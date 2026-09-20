@@ -2,7 +2,7 @@ using AchievementTracker.Core;
 
 namespace AchievementTracker.App.ViewModels;
 
-/// <summary>Data for one unlock toast. Spec: .superdesign/design-system.md ("Unlock toast").</summary>
+/// <summary>Data for one unlock toast. Spec: docs/DESIGN.md §6.</summary>
 public sealed class ToastViewModel(
     Rarity rarity,
     string title,

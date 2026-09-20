@@ -46,9 +46,7 @@ appsettings.Local.json
 tests/fixtures/_raw/
 
 # --- Editors / IDEs ---
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
 .idea/
 *.swp
 *.swo
@@ -59,9 +57,8 @@ tests/fixtures/_raw/
 Thumbs.db
 desktop.ini
 
-# --- Claude Code (personal/local only) ---
-.claude/settings.local.json
-.claude/scratch/
+# --- Claude Code ---
+.claude/
 
 # --- Superdesign ---
-.superdesign/tmp/
+.superdesign/

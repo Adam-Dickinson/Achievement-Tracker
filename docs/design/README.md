@@ -1,6 +1,6 @@
 # UI Mockups
 
-Initial designs for every core screen, generated with [Superdesign](https://superdesign.dev) from the brief in [../DESIGN.md](../DESIGN.md) and the tokens in [`.superdesign/design-system.md`](../../.superdesign/design-system.md).
+Initial designs for every core screen, generated with [Superdesign](https://superdesign.dev) from the brief in [../DESIGN.md](../DESIGN.md) and a local design-system file (`.superdesign/`, git-ignored). The resulting tokens are in `src/AchievementTracker.App/Themes/Tokens.axaml`.
 
 **Live canvas** (comment/iterate): https://superdesign.dev/teams/7cc1c153-6043-4e66-95ae-8dc30811ca1d/projects/4bd4cb42-4e16-4fb7-8ef0-f9cf56409448
 

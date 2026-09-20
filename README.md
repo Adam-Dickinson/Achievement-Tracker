@@ -58,7 +58,7 @@ dotnet run --project src/AchievementTracker.App   # tray icon + main window; tra
 
 ## Contributing
 
-Adding a platform or emulator? Follow the checklist in [`.claude/skills/add-provider`](.claude/skills/add-provider/SKILL.md) or [`add-emulator-adapter`](.claude/skills/add-emulator-adapter/SKILL.md). Significant decisions get an ADR (see [`write-adr`](.claude/skills/write-adr/SKILL.md)).
+Adding a platform or emulator? Read [docs/PROVIDERS.md](docs/PROVIDERS.md) for what's known about each platform and [docs/SPEC.md](docs/SPEC.md) §4 for the provider interface, then implement `IAchievementProvider` in `src/AchievementTracker.Providers`. Significant decisions get an ADR in [docs/adr/](docs/adr/) (use ADR-0002 as the template).
 
 ## Legal and safety notes
 

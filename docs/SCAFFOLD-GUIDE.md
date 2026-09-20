@@ -29,7 +29,7 @@ Providers (Steam, Xbox, PSN, ...)  ──►  Sync engine  ──►  Store (SQL
 |---|---|---|
 | Docs | Design, spec, architecture, providers, roadmap, ADRs, this guide | Complete drafts |
 | Mockups | 7 screens in `docs/design/mockups/` | Reference only |
-| Claude skills | `.claude/skills/*` recipes for recurring tasks | Ready to use |
+| Claude skills | `.claude/skills/*` recipes for recurring tasks | Local only (git-ignored) |
 | `Core` | Platform, Rarity, Secret, models, provider interface, errors | Real, tested |
 | `Store` | SQLite schema + migration runner | Real, tested (applies the schema to a real in-memory database) |
 | `Providers` | One stub per platform | Stubs |
@@ -75,7 +75,7 @@ One folder per platform (`Steam/`, `Xbox/`, ...). Each has a comment saying what
 ### `src/AchievementTracker.App`
 - `Program.cs` is the entry point and starts Avalonia (with the Inter font).
 - `App.axaml` / `App.axaml.cs`: application resources, the tray icon and its menu, and lifetime rules (closing the window hides it; only "Quit" exits).
-- `Themes/Tokens.axaml`: design tokens (colours, corner radii, shadows, the trophy glyph), matching `.superdesign/design-system.md`.
+- `Themes/Tokens.axaml`: design tokens (colours, corner radii, shadows, the trophy glyph), matching the visual direction in [DESIGN.md](DESIGN.md) §7 and the mockups.
 - `Views/`: `MainWindow`, `OverlayWindow` (the transparent toast host) and `ToastView` (the toast itself).
 - `ViewModels/`: `MainWindowViewModel`, `ToastViewModel`, `NavItem`.
 - `Services/OverlayService.cs`: shows a toast bottom-right for N seconds. `WindowsOverlayStyles.cs`: the few Windows calls that make the overlay click-through and non-focus-stealing.
@@ -202,7 +202,7 @@ These attributes trigger **source generators** that write the missing code at bu
 ## 9. Working with Claude on this project
 
 - `CLAUDE.md` holds the project rules Claude follows; they're good rules for you too.
-- Project skills in `.claude/skills/` automate recurring tasks: `add-provider`, `add-emulator-adapter`, `db-migration`, `write-adr`.
+- Local project skills in `.claude/skills/` (git-ignored, not in the repo) automate recurring tasks: `add-provider`, `add-emulator-adapter`, `db-migration`, `write-adr`.
 
 ## 10. Glossary
 

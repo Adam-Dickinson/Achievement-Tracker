@@ -5,7 +5,7 @@
              x:DataType="vm:ToastViewModel"
              Width="380"
              Height="96">
-  <!-- Spec: .superdesign/design-system.md ("Unlock toast"). Mockup: docs/design/mockups/unlock-toast.html -->
+  <!-- Spec: docs/DESIGN.md §6. Mockup: docs/design/mockups/unlock-toast.html -->
 
   <UserControl.Styles>
     <!-- Each rarity tier redefines ToastAccent; everything inside the toast reads that one resource. -->

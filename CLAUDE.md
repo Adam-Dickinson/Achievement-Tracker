@@ -27,7 +27,7 @@ dotnet format                      # fix style; CI runs `dotnet format --verify-
 dotnet run --project src/AchievementTracker.App
 ```
 
-The scaffold exists: `Core` and `Store` (with the migration runner) are real; `Providers` and `Sync` are mostly stubs (only `Backoff` is implemented); the app shows a placeholder main window, a tray icon, and a working click-through toast (tray menu → "Send test notification"). Verified at setup: build, 30 tests, and a manual run. UI targets are in `docs/design/mockups/`; design tokens are in `src/AchievementTracker.App/Themes/Tokens.axaml` and `.superdesign/design-system.md`.
+The scaffold exists: `Core` and `Store` (with the migration runner) are real; `Providers` and `Sync` are mostly stubs (only `Backoff` is implemented); the app shows a placeholder main window, a tray icon, and a working click-through toast (tray menu → "Send test notification"). Verified at setup: build, 30 tests, and a manual run. UI targets are in `docs/design/mockups/`; design tokens are in `src/AchievementTracker.App/Themes/Tokens.axaml` and the mockups' design brief in `docs/DESIGN.md` §7.
 
 ## Rules
 
@@ -52,7 +52,7 @@ The scaffold exists: `Core` and `Store` (with the migration runner) are real; `P
 
 ## Project skills
 
-Use these for recurring tasks (in `.claude/skills/`):
+Local project skills in `.claude/skills/` (git-ignored, so only present on machines that have them; if missing, follow the same steps using the docs):
 
 | Skill | When |
 |---|---|

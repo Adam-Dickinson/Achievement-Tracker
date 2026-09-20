@@ -34,7 +34,7 @@ Requirements are unchanged: an always-on background app with a small footprint t
 - **Secrets:** behind `ISecretStore`. The production implementation will use the Windows Credential Manager (M1).
 - **Overlay:** an Avalonia transparent, topmost window. Windows-specific extended styles (`WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW`) make it click-through and non-activating.
 - **Quality gates:** nullable reference types, warnings as errors, recommended analyzers, `dotnet format` in CI.
-- **Design system:** the tokens live in `Themes/Tokens.axaml` and mirror `.superdesign/design-system.md`. The HTML mockups in `docs/design/mockups/` remain the visual reference.
+- **Design system:** the tokens live in `Themes/Tokens.axaml` and mirror the design system used to generate the mockups. The HTML mockups in `docs/design/mockups/` remain the visual reference.
 
 ## Consequences
 

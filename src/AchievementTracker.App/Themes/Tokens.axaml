@@ -1,6 +1,6 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Design tokens. Keep in sync with .superdesign/design-system.md -->
+  <!-- Design tokens. Keep in sync with docs/DESIGN.md §7 and the mockups in docs/design/mockups/ -->
 
   <Color x:Key="BaseColor">#0B0D12</Color>
   <Color x:Key="Surface1Color">#12151C</Color>

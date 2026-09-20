@@ -81,13 +81,7 @@ achievement-tracker/
 ├── AchievementTracker.sln
 ├── Directory.Build.props            # shared: net10.0, nullable, warnings as errors, analyzers
 ├── .editorconfig                    # formatting + naming rules (enforced in build)
-├── .claude/skills/                  # project skills for Claude Code
-│   ├── add-provider/SKILL.md
-│   ├── add-emulator-adapter/SKILL.md
-│   ├── db-migration/SKILL.md
-│   └── write-adr/SKILL.md
 ├── .github/workflows/ci.yml         # restore, format check, build, test
-├── .superdesign/design-system.md    # design tokens/spec used for mockups
 ├── docs/
 │   ├── DESIGN.md  SPEC.md  ARCHITECTURE.md  PROVIDERS.md  ROADMAP.md  SCAFFOLD-GUIDE.md
 │   ├── adr/                         # architecture decision records
@@ -137,6 +131,6 @@ Planned additions: `src/AchievementTracker.App/Views/{Dashboard,Library,GameDeta
 
 ## 8. Extension points
 
-- **New platform:** implement `IAchievementProvider`, register it, add a connect view under `Views/Accounts`. Checklist: `.claude/skills/add-provider`.
-- **New emulator (file-based):** implement the provider with `Watch()` plus a path auto-detector. See `.claude/skills/add-emulator-adapter`.
+- **New platform:** implement `IAchievementProvider`, register it, add a connect view under `Views/Accounts`. Steps: research the platform first (PROVIDERS.md), then implement the interface with fixtures and tests.
+- **New emulator (file-based):** implement the provider with `Watch()` plus a path auto-detector. Parse defensively and keep the diff/baseline logic in `Sync`.
 - **New notification style:** the toast is an ordinary Avalonia `UserControl` (`ToastView`), so themes are XAML styles only.
