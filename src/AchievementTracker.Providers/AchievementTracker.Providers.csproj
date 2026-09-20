@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>One namespace per platform/emulator, each implementing IAchievementProvider</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AchievementTracker.Core\AchievementTracker.Core.csproj" />
+  </ItemGroup>
+
+</Project>

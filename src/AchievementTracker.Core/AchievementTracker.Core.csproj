@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Domain types, provider interface, errors and secret storage abstraction</Description>
+  </PropertyGroup>
+
+</Project>

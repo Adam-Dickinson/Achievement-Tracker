@@ -1,0 +1,57 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Design tokens. Keep in sync with .superdesign/design-system.md -->
+
+  <Color x:Key="BaseColor">#0B0D12</Color>
+  <Color x:Key="Surface1Color">#12151C</Color>
+  <Color x:Key="Surface2Color">#181C25</Color>
+  <Color x:Key="Surface3Color">#1F2430</Color>
+  <Color x:Key="LineColor">#262C3A</Color>
+  <Color x:Key="FgColor">#E8EAF0</Color>
+  <Color x:Key="FgMutedColor">#8B93A7</Color>
+  <Color x:Key="FgSubtleColor">#5B6478</Color>
+
+  <Color x:Key="PrimaryColor">#F5B942</Color>
+  <Color x:Key="PrimaryHoverColor">#FFCB5C</Color>
+  <Color x:Key="OnPrimaryColor">#1A1300</Color>
+
+  <Color x:Key="SuccessColor">#3FB984</Color>
+  <Color x:Key="WarningColor">#F2A33A</Color>
+  <Color x:Key="DangerColor">#F0616D</Color>
+  <Color x:Key="InfoColor">#4C9BFF</Color>
+
+  <Color x:Key="RarityCommonColor">#9AA3B5</Color>
+  <Color x:Key="RarityUncommonColor">#3FB984</Color>
+  <Color x:Key="RarityRareColor">#4C9BFF</Color>
+  <Color x:Key="RarityUltraColor">#F5A524</Color>
+
+  <SolidColorBrush x:Key="BaseBrush" Color="{StaticResource BaseColor}" />
+  <SolidColorBrush x:Key="Surface1Brush" Color="{StaticResource Surface1Color}" />
+  <SolidColorBrush x:Key="Surface2Brush" Color="{StaticResource Surface2Color}" />
+  <SolidColorBrush x:Key="Surface3Brush" Color="{StaticResource Surface3Color}" />
+  <SolidColorBrush x:Key="LineBrush" Color="{StaticResource LineColor}" />
+  <SolidColorBrush x:Key="FgBrush" Color="{StaticResource FgColor}" />
+  <SolidColorBrush x:Key="FgMutedBrush" Color="{StaticResource FgMutedColor}" />
+  <SolidColorBrush x:Key="FgSubtleBrush" Color="{StaticResource FgSubtleColor}" />
+  <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+  <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource PrimaryHoverColor}" />
+  <SolidColorBrush x:Key="OnPrimaryBrush" Color="{StaticResource OnPrimaryColor}" />
+  <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+  <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+  <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+  <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}" />
+  <SolidColorBrush x:Key="RarityCommonBrush" Color="{StaticResource RarityCommonColor}" />
+  <SolidColorBrush x:Key="RarityUncommonBrush" Color="{StaticResource RarityUncommonColor}" />
+  <SolidColorBrush x:Key="RarityRareBrush" Color="{StaticResource RarityRareColor}" />
+  <SolidColorBrush x:Key="RarityUltraBrush" Color="{StaticResource RarityUltraColor}" />
+
+  <CornerRadius x:Key="ControlRadius">8</CornerRadius>
+  <CornerRadius x:Key="CardRadius">12</CornerRadius>
+  <CornerRadius x:Key="PanelRadius">16</CornerRadius>
+
+  <!-- Trophy glyph (from the app icon), 1024x1024 design grid. -->
+  <StreamGeometry x:Key="TrophyGeometry">M296,224 h432 v208 c0,120 -96,216 -216,216 s-216,-96 -216,-216 z M472,640 h80 v120 h-80 z M356,760 h312 v72 h-312 z</StreamGeometry>
+
+  <BoxShadows x:Key="UltraToastShadow">0 12 40 0 #8C000000, 0 0 32 0 #59F5A524</BoxShadows>
+  <BoxShadows x:Key="ToastShadow">0 12 40 0 #8C000000</BoxShadows>
+</ResourceDictionary>

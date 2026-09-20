@@ -62,7 +62,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | ID | Requirement | Target |
 |---|---|---|
 | N-01 | Idle CPU (tray, no sync) | < 0.5% average |
-| N-02 | Idle memory, main window closed | < 100 MB total (app + WebView) |
+| N-02 | Idle memory, main window closed | < 100 MB working set (see ADR-0002 for the measured baseline and tuning options) |
 | N-03 | Unlock-to-toast latency, local providers | < 2 s |
 | N-04 | Unlock-to-toast latency, polling providers | ≤ poll interval + 5 s |
 | N-05 | Installer size | < 30 MB |
@@ -154,31 +154,33 @@ CREATE INDEX idx_unlock_detected ON unlock(detected_at DESC);
 CREATE INDEX idx_pgame_game ON platform_game(game_id);
 ```
 
-## 4. Provider interface (Rust)
+## 4. Provider interface (C#)
 
-```rust
-#[async_trait]
-pub trait AchievementProvider: Send + Sync {
-    fn platform(&self) -> Platform;
-    fn capabilities(&self) -> Capabilities;     // { local_watch, polling, global_rarity, oauth, ... }
+```csharp
+public interface IAchievementProvider
+{
+    Platform Platform { get; }
+    ProviderCapabilities Capabilities { get; }   // LocalWatch, Polling, GlobalRarity, OAuth, Unofficial
 
-    async fn authenticate(&self, ctx: AuthContext) -> Result<AccountCredentials, ProviderError>;
-    async fn validate(&self, creds: &AccountCredentials) -> Result<AccountInfo, ProviderError>;
+    Task<AccountCredentials> AuthenticateAsync(AuthInput input, CancellationToken ct = default);
+    Task<AccountInfo> ValidateAsync(AccountCredentials credentials, CancellationToken ct = default);
 
     /// All games with any achievement data for this account.
-    async fn list_games(&self, creds: &AccountCredentials) -> Result<Vec<RemoteGame>, ProviderError>;
+    Task<IReadOnlyList<RemoteGame>> ListGamesAsync(AccountCredentials credentials, CancellationToken ct = default);
 
     /// Full schema + unlock state for one game.
-    async fn fetch_game(&self, creds: &AccountCredentials, game: &RemoteGameRef)
-        -> Result<RemoteGameAchievements, ProviderError>;
+    Task<RemoteGameAchievements> FetchGameAsync(AccountCredentials credentials, RemoteGameRef game, CancellationToken ct = default);
 
-    /// Optional: event-driven sources push changes instead of being polled.
-    fn watch(&self, creds: &AccountCredentials, tx: UnlockSender) -> Option<WatchHandle> { None }
+    /// Optional: event-driven sources signal changes instead of being polled. Dispose to stop.
+    IDisposable? Watch(AccountCredentials credentials, Action<RemoteGameRef> onChange) => null;
 }
 ```
 
-- Providers are **pure adapters**: they return normalized `Remote*` DTOs and know nothing about SQLite or notifications
-- Errors are typed: `AuthExpired`, `RateLimited { retry_after }`, `Network`, `Unsupported`, `Parse`, `Other`. The sync engine maps these to backoff, re-auth prompts or UI status.
+The real definitions are in `src/AchievementTracker.Core/IAchievementProvider.cs`.
+
+- Providers are **pure adapters**: they return normalized `Remote*` records and know nothing about SQLite or notifications
+- Failures are `ProviderException` with a `Kind`: `AuthExpired`, `RateLimited` (with `RetryAfter`), `Network`, `Parse`, `Unsupported`, `Other`. The sync engine maps these to backoff, re-auth prompts or UI status. `IsRetryable` is true for `Network` and `RateLimited`.
+- Watchers only signal "something changed for this game"; the sync engine re-fetches and diffs, so the baseline rule and de-duplication live in one place
 - Each provider has fixture-based tests (recorded, sanitized responses in `tests/fixtures/`)
 
 ## 5. Sync algorithm
@@ -199,29 +201,29 @@ for each due (account, scope):
 
 Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watcher events are safe.
 
-## 6. IPC contract (Tauri commands and events)
+## 6. UI services and view-models
 
-Generated to TypeScript via `tauri-specta`. Initial surface:
+The app is a single .NET process, so there is no IPC layer: view-models call application services directly (constructor-injected). Initial surface:
 
-**Commands**
-| Command | Description |
+**Application services** (in `Sync` / `App`, exposed to view-models)
+| Operation | Description |
 |---|---|
-| `list_accounts()` | Accounts + status |
-| `begin_connect(platform)` / `complete_connect(platform, payload)` | Auth flow |
-| `disconnect_account(id)` | Remove account (option: keep data) |
-| `list_games(filter, sort, page)` | Library query |
-| `get_game(id)` | Game + platform entries |
-| `list_achievements(platform_game_id, filter)` | |
-| `list_activity(cursor, limit)` | Unlock timeline |
-| `get_dashboard_stats()` | Aggregates |
-| `sync_now(scope)` | Manual sync |
-| `merge_games(ids)` / `split_game(id)` | Linking |
-| `get_settings()` / `update_settings(patch)` | |
-| `preview_notification(rarity)` | |
-| `export_data(format)` | |
+| `ListAccounts()` | Accounts + status |
+| `BeginConnect(platform)` / `CompleteConnect(platform, input)` | Auth flow (takes an `AuthInput`) |
+| `DisconnectAccount(id)` | Remove account (option: keep data) |
+| `ListGames(filter, sort, page)` | Library query |
+| `GetGame(id)` | Game + platform entries |
+| `ListAchievements(platformGameId, filter)` | |
+| `ListActivity(cursor, limit)` | Unlock timeline |
+| `GetDashboardStats()` | Aggregates |
+| `SyncNow(scope)` | Manual sync |
+| `MergeGames(ids)` / `SplitGame(id)` | Linking |
+| `GetSettings()` / `UpdateSettings(patch)` | |
+| `PreviewNotification(rarity)` | Implemented: `MainWindowViewModel.SendTestNotificationCommand` |
+| `ExportData(format)` | |
 
-**Events (Rust to UI)**
-`sync://status` (per-account progress/state), `achievement://unlocked`, `account://status-changed`, `settings://changed`.
+**Events** (plain C# events / `IObservable`, marshalled to the UI thread by the view-model)
+`SyncStatusChanged` (per-account progress/state), `AchievementUnlocked`, `AccountStatusChanged`, `SettingsChanged`.
 
 ## 7. Settings (defaults)
 
@@ -242,24 +244,25 @@ Generated to TypeScript via `tauri-specta`. Initial surface:
 
 ## 8. Security requirements
 
-- Secrets only via `keyring`; redact tokens in `tracing` output
-- Tauri CSP locked down; allowlist only the IPC commands above; no remote content in the main window
-- Auth webviews (OAuth) use separate, sandboxed windows and are destroyed after completion
-- Auto-update packages signed; updater pubkey pinned in config
-- Parse untrusted local files (trophy/stats binaries) defensively, with size limits and no panics
+- Secrets only via `ISecretStore` (Windows Credential Manager in production); never `ToString()` or log a secret (`Secret` is redacted by design); redact tokens in logs
+- No remote content rendered in app windows; auth flows (OAuth) run in a separate, short-lived browser/window and are disposed after completion
+- The overlay only changes its own window styles; nothing is injected into other processes
+- Auto-update packages signed; update signature verified before install
+- Parse untrusted local files (trophy/stats binaries) defensively, with size limits, returning `ProviderException(Parse)` rather than throwing unexpected exceptions
+- Keep NuGet packages patched: warnings-as-errors turns known-vulnerable dependencies (NU1901-NU1904) into build failures
 
 ## 9. Testing strategy
 
 | Layer | Approach |
 |---|---|
-| Domain / sync engine | Unit tests with an in-memory SQLite and a `FakeProvider` |
-| Providers | Fixture-driven tests using `wiremock`; parsers fuzzed/property-tested for binary formats |
-| IPC | Rust integration tests calling command handlers directly |
-| Frontend | Vitest + React Testing Library for components; Playwright for key flows against a mocked IPC layer |
-| Notifications | Manual preview harness + screenshot test of the toast component |
-| CI | GitHub Actions: `cargo fmt/clippy/test`, `pnpm lint/typecheck/test`, Windows runner build |
+| Domain / sync engine | xUnit tests with an in-memory SQLite and a fake `IAchievementProvider` |
+| Store | Apply all migrations to an in-memory database; upgrade tests seeded at the previous version |
+| Providers | Fixture-driven tests using a stubbed `HttpMessageHandler`; parsers property-tested/fuzzed for binary formats |
+| View-models | Plain unit tests (no UI needed); services are faked |
+| UI | Avalonia headless tests for key views; manual preview via the tray's "Send test notification" |
+| CI | GitHub Actions on Windows: `dotnet format --verify-no-changes`, `dotnet build`, `dotnet test` |
 
 ## 10. Observability
 
-- `tracing` with rolling log files in the app data dir; log level setting; "Open logs folder" in Settings
+- `Microsoft.Extensions.Logging` with rolling log files in the app data dir; log level setting; "Open logs folder" in Settings
 - Per-provider health surfaced in the Accounts screen (last success, last error)

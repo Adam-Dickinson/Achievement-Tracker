@@ -1,6 +1,8 @@
-# ADR-0001: Tech stack
+# ADR-0001: Tech stack (Tauri + Rust)
 
-- **Status:** Proposed
+> Historical record. The project moved to C# / .NET in ADR-0002 before any feature work started. Kept for the comparison of options.
+
+- **Status:** Superseded by [ADR-0002](0002-csharp-dotnet-avalonia.md)
 - **Date:** 2026-09-20
 
 ## Context

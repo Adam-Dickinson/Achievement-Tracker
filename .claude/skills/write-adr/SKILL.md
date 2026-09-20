@@ -5,10 +5,10 @@ description: Use when making or recording a significant architectural or technol
 
 # Write an Architecture Decision Record
 
-ADRs live in `docs/adr/NNNN-short-title.md`, numbered sequentially (next number = highest existing + 1). See `0001-tech-stack.md` for the house style.
+ADRs live in `docs/adr/NNNN-short-title.md`, numbered sequentially (next number = highest existing + 1). See `0002-csharp-dotnet-avalonia.md` for the house style.
 
 ## When to write one
-- Choosing/replacing a framework, database, or core crate
+- Choosing/replacing a framework, database, or core NuGet package
 - Changing how sync, notifications, auth or secrets work
 - Adding or dropping a platform for reasons beyond routine implementation
 - Anything a future contributor would otherwise ask "why did we do it this way?"

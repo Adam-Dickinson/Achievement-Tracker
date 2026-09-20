@@ -1,7 +1,7 @@
 # Design System: Achievement Tracker
 
 ## Product context
-Desktop app (Windows first, Tauri window ~1440x900, min 1024x680) that unifies achievements/trophies from Steam, Xbox, PlayStation, Epic, Ubisoft, EA, and emulators (RetroAchievements, RPCS3, Xenia). Lives in the system tray and shows an in-game-style toast when an achievement unlocks.
+Desktop app (Windows first, native window ~1440x900, min 1024x680) that unifies achievements/trophies from Steam, Xbox, PlayStation, Epic, Ubisoft, EA, and emulators (RetroAchievements, RPCS3, Xenia). Lives in the system tray and shows an in-game-style toast when an achievement unlocks.
 
 Jobs to be done: see all progress in one place; know instantly when I unlocked something; find what's left to complete; merge the same game across platforms.
 

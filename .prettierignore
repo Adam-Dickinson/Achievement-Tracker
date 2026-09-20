@@ -1,7 +1,0 @@
-dist
-node_modules
-target
-src-tauri/target
-src-tauri/gen
-docs/design/mockups
-pnpm-lock.yaml

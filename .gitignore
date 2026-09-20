@@ -1,34 +1,28 @@
-# --- Rust / Cargo ---
-target/
-**/*.rs.bk
-# Cargo.lock IS committed (this is an application, not a library)
-
-# --- Node / frontend ---
-node_modules/
-dist/
-dist-ssr/
-.vite/
-.pnpm-store/
-*.tsbuildinfo
+# --- .NET / build output ---
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+artifacts/
+*.user
+*.suo
+*.userprefs
+.vs/
+*.log
+TestResults/
+*.trx
 coverage/
-.eslintcache
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+*.nupkg
+*.snupkg
 
-# --- Tauri ---
-src-tauri/target/
-src-tauri/gen/
-src-tauri/WixTools/
-# Generated TS bindings are committed; build artifacts are not
+# --- Installers / packaged builds ---
 *.msi
+*.msix
 *.exe
 *.dmg
 *.AppImage
 *.deb
-*.nsis.zip
-*.sig
 
 # --- Local data & secrets (NEVER commit) ---
 .env
@@ -36,8 +30,11 @@ src-tauri/WixTools/
 !.env.example
 *.pem
 *.key
+*.pfx
 secrets/
 credentials*.json
+appsettings.Development.json
+appsettings.Local.json
 # Local dev databases and sync caches
 *.db
 *.db-shm
@@ -48,10 +45,6 @@ credentials*.json
 # Recorded provider responses may contain real account data; only sanitized fixtures belong in git
 tests/fixtures/_raw/
 
-# --- Logs ---
-*.log
-logs/
-
 # --- Editors / IDEs ---
 .vscode/*
 !.vscode/extensions.json
@@ -59,6 +52,7 @@ logs/
 .idea/
 *.swp
 *.swo
+*.DotSettings.user
 
 # --- OS ---
 .DS_Store

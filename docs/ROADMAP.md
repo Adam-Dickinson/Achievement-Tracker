@@ -5,10 +5,10 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M0: Foundations and spikes (1-2 weeks)
 
 - [ ] Decide open questions in DESIGN.md §11 (license, OS scope, Steam key strategy)
-- [x] Scaffold: Cargo workspace + Tauri shell + React/TS frontend per [ARCHITECTURE.md](ARCHITECTURE.md) §6 (verified locally: cargo check/test/clippy/fmt and `pnpm tauri dev` all pass)
+- [x] Scaffold: .NET solution (Core, Store, Providers, Sync, App, Tests) per [ARCHITECTURE.md](ARCHITECTURE.md) §6; build, 30 tests and a manual run of the app (tray, main window, click-through toast) verified locally
 - [x] CI workflow written (`.github/workflows/ci.yml`); confirm it passes on first push
-- [ ] `tauri-specta` bindings wired up with one trivial command
-- [ ] **Spike A:** overlay window: transparent, click-through, no focus steal, over a borderless-windowed game
+- [ ] Decide DI/hosting approach (`Microsoft.Extensions.Hosting`) and wire services into the App
+- [~] **Spike A:** overlay window: transparent, click-through, no focus steal. Built and shown over a desktop app; still to verify over a real borderless-windowed game and on multi-monitor / mixed-DPI setups
 - [ ] **Spike B:** RPCS3 trophy file format parse (fixture from real files)
 - [ ] **Spike C:** feasibility notes for Xenia, Epic, Ubisoft, EA (write verdicts into PROVIDERS.md)
 - [x] Mockups: Dashboard, Library, Game detail, Toast, Accounts, Notification settings, Onboarding ([docs/design](design/README.md)); Activity + tray menu still to design
@@ -16,7 +16,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 ## M1: Vertical slice, Steam and toasts (MVP core)
 
-- [ ] `core` types + provider trait; `store` with migrations 0001; `SecretStore`
+- [x] `Core` types + provider interface; `Store` with migration 0001 + runner; `ISecretStore` (in-memory; Windows Credential Manager implementation still to do)
 - [ ] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`
 - [ ] Steam provider (Web API): library, schema, unlocks, rarity
 - [ ] Notification service + overlay toast (queue, sound, preview)
@@ -28,7 +28,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 - [ ] RetroAchievements provider
 - [ ] RPCS3 provider with file watcher (< 2 s latency)
-- [ ] Xbox provider (OAuth in sandboxed webview, token refresh)
+- [ ] Xbox provider (OAuth via browser/loopback redirect, token refresh)
 - [ ] Running-game detection → fast polling
 - [ ] Activity feed screen
 - **Exit:** unlocks from Steam, Xbox, RA and RPCS3 all appear in one library and fire toasts
@@ -57,7 +57,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M6: Release engineering
 
 - [ ] Code signing, signed auto-update channel
-- [ ] Installer (NSIS/MSI), WebView2 bootstrap
+- [ ] Installer (MSIX or Velopack), self-contained publish, measure memory against N-02
 - [ ] Performance validation against N-01..N-07
 - [ ] Crash reporting (opt-in), docs site/README screenshots
 - [ ] v1.0.0
@@ -68,7 +68,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 |---|---|---|
 | Unofficial APIs (PSN, Xbox, Epic, Ubisoft, EA) break or are blocked | Provider outage | Isolation, clear "needs attention" state, fixtures, keep Steam/RA/local solid |
 | Exclusive-fullscreen hides the overlay | Missed toasts | Native toast fallback, docs, Activity feed |
-| Rust learning curve | Slower early velocity | Keep providers as small pure adapters, lean on Claude skills/checklists |
+| Idle memory above the N-02 target | Not "lightweight" | Measure release builds early; trim, ReadyToRun, release the main window's visuals when hidden; see ADR-0002 |
 | Local file formats change with emulator updates | Parser breakage | Pinned fixtures, defensive parsing, version detection |
 | ToS concerns for unofficial providers | Legal/ban risk for users | Opt-in with warnings, tokens only, no game injection |
 | First-sync toast flood | Terrible UX | Baseline rule (F-16), burst collapsing |

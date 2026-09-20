@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:AchievementTracker.App.Views"
+        x:Class="AchievementTracker.App.Views.OverlayWindow"
+        Title="Achievement Tracker Overlay"
+        Width="428"
+        Height="144"
+        CanResize="False"
+        WindowDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Focusable="False"
+        WindowStartupLocation="Manual">
+  <!-- The window is transparent; the margin leaves room for the toast's glow and shadow. -->
+  <views:ToastView Margin="24" />
+</Window>

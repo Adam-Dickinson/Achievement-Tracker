@@ -1,273 +1,220 @@
-# Scaffold Guide: what's here, and Rust for first-timers
+# Scaffold Guide: what's here, and a C# primer
 
-Written for someone new to Rust. It explains what was built in the initial commit, how the pieces connect, and the Rust concepts you'll meet when reading the code. Read it once, then use it as a reference.
+Explains what was built, how the pieces connect, how to run it, and the C# ideas you will meet when reading the code. Read it once, then use it as a reference.
 
-> **Status:** everything here has been built and checked. `cargo check`, `cargo test` (8 tests), `cargo clippy`, `cargo fmt --check` and the frontend checks pass, and `pnpm tauri dev` opens the app window. The first `cargo check` compiled with no errors. Rust's compiler is strict, so expect errors as soon as you start changing code; they are unusually helpful, and [§8](#8-your-first-30-minutes) walks you through the loop.
+> **Status:** everything here has been built and checked. `dotnet build` passes with zero warnings (warnings are errors), 30 tests pass, and the app was launched and used: main window, tray icon, and a click-through toast that appears bottom-right and hides after 5 seconds.
 
 ---
 
 ## 1. The big picture
 
-The app has two halves that talk to each other:
+One .NET process does everything: it draws the windows, syncs with the platforms, stores data and shows the toast.
 
 ```
-┌─ Rust (the "backend") ───────────────┐      ┌─ TypeScript/React (the "frontend") ─┐
-│ Talks to Steam/Xbox/PSN, reads files, │ IPC  │ Draws the windows: dashboard,        │
-│ stores data, detects unlocks          │◄────►│ library, settings, the toast pop-up  │
-└───────────────────────────────────────┘      └──────────────────────────────────────┘
-                     └────────────── Tauri glues them into one desktop app ───────────┘
+Providers (Steam, Xbox, PSN, ...)  ──►  Sync engine  ──►  Store (SQLite)
+  fetch achievements                   spot new unlocks       remember everything
+                                            │
+                                            ▼
+                                     UnlockEvent ──► Notification service ──► Overlay window (toast)
+                                            └──────► Main window (view-models)
 ```
 
-- **Tauri** is the framework. It gives you a native window that shows a web page (your React UI), plus a Rust process behind it. Think "Electron, but the backend is Rust and the app is much smaller."
-- **IPC** (inter-process communication) means the UI calls Rust functions by name, e.g. `invoke("app_version")`, and Rust can send events back.
-- The decision and reasoning are in [ADR-0001](adr/0001-tech-stack.md).
+- **Avalonia** is the UI framework: you describe windows in XAML (`.axaml`) and bind them to C# view-models. Think "WPF that also runs on macOS and Linux."
+- **MVVM**: the *View* (XAML) shows data, the *ViewModel* (C#) holds state and commands, the *Model* is the domain (`Core`). Views contain almost no logic.
+- Decision and reasoning: [ADR-0002](adr/0002-csharp-dotnet-avalonia.md).
 
 ## 2. What was created
 
 | Area | What | State |
 |---|---|---|
-| Docs | Design, spec, architecture, providers, roadmap, ADR, this guide | Complete drafts |
+| Docs | Design, spec, architecture, providers, roadmap, ADRs, this guide | Complete drafts |
 | Mockups | 7 screens in `docs/design/mockups/` | Reference only |
 | Claude skills | `.claude/skills/*` recipes for recurring tasks | Ready to use |
-| **Rust workspace** | 5 crates (see §3) | `at-core` real, others stubs. Compiles, tests pass |
-| **Frontend** | React + Vite + Tailwind shell, 2 windows | Builds, lints, tests pass |
+| `Core` | Platform, Rarity, Secret, models, provider interface, errors | Real, tested |
+| `Store` | SQLite schema + migration runner | Real, tested (applies the schema to a real in-memory database) |
+| `Providers` | One stub per platform | Stubs |
+| `Sync` | Backoff calculation | One small real piece |
+| `App` | Main window shell, tray icon, overlay toast | Working, placeholder content |
 | CI | `.github/workflows/ci.yml` | Written, not yet run on GitHub (same commands pass locally) |
-| Icons | `src-tauri/icons/` generated from `app-icon.svg` | Done |
 
-Nothing *does* anything yet (no syncing, no notifications). The scaffold is the skeleton the milestones in the [roadmap](ROADMAP.md) fill in.
+The main window is a placeholder (sidebar + "Scaffold ready"). The mockups in `docs/design/mockups/` are what it should become, milestone by milestone ([roadmap](ROADMAP.md)).
 
-## 3. The Rust workspace, file by file
+## 3. The solution, project by project
 
-### Cargo, Rust's build tool and package manager
-
-- `Cargo.toml` is Rust's `package.json`. A **crate** is a Rust package (a library or a program).
-- The root [`Cargo.toml`](../Cargo.toml) declares a **workspace**: several crates in one repo, built together and sharing one `target/` folder (like a pnpm/npm workspace). Members: `crates/core`, `crates/store`, `crates/providers`, `crates/sync`, `src-tauri`.
-- `[workspace.dependencies]` lists shared versions once. A member says `serde.workspace = true` to use it. `at-core = { path = "crates/core" }` is a dependency on a sibling crate in this repo.
-- Crate names use hyphens (`at-core`) but in code you write underscores: `use at_core::Platform;`.
-- `Cargo.lock` is like `pnpm-lock.yaml`. Commit it for apps.
-- `rust-toolchain.toml` pins "stable" Rust with `rustfmt` (formatter) and `clippy` (linter).
-
-### The crates and how they depend on each other
+- `AchievementTracker.sln` groups the projects. `dotnet build` and `dotnet test` at the repo root act on all of them.
+- Each `.csproj` describes one project (its dependencies, packages, settings). `Directory.Build.props` at the root holds settings shared by all: .NET 10, nullable checks, **warnings as errors**, analyzers on.
+- `.editorconfig` holds formatting and naming rules that the build enforces.
 
 ```
-at-core  ←  at-store
-   ↑     ←  at-providers   ←  at-sync  ←  src-tauri (the app)
+Core  ←  Store
+  ↑   ←  Providers   ←  Sync  ←  App (the executable)
 ```
 
-Arrows point at what is depended on. `at-core` depends on no other crate in the repo. This one-way rule keeps the code tidy: providers can never reach into the database, and so on ([ARCHITECTURE.md](ARCHITECTURE.md) §2).
+An arrow points at what is depended on. `Core` depends on nothing internal, so providers can never reach into the database, and so on ([ARCHITECTURE.md](ARCHITECTURE.md) §2).
 
-### `crates/core`: the shared vocabulary (real code)
-
+### `src/AchievementTracker.Core`
 | File | What it defines |
 |---|---|
-| `platform.rs` | `enum Platform { Steam, Xbox, ... }` with helper methods |
-| `model.rs` | Data shapes: `RemoteGame`, `RemoteAchievement`, `UnlockEvent`, `Rarity`, `Secret`... |
-| `error.rs` | `ProviderError`, the ways a platform call can fail |
-| `provider.rs` | `trait AchievementProvider`, the interface every platform must implement |
-| `secrets.rs` | `trait SecretStore` (where tokens live) and an in-memory version for tests |
-| `lib.rs` | Declares the modules and re-exports the important names |
+| `Platform.cs` | `enum Platform { Steam, Xbox, ... }` plus helper methods (`Id()`, `DisplayName()`, `IsUnofficial()`) |
+| `Rarity.cs` | `enum Rarity` and `FromPercent()`: the rarity tiers from the design |
+| `Secret.cs` | Wraps a token so it prints as `Secret(<redacted>)` and can't leak into logs |
+| `Models.cs` | Data shapes returned by providers: `RemoteGame`, `RemoteAchievement`, `UnlockEvent`... |
+| `ProviderException.cs` | The ways a platform call can fail (`AuthExpired`, `RateLimited`, `Network`...) |
+| `IAchievementProvider.cs` | The interface every platform implements, plus `ProviderCapabilities` and `AuthInput` |
+| `ISecretStore.cs` | Where tokens live, plus an in-memory version for tests |
 
-### `crates/store`: the database (schema only)
+### `src/AchievementTracker.Store`
+`Migrations/0001_init.sql` is the full schema, embedded in the assembly. `Migrations.cs` loads the SQL files; `MigrationRunner.cs` applies the pending ones and records progress in SQLite's `user_version`.
 
-`migrations/0001_init.sql` is the full SQLite schema. `lib.rs` embeds it into the program with `include_str!`. No queries yet; you'll add `sqlx` in M1.
+### `src/AchievementTracker.Providers`
+One folder per platform (`Steam/`, `Xbox/`, ...). Each has a comment saying what it will do. Real code arrives in M1+.
 
-### `crates/providers`: one folder per platform (stubs)
+### `src/AchievementTracker.Sync`
+`Backoff.cs` computes retry delays (5s, 10s, 20s... capped). The scheduler and diff logic arrive in M1.
 
-`steam/`, `xbox/`, `playstation/`, `retroachievements/`, `rpcs3/`, `epic/`, `ubisoft/`, `ea/`, `xenia/`, `local_file/`. Each `mod.rs` is only a doc comment saying what it will do and its priority.
+### `src/AchievementTracker.App`
+- `Program.cs` is the entry point and starts Avalonia (with the Inter font).
+- `App.axaml` / `App.axaml.cs`: application resources, the tray icon and its menu, and lifetime rules (closing the window hides it; only "Quit" exits).
+- `Themes/Tokens.axaml`: design tokens (colours, corner radii, shadows, the trophy glyph), matching `.superdesign/design-system.md`.
+- `Views/`: `MainWindow`, `OverlayWindow` (the transparent toast host) and `ToastView` (the toast itself).
+- `ViewModels/`: `MainWindowViewModel`, `ToastViewModel`, `NavItem`.
+- `Services/OverlayService.cs`: shows a toast bottom-right for N seconds. `WindowsOverlayStyles.cs`: the few Windows calls that make the overlay click-through and non-focus-stealing.
 
-### `crates/sync`: the engine (one small real function)
+### `tests/AchievementTracker.Tests`
+xUnit tests. `dotnet test` runs them all.
 
-`backoff.rs` computes retry delays (5s, 10s, 20s... capped). `events.rs` re-exports `UnlockEvent`. The scheduler and diff logic arrive in M1.
+## 4. C# concepts, using this codebase as the examples
 
-### `src-tauri`: the app itself
+You don't need to memorise these; skim, then look at the file when curious.
 
-- `src/main.rs` is the program entry point. It just calls `run()`.
-- `src/lib.rs` builds the Tauri app and registers the commands the UI may call.
-- `src/commands/mod.rs` has one command, `app_version`, to prove the Rust↔UI bridge works.
-- `src/notify/` and `src/tray.rs` are placeholders (M1).
-- `tauri.conf.json` defines two windows: **main** (the app) and **overlay** (a hidden, transparent, always-on-top window for toasts).
-- `capabilities/default.json` lists what those windows are allowed to do (Tauri denies by default).
-- `build.rs` runs at compile time to set up Tauri. You won't touch it.
+### Records: data with value semantics
+`Models.cs` declares data shapes in one line each:
 
-### The frontend (`src/`, `index.html`, `overlay.html`)
-
-- Two HTML entry points, one per window. `vite.config.ts` builds both.
-- `src/styles/index.css` holds the design tokens (colors, fonts) as Tailwind theme values, matching `.superdesign/design-system.md`.
-- `src/overlay/Toast.tsx` is the unlock pop-up component; `src/app/App.tsx` is a placeholder shell.
-- `src/lib/rarity.ts` mirrors the Rust `Rarity::from_percent` so both sides classify identically (there's a test).
-- `src/features/*` are empty folders waiting for the screens in the mockups.
-
-## 4. Rust concepts, using this codebase as the examples
-
-You don't need to memorise these. Skim, then look at the file when you're curious.
-
-### Everything has an owner (ownership and borrowing)
-
-The big idea in Rust. A value has exactly one owner, and when the owner goes out of scope the value is freed (no garbage collector, no manual `free`). To use a value without taking it, you **borrow** it with `&`.
-
-```rust
-async fn list_games(&self, creds: &AccountCredentials) -> Result<...>
+```csharp
+public sealed record RemoteGame(RemoteGameRef Reference, string Title, string? IconUrl, DateTimeOffset? LastPlayed);
 ```
 
-`&self` and `&AccountCredentials` mean "I only look at these; the caller keeps them." If it were `creds: AccountCredentials` (no `&`), the function would *take* it and the caller couldn't use it afterwards. `&mut` is a borrow you can modify. Most compiler errors you'll hit early are about this, and the messages tell you what to change.
+A `record` gives you a constructor, properties, equality by value, `ToString()` and `with` copies for free. Records are for data; classes are for things with behaviour.
 
-### `enum` and `match`: enums that carry meaning
+### Nullable reference types: `string` vs `string?`
+The project turns on nullable checks. `string Title` promises "never null"; `string? IconUrl` says "may be null". The compiler warns if you dereference a maybe-null value without checking, and warnings are errors here, so null bugs are caught at build time.
 
-[`platform.rs`](../crates/core/src/platform.rs) defines `Platform` as an enum: a value that is exactly one of a fixed set of variants. `match` handles each case, and **the compiler refuses to compile if you forget one**. That's why adding a new platform later will point you to every place that needs updating:
+### `enum` and `switch` expressions
+`Platform.cs` maps each enum member to text with a `switch` expression:
 
-```rust
-pub fn display_name(self) -> &'static str {
-    match self {
-        Platform::Steam => "Steam",
-        Platform::Xbox => "Xbox",
-        // ...every variant must appear
-    }
-}
+```csharp
+public static string DisplayName(this Platform platform) => platform switch
+{
+    Platform.Steam => "Steam",
+    Platform.Xbox => "Xbox",
+    ...
+    _ => throw new ArgumentOutOfRangeException(...),
+};
 ```
 
-`matches!(self, Platform::Xbox | Platform::Playstation | ...)` is a shortcut that returns `true`/`false`.
+Add a new `Platform` and the compiler flags every non-exhaustive `switch` in the code as an error, so you can't forget one.
 
-### `Option` and `Result`: no `null`, no exceptions
+### Extension methods
+`public static string Id(this Platform platform)` lets you write `platform.Id()` as if it were a method on the enum. The `this` on the first parameter is what does that.
 
-- `Option<T>` is either `Some(value)` or `None`. Rust has no null. `description: Option<String>` in [`model.rs`](../crates/core/src/model.rs) says "may be missing", and the compiler forces you to handle both cases.
-- `Result<T, E>` is either `Ok(value)` or `Err(error)`. Functions that can fail return it, e.g. `Result<Vec<RemoteGame>, ProviderError>`. There are no exceptions.
-- The `?` operator means "if this is an error, return it from my function now; otherwise unwrap the value". Seen in [`secrets.rs`](../crates/core/src/secrets.rs): `let map = self.inner.lock().map_err(|e| e.to_string())?;`
-- `.unwrap()` means "crash if this is an error/None." Fine in tests, **avoided in app code** (project rule in `CLAUDE.md`).
+### Interfaces and default implementations
+`IAchievementProvider` is the contract every platform meets. Its `Watch(...)` method has a body (`=> null`) so providers that don't watch files don't need to implement it. That's a *default interface method*.
 
-### `struct`, `impl`, and `derive`
+### `async` / `await`, `Task`, `CancellationToken`
+Methods that wait on the network return `Task<T>` and are named `...Async`. `await` pauses the method without blocking a thread. Every provider method takes a `CancellationToken` so a sync can be cancelled cleanly (on disconnect, or quit). Rules of thumb: never call `.Result` or `.Wait()`, and avoid `async void` except for UI event handlers.
 
-A `struct` is a record of fields (like a TS interface/class). Methods live in an `impl` block. Lines like
+### `IDisposable`: cleaning up
+`Watch(...)` returns an `IDisposable`. Calling `Dispose()` (or a `using` block) stops the file watcher. Anything that holds a resource (files, timers, connections) implements it.
 
-```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RemoteGame { ... }
+### Primary constructors
+`public sealed class Secret(string value)` and `ToastViewModel(...)` take their constructor parameters right in the class declaration; the parameters are usable throughout the class body.
+
+### Small language features you'll see everywhere
+- `namespace X;` (file-scoped): the whole file is in that namespace
+- `sealed`: this class can't be inherited (our default: it's simpler and faster)
+- `var`: the compiler infers the type
+- `[..]` collection expressions and `[]` empty collections
+- `is`/`or` patterns: `platform is Platform.Xbox or Platform.PlayStation`
+- `$"..."` string interpolation
+
+### XAML, bindings and MVVM
+In `MainWindow.axaml`:
+
+```xml
+<TextBlock Text="{Binding SelectedNav.Title}" />
+<Button Content="Send test notification" Command="{Binding SendTestNotificationCommand}" />
 ```
 
-ask the compiler to **generate code** for you: `Debug` (printable with `{:?}`), `Clone` (`.clone()` copies it), `Serialize`/`Deserialize` (to/from JSON, via the `serde` crate). `#[serde(rename_all = "snake_case")]` controls how variants are spelled in JSON.
+`{Binding X}` connects a control to a property on the window's view-model (`x:DataType` names its type, so bindings are checked at compile time). When the property changes, the UI updates automatically.
 
-### `trait`: an interface
+### CommunityToolkit.Mvvm: less boilerplate
+In `MainWindowViewModel.cs`:
 
-[`provider.rs`](../crates/core/src/provider.rs) defines `trait AchievementProvider`: the list of methods every platform must provide (`authenticate`, `list_games`, `fetch_game`...). Steam, Xbox, etc. will each write `impl AchievementProvider for SteamProvider { ... }`. A trait method can have a default body (`watch` returns `None` unless overridden, since only file-based emulators need it).
-
-`Send + Sync` on the trait means "safe to share across threads." Needed because the sync engine runs providers concurrently.
-
-### `async`/`await` and `#[async_trait]`
-
-Same idea as JavaScript: `async fn` returns a "future" you `.await`. Rust needs a runtime (**tokio**, added in M1) to run them. Traits with `async fn` need the `#[async_trait]` attribute for now.
-
-### `dyn`, `Box`, `Arc`: trait objects and shared pointers
-
-You'll see `Arc<dyn Fn(RemoteGameRef) + Send + Sync>` and `Box<dyn Send + Sync>` in `provider.rs`. Read them as:
-- `dyn Trait`: "some value that implements this trait; I don't know which type until runtime."
-- `Box<T>`: put a value on the heap (needed when the size isn't known).
-- `Arc<T>`: a reference-counted pointer that many threads can share safely.
-
-The `ChangeCallback` is a function a file-watching provider calls when a file changes. The `WatchHandle` stops the watcher when dropped ("dropping" = the value going out of scope, Rust's automatic cleanup).
-
-### `Secret`: making a mistake impossible
-
-`Secret` in `model.rs` wraps a string and implements `Debug` by hand so it prints `Secret(<redacted>)`. If anyone logs a struct containing it, the token can't leak. There's a test proving it. This "newtype" pattern (a tiny wrapper type with a special rule) is common in Rust.
-
-### Modules and visibility
-
-Each file is a **module**. `pub mod error;` in `lib.rs` says "there's a file `error.rs`, and make it public." Items are private unless marked `pub`. `pub use platform::Platform;` re-exports so callers write `at_core::Platform` instead of `at_core::platform::Platform`. `use super::*;` (in tests) means "bring everything from the parent module into scope."
-
-### Tests live next to the code
-
-```rust
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn rarity_thresholds() { assert_eq!(Rarity::from_percent(1.4), Rarity::UltraRare); }
-}
+```csharp
+[ObservableProperty] private string _syncStatus = "Not synced yet";   // generates a SyncStatus property that notifies the UI
+[RelayCommand] private void SendTestNotification() { ... }            // generates SendTestNotificationCommand
 ```
 
-`#[cfg(test)]` means "only compile this when testing." Run them with `cargo test`. There are tests in `at-core`, `at-store` and `at-sync` already.
+These attributes trigger **source generators** that write the missing code at build time. That is why the class is `partial`: the generated half lives alongside yours.
 
-### Attributes: `#[...]` and `#![...]`
+### Style classes and resources (how the toast changes colour)
+`ToastView.axaml` gives its border the classes `uncommon`, `rare` or `ultra` depending on view-model flags. Each class redefines a single resource, `ToastAccent`, and the icon, title label and border all read that one resource, so one rule recolours the whole toast. Colours come from `Tokens.axaml`; don't hard-code them in views.
 
-Metadata for the compiler. `#[tauri::command]` marks a function the UI can call; `#[derive(...)]` generates code; `#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]` in `main.rs` hides the console window in release builds.
+### Platform-specific code
+`WindowsOverlayStyles.cs` calls Windows APIs (`user32.dll`) to add `WS_EX_TRANSPARENT` (click-through) and `WS_EX_NOACTIVATE` (never takes focus). It is guarded by `OperatingSystem.IsWindows()`, and it only changes the overlay's own window, never another process, which keeps it anti-cheat safe.
 
-### Macros: names ending in `!`
-
-`println!`, `matches!`, `include_str!`, `generate_handler![...]`, `generate_context!()`. They generate code at compile time. `include_str!("../migrations/0001_init.sql")` embeds that file's text into the program.
-
-## 5. How the pieces will fit at runtime (once built out)
-
-```
-Scheduler (at-sync) ── every N minutes ──► Provider.fetch_game() (at-providers)
-        │                                         │ returns RemoteGameAchievements
-        ▼                                         ▼
-   diff against DB (at-store)  ──► new unlock? ──► UnlockEvent ──► notification service
-                                    (skip on the                       │
-                                     first sync!)                      ▼
-                                                        overlay window shows Toast.tsx
-```
-
-Full detail: [ARCHITECTURE.md](ARCHITECTURE.md) §3 and [SPEC.md](SPEC.md) §5.
-
-## 6. Command cheat sheet
+## 5. Command cheat sheet
 
 | Command | Does |
 |---|---|
-| `cargo check --workspace` | Type-check everything fast, without producing a program. **Use this constantly.** |
-| `cargo build` | Compile (debug) |
-| `cargo test --workspace` | Run all Rust tests |
-| `cargo test -p at-core` | Test one crate |
-| `cargo fmt --all` | Auto-format |
-| `cargo clippy --workspace --all-targets` | Lint: catches common mistakes and non-idiomatic code |
-| `pnpm install` | Install frontend dependencies |
-| `pnpm tauri dev` | Run the whole app with hot reload (first run compiles for several minutes) |
-| `pnpm tauri build` | Produce an installer |
-| `pnpm lint` / `typecheck` / `test` / `build` | Frontend checks (these pass today) |
+| `dotnet build` | Compile everything (warnings are errors) |
+| `dotnet test` | Run all tests |
+| `dotnet test --filter "FullyQualifiedName~Migration"` | Run matching tests only |
+| `dotnet format` | Fix formatting/style; add `--verify-no-changes` to only check |
+| `dotnet run --project src/AchievementTracker.App` | Run the app |
+| `dotnet watch --project src/AchievementTracker.App` | Rebuild and restart on change |
+| `dotnet add <project> package <Name>` | Add a NuGet package |
 
-## 7. Installing what you need (Windows)
+## 6. Your first 30 minutes
 
-1. **Rust:** `winget install Rustlang.Rustup` (or https://rustup.rs). The repo's `rust-toolchain.toml` makes rustup fetch the right toolchain automatically on first use. Open a new terminal afterwards so `cargo` is on your PATH.
-2. **C++ build tools:** `winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"` (multi-GB download, needs admin).
-3. **WebView2:** already on Windows 11.
-4. **pnpm:** `npm i -g pnpm@9` (or `corepack enable`).
-4. Recommended VS Code extensions are listed in `.vscode/extensions.json` (rust-analyzer is the important one: inline errors and type hints).
+1. `dotnet build` and `dotnet test`. Both should pass.
+2. `dotnet run --project src/AchievementTracker.App`. The main window opens and a trophy icon appears in the tray. Click **Send test notification** (or use the tray menu) to see the toast; press it repeatedly to cycle through the four rarity tiers. Close the window: the app stays in the tray. Right-click the tray icon > **Quit** to exit.
+3. **Break something on purpose.** In `Platform.cs`, add `Gog` to the `Platform` enum and run `dotnet build`. The compiler lists every `switch` that must handle it. Then undo it (`git restore .`).
+4. Change the text in `MainWindowViewModel`'s `NavItems` and re-run to see it update.
+5. Open `docs/design/mockups/dashboard.html` in a browser: that's what the Dashboard view should look like. The Dashboard is a good first screen to build in M1.
 
-Then verify: `rustc --version`, `cargo --version`, `pnpm --version`.
+## 7. Known gaps and follow-ups
 
-## 8. Your first 30 minutes
+- **Memory:** the debug build showed ~174 MB with the main window open. The target is under 100 MB (SPEC N-02); measure a *release* build with the window hidden before tuning. ADR-0002 lists options.
+- **Display font:** Space Grotesk (for big numbers) is not bundled yet; everything uses Inter.
+- **Single instance, autostart, credential store, queueing/stacking of toasts:** planned for M1.
+- **Overlay not yet verified over a real game** or across multiple monitors with different DPI (roadmap Spike A).
+- CI has not run on GitHub yet.
 
-1. `pnpm install`
-2. `cargo check --workspace`. It should pass. The first run downloads and compiles Tauri, so it takes a minute or two; later runs are fast.
-3. `cargo test --workspace` and confirm the tests pass.
-4. `pnpm tauri dev` and confirm the window opens (a placeholder shell). The overlay window is hidden by design. The first launch compiles the app (about 20 seconds after `cargo check` has run); later launches are quicker.
-5. **Break something on purpose.** In `crates/core/src/platform.rs`, add a new variant to `Platform` (say `Gog`) and run `cargo check --workspace`. The compiler will list every `match` that must handle it, which is the exact behaviour described in §4. Then undo the change (`git restore .`).
-6. Try the loop: change the `app_version` command in `src-tauri/src/commands/mod.rs`, re-run, and see it rebuild.
+## 8. Learning resources
 
-## 9. Learning resources
+- **C# documentation and tour:** https://learn.microsoft.com/dotnet/csharp/
+- **Avalonia docs** (XAML, styles, bindings): https://docs.avaloniaui.net/
+- **CommunityToolkit.Mvvm:** https://learn.microsoft.com/dotnet/communitytoolkit/mvvm/
+- **async/await in C#:** https://learn.microsoft.com/dotnet/csharp/asynchronous-programming/
+- **xUnit:** https://xunit.net/
 
-- **The Rust Programming Language** ("the Book"): https://doc.rust-lang.org/book/. Read chapters 1-10 first; ownership is chapter 4.
-- **Rustlings**: small exercises that teach by fixing compiler errors: https://github.com/rust-lang/rustlings
-- **Rust by Example**: https://doc.rust-lang.org/rust-by-example/
-- **Tauri 2 docs**: https://tauri.app/
-- **Tokio tutorial** (for async, needed in M1): https://tokio.rs/tokio/tutorial
-- Rust standard library docs: https://doc.rust-lang.org/std/. Run `cargo doc --open` to browse docs for this project and its dependencies.
+## 9. Working with Claude on this project
 
-## 10. Working with Claude on this project
-
-- `CLAUDE.md` holds the project rules Claude follows. Read them: they are also good rules for you.
+- `CLAUDE.md` holds the project rules Claude follows; they're good rules for you too.
 - Project skills in `.claude/skills/` automate recurring tasks: `add-provider`, `add-emulator-adapter`, `db-migration`, `write-adr`.
-- When learning, ask Claude to explain compiler errors or code before fixing them, and don't just accept fixes you don't understand.
 
-## 11. Glossary
+## 10. Glossary
 
 | Term | Meaning |
 |---|---|
-| Crate | A Rust package (library or program) |
-| Workspace | Several crates built together |
-| Trait | An interface: a set of methods a type must implement |
-| Derive | Ask the compiler to generate common code for a type |
-| Borrow (`&`) | Use a value without taking ownership |
-| `Option` / `Result` | Rust's null-safe "maybe" and "success or error" types |
-| Macro (`name!`) | Code that writes code at compile time |
-| Clippy | Rust's linter |
-| Tauri | Framework that wraps a web UI in a small native app with a Rust backend |
-| IPC | Messages between the UI and the Rust side |
+| Solution / project | `.sln` groups `.csproj` projects; each project builds to one assembly |
+| NuGet | .NET's package manager (like npm) |
+| Record | A data type with value equality, defined in one line |
+| Nullable reference types | Compiler checks that distinguish `string` from `string?` |
+| MVVM | View (XAML) - ViewModel (state and commands) - Model (domain) |
+| XAML / AXAML | The markup language used to describe UI |
+| Source generator | Code that writes code at build time (used by CommunityToolkit.Mvvm) |
+| Avalonia | Cross-platform XAML UI framework for .NET |
 | Provider | An adapter for one platform (Steam, Xbox, ...) |
 | Baseline | The first sync of a game, which stores existing unlocks silently |
