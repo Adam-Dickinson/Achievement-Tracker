@@ -2,7 +2,7 @@
 
 A lightweight desktop app that tracks your achievements and trophies across **PlayStation, Xbox, Steam, Epic Games, Ubisoft Connect, EA** and **emulators** in one place. It runs quietly in the system tray and pops up a notification the moment you unlock something, whichever platform it came from.
 
-> **Status:** Pre-alpha. The project scaffold, docs and UI mockups are in place, and the tray icon and click-through unlock toast work; features start at [roadmap](docs/ROADMAP.md) milestone M1.
+> **Status:** Pre-alpha. The project scaffold, docs and UI mockups are in place, and the tray icon and animated, click-through unlock toast work; features start at [roadmap](docs/ROADMAP.md) milestone M1.
 
 ## Goals
 
@@ -30,7 +30,7 @@ Details and risks for each: [docs/PROVIDERS.md](docs/PROVIDERS.md).
 
 ## Tech stack
 
-**C# on .NET 10** with **Avalonia** for the UI, SQLite for storage. One language for the whole app. Rationale: [ADR-0002](docs/adr/0002-csharp-dotnet-avalonia.md) (which superseded a Tauri/Rust plan, [ADR-0001](docs/adr/0001-tech-stack.md)).
+**Electron** (Node.js main process) with a **React + TypeScript** UI, styled with Tailwind CSS and animated with Motion; SQLite (Node's built-in `node:sqlite`) for storage. One language (TypeScript) for the whole app. Rationale: [ADR-0003](docs/adr/0003-electron-typescript-react.md) (which superseded earlier C# and Tauri plans: [ADR-0002](docs/adr/0002-csharp-dotnet-avalonia.md), [ADR-0001](docs/adr/0001-tech-stack.md)).
 
 ## Documentation
 
@@ -42,23 +42,29 @@ Details and risks for each: [docs/PROVIDERS.md](docs/PROVIDERS.md).
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, folder structure |
 | [docs/PROVIDERS.md](docs/PROVIDERS.md) | Per-platform integration notes and risks |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Milestones and task breakdown |
-| [docs/SCAFFOLD-GUIDE.md](docs/SCAFFOLD-GUIDE.md) | What's in the scaffold, how to run it, and a C# primer |
+| [docs/SCAFFOLD-GUIDE.md](docs/SCAFFOLD-GUIDE.md) | What's in the scaffold, how to run it, and a React + Electron primer |
 | [docs/adr/](docs/adr/) | Architecture decision records |
 | [CLAUDE.md](CLAUDE.md) | Guide for Claude Code working in this repo |
 
 ## Getting started
 
-Prerequisites: the [.NET 10 SDK](https://dotnet.microsoft.com/download) (Windows 10/11; macOS and Linux should work for everything except the Windows-only overlay styles and credential store).
+Prerequisites: [Node.js](https://nodejs.org) 22+ and [pnpm](https://pnpm.io) 9 (`npm i -g pnpm@9`). Windows is the primary target.
 
 ```bash
-dotnet build
-dotnet test
-dotnet run --project src/AchievementTracker.App   # tray icon + main window; tray menu > Send test notification
+pnpm install
+pnpm dev          # run the app with hot reload (tray icon + main window)
+pnpm test         # unit and component tests
+pnpm lint && pnpm typecheck
+pnpm build        # production build into ./out (run it with: pnpm start)
 ```
+
+In the app, use the **Send test notification** button (or the tray menu) to see an unlock toast.
+
+> If the app fails to start with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`, the environment variable `ELECTRON_RUN_AS_NODE` is set (VS Code's extension host sets it). Unset it: `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell.
 
 ## Contributing
 
-Adding a platform or emulator? Read [docs/PROVIDERS.md](docs/PROVIDERS.md) for what's known about each platform and [docs/SPEC.md](docs/SPEC.md) §4 for the provider interface, then implement `IAchievementProvider` in `src/AchievementTracker.Providers`. Significant decisions get an ADR in [docs/adr/](docs/adr/) (use ADR-0002 as the template).
+Adding a platform or emulator? Read [docs/PROVIDERS.md](docs/PROVIDERS.md) for what's known about each platform and [docs/SPEC.md](docs/SPEC.md) §4 for the provider interface, then implement `AchievementProvider` in `src/main/providers`. Significant decisions get an ADR in [docs/adr/](docs/adr/) (use ADR-0003 as the template).
 
 ## Legal and safety notes
 

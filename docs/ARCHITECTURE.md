@@ -1,45 +1,50 @@
 # Architecture
 
-Stack: C# on .NET 10 with Avalonia. Decision and alternatives: [ADR-0002](adr/0002-csharp-dotnet-avalonia.md).
+Stack: Electron, TypeScript and React. Decision and alternatives: [ADR-0003](adr/0003-electron-typescript-react.md).
 
 ## 1. System overview
 
 ```
-┌──────────────────────────── AchievementTracker.exe (one process) ────────────────────────────┐
-│                                                                                              │
-│  ┌──────────────── Core services ────────────────┐      ┌──────────── Avalonia UI ─────────┐ │
-│  │                                               │      │                                  │ │
-│  │  Providers ──► Sync engine ──► Store          │      │  MainWindow (Dashboard, Library, │ │
-│  │  (steam, xbox, psn, ra,        (SQLite)       │      │   Activity, Accounts, Settings)  │ │
-│  │   rpcs3, ...)      │                          │ VMs  │                                  │ │
-│  │      ▲             ▼                          │◄────►│  OverlayWindow (transparent,     │ │
-│  │  Watchers     UnlockEvent                     │      │   click-through, topmost)        │ │
-│  │  (FileSystemWatcher)  │                       │      │   └─ ToastView                   │ │
-│  │      ▲                ▼                       │      │                                  │ │
-│  │  Game detector   Notification service ────────┼─────►│  Tray icon + menu                │ │
-│  │  (Process list)  (queue, DND, sound)          │      └──────────────────────────────────┘ │
-│  └───────────────────────────────────────────────┘                                           │
-└──────────────────────────────────────────────────────────────────────────────────────────────┘
-      │ HTTPS                       │ file system                │ Windows Credential Manager
-      ▼                             ▼                            ▼
+┌──────────────────────────────── Electron app ────────────────────────────────┐
+│                                                                              │
+│  MAIN PROCESS (Node.js)                       RENDERER PROCESSES (Chromium)  │
+│  ┌────────────────────────────────────┐       ┌────────────────────────────┐ │
+│  │ Providers ─► Sync engine ─► Store  │       │ Main window (React)        │ │
+│  │ (steam, xbox, psn, ra,     (SQLite)│  IPC  │  Dashboard, Library, ...   │ │
+│  │  rpcs3, ...)   │                   │◄─────►│                            │ │
+│  │      ▲         ▼                   │       │ Overlay window (React)     │ │
+│  │  Watchers   UnlockEvent            │       │  transparent, click-through│ │
+│  │  (fs.watch)     │                  │       │  └─ <Toast>                │ │
+│  │      ▲          ▼                  │       └────────────────────────────┘ │
+│  │  Game detector  Overlay service ───┼─────────────────►                    │
+│  │  (process list) (queue, DND)       │   preload script = the only bridge   │
+│  │                                    │   (window.api, sandboxed)            │
+│  │ Tray · single instance · windows   │                                      │
+│  └────────────────────────────────────┘                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+      │ HTTPS                      │ file system              │ safeStorage (DPAPI)
+      ▼                            ▼                          ▼
 Steam / Xbox / PSN / RA APIs   RPCS3 / Xenia / Steam files   Tokens & API keys
 ```
 
-It is a **single process**. Closing the main window only hides it (`ShutdownMode.OnExplicitShutdown`); the tray icon, watchers, sync tasks and overlay keep running. "Quit" in the tray menu is the only way to exit.
+The **main process** owns everything with side effects: windows, tray, database, network, files. The **renderer** processes only draw UI. They talk over IPC through the **preload** script, which exposes a tiny typed API as `window.api`; the UI has no Node.js access.
 
-## 2. Projects
+Closing the main window destroys it (freeing its renderer, ~90 MB). The tray icon, the hidden overlay window and (from M1) the watchers and sync tasks keep running. "Quit" in the tray menu is the only way to exit.
 
-| Project | Responsibility | Depends on |
+## 2. Code areas
+
+| Folder | Runs in | Responsibility |
 |---|---|---|
-| `AchievementTracker.Core` | Domain records (`RemoteGame`, `UnlockEvent`...), `Platform`, `Rarity`, `IAchievementProvider`, `ProviderException`, `Secret`, `ISecretStore` | nothing |
-| `AchievementTracker.Store` | SQLite access, embedded SQL migrations, `MigrationRunner`. **The only place SQL lives.** | Core |
-| `AchievementTracker.Providers` | One namespace per platform/emulator implementing `IAchievementProvider` | Core |
-| `AchievementTracker.Sync` | Scheduler, diff engine (baseline rule), backoff, game detector, unlock events | Core, Store, Providers |
-| `AchievementTracker.App` | Avalonia shell: windows, view-models, tray, overlay, notification service | all of the above |
-| `AchievementTracker.Tests` | xUnit tests for everything except UI | all of the above |
+| `src/shared` | both | Domain types (`Platform`, `Rarity`, `RemoteGame`, `UnlockEvent`...), the `AchievementProvider` interface, `ProviderError`, `Secret`, `SecretStore`, and the **IPC contract** (`ipc.ts`). Depends on nothing else in the repo. |
+| `src/main/store` | main | SQLite access, SQL migrations, migration runner. **The only place SQL lives.** |
+| `src/main/providers` | main | One folder per platform/emulator implementing `AchievementProvider` |
+| `src/main/sync` | main | Scheduler, diff engine (baseline rule), backoff, game detector |
+| `src/main` (root files) | main | App lifecycle (`index.ts`), windows, tray, overlay service, IPC handlers |
+| `src/preload` | preload (sandboxed) | Builds `window.api` from the IPC contract |
+| `src/renderer` | renderer | The React UI: `app/` shell, `features/*` screens, `components/` shared UI, `overlay/` toast, `styles/` |
 
 ### Dependency rule
-`Core` ← `Store`, `Providers` ← `Sync` ← `App`. `Core` depends on nothing internal. Providers never touch the store, and views never talk to providers directly (they go through view-models and services).
+`shared` ← `main/store`, `main/providers` ← `main/sync` ← `main` (app). The renderer imports only `shared` (types, rarity helpers) and never anything from `main`. Providers never touch the store; the UI never calls providers (it asks the main process through IPC).
 
 ## 3. Key data flows
 
@@ -47,90 +52,100 @@ It is a **single process**. Closing the main window only hides it (`ShutdownMode
 1. The scheduler fires for `(account, scope)`
 2. The provider fetches remote state; the sync engine diffs it against the store
 3. New unlocks are inserted in one transaction; **after commit** an `UnlockEvent` is published
-4. The notification service applies DND/settings and shows the toast on the overlay window
-5. The same event updates the main window's view-models (marshalled to the UI thread)
+4. The overlay service applies DND/settings and sends the toast to the overlay window over IPC
+5. The same event is pushed to the main window so its lists update live
 
 ### Unlock detection (local watcher, e.g. RPCS3)
-A `FileSystemWatcher` notices a change, debounces (200-500 ms), and the provider signals `onChange(gameRef)`. The sync engine re-fetches and diffs exactly as above (steps 2-5). Watchers never emit unlocks themselves.
+`fs.watch` notices a change, the provider debounces (200-500 ms) and signals `onChange(gameRef)`. The sync engine re-fetches and diffs exactly as above (steps 2-5). Watchers never emit unlocks themselves.
 
 ### Auth (OAuth-style, e.g. Xbox)
-The Accounts view-model asks the service to begin the flow; the app opens the system browser (loopback redirect) or a short-lived auth window, exchanges tokens in the service layer, stores secrets in the credential store, creates the account row and disposes the flow. Tokens never reach views.
+The UI asks the main process to begin the flow; the main process opens the system browser (loopback redirect) or a short-lived auth window, exchanges tokens itself, stores secrets via `SecretStore`, creates the account row and closes the flow. Tokens never reach the renderer.
+
+### A test notification today (implemented)
+Button click in React → `window.api.sendTestNotification()` → preload `ipcRenderer.invoke('notifications:send-test')` → main `ipc.ts` handler (validates the sender) → `OverlayService.show()` positions the overlay bottom-right, shows it without focus, and sends `overlay:show-toast` → the overlay's React `OverlayApp` receives it via `window.api.onToast` and animates a `<Toast>` in, then out after its duration → the main process hides the window.
 
 ## 4. Concurrency model
 
-- `async`/`await` end to end; **one supervised long-running task per (account, provider)** so failures are isolated (N-10)
-- `System.Threading.Channels` between sync and the notification service: bounded, so a slow UI never blocks sync
-- SQLite in WAL mode; one writer at a time, reads concurrent
-- `CancellationToken` on every provider call; cancelled on disconnect and on quit
-- UI updates go through `Dispatcher.UIThread`; view-models never block it
+- Everything in main is `async`/`await` on the Node event loop; **one supervised long-running task per (account, provider)** so a failing provider can't affect others (N-10)
+- Every provider call takes an `AbortSignal` (cancel on disconnect and on quit)
+- The database is SQLite in WAL mode via the synchronous `node:sqlite` API. Keep queries small and batch writes in transactions so the event loop is never blocked for long (move to a worker thread if profiling shows a need).
+- The renderer never blocks main: it only awaits IPC calls
 
 ## 5. Overlay window details
 
-- One `OverlayWindow`, created lazily on first toast and then reused (hidden between toasts)
-- Avalonia properties: `WindowDecorations="None"`, `Background="Transparent"`, `TransparencyLevelHint="Transparent"`, `Topmost`, `ShowInTaskbar="False"`, `ShowActivated="False"`, `CanResize="False"`
-- `WindowsOverlayStyles.Apply(hwnd)` adds `WS_EX_TRANSPARENT` (click-through), `WS_EX_NOACTIVATE` (never takes focus) and `WS_EX_TOOLWINDOW` (hidden from Alt+Tab) via `SetWindowLongPtr`. It only touches our own window.
-- `OverlayService` positions the window in the bottom-right of the primary monitor's **working area**, using pixel coordinates scaled by the monitor's DPI factor. Corner and monitor selection are settings (M4).
-- A `DispatcherTimer` hides the window after the configured duration
-- Exclusive-fullscreen games render above normal windows, so a fallback native Windows toast is planned (DESIGN §6)
-- The toast (`ToastView`) picks its accent colour with style classes (`uncommon`, `rare`, `ultra`) driven by view-model flags; each class redefines one `ToastAccent` resource
+- One `BrowserWindow`, **created hidden at startup** (so a toast appears instantly) and reused
+- Options: `transparent`, `frame: false`, `alwaysOnTop` at the `screen-saver` level, `skipTaskbar`, `focusable: false`, `hasShadow: false`, not resizable/movable
+- `setIgnoreMouseEvents(true)` makes it click-through. Verified on Windows: the window carries `WS_EX_TRANSPARENT` (click-through) and `WS_EX_NOACTIVATE` (never takes focus). Shown with `showInactive()` so it never activates.
+- `OverlayService` positions it in the bottom-right of the primary display's **work area** (DIP coordinates from `screen.getPrimaryDisplay()`), 16 px from the edges. Corner and monitor selection are settings (M4).
+- A timer hides the window after `durationMs` plus the exit animation
+- Exclusive-fullscreen games render above normal windows, so a fallback native Windows notification is planned (DESIGN §6)
+- The toast (`overlay/Toast.tsx`) picks its colours from a per-rarity lookup table and animates with Motion (slide + fade; a one-off shimmer for Ultra Rare; only a fade if the OS requests reduced motion)
+- Nothing is injected into any other process: the overlay only changes its own window
 
 ## 6. Folder structure
 
 ```
 achievement-tracker/
-├── AchievementTracker.sln
-├── Directory.Build.props            # shared: net10.0, nullable, warnings as errors, analyzers
-├── .editorconfig                    # formatting + naming rules (enforced in build)
-├── .github/workflows/ci.yml         # restore, format check, build, test
+├── package.json  pnpm-lock.yaml
+├── electron.vite.config.ts          # build config for main, preload and renderer (2 HTML entries)
+├── vitest.config.ts                 # test config (Node by default; UI tests opt in to jsdom)
+├── tsconfig.json  tsconfig.node.json  tsconfig.web.json
+├── eslint.config.mjs  .prettierrc.json  .editorconfig
+├── resources/                       # app icon (png, ico, svg)
+├── .github/workflows/ci.yml         # format check, lint, typecheck, test, build
 ├── docs/
 │   ├── DESIGN.md  SPEC.md  ARCHITECTURE.md  PROVIDERS.md  ROADMAP.md  SCAFFOLD-GUIDE.md
 │   ├── adr/                         # architecture decision records
-│   └── design/                      # README + mockups/*.html
+│   └── design/                      # README + mockups/*.html (reference designs)
 ├── src/
-│   ├── AchievementTracker.Core/
-│   │   ├── Platform.cs  Rarity.cs  Secret.cs  Models.cs
-│   │   ├── IAchievementProvider.cs  ProviderException.cs  ISecretStore.cs
-│   ├── AchievementTracker.Store/
-│   │   ├── Migrations/0001_init.sql          # embedded resources, forward-only
-│   │   └── Migrations.cs  MigrationRunner.cs
-│   ├── AchievementTracker.Providers/
-│   │   ├── Steam/  Xbox/  PlayStation/  RetroAchievements/  Rpcs3/
-│   │   └── Xenia/  Epic/  Ubisoft/  Ea/  LocalFile/          # stubs for now
-│   ├── AchievementTracker.Sync/
-│   │   └── Backoff.cs                        # + Scheduler, Diff, GameDetector in M1/M2
-│   └── AchievementTracker.App/
-│       ├── Program.cs  App.axaml(.cs)        # startup, tray icon, lifetime
-│       ├── Themes/Tokens.axaml               # design tokens (colours, radii, shadows, glyphs)
-│       ├── Assets/                           # app icon
-│       ├── Views/                            # MainWindow, OverlayWindow, ToastView
-│       ├── ViewModels/                       # MainWindowViewModel, ToastViewModel, NavItem
-│       └── Services/                         # OverlayService, WindowsOverlayStyles
-└── tests/
-    ├── AchievementTracker.Tests/             # xUnit
-    └── fixtures/                             # sanitized provider responses / sample trophy files
+│   ├── shared/                      # runs in main AND renderer
+│   │   ├── platform.ts  rarity.ts  secret.ts  secret-store.ts
+│   │   ├── models.ts  errors.ts  provider.ts
+│   │   └── ipc.ts                   # channel names, payload types, the window.api interface
+│   ├── main/
+│   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC wiring
+│   │   ├── windows.ts  tray.ts  overlay-service.ts  ipc.ts  sample-toasts.ts
+│   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts
+│   │   ├── sync/                    # backoff.ts (+ scheduler, diff, detector in M1/M2)
+│   │   └── providers/               # steam/ xbox/ playstation/ retroachievements/ rpcs3/
+│   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (stubs)
+│   ├── preload/index.ts             # exposes window.api
+│   └── renderer/
+│       ├── index.html  overlay.html # one entry per window
+│       └── src/
+│           ├── main.tsx  env.d.ts   # window entry; types for window.api
+│           ├── app/                 # App.tsx, Sidebar.tsx, navigation.ts
+│           ├── overlay/             # main.tsx, OverlayApp.tsx, Toast.tsx
+│           ├── components/          # Button.tsx, TrophyIcon.tsx (shared UI)
+│           ├── features/            # dashboard/ library/ game-detail/ activity/
+│           │                        #   accounts/ settings/ onboarding/   (built in M1+)
+│           └── styles/index.css     # design tokens (Tailwind @theme) + base styles
+└── tests/fixtures/                  # sanitized provider responses / sample trophy files
 ```
 
-Planned additions: `src/AchievementTracker.App/Views/{Dashboard,Library,GameDetail,Activity,Accounts,Settings,Onboarding}` with matching view-models, mirroring the mockups in `docs/design/mockups/`.
+Tests live next to the code they test (`*.test.ts`, `*.test.tsx`).
 
 ## 7. Technology summary
 
 | Concern | Choice |
 |---|---|
-| Runtime / language | .NET 10 (LTS), C# (latest), nullable enabled, warnings as errors |
-| UI | Avalonia 12 (XAML, compiled bindings), Fluent theme, Inter font |
-| MVVM | CommunityToolkit.Mvvm (`[ObservableProperty]`, `[RelayCommand]`) |
-| DB | SQLite via `Microsoft.Data.Sqlite`; plain SQL migrations (add Dapper if row mapping gets tedious) |
-| Secrets | Windows Credential Manager behind `ISecretStore` (M1) |
-| HTTP | `HttpClient` via `IHttpClientFactory` (M1) |
-| File watching | `FileSystemWatcher` + debounce |
-| Process detection | `System.Diagnostics.Process` |
-| Binary parsing | `BinaryPrimitives` / `Span<byte>` for trophy files |
-| Logging | `Microsoft.Extensions.Logging` |
-| Testing | xUnit; stubbed `HttpMessageHandler`; Avalonia headless for UI |
-| Tooling | `dotnet format`, built-in analyzers, GitHub Actions |
+| Shell | Electron 44 (Chromium 152, Node 24) |
+| Language | TypeScript 6.0, strict, `noUncheckedIndexedAccess` |
+| UI | React 19, Tailwind CSS 4 (tokens in `@theme`), Motion (animation), lucide-react (icons) |
+| Fonts | Inter and Space Grotesk, bundled with `@fontsource-variable/*` |
+| Build | electron-vite 5 on Vite 7 |
+| DB | `node:sqlite` (built into Node), plain SQL migrations |
+| Secrets | Electron `safeStorage` behind `SecretStore` (M1) |
+| HTTP | Node `fetch` (M1) |
+| File watching | `fs.watch` + debounce |
+| Process detection | `tasklist` / a small library (M2) |
+| Testing | Vitest; Testing Library + jsdom for UI |
+| Quality | ESLint (zero warnings), Prettier, GitHub Actions |
+| Packaging | electron-builder (M6) |
 
 ## 8. Extension points
 
-- **New platform:** implement `IAchievementProvider`, register it, add a connect view under `Views/Accounts`. Steps: research the platform first (PROVIDERS.md), then implement the interface with fixtures and tests.
-- **New emulator (file-based):** implement the provider with `Watch()` plus a path auto-detector. Parse defensively and keep the diff/baseline logic in `Sync`.
-- **New notification style:** the toast is an ordinary Avalonia `UserControl` (`ToastView`), so themes are XAML styles only.
+- **New platform:** add `src/main/providers/<name>/` implementing `AchievementProvider`, add the id to `PLATFORMS`/`PLATFORM_INFO` (the compiler lists what else needs updating), register it, and add a connect view under `renderer/src/features/accounts/`.
+- **New emulator (file-based):** implement the provider with `watch()` plus a path auto-detector.
+- **New IPC call:** add the channel and types to `shared/ipc.ts`, handle it in `main/ipc.ts`, expose it in `preload/index.ts`. TypeScript flags any of the three you forget.
+- **New notification style:** the toast is an ordinary React component, so themes are Tailwind classes only.

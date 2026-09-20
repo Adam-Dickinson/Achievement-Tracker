@@ -1,6 +1,8 @@
 # ADR-0002: C# / .NET with Avalonia
 
-- **Status:** Accepted
+> Historical record. The project moved to Electron + TypeScript + React in ADR-0003 (a few hours after this decision, before any feature work). Kept for the comparison of options.
+
+- **Status:** Superseded by [ADR-0003](0003-electron-typescript-react.md)
 - **Date:** 2026-09-20
 - **Supersedes:** [ADR-0001](0001-tech-stack.md)
 

@@ -1,20 +1,16 @@
-# --- .NET / build output ---
-bin/
-obj/
-[Dd]ebug/
-[Rr]elease/
-publish/
-artifacts/
-*.user
-*.suo
-*.userprefs
-.vs/
-*.log
-TestResults/
-*.trx
+# --- Node / build output ---
+node_modules/
+out/
+dist/
+release/
 coverage/
-*.nupkg
-*.snupkg
+*.tsbuildinfo
+.eslintcache
+.vite/
+.pnpm-store/
+npm-debug.log*
+pnpm-debug.log*
+*.log
 
 # --- Installers / packaged builds ---
 *.msi
@@ -23,6 +19,7 @@ coverage/
 *.dmg
 *.AppImage
 *.deb
+*.blockmap
 
 # --- Local data & secrets (NEVER commit) ---
 .env
@@ -33,8 +30,6 @@ coverage/
 *.pfx
 secrets/
 credentials*.json
-appsettings.Development.json
-appsettings.Local.json
 # Local dev databases and sync caches
 *.db
 *.db-shm
@@ -50,7 +45,6 @@ tests/fixtures/_raw/
 .idea/
 *.swp
 *.swo
-*.DotSettings.user
 
 # --- OS ---
 .DS_Store

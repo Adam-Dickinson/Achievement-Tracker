@@ -62,11 +62,11 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | ID | Requirement | Target |
 |---|---|---|
 | N-01 | Idle CPU (tray, no sync) | < 0.5% average |
-| N-02 | Idle memory, main window closed | < 100 MB working set (see ADR-0002 for the measured baseline and tuning options) |
+| N-02 | Idle memory in the tray (main window closed) | ≤ 200 MB private (measured baseline: ~170 MB, 4 processes; see ADR-0003 for tuning options) |
 | N-03 | Unlock-to-toast latency, local providers | < 2 s |
 | N-04 | Unlock-to-toast latency, polling providers | ≤ poll interval + 5 s |
-| N-05 | Installer size | < 30 MB |
-| N-06 | Cold start to tray | < 2 s |
+| N-05 | Installer size | < 120 MB (Electron bundles Chromium) |
+| N-06 | Cold start to tray | < 3 s |
 | N-07 | Handles libraries of 5,000+ games / 200,000+ achievements smoothly (virtualized lists) | |
 | N-08 | Works offline: shows cached data, queues sync | |
 | N-09 | No game process injection or memory reading, ever | |
@@ -154,32 +154,31 @@ CREATE INDEX idx_unlock_detected ON unlock(detected_at DESC);
 CREATE INDEX idx_pgame_game ON platform_game(game_id);
 ```
 
-## 4. Provider interface (C#)
+## 4. Provider interface (TypeScript)
 
-```csharp
-public interface IAchievementProvider
-{
-    Platform Platform { get; }
-    ProviderCapabilities Capabilities { get; }   // LocalWatch, Polling, GlobalRarity, OAuth, Unofficial
+```ts
+export interface AchievementProvider {
+  readonly platform: Platform
+  readonly capabilities: ProviderCapabilities // localWatch, polling, globalRarity, oauth, unofficial
 
-    Task<AccountCredentials> AuthenticateAsync(AuthInput input, CancellationToken ct = default);
-    Task<AccountInfo> ValidateAsync(AccountCredentials credentials, CancellationToken ct = default);
+  authenticate(input: AuthInput, signal?: AbortSignal): Promise<AccountCredentials>
+  validate(credentials: AccountCredentials, signal?: AbortSignal): Promise<AccountInfo>
 
-    /// All games with any achievement data for this account.
-    Task<IReadOnlyList<RemoteGame>> ListGamesAsync(AccountCredentials credentials, CancellationToken ct = default);
+  /** All games with any achievement data for this account. */
+  listGames(credentials: AccountCredentials, signal?: AbortSignal): Promise<readonly RemoteGame[]>
 
-    /// Full schema + unlock state for one game.
-    Task<RemoteGameAchievements> FetchGameAsync(AccountCredentials credentials, RemoteGameRef game, CancellationToken ct = default);
+  /** Full schema + unlock state for one game. */
+  fetchGame(credentials: AccountCredentials, game: RemoteGameRef, signal?: AbortSignal): Promise<RemoteGameAchievements>
 
-    /// Optional: event-driven sources signal changes instead of being polled. Dispose to stop.
-    IDisposable? Watch(AccountCredentials credentials, Action<RemoteGameRef> onChange) => null;
+  /** Optional: event-driven sources signal changes instead of being polled. Returns a stop function. */
+  watch?(credentials: AccountCredentials, onChange: (game: RemoteGameRef) => void): () => void
 }
 ```
 
-The real definitions are in `src/AchievementTracker.Core/IAchievementProvider.cs`.
+The real definitions are in `src/shared/provider.ts`.
 
-- Providers are **pure adapters**: they return normalized `Remote*` records and know nothing about SQLite or notifications
-- Failures are `ProviderException` with a `Kind`: `AuthExpired`, `RateLimited` (with `RetryAfter`), `Network`, `Parse`, `Unsupported`, `Other`. The sync engine maps these to backoff, re-auth prompts or UI status. `IsRetryable` is true for `Network` and `RateLimited`.
+- Providers are **pure adapters**: they return normalized `Remote*` objects and know nothing about SQLite or notifications
+- Failures are thrown as `ProviderError` with a `kind`: `auth_expired`, `rate_limited` (with `retryAfterMs`), `network`, `parse`, `unsupported`, `other`. The sync engine maps these to backoff, re-auth prompts or UI status. `isRetryable` is true for `network` and `rate_limited`.
 - Watchers only signal "something changed for this game"; the sync engine re-fetches and diffs, so the baseline rule and de-duplication live in one place
 - Each provider has fixture-based tests (recorded, sanitized responses in `tests/fixtures/`)
 
@@ -201,29 +200,34 @@ for each due (account, scope):
 
 Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watcher events are safe.
 
-## 6. UI services and view-models
+## 6. IPC contract (main process ⇄ UI)
 
-The app is a single .NET process, so there is no IPC layer: view-models call application services directly (constructor-injected). Initial surface:
+The UI has no Node.js access. It calls the main process through `window.api`, which the preload script builds from the contract in `src/shared/ipc.ts` (channel names and payload types shared by all three sides). Every handler validates that the sender is one of our own pages.
 
-**Application services** (in `Sync` / `App`, exposed to view-models)
-| Operation | Description |
+**Implemented**
+| API (`window.api`) | Channel | Description |
+|---|---|---|
+| `getAppInfo()` | `app:get-info` | App version and database schema version |
+| `sendTestNotification()` | `notifications:send-test` | Show the next sample toast (cycles rarity tiers) |
+| `onToast(listener)` | `overlay:show-toast` (main → overlay) | Subscribe to toasts; returns an unsubscribe function |
+
+**Planned** (added in the milestones that need them)
+| API | Description |
 |---|---|
-| `ListAccounts()` | Accounts + status |
-| `BeginConnect(platform)` / `CompleteConnect(platform, input)` | Auth flow (takes an `AuthInput`) |
-| `DisconnectAccount(id)` | Remove account (option: keep data) |
-| `ListGames(filter, sort, page)` | Library query |
-| `GetGame(id)` | Game + platform entries |
-| `ListAchievements(platformGameId, filter)` | |
-| `ListActivity(cursor, limit)` | Unlock timeline |
-| `GetDashboardStats()` | Aggregates |
-| `SyncNow(scope)` | Manual sync |
-| `MergeGames(ids)` / `SplitGame(id)` | Linking |
-| `GetSettings()` / `UpdateSettings(patch)` | |
-| `PreviewNotification(rarity)` | Implemented: `MainWindowViewModel.SendTestNotificationCommand` |
-| `ExportData(format)` | |
+| `listAccounts()` | Accounts + status |
+| `beginConnect(platform)` / `completeConnect(platform, input)` | Auth flow |
+| `disconnectAccount(id)` | Remove account (option: keep data) |
+| `listGames(filter, sort, page)` | Library query |
+| `getGame(id)` | Game + platform entries |
+| `listAchievements(platformGameId, filter)` | |
+| `listActivity(cursor, limit)` | Unlock timeline |
+| `getDashboardStats()` | Aggregates |
+| `syncNow(scope)` | Manual sync |
+| `mergeGames(ids)` / `splitGame(id)` | Linking |
+| `getSettings()` / `updateSettings(patch)` | |
+| `exportData(format)` | |
 
-**Events** (plain C# events / `IObservable`, marshalled to the UI thread by the view-model)
-`SyncStatusChanged` (per-account progress/state), `AchievementUnlocked`, `AccountStatusChanged`, `SettingsChanged`.
+**Events** (main → UI, via `webContents.send`): `sync:status` (per-account progress/state), `achievement:unlocked`, `account:status-changed`, `settings:changed`.
 
 ## 7. Settings (defaults)
 
@@ -244,25 +248,28 @@ The app is a single .NET process, so there is no IPC layer: view-models call app
 
 ## 8. Security requirements
 
-- Secrets only via `ISecretStore` (Windows Credential Manager in production); never `ToString()` or log a secret (`Secret` is redacted by design); redact tokens in logs
-- No remote content rendered in app windows; auth flows (OAuth) run in a separate, short-lived browser/window and are disposed after completion
-- The overlay only changes its own window styles; nothing is injected into other processes
-- Auto-update packages signed; update signature verified before install
-- Parse untrusted local files (trophy/stats binaries) defensively, with size limits, returning `ProviderException(Parse)` rather than throwing unexpected exceptions
-- Keep NuGet packages patched: warnings-as-errors turns known-vulnerable dependencies (NU1901-NU1904) into build failures
+- **Renderer isolation:** `contextIsolation: true`, `sandbox: true`, `nodeIntegration: false`; the UI only gets the explicit `window.api`. New windows and navigation away from our own pages are blocked.
+- **CSP:** a strict Content-Security-Policy is injected into production builds (`script-src 'self'`, no remote content).
+- **IPC:** validate the sender of every call; validate and narrow every payload in the main process (never trust the renderer).
+- **Secrets** only via `SecretStore` (Electron `safeStorage` in production); `Secret` redacts itself in strings, JSON and `console.log`, so never log credentials; redact tokens in any logs.
+- **Auth flows** (OAuth) run in the system browser (loopback redirect) or a separate short-lived window, and are closed after completion.
+- **The overlay** only changes its own window; nothing is injected into other processes.
+- **Updates:** auto-update packages signed; signature verified before install (M6).
+- **Local files:** parse untrusted files (trophy/stats binaries) defensively, with size limits, throwing `ProviderError('parse', ...)` rather than crashing.
+- **Dependencies:** keep them patched (`pnpm audit` in CI is a candidate for M4).
 
 ## 9. Testing strategy
 
 | Layer | Approach |
 |---|---|
-| Domain / sync engine | xUnit tests with an in-memory SQLite and a fake `IAchievementProvider` |
-| Store | Apply all migrations to an in-memory database; upgrade tests seeded at the previous version |
-| Providers | Fixture-driven tests using a stubbed `HttpMessageHandler`; parsers property-tested/fuzzed for binary formats |
-| View-models | Plain unit tests (no UI needed); services are faked |
-| UI | Avalonia headless tests for key views; manual preview via the tray's "Send test notification" |
-| CI | GitHub Actions on Windows: `dotnet format --verify-no-changes`, `dotnet build`, `dotnet test` |
+| Shared domain, sync engine | Vitest in Node; a fake `AchievementProvider` and an in-memory database |
+| Store | Apply all migrations to an in-memory `node:sqlite` database; upgrade tests seeded at the previous version; failing migrations roll back |
+| Providers | Fixture-driven tests using a stubbed `fetch`; parsers property-tested for binary formats |
+| React components | Vitest + Testing Library in jsdom, with `window.api` faked |
+| Whole app | Manual and scripted runs of the built app (launch, IPC, overlay window flags, close-to-tray, single instance); Playwright's Electron support is a candidate for automation |
+| CI | GitHub Actions on Windows: `pnpm format:check`, `lint`, `typecheck`, `test`, `build` |
 
 ## 10. Observability
 
-- `Microsoft.Extensions.Logging` with rolling log files in the app data dir; log level setting; "Open logs folder" in Settings
+- Structured logging to rolling files in the app data dir (a small logger or `electron-log`); log level setting; "Open logs folder" in Settings
 - Per-provider health surfaced in the Accounts screen (last success, last error)

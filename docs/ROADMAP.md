@@ -5,10 +5,10 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M0: Foundations and spikes (1-2 weeks)
 
 - [ ] Decide open questions in DESIGN.md §11 (license, OS scope, Steam key strategy)
-- [x] Scaffold: .NET solution (Core, Store, Providers, Sync, App, Tests) per [ARCHITECTURE.md](ARCHITECTURE.md) §6; build, 30 tests and a manual run of the app (tray, main window, click-through toast) verified locally
+- [x] Scaffold: Electron + TypeScript + React project per [ARCHITECTURE.md](ARCHITECTURE.md) §6. Verified: lint, typecheck, 27 tests and the production build pass, and the built app was run: window, IPC and SQLite schema, tray-driven close, single instance, and a click-through toast. `pnpm dev` also verified
 - [x] CI workflow written (`.github/workflows/ci.yml`); confirm it passes on first push
-- [ ] Decide DI/hosting approach (`Microsoft.Extensions.Hosting`) and wire services into the App
-- [~] **Spike A:** overlay window: transparent, click-through, no focus steal. Built and shown over a desktop app; still to verify over a real borderless-windowed game and on multi-monitor / mixed-DPI setups
+- [ ] Decide how main-process services are composed and shared (simple modules vs a tiny DI container) before M1 grows them
+- [~] **Spike A:** overlay window: transparent, click-through, no focus steal. Built and verified on Windows (window carries `WS_EX_TRANSPARENT` and `WS_EX_NOACTIVATE`; toast shown over a Steam window). Still to verify over a real borderless-windowed game and with multiple monitors / mixed DPI
 - [ ] **Spike B:** RPCS3 trophy file format parse (fixture from real files)
 - [ ] **Spike C:** feasibility notes for Xenia, Epic, Ubisoft, EA (write verdicts into PROVIDERS.md)
 - [x] Mockups: Dashboard, Library, Game detail, Toast, Accounts, Notification settings, Onboarding ([docs/design](design/README.md)); Activity + tray menu still to design
@@ -16,7 +16,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 ## M1: Vertical slice, Steam and toasts (MVP core)
 
-- [x] `Core` types + provider interface; `Store` with migration 0001 + runner; `ISecretStore` (in-memory; Windows Credential Manager implementation still to do)
+- [x] Domain types + provider interface (`src/shared`); database + migration runner (`src/main/store`); `SecretStore` (in-memory; `safeStorage` implementation still to do)
 - [ ] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`
 - [ ] Steam provider (Web API): library, schema, unlocks, rarity
 - [ ] Notification service + overlay toast (queue, sound, preview)
@@ -57,7 +57,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M6: Release engineering
 
 - [ ] Code signing, signed auto-update channel
-- [ ] Installer (MSIX or Velopack), self-contained publish, measure memory against N-02
+- [ ] Installer (electron-builder, NSIS), code signing, signed auto-update; measure memory and size against N-02 / N-05
 - [ ] Performance validation against N-01..N-07
 - [ ] Crash reporting (opt-in), docs site/README screenshots
 - [ ] v1.0.0
@@ -68,7 +68,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 |---|---|---|
 | Unofficial APIs (PSN, Xbox, Epic, Ubisoft, EA) break or are blocked | Provider outage | Isolation, clear "needs attention" state, fixtures, keep Steam/RA/local solid |
 | Exclusive-fullscreen hides the overlay | Missed toasts | Native toast fallback, docs, Activity feed |
-| Idle memory above the N-02 target | Not "lightweight" | Measure release builds early; trim, ReadyToRun, release the main window's visuals when hidden; see ADR-0002 |
+| Idle memory above the N-02 target | Not "lightweight" | Measured baseline ~170 MB private in the tray. Options: create the overlay on demand, disable GPU acceleration, trim dependencies; see ADR-0003 |
 | Local file formats change with emulator updates | Parser breakage | Pinned fixtures, defensive parsing, version detection |
 | ToS concerns for unofficial providers | Legal/ban risk for users | Opt-in with warnings, tokens only, no game injection |
 | First-sync toast flood | Terrible UX | Baseline rule (F-16), burst collapsing |
