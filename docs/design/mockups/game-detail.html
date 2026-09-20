@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Achievement Tracker - Elden Ring</title>
+  <meta name="view-transition" content="same-origin">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            base: '#0B0D12',
+            surface1: '#12151C',
+            surface2: '#181C25',
+            surface3: '#1F2430',
+            border: '#262C3A',
+            text: '#E8EAF0',
+            muted: '#8B93A7',
+            subtle: '#5B6478',
+            primary: '#F5B942',
+            primaryHover: '#FFCB5C',
+            onPrimary: '#1A1300',
+            success: '#3FB984',
+            warning: '#F2A33A',
+            danger: '#F0616D',
+            info: '#4C9BFF',
+            platform: {
+              steam: '#66C0F4',
+              xbox: '#52B043',
+              playstation: '#0070D1',
+              epic: '#D4D4D8',
+              ubisoft: '#3D8BFF',
+              ea: '#FF5A5A',
+              emulator: '#A78BFA'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-variant-numeric: tabular-nums; background-color: #0B0D12; color: #E8EAF0; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .glow-ur { box-shadow: 0 0 16px rgba(245, 185, 66, 0.2); }
+
+    /* View Transitions */
+    html { background-color: #0B0D12; }
+    @view-transition { navigation: auto; }
+    ::view-transition { background-color: #0B0D12; }
+    
+    ::view-transition-old(sidebar),
+    ::view-transition-new(sidebar) {
+        animation: none;
+        mix-blend-mode: normal;
+    }
+
+    ::view-transition-old(main-content) {
+        animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+        animation: 0.25s ease-in 0.1s both fade-in;
+    }
+
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-base flex overflow-hidden">
+    
+    <!-- Sidebar (Persistent) -->
+    <aside class="w-[240px] bg-surface1 border-r border-border flex flex-col flex-shrink-0" style="view-transition-name: sidebar">
+      <div class="h-16 px-6 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-surface2 border border-border flex items-center justify-center text-primary">
+          <iconify-icon icon="lucide:trophy" class="text-xl"></iconify-icon>
+        </div>
+        <span class="font-display font-semibold text-text truncate">Achievement Tracker</span>
+      </div>
+
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:layout-dashboard" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Dashboard</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" class="flex items-center px-3 py-2.5 rounded-lg bg-surface3 text-text relative group">
+          <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full"></div>
+          <iconify-icon icon="lucide:library" class="w-5 h-5 mr-3 text-primary"></iconify-icon>
+          <span class="font-medium">Library</span>
+        </a>
+        <a href="#activity" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:activity" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Activity</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:plug" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Accounts</span>
+        </a>
+        <a href="#settings" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:settings" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Settings</span>
+        </a>
+      </nav>
+
+      <div class="p-4 border-t border-border space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center text-xs text-muted">
+            <div class="w-2 h-2 rounded-full bg-success mr-2"></div>
+            Synced 2 min ago
+          </div>
+          <button class="text-muted hover:text-text w-6 h-6 flex items-center justify-center rounded transition-colors">
+            <iconify-icon icon="lucide:bell-off" class="text-sm"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden" style="view-transition-name: main-content">
+      <!-- Game Detail Header -->
+      <div class="relative h-64 flex-shrink-0">
+        <img src="https://images.unsplash.com/photo-1605901309584-818e25960b8f?auto=format&fit=crop&w=1440&q=80" class="w-full h-full object-cover opacity-50" alt="Elden Ring Cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-base via-base/80 to-transparent"></div>
+        <div class="absolute inset-0 px-8 pb-8 flex items-end justify-between max-w-[1280px] mx-auto">
+           <div class="flex items-end gap-6">
+             <a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" class="mb-2 text-muted hover:text-text transition-colors inline-flex items-center gap-1 text-sm font-medium self-start mt-8">
+               <iconify-icon icon="lucide:chevron-left"></iconify-icon>
+               Library
+             </a>
+             <div class="flex items-center gap-6">
+               <div class="relative w-[96px] h-[96px] flex-shrink-0">
+                  <svg class="w-full h-full" viewBox="0 0 96 96">
+                    <circle cx="48" cy="48" r="44" fill="none" stroke="#1F2430" stroke-width="8"></circle>
+                    <circle cx="48" cy="48" r="44" fill="none" stroke="#F5B942" stroke-width="8" stroke-dasharray="276.4" stroke-dashoffset="105" stroke-linecap="round" class="-rotate-90 origin-center"></circle>
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="font-display text-[22px] font-semibold text-text">62%</span>
+                  </div>
+                </div>
+                <div>
+                  <h1 class="font-display font-semibold text-[44px] leading-[48px] text-text mb-1">Elden Ring</h1>
+                  <div class="text-muted text-sm flex items-center gap-4">
+                    <span>FromSoftware Inc.</span>
+                    <span class="w-1 h-1 rounded-full bg-border"></span>
+                    <span class="font-semibold text-text">31 / 42 <span class="text-muted font-normal">Achievements</span></span>
+                  </div>
+                </div>
+             </div>
+           </div>
+           <div class="flex items-center gap-3">
+             <button class="h-9 px-4 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors flex items-center gap-2">
+                <iconify-icon icon="lucide:merge"></iconify-icon>
+                Merge game
+             </button>
+             <button class="h-9 px-4 bg-primary text-onPrimary rounded-lg text-sm font-semibold hover:bg-primaryHover transition-colors flex items-center gap-2">
+                <iconify-icon icon="lucide:refresh-cw"></iconify-icon>
+                Sync this game
+             </button>
+           </div>
+        </div>
+      </div>
+
+      <!-- Scrollable Area -->
+      <div class="flex-1 overflow-y-auto px-8 pb-12">
+        <div class="max-w-[1280px] mx-auto space-y-6">
+          
+          <!-- Tabs -->
+          <div class="flex items-center gap-2 border-b border-border">
+             <button class="px-4 py-3 text-sm font-medium text-text border-b-2 border-primary">Combined (31/42)</button>
+             <button class="px-4 py-3 text-sm font-medium text-muted hover:text-text border-b-2 border-transparent transition-colors flex items-center gap-2">
+               <span class="inline-flex h-[18px] px-1.5 items-center rounded-full bg-[#66C0F4]/14 text-[#66C0F4] text-[10px] font-medium uppercase">Steam</span>
+               Steam (31/42)
+             </button>
+             <button class="px-4 py-3 text-sm font-medium text-muted hover:text-text border-b-2 border-transparent transition-colors flex items-center gap-2">
+               <span class="inline-flex h-[18px] px-1.5 items-center rounded-full bg-[#0070D1]/14 text-[#0070D1] text-[10px] font-medium uppercase">PlayStation</span>
+               PlayStation (24/42)
+             </button>
+          </div>
+
+          <!-- Main Content Grid -->
+          <div class="grid grid-cols-12 gap-8">
+            <!-- Left Col: Achievements List -->
+            <div class="col-span-8 space-y-4">
+              <!-- Filters -->
+              <div class="flex items-center justify-between">
+                 <div class="flex items-center gap-2 bg-surface2 rounded-lg p-1 border border-border">
+                    <button class="px-3 py-1.5 text-xs font-medium text-text bg-surface3 rounded-md shadow-sm">All</button>
+                    <button class="px-3 py-1.5 text-xs font-medium text-muted hover:text-text transition-colors rounded-md">Unlocked</button>
+                    <button class="px-3 py-1.5 text-xs font-medium text-muted hover:text-text transition-colors rounded-md">Locked</button>
+                 </div>
+                 <div class="flex items-center gap-3">
+                    <select class="h-8 pl-3 pr-8 bg-surface2 border border-border rounded-lg text-xs font-medium text-text focus:outline-none focus:border-primary">
+                      <option>Sort by: Rarity</option>
+                      <option>Sort by: Unlocked date</option>
+                    </select>
+                    <div class="relative w-48">
+                      <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                        <iconify-icon icon="lucide:search" class="text-muted text-sm"></iconify-icon>
+                      </div>
+                      <input type="text" placeholder="Search..." class="w-full h-8 pl-8 pr-3 bg-surface2 border border-border rounded-lg text-xs text-text placeholder:text-subtle focus:outline-none focus:border-primary">
+                    </div>
+                 </div>
+              </div>
+
+              <!-- List -->
+              <div class="bg-surface1 border border-border rounded-xl divide-y divide-border">
+                <!-- Row 1: Ultra Rare Unlocked -->
+                <div class="p-4 flex items-center gap-4 hover:bg-surface2 transition-colors">
+                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 relative glow-ur p-1">
+                     <img src="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?auto=format&fit=crop&w=128&q=80" class="w-full h-full object-cover rounded-md" alt="Elden Lord">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-semibold text-text truncate mb-0.5">Elden Lord</h3>
+                    <p class="text-xs text-muted truncate">Achieve the "Elden Lord" ending.</p>
+                  </div>
+                  <div class="flex-shrink-0 flex flex-col items-end gap-1.5">
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-[#F5A524]/30">
+                      <div class="w-2 h-2 rounded-full bg-gradient-to-r from-[#FFD36B] to-[#F5A524]"></div>
+                      <span class="text-[11px] font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#FFD36B] to-[#F5A524]">Ultra Rare 1.4%</span>
+                    </div>
+                    <span class="text-[11px] text-subtle font-medium">Unlocked 12m ago</span>
+                  </div>
+                </div>
+
+                <!-- Row 2: Progressive -->
+                <div class="p-4 flex items-center gap-4 hover:bg-surface2 transition-colors">
+                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 p-1 opacity-60">
+                     <div class="w-full h-full bg-surface2 rounded-md flex items-center justify-center border border-border relative">
+                       <iconify-icon icon="lucide:swords" class="text-muted text-xl"></iconify-icon>
+                       <div class="absolute inset-0 bg-base/50 flex items-center justify-center">
+                         <iconify-icon icon="lucide:lock" class="text-text text-sm"></iconify-icon>
+                       </div>
+                     </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-semibold text-text truncate mb-0.5">Master of Arms</h3>
+                    <p class="text-xs text-muted truncate mb-2">Collect all legendary armaments.</p>
+                    <div class="flex items-center gap-3">
+                      <div class="flex-1 h-1.5 bg-surface3 rounded-full overflow-hidden max-w-[200px]">
+                         <div class="h-full bg-primary rounded-full" style="width: 70%"></div>
+                      </div>
+                      <span class="text-[11px] font-semibold text-text tabular-nums">7 / 10</span>
+                    </div>
+                  </div>
+                  <div class="flex-shrink-0 flex flex-col items-end gap-1.5">
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
+                      <div class="w-2 h-2 rounded-full bg-[#4C9BFF]"></div>
+                      <span class="text-[11px] font-medium text-[#4C9BFF]">Rare 4.2%</span>
+                    </div>
+                    <span class="text-[11px] text-subtle font-medium">Locked</span>
+                  </div>
+                </div>
+
+                <!-- Row 3: Hidden Locked -->
+                <div class="p-4 flex items-center gap-4 hover:bg-surface2 transition-colors">
+                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 p-1 opacity-60">
+                     <div class="w-full h-full bg-surface2 rounded-md flex items-center justify-center border border-border">
+                       <iconify-icon icon="lucide:eye-off" class="text-muted text-xl"></iconify-icon>
+                     </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-semibold text-text truncate mb-0.5 italic">Hidden Achievement</h3>
+                    <p class="text-xs text-subtle truncate">Continue playing to reveal this achievement.</p>
+                  </div>
+                  <div class="flex-shrink-0 flex flex-col items-end gap-1.5">
+                    <span class="text-[11px] text-subtle font-medium">Locked</span>
+                  </div>
+                </div>
+
+                 <!-- Row 4-9: Generic Unlocked -->
+                 <div class="p-4 flex items-center gap-4 hover:bg-surface2 transition-colors">
+                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 p-1">
+                     <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=128&q=80" class="w-full h-full object-cover rounded-md" alt="Margit">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-semibold text-text truncate mb-0.5">Margit, the Fell Omen</h3>
+                    <p class="text-xs text-muted truncate">Defeat Margit, the Fell Omen.</p>
+                  </div>
+                  <div class="flex-shrink-0 flex flex-col items-end gap-1.5">
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
+                      <div class="w-2 h-2 rounded-full bg-[#9AA3B5]"></div>
+                      <span class="text-[11px] font-medium text-[#9AA3B5]">Common 74.5%</span>
+                    </div>
+                    <span class="text-[11px] text-subtle font-medium">Apr 12, 2024</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Right Col: Sidebar Stats -->
+            <div class="col-span-4 space-y-6">
+               <div class="bg-surface1 border border-border rounded-xl p-6">
+                 <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] mb-4">Rarity Breakdown</h2>
+                 <div class="space-y-3">
+                   <div class="flex items-center justify-between">
+                     <div class="flex items-center gap-2">
+                       <div class="w-2.5 h-2.5 rounded-full bg-[#9AA3B5]"></div>
+                       <span class="text-sm text-text">Common</span>
+                     </div>
+                     <span class="font-display font-semibold text-sm">24</span>
+                   </div>
+                   <div class="flex items-center justify-between">
+                     <div class="flex items-center gap-2">
+                       <div class="w-2.5 h-2.5 rounded-full bg-[#3FB984]"></div>
+                       <span class="text-sm text-text">Uncommon</span>
+                     </div>
+                     <span class="font-display font-semibold text-sm">5</span>
+                   </div>
+                   <div class="flex items-center justify-between">
+                     <div class="flex items-center gap-2">
+                       <div class="w-2.5 h-2.5 rounded-full bg-[#4C9BFF]"></div>
+                       <span class="text-sm text-text">Rare</span>
+                     </div>
+                     <span class="font-display font-semibold text-sm">1</span>
+                   </div>
+                   <div class="flex items-center justify-between">
+                     <div class="flex items-center gap-2">
+                       <div class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[#FFD36B] to-[#F5A524]"></div>
+                       <span class="text-sm text-text">Ultra Rare</span>
+                     </div>
+                     <span class="font-display font-semibold text-sm text-primary">1</span>
+                   </div>
+                 </div>
+               </div>
+
+               <div class="bg-surface1 border border-border rounded-xl p-6">
+                 <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] mb-2">Time to 100%</h2>
+                 <div class="text-sm text-muted">
+                   Estimated <span class="text-text font-medium">120+ hours</span> based on global player average. You have 11 achievements remaining.
+                 </div>
+               </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

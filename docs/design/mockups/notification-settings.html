@@ -1,0 +1,387 @@
+<!DOCTYPE html><html lang="en" class="dark"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Achievement Tracker - Notification settings</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            base: '#0B0D12',
+            surface1: '#12151C',
+            surface2: '#181C25',
+            surface3: '#1F2430',
+            border: '#262C3A',
+            text: '#E8EAF0',
+            muted: '#8B93A7',
+            subtle: '#5B6478',
+            primary: '#F5B942',
+            primaryHover: '#FFCB5C',
+            onPrimary: '#1A1300',
+            success: '#3FB984',
+            warning: '#F2A33A',
+            danger: '#F0616D',
+            info: '#4C9BFF',
+            platform: {
+              steam: '#66C0F4',
+              xbox: '#52B043',
+              playstation: '#0070D1',
+              epic: '#D4D4D8',
+              ubisoft: '#3D8BFF',
+              ea: '#FF5A5A',
+              emulator: '#A78BFA'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-variant-numeric: tabular-nums; background-color: #0B0D12; color: #E8EAF0; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* View Transition */
+    html { background-color: #0B0D12; }
+    @view-transition { navigation: auto; }
+    ::view-transition { background-color: #0B0D12; }
+    
+    ::view-transition-old(sidebar),
+    ::view-transition-new(sidebar),
+    ::view-transition-old(topbar),
+    ::view-transition-new(topbar) {
+        animation: none;
+        mix-blend-mode: normal;
+    }
+    
+    ::view-transition-old(main-content) {
+        animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+        animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-base flex overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="w-[240px] bg-surface1 border-r border-border flex flex-col flex-shrink-0" style="view-transition-name: sidebar">
+      <!-- Header -->
+      <div class="h-16 px-6 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-surface2 border border-border flex items-center justify-center text-primary">
+          <iconify-icon icon="lucide:trophy" class="text-xl"></iconify-icon>
+        </div>
+        <span class="font-display font-semibold text-text truncate">Achievement Tracker</span>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:layout-dashboard" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Dashboard</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="nav-library" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:library" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Library</span>
+        </a>
+        <a href="#activity" id="nav-activity" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:activity" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Activity</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="nav-accounts" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:plug" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Accounts</span>
+        </a>
+        <a href="#settings" id="nav-settings" class="flex items-center px-3 py-2.5 rounded-lg bg-surface3 text-text relative group">
+          <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full"></div>
+          <iconify-icon icon="lucide:settings" class="w-5 h-5 mr-3 text-primary"></iconify-icon>
+          <span class="font-medium">Settings</span>
+        </a>
+      </nav>
+
+      <!-- Footer -->
+      <div class="p-4 border-t border-border space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center text-xs text-muted">
+            <div class="w-2 h-2 rounded-full bg-success mr-2"></div>
+            Synced 2 min ago
+          </div>
+          <button id="btn-dnd" class="text-muted hover:text-text w-6 h-6 flex items-center justify-center rounded transition-colors">
+            <iconify-icon icon="lucide:bell-off" class="text-sm"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+      <!-- Topbar -->
+      <header class="h-16 px-8 flex items-center justify-between flex-shrink-0" style="view-transition-name: topbar">
+        <h1 class="font-display font-semibold text-[28px] leading-[34px] text-text">Settings</h1>
+        
+        <div class="flex items-center gap-4">
+          <div class="relative w-64">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <iconify-icon icon="lucide:search" class="text-muted"></iconify-icon>
+            </div>
+            <input type="text" placeholder="Search games or achievements..." class="w-full h-9 pl-9 pr-12 bg-surface2 border border-border rounded-lg text-sm text-text placeholder:text-subtle focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span class="text-[10px] font-medium text-subtle px-1.5 py-0.5 rounded border border-border bg-surface1">Ctrl+K</span>
+            </div>
+          </div>
+          <button id="btn-sync" class="h-9 px-4 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors flex items-center gap-2">
+            <iconify-icon icon="lucide:refresh-cw" class="text-muted"></iconify-icon>
+            Sync now
+          </button>
+        </div>
+      </header>
+
+      <!-- Settings Content -->
+      <div class="flex-1 overflow-hidden flex" style="view-transition-name: main-content">
+        <!-- Secondary Nav -->
+        <div class="w-[200px] border-r border-border p-4 flex flex-col gap-1">
+           <a href="#settings-general" class="px-3 py-2 rounded-lg text-sm font-medium text-muted hover:text-text hover:bg-surface2 transition-colors">General</a>
+           <a href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" class="px-3 py-2 rounded-lg text-sm font-medium text-text bg-surface3 transition-colors">Notifications</a>
+           <a href="#settings-sync" class="px-3 py-2 rounded-lg text-sm font-medium text-muted hover:text-text hover:bg-surface2 transition-colors">Sync</a>
+           <a href="#settings-appearance" class="px-3 py-2 rounded-lg text-sm font-medium text-muted hover:text-text hover:bg-surface2 transition-colors">Appearance</a>
+           <a href="#settings-data" class="px-3 py-2 rounded-lg text-sm font-medium text-muted hover:text-text hover:bg-surface2 transition-colors">Data</a>
+        </div>
+        
+        <!-- Scrollable Settings -->
+        <div class="flex-1 overflow-y-auto px-8 py-8">
+           <div class="max-w-[800px] mx-auto grid grid-cols-12 gap-12">
+              
+              <!-- Left Column: Controls -->
+              <div class="col-span-7 space-y-10">
+                 
+                 <!-- Section: Appearance -->
+                 <section class="space-y-6">
+                    <div>
+                      <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] mb-1">Appearance</h2>
+                      <p class="text-sm text-muted">Customize how and where notifications appear on your screen.</p>
+                    </div>
+                    
+                    <!-- Position -->
+                    <div class="space-y-3">
+                      <label class="text-sm font-medium text-text">Position</label>
+                      <div class="flex gap-4 items-center">
+                         <div class="w-32 h-20 bg-surface2 border border-border rounded-lg relative">
+                            <button class="absolute top-2 left-2 w-3 h-3 rounded-sm border border-subtle hover:border-text"></button>
+                            <button class="absolute top-2 right-2 w-3 h-3 rounded-sm border border-subtle hover:border-text"></button>
+                            <button class="absolute bottom-2 left-2 w-3 h-3 rounded-sm border border-subtle hover:border-text"></button>
+                            <button class="absolute bottom-2 right-2 w-3 h-3 rounded-sm bg-primary"></button>
+                         </div>
+                         <select class="h-9 px-3 bg-surface2 border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-48">
+                            <option>Display 1 (Primary)</option>
+                            <option>Display 2</option>
+                         </select>
+                      </div>
+                    </div>
+
+                    <!-- Sliders -->
+                    <div class="space-y-4">
+                       <div class="space-y-2">
+                          <div class="flex justify-between text-sm">
+                             <label class="font-medium text-text">Duration</label>
+                             <span class="text-muted">5s</span>
+                          </div>
+                          <input type="range" min="1" max="10" value="5" class="w-full h-1.5 bg-surface3 rounded-lg appearance-none cursor-pointer accent-primary">
+                       </div>
+                       <div class="space-y-2">
+                          <div class="flex justify-between text-sm">
+                             <label class="font-medium text-text">Size</label>
+                             <span class="text-muted">100%</span>
+                          </div>
+                          <input type="range" min="50" max="150" value="100" class="w-full h-1.5 bg-surface3 rounded-lg appearance-none cursor-pointer accent-primary">
+                       </div>
+                       <div class="space-y-2">
+                          <div class="flex justify-between text-sm">
+                             <label class="font-medium text-text">Opacity</label>
+                             <span class="text-muted">96%</span>
+                          </div>
+                          <input type="range" min="20" max="100" value="96" class="w-full h-1.5 bg-surface3 rounded-lg appearance-none cursor-pointer accent-primary">
+                       </div>
+                    </div>
+                 </section>
+
+                 <!-- Section: Audio -->
+                 <section class="space-y-6">
+                    <div>
+                      <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] mb-1">Audio</h2>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                       <div class="space-y-1">
+                          <label class="text-sm font-medium text-text">Play sound</label>
+                          <p class="text-xs text-muted">Play a sound when an achievement unlocks.</p>
+                       </div>
+                       <button class="w-10 h-6 rounded-full bg-primary relative transition-colors">
+                          <span class="absolute right-1 top-1 w-4 h-4 bg-[#1A1300] rounded-full transition-transform"></span>
+                       </button>
+                    </div>
+
+                    <div class="space-y-4 pl-4 border-l-2 border-surface3">
+                       <div class="space-y-2">
+                          <label class="text-sm font-medium text-text">Volume</label>
+                          <input type="range" min="0" max="100" value="80" class="w-full h-1.5 bg-surface3 rounded-lg appearance-none cursor-pointer accent-primary">
+                       </div>
+                       <div class="space-y-2">
+                          <label class="text-sm font-medium text-text">Sound effect</label>
+                          <select class="w-full h-9 px-3 bg-surface2 border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                             <option>Default (Subtle pop)</option>
+                             <option>Xbox 360 Classic</option>
+                             <option>PlayStation Trophy</option>
+                          </select>
+                       </div>
+                    </div>
+                 </section>
+
+                 <!-- Section: Behavior -->
+                 <section class="space-y-6">
+                    <div>
+                      <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] mb-1">Behavior</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                       <div class="space-y-2">
+                          <label class="text-sm font-medium text-text">Minimum rarity to notify</label>
+                          <select class="w-full h-9 px-3 bg-surface2 border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                             <option>All achievements</option>
+                             <option>Uncommon or higher</option>
+                             <option>Rare or higher</option>
+                             <option>Ultra Rare only</option>
+                          </select>
+                       </div>
+
+                       <div class="space-y-3 pt-2">
+                          <label class="text-sm font-medium text-text">Platforms</label>
+                          <div class="grid grid-cols-2 gap-3">
+                             <label class="flex items-center gap-2 text-sm text-text">
+                                <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-border bg-surface2">
+                                Steam
+                             </label>
+                             <label class="flex items-center gap-2 text-sm text-text">
+                                <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-border bg-surface2">
+                                Xbox
+                             </label>
+                             <label class="flex items-center gap-2 text-sm text-text">
+                                <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-border bg-surface2">
+                                PlayStation
+                             </label>
+                             <label class="flex items-center gap-2 text-sm text-text">
+                                <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-border bg-surface2">
+                                Emulators
+                             </label>
+                          </div>
+                       </div>
+                    </div>
+                 </section>
+
+                 <!-- Section: Do Not Disturb -->
+                 <section class="space-y-6">
+                    <div>
+                      <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] mb-1">Do Not Disturb</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                       <div class="flex items-center justify-between">
+                          <div class="space-y-1">
+                             <label class="text-sm font-medium text-text">Do Not Disturb</label>
+                             <p class="text-xs text-muted">Mute all notifications manually.</p>
+                          </div>
+                          <button class="w-10 h-6 rounded-full bg-surface3 relative transition-colors border border-border">
+                             <span class="absolute left-1 top-1 w-4 h-4 bg-muted rounded-full transition-transform"></span>
+                          </button>
+                       </div>
+                       
+                       <div class="flex items-center justify-between">
+                          <div class="space-y-1">
+                             <label class="text-sm font-medium text-text">Pause in exclusive fullscreen</label>
+                             <p class="text-xs text-muted">Don't show overlays when a game is in exclusive fullscreen mode.</p>
+                          </div>
+                          <button class="w-10 h-6 rounded-full bg-primary relative transition-colors">
+                             <span class="absolute right-1 top-1 w-4 h-4 bg-[#1A1300] rounded-full transition-transform"></span>
+                          </button>
+                       </div>
+
+                       <div class="p-4 bg-surface2 rounded-lg border border-border">
+                           <div class="flex gap-3">
+                              <iconify-icon icon="lucide:info" class="text-info text-lg flex-shrink-0 mt-0.5"></iconify-icon>
+                              <div class="space-y-3">
+                                 <p class="text-sm text-text">Exclusive-fullscreen games hide custom overlays by default.</p>
+                                 <p class="text-sm text-muted">Use borderless windowed mode, or enable the Windows native toast fallback.</p>
+                                 <label class="flex items-center gap-2 text-sm text-text pt-1">
+                                    <input type="checkbox" class="accent-primary w-4 h-4 rounded border-border bg-surface3">
+                                    Use Windows toast fallback
+                                 </label>
+                              </div>
+                           </div>
+                       </div>
+                    </div>
+                 </section>
+
+              </div>
+
+              <!-- Right Column: Preview Sticky -->
+              <div class="col-span-5">
+                 <div class="sticky top-0 bg-surface1 border border-border rounded-xl p-6 space-y-6">
+                    <div>
+                       <h3 class="text-sm font-semibold text-text mb-4">Preview</h3>
+                       <div class="aspect-video bg-[#0B0D12] rounded-lg border border-border relative overflow-hidden">
+                          <!-- Fake Game Bg -->
+                          <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&amp;fit=crop&amp;w=800&amp;q=80" class="absolute inset-0 w-full h-full object-cover opacity-50" alt="Game preview">
+                          
+                          <!-- Fake Toast Preview -->
+                          <div class="absolute bottom-4 right-4 w-[280px] h-[72px] bg-surface2/95 backdrop-blur-sm rounded-xl border border-[#F5A524]/50 shadow-[0_8px_24px_rgba(0,0,0,0.5)] p-3 flex gap-3">
+                             <div class="w-12 h-12 rounded-lg bg-surface3 flex-shrink-0 relative">
+                                <div class="absolute inset-0 rounded-lg border border-[#F5A524]/30 shadow-[0_0_8px_rgba(245,165,36,0.2)]"></div>
+                             </div>
+                             <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                <div class="text-[9px] font-semibold text-[#F5A524] uppercase tracking-wider mb-0.5">Achievement Unlocked</div>
+                                <div class="text-xs font-semibold text-text truncate">Test Notification</div>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div class="space-y-3">
+                       <label class="text-sm font-medium text-text">Test rarity</label>
+                       <div class="flex gap-2">
+                          <select class="flex-1 h-9 px-3 bg-surface2 border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                             <option>Ultra Rare</option>
+                             <option>Rare</option>
+                             <option>Uncommon</option>
+                             <option>Common</option>
+                          </select>
+                          <button class="h-9 px-4 bg-primary text-onPrimary font-semibold text-sm rounded-lg hover:bg-primaryHover transition-colors">
+                             Send test
+                          </button>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+           </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body></html>

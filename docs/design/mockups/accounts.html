@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <title>Achievement Tracker - Accounts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            base: '#0B0D12',
+            surface1: '#12151C',
+            surface2: '#181C25',
+            surface3: '#1F2430',
+            border: '#262C3A',
+            text: '#E8EAF0',
+            muted: '#8B93A7',
+            subtle: '#5B6478',
+            primary: '#F5B942',
+            primaryHover: '#FFCB5C',
+            onPrimary: '#1A1300',
+            success: '#3FB984',
+            warning: '#F2A33A',
+            danger: '#F0616D',
+            info: '#4C9BFF',
+            platform: {
+              steam: '#66C0F4',
+              xbox: '#52B043',
+              playstation: '#0070D1',
+              epic: '#D4D4D8',
+              ubisoft: '#3D8BFF',
+              ea: '#FF5A5A',
+              emulator: '#A78BFA'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-variant-numeric: tabular-nums; background-color: #0B0D12; color: #E8EAF0; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    html {
+        background-color: #0B0D12;
+    }
+    @view-transition { navigation: auto; }
+    ::view-transition { background-color: #0B0D12; }
+
+    ::view-transition-old(sidebar),
+    ::view-transition-new(sidebar),
+    ::view-transition-old(topbar),
+    ::view-transition-new(topbar) {
+        animation: none;
+        mix-blend-mode: normal;
+    }
+
+    ::view-transition-old(main-content) {
+        animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+        animation: 0.25s ease-in 0.1s both fade-in;
+    }
+
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-base flex overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="w-[240px] bg-surface1 border-r border-border flex flex-col flex-shrink-0" style="view-transition-name: sidebar">
+      <!-- Header -->
+      <div class="h-16 px-6 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-surface2 border border-border flex items-center justify-center text-primary">
+          <iconify-icon icon="lucide:trophy" class="text-xl"></iconify-icon>
+        </div>
+        <span class="font-display font-semibold text-text truncate">Achievement Tracker</span>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:layout-dashboard" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Dashboard</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="nav-library" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:library" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Library</span>
+        </a>
+        <a href="#activity" id="nav-activity" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:activity" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Activity</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="nav-accounts" class="flex items-center px-3 py-2.5 rounded-lg bg-surface3 text-text relative group">
+          <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full"></div>
+          <iconify-icon icon="lucide:plug" class="w-5 h-5 mr-3 text-primary"></iconify-icon>
+          <span class="font-medium">Accounts</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" id="nav-settings" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
+          <iconify-icon icon="lucide:settings" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
+          <span class="font-medium">Settings</span>
+        </a>
+      </nav>
+
+      <!-- Footer -->
+      <div class="p-4 border-t border-border space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center text-xs text-muted">
+            <div class="w-2 h-2 rounded-full bg-success mr-2"></div>
+            Synced 2 min ago
+          </div>
+          <button id="btn-dnd" class="text-muted hover:text-text w-6 h-6 flex items-center justify-center rounded transition-colors">
+            <iconify-icon icon="lucide:bell-off" class="text-sm"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden" style="view-transition-name: main-content">
+      <!-- Topbar -->
+      <header class="h-16 px-8 flex items-center justify-between flex-shrink-0" style="view-transition-name: topbar">
+        <h1 class="font-display font-semibold text-[28px] leading-[34px] text-text">Accounts</h1>
+        
+        <div class="flex items-center gap-4">
+          <div class="relative w-64">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <iconify-icon icon="lucide:search" class="text-muted"></iconify-icon>
+            </div>
+            <input type="text" placeholder="Search games or achievements..." class="w-full h-9 pl-9 pr-12 bg-surface2 border border-border rounded-lg text-sm text-text placeholder:text-subtle focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span class="text-[10px] font-medium text-subtle px-1.5 py-0.5 rounded border border-border bg-surface1">Ctrl+K</span>
+            </div>
+          </div>
+          <button id="btn-sync" class="h-9 px-4 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors flex items-center gap-2">
+            <iconify-icon icon="lucide:refresh-cw" class="text-muted"></iconify-icon>
+            Sync now
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Area -->
+      <div class="flex-1 overflow-y-auto px-8 pb-12">
+        <div class="max-w-[1280px] mx-auto space-y-8">
+
+          <!-- Helper Banner -->
+          <div class="bg-surface1 border border-border rounded-xl p-4 flex items-center gap-3">
+            <iconify-icon icon="lucide:info" class="text-info text-xl flex-shrink-0"></iconify-icon>
+            <p class="text-sm text-text">
+              Your credentials are stored in the Windows Credential Manager and never leave this device.
+            </p>
+          </div>
+
+          <!-- Accounts Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Steam -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-[#66C0F4]/14 text-[#66C0F4] flex items-center justify-center">
+                  <iconify-icon icon="mdi:steam" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-success/30">
+                  <div class="w-2 h-2 rounded-full bg-success"></div>
+                  <span class="text-[11px] font-medium text-success">Connected</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-text mb-1">Steam</h3>
+              <p class="text-sm text-muted mb-4 flex-1">Synced 2 min ago &middot; Web API key</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
+                Manage
+              </button>
+            </div>
+
+            <!-- Xbox -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-[#52B043]/14 text-[#52B043] flex items-center justify-center">
+                  <iconify-icon icon="mdi:microsoft-xbox" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-success/30">
+                  <div class="w-2 h-2 rounded-full bg-success"></div>
+                  <span class="text-[11px] font-medium text-success">Connected</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-text mb-1">Xbox</h3>
+              <p class="text-sm text-muted mb-4 flex-1">Active session</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
+                Manage
+              </button>
+            </div>
+
+            <!-- PlayStation -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-[#0070D1]/14 text-[#0070D1] flex items-center justify-center">
+                  <iconify-icon icon="mdi:sony-playstation" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-warning/30">
+                  <div class="w-2 h-2 rounded-full bg-warning"></div>
+                  <span class="text-[11px] font-medium text-warning">Needs re-auth</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-text mb-1">PlayStation</h3>
+              <p class="text-sm text-warning mb-4 flex-1">NPSSO token expired</p>
+              <button class="w-full h-9 bg-primary text-onPrimary rounded-lg text-sm font-semibold hover:bg-primaryHover transition-colors">
+                Re-authenticate
+              </button>
+            </div>
+
+            <!-- RetroAchievements -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-platform-emulator/14 text-platform-emulator flex items-center justify-center">
+                  <iconify-icon icon="lucide:gamepad-2" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-success/30">
+                  <div class="w-2 h-2 rounded-full bg-success"></div>
+                  <span class="text-[11px] font-medium text-success">Connected</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-text mb-1">RetroAchievements</h3>
+              <p class="text-sm text-muted mb-4 flex-1">Active session</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
+                Manage
+              </button>
+            </div>
+
+            <!-- RPCS3 -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-platform-emulator/14 text-platform-emulator flex items-center justify-center">
+                  <iconify-icon icon="lucide:folder-open" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-info/30">
+                  <div class="w-2 h-2 rounded-full bg-info"></div>
+                  <span class="text-[11px] font-medium text-info">Watching</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-text mb-1">RPCS3</h3>
+              <p class="text-sm text-muted mb-4 flex-1 truncate" title="E:/Games/RPCS3/dev_hdd0">E:/Games/RPCS3/dev_hdd0</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
+                Manage
+              </button>
+            </div>
+
+            <!-- Xenia -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-platform-emulator/14 text-platform-emulator flex items-center justify-center">
+                  <iconify-icon icon="lucide:disc" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
+                  <div class="w-2 h-2 rounded-full bg-muted"></div>
+                  <span class="text-[11px] font-medium text-muted">Not connected</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-text mb-1">Xenia</h3>
+              <p class="text-sm text-muted mb-4 flex-1">Local save parsing</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
+                Connect
+              </button>
+            </div>
+
+            <!-- Epic Games -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-[#D4D4D8]/14 text-[#D4D4D8] flex items-center justify-center">
+                  <iconify-icon icon="simple-icons:epicgames" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
+                  <div class="w-2 h-2 rounded-full bg-muted"></div>
+                  <span class="text-[11px] font-medium text-muted">Not connected</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-lg font-semibold text-text">Epic Games</h3>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface3 text-muted uppercase tracking-wide">Unofficial</span>
+              </div>
+              <p class="text-sm text-muted mb-4 flex-1">Experimental support</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
+                Connect
+              </button>
+            </div>
+
+            <!-- Ubisoft Connect -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-[#3D8BFF]/14 text-[#3D8BFF] flex items-center justify-center">
+                  <iconify-icon icon="simple-icons:ubisoft" class="text-2xl"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
+                  <div class="w-2 h-2 rounded-full bg-muted"></div>
+                  <span class="text-[11px] font-medium text-muted">Not connected</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-lg font-semibold text-text">Ubisoft Connect</h3>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface3 text-muted uppercase tracking-wide">Unofficial</span>
+              </div>
+              <p class="text-sm text-muted mb-4 flex-1">Experimental support</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
+                Connect
+              </button>
+            </div>
+
+            <!-- EA app -->
+            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col opacity-60">
+              <div class="flex items-start justify-between mb-6">
+                <div class="w-12 h-12 rounded-full bg-[#FF5A5A]/14 text-[#FF5A5A] flex items-center justify-center">
+                  <iconify-icon icon="simple-icons:ea" class="text-2xl"></iconify-icon>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-text mb-1">EA app</h3>
+              <p class="text-sm text-muted mb-4 flex-1">Not supported yet</p>
+              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-muted cursor-not-allowed" disabled>
+                Coming soon
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

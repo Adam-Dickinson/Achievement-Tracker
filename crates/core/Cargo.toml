@@ -1,0 +1,13 @@
+[package]
+name = "at-core"
+description = "Domain types, provider trait, errors and secret storage abstraction"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+chrono.workspace = true
+serde.workspace = true
+thiserror.workspace = true

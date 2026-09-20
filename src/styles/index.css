@@ -1,0 +1,56 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/space-grotesk";
+@import "tailwindcss";
+
+/* Design tokens: keep in sync with .superdesign/design-system.md */
+@theme {
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "Inter Variable", sans-serif;
+
+  --color-base: #0b0d12;
+  --color-surface-1: #12151c;
+  --color-surface-2: #181c25;
+  --color-surface-3: #1f2430;
+  --color-line: #262c3a;
+  --color-fg: #e8eaf0;
+  --color-fg-muted: #8b93a7;
+  --color-fg-subtle: #5b6478;
+
+  --color-primary: #f5b942;
+  --color-primary-hover: #ffcb5c;
+  --color-on-primary: #1a1300;
+
+  --color-success: #3fb984;
+  --color-warning: #f2a33a;
+  --color-danger: #f0616d;
+  --color-info: #4c9bff;
+
+  --color-rarity-common: #9aa3b5;
+  --color-rarity-uncommon: #3fb984;
+  --color-rarity-rare: #4c9bff;
+  --color-rarity-ultra: #f5a524;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-panel: 16px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-base text-fg font-sans antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

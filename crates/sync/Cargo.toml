@@ -1,0 +1,13 @@
+[package]
+name = "at-sync"
+description = "Scheduler, diff engine, running-game detector and unlock events"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+at-core.workspace = true
+at-store.workspace = true
+at-providers.workspace = true
+# M1: tokio, tokio-util (CancellationToken), tracing. M2: sysinfo (game detector).

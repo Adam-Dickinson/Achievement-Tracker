@@ -1,0 +1,11 @@
+[package]
+name = "at-store"
+description = "SQLite persistence layer. The only crate that contains SQL."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+at-core.workspace = true
+# M1: add sqlx (sqlite, runtime-tokio, migrate) and wire up the pool + migrations.

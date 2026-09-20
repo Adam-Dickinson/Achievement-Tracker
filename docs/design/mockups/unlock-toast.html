@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Achievement Tracker - Unlock Toast Overlay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            base: '#0B0D12',
+            surface1: '#12151C',
+            surface2: '#181C25',
+            surface3: '#1F2430',
+            border: '#262C3A',
+            text: '#E8EAF0',
+            muted: '#8B93A7',
+            subtle: '#5B6478',
+            primary: '#F5B942',
+            primaryHover: '#FFCB5C',
+            onPrimary: '#1A1300',
+            success: '#3FB984',
+            warning: '#F2A33A',
+            danger: '#F0616D',
+            info: '#4C9BFF',
+            platform: {
+              steam: '#66C0F4',
+              xbox: '#52B043',
+              playstation: '#0070D1',
+              epic: '#D4D4D8',
+              ubisoft: '#3D8BFF',
+              ea: '#FF5A5A',
+              emulator: '#A78BFA'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-variant-numeric: tabular-nums; background-color: transparent; margin: 0; padding: 0; }
+    .glow-ur { box-shadow: 0 0 40px rgba(245, 185, 66, 0.4); }
+    .glow-toast { box-shadow: 0 12px 40px rgba(0,0,0,.55); }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen w-full relative overflow-hidden bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1440&q=80')] bg-cover bg-center">
+    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+    
+    <!-- Toasts Stack in Bottom Right -->
+    <div class="absolute bottom-8 right-8 flex flex-col items-end gap-4">
+      
+      <!-- Common (Xbox) -->
+      <div class="w-[380px] h-[96px] bg-surface2/96 backdrop-blur-md rounded-[16px] border border-[#9AA3B5]/30 p-4 flex flex-row items-center gap-4 glow-toast opacity-40 translate-x-4 scale-95">
+        <!-- Icon -->
+        <div class="w-16 h-16 rounded-lg bg-surface3 flex-shrink-0 relative overflow-hidden p-1 border border-[#9AA3B5]/40">
+           <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=64&q=80" class="w-full h-full object-cover rounded-md" alt="Common Icon">
+        </div>
+        <!-- Content -->
+        <div class="flex-1 flex flex-col justify-center min-w-0">
+          <div class="text-[11px] font-semibold text-[#9AA3B5] uppercase tracking-[0.06em] mb-0.5">Achievement Unlocked</div>
+          <h3 class="text-[16px] font-semibold text-text truncate mb-0.5">Welcome to Mexico</h3>
+          <p class="text-[12px] text-muted truncate">Arrive at the Horizon Festival.</p>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="text-[11px] font-medium text-subtle truncate">Forza Horizon 5</span>
+            <span class="text-subtle">·</span>
+            <span class="inline-flex h-[16px] px-1.5 items-center rounded-full bg-[#52B043]/14 text-[#52B043] text-[9px] font-medium uppercase">
+              Xbox
+            </span>
+            <span class="text-subtle">·</span>
+            <span class="text-[11px] font-medium text-subtle">20 G</span>
+          </div>
+        </div>
+        <!-- Rarity -->
+        <div class="flex-shrink-0 self-start">
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface2 border border-[#9AA3B5]/30">
+            <div class="w-1.5 h-1.5 rounded-full bg-[#9AA3B5]"></div>
+            <span class="text-[10px] font-medium text-[#9AA3B5]">Common 42%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rare (PlayStation) -->
+      <div class="w-[380px] h-[96px] bg-surface2/96 backdrop-blur-md rounded-[16px] border border-[#4C9BFF]/40 p-4 flex flex-row items-center gap-4 glow-toast opacity-70 translate-x-2 scale-97 -mt-16">
+        <!-- Icon -->
+        <div class="w-16 h-16 rounded-lg bg-surface3 flex-shrink-0 relative overflow-hidden p-1 border border-[#4C9BFF]/50 shadow-[0_0_12px_rgba(76,155,255,0.3)]">
+           <img src="https://images.unsplash.com/photo-1605901309584-818e25960b8f?auto=format&fit=crop&w=64&q=80" class="w-full h-full object-cover rounded-md" alt="Rare Icon">
+        </div>
+        <!-- Content -->
+        <div class="flex-1 flex flex-col justify-center min-w-0">
+          <div class="text-[11px] font-semibold text-[#4C9BFF] uppercase tracking-[0.06em] mb-0.5">Platinum Trophy</div>
+          <h3 class="text-[16px] font-semibold text-text truncate mb-0.5">Father and Son</h3>
+          <p class="text-[12px] text-muted truncate">Obtain all other trophies.</p>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="text-[11px] font-medium text-subtle truncate">God of War</span>
+            <span class="text-subtle">·</span>
+            <span class="inline-flex h-[16px] px-1.5 items-center rounded-full bg-[#0070D1]/14 text-[#0070D1] text-[9px] font-medium uppercase">
+              PlayStation
+            </span>
+          </div>
+        </div>
+        <!-- Rarity -->
+        <div class="flex-shrink-0 self-start">
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface2 border border-[#4C9BFF]/40">
+            <div class="w-1.5 h-1.5 rounded-full bg-[#4C9BFF]"></div>
+            <span class="text-[10px] font-medium text-[#4C9BFF]">Rare 2.8%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ultra Rare (Steam) - Front Card -->
+      <div class="w-[380px] h-[96px] bg-surface2/96 backdrop-blur-md rounded-[16px] border border-[#F5A524]/50 p-4 flex flex-row items-center gap-4 glow-toast glow-ur -mt-16 z-10">
+        <!-- Icon -->
+        <div class="w-16 h-16 rounded-lg bg-surface3 flex-shrink-0 relative overflow-hidden p-1 border border-[#F5A524]/60">
+           <img src="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?auto=format&fit=crop&w=64&q=80" class="w-full h-full object-cover rounded-md" alt="Ultra Rare Icon">
+        </div>
+        <!-- Content -->
+        <div class="flex-1 flex flex-col justify-center min-w-0">
+          <div class="text-[11px] font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#FFD36B] to-[#F5A524] uppercase tracking-[0.06em] mb-0.5">Achievement Unlocked</div>
+          <h3 class="text-[16px] font-semibold text-text truncate mb-0.5">Lord of Frenzied Flame</h3>
+          <p class="text-[12px] text-muted truncate">Achieve the Lord of Frenzied Flame ending</p>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="text-[11px] font-medium text-subtle truncate">Elden Ring</span>
+            <span class="text-subtle">·</span>
+            <span class="inline-flex h-[16px] px-1.5 items-center rounded-full bg-[#66C0F4]/14 text-[#66C0F4] text-[9px] font-medium uppercase">
+              Steam
+            </span>
+          </div>
+        </div>
+        <!-- Rarity -->
+        <div class="flex-shrink-0 self-start">
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface2 border border-[#F5A524]/40">
+            <div class="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#FFD36B] to-[#F5A524]"></div>
+            <span class="text-[10px] font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#FFD36B] to-[#F5A524]">Ultra Rare 1.4%</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
