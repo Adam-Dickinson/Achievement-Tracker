@@ -25,14 +25,16 @@ Dependency rule: `shared` ← `main/store`, `main/providers` ← `main/sync` ←
 ## Commands
 
 ```bash
-pnpm install
-pnpm dev                 # run the app with hot reload
-pnpm test                # Vitest (Node tests + jsdom component tests)
-pnpm lint                # zero warnings allowed
-pnpm typecheck           # main/preload/shared and renderer configs
-pnpm format              # Prettier on src and config files (CI runs format:check)
-pnpm build               # typecheck + production build into ./out; run it with `pnpm start`
+npm install              # also downloads Electron's binary (postinstall)
+npm run dev              # run the app with hot reload
+npm test                 # Vitest (Node tests + jsdom component tests)
+npm run lint             # zero warnings allowed
+npm run typecheck        # main/preload/shared and renderer configs
+npm run format           # Prettier on src and config files (CI runs format:check)
+npm run build            # typecheck + production build into ./out; run it with `npm start`
 ```
+
+electron-vite looks for Electron's binary itself and fails with `Error: Electron uninstall` if it is missing. `npm install` fetches it via the `postinstall` script (`install-electron`); if it is ever missing, run `npx install-electron`.
 
 **Launching Electron from a shell that has `ELECTRON_RUN_AS_NODE` set (VS Code's extension host does, so Claude Code's shell has it) makes Electron behave as plain Node** and the app fails with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`. Unset it first (`env -u ELECTRON_RUN_AS_NODE ...` in bash, `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell).
 
@@ -66,4 +68,4 @@ Local project skills live in `.claude/skills/` (git-ignored, so only present on 
 
 ## Definition of done
 
-`pnpm lint`, `pnpm typecheck` and `pnpm test` pass, `pnpm format:check` is clean, docs are updated if behaviour or the spec changed, UI changes were checked by actually running the app, and for provider work: fixtures added and PROVIDERS.md updated with what was actually verified.
+`npm run lint`, `npm run typecheck` and `npm test` pass, `npm run format:check` is clean, docs are updated if behaviour or the spec changed, UI changes were checked by actually running the app, and for provider work: fixtures added and PROVIDERS.md updated with what was actually verified.

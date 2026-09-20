@@ -5,7 +5,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M0: Foundations and spikes (1-2 weeks)
 
 - [ ] Decide open questions in DESIGN.md §11 (license, OS scope, Steam key strategy)
-- [x] Scaffold: Electron + TypeScript + React project per [ARCHITECTURE.md](ARCHITECTURE.md) §6. Verified: lint, typecheck, 27 tests and the production build pass, and the built app was run: window, IPC and SQLite schema, tray-driven close, single instance, and a click-through toast. `pnpm dev` also verified
+- [x] Scaffold: Electron + TypeScript + React project per [ARCHITECTURE.md](ARCHITECTURE.md) §6. Verified: lint, typecheck, 27 tests and the production build pass, and the built app was run: window, IPC and SQLite schema, tray-driven close, single instance, and a click-through toast. `npm run dev` also verified
 - [x] CI workflow written (`.github/workflows/ci.yml`); confirm it passes on first push
 - [ ] Decide how main-process services are composed and shared (simple modules vs a tiny DI container) before M1 grows them
 - [~] **Spike A:** overlay window: transparent, click-through, no focus steal. Built and verified on Windows (window carries `WS_EX_TRANSPARENT` and `WS_EX_NOACTIVATE`; toast shown over a Steam window). Still to verify over a real borderless-windowed game and with multiple monitors / mixed DPI

@@ -86,7 +86,7 @@ Button click in React → `window.api.sendTestNotification()` → preload `ipcRe
 
 ```
 achievement-tracker/
-├── package.json  pnpm-lock.yaml
+├── package.json  package-lock.json
 ├── electron.vite.config.ts          # build config for main, preload and renderer (2 HTML entries)
 ├── vitest.config.ts                 # test config (Node by default; UI tests opt in to jsdom)
 ├── tsconfig.json  tsconfig.node.json  tsconfig.web.json

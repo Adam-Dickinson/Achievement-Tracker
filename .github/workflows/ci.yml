@@ -12,21 +12,16 @@ concurrency:
 jobs:
   build-test:
     runs-on: windows-latest
-    env:
-      # Tests and the build don't launch Electron, so skip downloading its ~100 MB binary.
-      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+          cache: npm
+      # `npm ci` installs exactly what package-lock.json says; the postinstall script downloads Electron.
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

@@ -256,7 +256,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 - **The overlay** only changes its own window; nothing is injected into other processes.
 - **Updates:** auto-update packages signed; signature verified before install (M6).
 - **Local files:** parse untrusted files (trophy/stats binaries) defensively, with size limits, throwing `ProviderError('parse', ...)` rather than crashing.
-- **Dependencies:** keep them patched (`pnpm audit` in CI is a candidate for M4).
+- **Dependencies:** keep them patched (`npm audit` in CI is a candidate for M4).
 
 ## 9. Testing strategy
 
@@ -267,7 +267,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | Providers | Fixture-driven tests using a stubbed `fetch`; parsers property-tested for binary formats |
 | React components | Vitest + Testing Library in jsdom, with `window.api` faked |
 | Whole app | Manual and scripted runs of the built app (launch, IPC, overlay window flags, close-to-tray, single instance); Playwright's Electron support is a candidate for automation |
-| CI | GitHub Actions on Windows: `pnpm format:check`, `lint`, `typecheck`, `test`, `build` |
+| CI | GitHub Actions on Windows: `npm run format:check`, `lint`, `typecheck`, `test`, `build` |
 
 ## 10. Observability
 

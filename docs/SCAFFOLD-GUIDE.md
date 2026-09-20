@@ -2,7 +2,7 @@
 
 Explains what was built, how the pieces connect, how to run it, and the React and Electron ideas you will meet when reading the code. It is written for someone who is new to React. Read it once, then keep it as a reference.
 
-> **Status:** everything here has been built and checked. `pnpm lint`, `pnpm typecheck` and `pnpm test` (27 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `pnpm dev` (hot reload) was also verified.
+> **Status:** everything here has been built and checked. `npm run lint`, `npm run typecheck` and `npm test` (27 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `npm run dev` (hot reload) was also verified.
 
 ---
 
@@ -52,7 +52,7 @@ The main window is a placeholder. The mockups in `docs/design/mockups/` show wha
 
 | Tool | What it does |
 |---|---|
-| **pnpm** | Installs packages (like npm). `pnpm-lock.yaml` pins exact versions. |
+| **npm** | Installs packages and runs the scripts in `package.json`. `package-lock.json` pins exact versions, so commit it. |
 | **electron-vite** (on Vite) | Builds all three parts (main, preload, renderer) and runs them with hot reload. Config: `electron.vite.config.ts`. |
 | **TypeScript** | Types. Two configs: `tsconfig.node.json` (main/preload/shared) and `tsconfig.web.json` (renderer). |
 | **React 19** | The UI library. |
@@ -240,31 +240,32 @@ Uses Node's built-in `node:sqlite`, so there is nothing native to compile. The s
 
 | Command | Does |
 |---|---|
-| `pnpm dev` | Run the app with hot reload. Edit a `.tsx` file and the window updates instantly. |
-| `pnpm test` | Run all tests once. `pnpm vitest` runs them in watch mode. |
-| `pnpm lint` | ESLint (zero warnings allowed) |
-| `pnpm typecheck` | TypeScript, both configs |
-| `pnpm format` | Prettier on `src` and config files |
-| `pnpm build` | Typecheck + production build into `out/` |
-| `pnpm start` | Run the production build |
-| `pnpm add <pkg>` / `pnpm add -D <pkg>` | Add a dependency / dev dependency |
+| `npm run dev` | Run the app with hot reload. Edit a `.tsx` file and the window updates instantly. |
+| `npm test` | Run all tests once. `npx vitest` runs them in watch mode. |
+| `npm run lint` | ESLint (zero warnings allowed) |
+| `npm run typecheck` | TypeScript, both configs |
+| `npm run format` | Prettier on `src` and config files |
+| `npm run build` | Typecheck + production build into `out/` |
+| `npm start` | Run the production build |
+| `npm install <pkg>` / `npm install -D <pkg>` | Add a dependency / dev dependency |
 
 In development the default menu is kept: press **Ctrl+Shift+I** (or Alt → View → Toggle Developer Tools) to open browser DevTools for the React UI. The React DevTools extension is worth installing later.
 
 ## 9. Your first 30 minutes
 
-1. `pnpm install`, then `pnpm dev`. The window opens and a trophy icon appears in the tray.
+1. `npm install` (downloads Electron the first time, ~100 MB), then `npm run dev`. The window opens and a trophy icon appears in the tray.
 2. Click **Send test notification** and watch the toast slide in at the bottom-right. Click it repeatedly to cycle the four rarity tiers. Try clicking *through* it: it ignores the mouse.
 3. **Change something and watch hot reload.** In `app/navigation.ts`, change the description of Dashboard and save. The window updates without a restart.
 4. **Add a nav item.** Add `'reports'` to `PageId` and an entry to `NAV_ITEMS` (pick an icon from lucide). The compiler and the UI both pick it up.
-5. **Break something on purpose.** Add `'gog'` to `PLATFORMS` in `shared/platform.ts` and run `pnpm typecheck`: it lists everything that must be updated. Undo with `git restore .`.
+5. **Break something on purpose.** Add `'gog'` to `PLATFORMS` in `shared/platform.ts` and run `npm run typecheck`: it lists everything that must be updated. Undo with `git restore .`.
 6. **Change the toast.** In `main/overlay-service.ts` the default duration is 5000 ms. In `overlay/Toast.tsx`, tweak the `transition` numbers and watch the animation change.
 7. Open `docs/design/mockups/dashboard.html` in a browser: that is what the Dashboard should look like, and a good first real screen to build in M1.
 
 ## 10. Troubleshooting
 
 - **`Cannot read properties of undefined (reading 'requestSingleInstanceLock')`:** the environment variable `ELECTRON_RUN_AS_NODE` is set (VS Code's extension host sets it), which makes Electron run as plain Node. Unset it in that shell (`Remove-Item Env:ELECTRON_RUN_AS_NODE`) or launch from a normal terminal.
-- **Electron binary missing after install:** run `node node_modules/electron/install.js`. (`package.json` allows Electron's install script via `pnpm.onlyBuiltDependencies`.)
+- **`Error: Electron uninstall` when running `npm run dev`:** Electron's binary wasn't downloaded. `npm install` normally fetches it through the `postinstall` script (`install-electron`); if it's missing (an interrupted install, or you used `--ignore-scripts`), run `npx install-electron`.
+- **`EBADENGINE` warnings during `npm install`:** you're on a Node version that some test dependencies don't list as supported (for example Node 25). It still works, but Node 24 LTS avoids the warnings.
 - **A Tailwind class does nothing:** check the class name is written out in full somewhere in the source, and that its token exists in `styles/index.css`.
 - **Blank window in a production build:** open DevTools (dev builds only) and check for Content-Security-Policy errors: production pages allow only same-origin scripts and styles.
 

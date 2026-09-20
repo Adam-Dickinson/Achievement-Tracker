@@ -48,14 +48,14 @@ Details and risks for each: [docs/PROVIDERS.md](docs/PROVIDERS.md).
 
 ## Getting started
 
-Prerequisites: [Node.js](https://nodejs.org) 22+ and [pnpm](https://pnpm.io) 9 (`npm i -g pnpm@9`). Windows is the primary target.
+Prerequisites: [Node.js](https://nodejs.org) 24 LTS (22.22+ also works; odd-numbered releases such as 25 work but print engine warnings from test dependencies). npm comes with Node. Windows is the primary target.
 
 ```bash
-pnpm install
-pnpm dev          # run the app with hot reload (tray icon + main window)
-pnpm test         # unit and component tests
-pnpm lint && pnpm typecheck
-pnpm build        # production build into ./out (run it with: pnpm start)
+npm install       # also downloads Electron's binary (~100 MB, first time only)
+npm run dev          # run the app with hot reload (tray icon + main window)
+npm test         # unit and component tests
+npm run lint && npm run typecheck
+npm run build        # production build into ./out (run it with: npm start)
 ```
 
 In the app, use the **Send test notification** button (or the tray menu) to see an unlock toast.

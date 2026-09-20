@@ -35,7 +35,7 @@ Frontend framework: **React** (largest ecosystem, best animation and component l
 - **Secrets:** behind a `SecretStore` interface; production will use Electron `safeStorage` (Windows DPAPI) in M1. `Secret` redacts itself in strings, JSON and `console.log`.
 - **Overlay:** a transparent, frameless, always-on-top, `focusable: false`, click-through (`setIgnoreMouseEvents`) window, created hidden at startup. Verified on Windows to carry `WS_EX_TRANSPARENT` and `WS_EX_NOACTIVATE`.
 - **Close-to-tray:** closing the main window *destroys* it (freeing its renderer, about 90 MB); the tray icon keeps the app alive and recreates the window on demand.
-- **Tooling:** pnpm 9, Vitest (Node tests for main/shared; jsdom + Testing Library for UI), ESLint (typescript-eslint, react-hooks) with zero warnings allowed, Prettier, TypeScript 6.0.
+- **Tooling:** npm (ships with Node; simplest for a single-package repo), Vitest (Node tests for main/shared; jsdom + Testing Library for UI), ESLint (typescript-eslint, react-hooks) with zero warnings allowed, Prettier, TypeScript 6.0.
 
 ## Consequences
 
@@ -46,6 +46,9 @@ Frontend framework: **React** (largest ecosystem, best animation and component l
 - **Installer size:** roughly 80-120 MB (Chromium). SPEC N-05 revised.
 - **`node:sqlite` is still flagged experimental in Node.** It works and is tested here, but the API could change; the `SqlDatabase` interface confines the impact. `better-sqlite3` is the fallback (needs an Electron rebuild step).
 - **Version pins:** Vite is pinned to 7 (electron-vite 5 doesn't support 8 yet) and TypeScript to 6.0 (typescript-eslint doesn't support 7 yet). Revisit on upgrades.
+- **Electron binary:** Electron 44 has no install script of its own, and electron-vite fails with `Error: Electron uninstall` if the binary is missing. `package.json` therefore has `"postinstall": "install-electron"`, so `npm install` downloads it (~100 MB, cached afterwards). CI downloads it too; there is no skip flag in this Electron version.
+- **Node version:** the toolchain is developed on Node 24 LTS (the same major as Electron 44's bundled Node). Newer odd-numbered releases work but print `EBADENGINE` warnings from test dependencies.
+- **Package manager:** npm was chosen over pnpm (used in the first scaffold) because pnpm added install-step friction and an untested electron-builder risk with little benefit for one package.
 - **Gotcha:** if the environment variable `ELECTRON_RUN_AS_NODE` is set (VS Code's extension host sets it), Electron runs as plain Node and the app fails with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`. Unset it when launching from such a shell.
 - **package.json must not set `"type": "module"`:** the main and preload bundles must be CommonJS (sandboxed preload scripts cannot be ES modules).
 - Two "worlds" (main process and renderer) with an IPC boundary: more to learn, but the contract lives in one file (`src/shared/ipc.ts`).
