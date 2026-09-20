@@ -26,7 +26,10 @@ pub enum ProviderError {
 impl ProviderError {
     /// Whether retrying later (with backoff) can plausibly succeed.
     pub fn is_retryable(&self) -> bool {
-        matches!(self, ProviderError::RateLimited { .. } | ProviderError::Network(_))
+        matches!(
+            self,
+            ProviderError::RateLimited { .. } | ProviderError::Network(_)
+        )
     }
 }
 

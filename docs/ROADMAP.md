@@ -5,7 +5,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M0: Foundations and spikes (1-2 weeks)
 
 - [ ] Decide open questions in DESIGN.md §11 (license, OS scope, Steam key strategy)
-- [x] Scaffold: Cargo workspace + Tauri shell + React/TS frontend per [ARCHITECTURE.md](ARCHITECTURE.md) §6 (Rust side not yet compiled, so run `cargo check --workspace`)
+- [x] Scaffold: Cargo workspace + Tauri shell + React/TS frontend per [ARCHITECTURE.md](ARCHITECTURE.md) §6 (verified locally: cargo check/test/clippy/fmt and `pnpm tauri dev` all pass)
 - [x] CI workflow written (`.github/workflows/ci.yml`); confirm it passes on first push
 - [ ] `tauri-specta` bindings wired up with one trivial command
 - [ ] **Spike A:** overlay window: transparent, click-through, no focus steal, over a borderless-windowed game

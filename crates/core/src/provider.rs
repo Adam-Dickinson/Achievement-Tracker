@@ -52,8 +52,10 @@ pub trait AchievementProvider: Send + Sync {
     async fn validate(&self, creds: &AccountCredentials) -> Result<AccountInfo, ProviderError>;
 
     /// All games with achievement data for this account.
-    async fn list_games(&self, creds: &AccountCredentials)
-        -> Result<Vec<RemoteGame>, ProviderError>;
+    async fn list_games(
+        &self,
+        creds: &AccountCredentials,
+    ) -> Result<Vec<RemoteGame>, ProviderError>;
 
     /// Full schema and unlock state for one game.
     async fn fetch_game(

@@ -29,7 +29,7 @@ cargo test --workspace
 pnpm lint && pnpm typecheck && pnpm test
 ```
 
-The scaffold exists: Rust crates are stubs (only `at-core` has real types; `store`/`providers`/`sync` are placeholders) and the frontend is a shell. The Rust workspace was written without a toolchain available, so run `cargo check --workspace` first and fix anything it finds. UI targets are in `docs/design/mockups/`; design tokens are in `src/styles/index.css` and `.superdesign/design-system.md`.
+The scaffold exists: Rust crates are stubs (only `at-core` has real types; `store`/`providers`/`sync` are placeholders) and the frontend is a shell. Verified on Windows at setup: `cargo check`, `cargo test` (8 tests), `cargo clippy -D warnings`, `cargo fmt --check`, the frontend checks, and `pnpm tauri dev` (main window opens; overlay is hidden by design). UI targets are in `docs/design/mockups/`; design tokens are in `src/styles/index.css` and `.superdesign/design-system.md`.
 
 ## Rules
 

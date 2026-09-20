@@ -2,7 +2,7 @@
 
 Written for someone new to Rust. It explains what was built in the initial commit, how the pieces connect, and the Rust concepts you'll meet when reading the code. Read it once, then use it as a reference.
 
-> **Honest status:** the Rust code has **never been compiled**. It was written on a machine without a Rust toolchain. The frontend was built and tested; the Rust was not. Your first job is to run `cargo check --workspace` and fix whatever it reports (see [§8](#8-your-first-30-minutes)). Compiler errors in Rust are unusually helpful, so this is a good way to learn.
+> **Status:** everything here has been built and checked. `cargo check`, `cargo test` (8 tests), `cargo clippy`, `cargo fmt --check` and the frontend checks pass, and `pnpm tauri dev` opens the app window. The first `cargo check` compiled with no errors. Rust's compiler is strict, so expect errors as soon as you start changing code; they are unusually helpful, and [§8](#8-your-first-30-minutes) walks you through the loop.
 
 ---
 
@@ -29,9 +29,9 @@ The app has two halves that talk to each other:
 | Docs | Design, spec, architecture, providers, roadmap, ADR, this guide | Complete drafts |
 | Mockups | 7 screens in `docs/design/mockups/` | Reference only |
 | Claude skills | `.claude/skills/*` recipes for recurring tasks | Ready to use |
-| **Rust workspace** | 5 crates (see §3) | `at-core` real, others stubs. **Uncompiled** |
+| **Rust workspace** | 5 crates (see §3) | `at-core` real, others stubs. Compiles, tests pass |
 | **Frontend** | React + Vite + Tailwind shell, 2 windows | Builds, lints, tests pass |
-| CI | `.github/workflows/ci.yml` | Written, never run |
+| CI | `.github/workflows/ci.yml` | Written, not yet run on GitHub (same commands pass locally) |
 | Icons | `src-tauri/icons/` generated from `app-icon.svg` | Done |
 
 Nothing *does* anything yet (no syncing, no notifications). The scaffold is the skeleton the milestones in the [roadmap](ROADMAP.md) fill in.
@@ -223,9 +223,10 @@ Full detail: [ARCHITECTURE.md](ARCHITECTURE.md) §3 and [SPEC.md](SPEC.md) §5.
 
 ## 7. Installing what you need (Windows)
 
-1. **Rust:** install from https://rustup.rs (choose the default). It also offers the **Visual Studio C++ Build Tools**; you need the "Desktop development with C++" workload.
-2. **WebView2:** already on Windows 11.
-3. **pnpm:** `npm i -g pnpm@9` (or `corepack enable`).
+1. **Rust:** `winget install Rustlang.Rustup` (or https://rustup.rs). The repo's `rust-toolchain.toml` makes rustup fetch the right toolchain automatically on first use. Open a new terminal afterwards so `cargo` is on your PATH.
+2. **C++ build tools:** `winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"` (multi-GB download, needs admin).
+3. **WebView2:** already on Windows 11.
+4. **pnpm:** `npm i -g pnpm@9` (or `corepack enable`).
 4. Recommended VS Code extensions are listed in `.vscode/extensions.json` (rust-analyzer is the important one: inline errors and type hints).
 
 Then verify: `rustc --version`, `cargo --version`, `pnpm --version`.
@@ -233,12 +234,11 @@ Then verify: `rustc --version`, `cargo --version`, `pnpm --version`.
 ## 8. Your first 30 minutes
 
 1. `pnpm install`
-2. `cargo check --workspace`. **Expect some errors** (the code was never compiled). Read each one top to bottom: Rust's messages say what's wrong, point at the line, and often suggest the exact fix. Fix the first error, re-run (later errors are often side effects of the first).
+2. `cargo check --workspace`. It should pass. The first run downloads and compiles Tauri, so it takes a minute or two; later runs are fast.
 3. `cargo test --workspace` and confirm the tests pass.
-4. `pnpm tauri dev` and confirm the window opens (a placeholder shell). The overlay window is hidden by design.
-5. Try the loop: change the `app_version` command in `src-tauri/src/commands/mod.rs`, re-run, and see it rebuild.
-
-Likely trouble spots to look at first: `src-tauri/tauri.conf.json` (window options can differ between Tauri versions), the dependency versions in `Cargo.toml`, and the trait/`async_trait` code in `provider.rs`.
+4. `pnpm tauri dev` and confirm the window opens (a placeholder shell). The overlay window is hidden by design. The first launch compiles the app (about 20 seconds after `cargo check` has run); later launches are quicker.
+5. **Break something on purpose.** In `crates/core/src/platform.rs`, add a new variant to `Platform` (say `Gog`) and run `cargo check --workspace`. The compiler will list every `match` that must handle it, which is the exact behaviour described in §4. Then undo the change (`git restore .`).
+6. Try the loop: change the `app_version` command in `src-tauri/src/commands/mod.rs`, re-run, and see it rebuild.
 
 ## 9. Learning resources
 
