@@ -38,6 +38,21 @@
   --color-rarity-rare: #5ab0ff;
   --color-rarity-ultra: #ffc94a;
 
+  /* The light and dark ends of each rarity's gradient (icon tile, ultra-rare chip), and the colour
+     of a glyph drawn on that gradient. */
+  --color-rarity-common-light: #66708a;
+  --color-rarity-common-dark: #3a4256;
+  --color-rarity-uncommon-light: #37d493;
+  --color-rarity-uncommon-dark: #127a55;
+  --color-rarity-rare-light: #5ab0ff;
+  --color-rarity-rare-dark: #2a5fd6;
+  --color-rarity-ultra-light: #ffe07a;
+  --color-rarity-ultra-dark: #ff8a1f;
+  --color-on-rarity-common: #ffffff;
+  --color-on-rarity-uncommon: #04231a;
+  --color-on-rarity-rare: #ffffff;
+  --color-on-rarity-ultra: #3a1c00;
+
   /* Generous radii: control = buttons and inputs, card = art and small tiles, panel = floating cards. */
   --radius-control: 14px;
   --radius-card: 18px;
@@ -49,29 +64,22 @@
     inset 0 1px 0 rgb(255 255 255 / 0.07), 0 28px 56px -22px rgb(0 0 0 / 0.8),
     0 10px 22px -10px rgb(0 0 0 / 0.55);
   --shadow-glow-primary: 0 12px 28px -10px rgb(196 245 66 / 0.7);
-  /* The unlock toast's shadow, one per rarity: an inset top highlight, a faint 4px ring, a big
-     dark drop shadow and a glow in the rarity's colour. Written out four times because a shared
-     variable would be resolved here at :root, where no rarity is known yet. */
-  --shadow-toast-common:
+  --shadow-chip-ultra: 0 0 18px -4px color-mix(in srgb, var(--color-rarity-ultra) 55%, transparent);
+}
+
+/* "inline" copies each value into the shadow class itself instead of pointing at a variable. That is
+   what lets these read --rarity: it is only set on an element inside a rarity scope (see
+   [data-rarity] below), so a normal token, resolved once at :root, would see nothing. */
+@theme inline {
+  /* The unlock toast: an inset top highlight, a faint 4px ring, a big dark drop shadow and a glow
+     in the rarity's colour. */
+  --shadow-toast:
     inset 0 1px 0 rgb(255 255 255 / 0.1),
-    0 0 0 4px color-mix(in srgb, var(--color-rarity-common) 10%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--rarity) 10%, transparent),
     0 26px 50px -16px rgb(0 0 0 / 0.9),
-    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-common) 45%, transparent);
-  --shadow-toast-uncommon:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    0 0 0 4px color-mix(in srgb, var(--color-rarity-uncommon) 10%, transparent),
-    0 26px 50px -16px rgb(0 0 0 / 0.9),
-    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-uncommon) 45%, transparent);
-  --shadow-toast-rare:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    0 0 0 4px color-mix(in srgb, var(--color-rarity-rare) 10%, transparent),
-    0 26px 50px -16px rgb(0 0 0 / 0.9),
-    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-rare) 45%, transparent);
-  --shadow-toast-ultra:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    0 0 0 4px color-mix(in srgb, var(--color-rarity-ultra) 10%, transparent),
-    0 26px 50px -16px rgb(0 0 0 / 0.9),
-    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-ultra) 45%, transparent);
+    0 12px 44px -6px color-mix(in srgb, var(--rarity) 45%, transparent);
+  /* A rarity-coloured icon tile: a glow underneath and a bright top edge. */
+  --shadow-tile: 0 10px 22px -10px var(--rarity), inset 0 1px 0 rgb(255 255 255 / 0.35);
 }
 
 @layer components {
@@ -88,6 +96,36 @@
 }
 
 @layer base {
+  /* Rarity scope. Put data-rarity="ultra_rare" (or common, uncommon, rare) on an element and it,
+     and everything inside it, can use: --rarity (the colour), --rarity-light and --rarity-dark
+     (the ends of its gradient) and --rarity-on (a glyph colour that reads on that gradient).
+     Components then style with text-(--rarity), border-(--rarity)/45 and so on, with no
+     per-rarity class tables. Adding a rarity means adding a rule here (a test checks). */
+  [data-rarity='common'] {
+    --rarity: var(--color-rarity-common);
+    --rarity-light: var(--color-rarity-common-light);
+    --rarity-dark: var(--color-rarity-common-dark);
+    --rarity-on: var(--color-on-rarity-common);
+  }
+  [data-rarity='uncommon'] {
+    --rarity: var(--color-rarity-uncommon);
+    --rarity-light: var(--color-rarity-uncommon-light);
+    --rarity-dark: var(--color-rarity-uncommon-dark);
+    --rarity-on: var(--color-on-rarity-uncommon);
+  }
+  [data-rarity='rare'] {
+    --rarity: var(--color-rarity-rare);
+    --rarity-light: var(--color-rarity-rare-light);
+    --rarity-dark: var(--color-rarity-rare-dark);
+    --rarity-on: var(--color-on-rarity-rare);
+  }
+  [data-rarity='ultra_rare'] {
+    --rarity: var(--color-rarity-ultra);
+    --rarity-light: var(--color-rarity-ultra-light);
+    --rarity-dark: var(--color-rarity-ultra-dark);
+    --rarity-on: var(--color-on-rarity-ultra);
+  }
+
   html,
   body,
   #root {

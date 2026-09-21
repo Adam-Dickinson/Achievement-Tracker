@@ -12,6 +12,9 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.test.{ts,tsx}'],
+    // Vitest normally swaps CSS imports for an empty string. The rarity-scope test reads the real
+    // stylesheet as text, so let that one file through.
+    css: { include: [/index\.css/] },
     environment: 'node',
   },
 })

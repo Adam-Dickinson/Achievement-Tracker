@@ -2,7 +2,7 @@
 
 Explains what was built, how the pieces connect, how to run it, and the React and Electron ideas you will meet when reading the code. It is written for someone who is new to React. Read it once, then keep it as a reference.
 
-> **Status:** everything here has been built and checked. `npm run lint`, `npm run typecheck` and `npm test` (33 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `npm run dev` (hot reload) was also verified.
+> **Status:** everything here has been built and checked. `npm run lint`, `npm run typecheck` and `npm test` (48 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `npm run dev` (hot reload) was also verified.
 
 ---
 
@@ -183,7 +183,7 @@ Giving `<Toast key={toast.id} />` a new `key` for each toast tells React "this i
 There is no separate CSS file per component. `className="flex items-center gap-3 rounded-control px-3 py-2.5 text-fg-muted"` reads: flex row, centred, 12px gap, our `control` corner radius, padding, muted text colour. Class names like `bg-surface-1`, `text-fg-muted` and `border-rarity-rare` come from the tokens in `styles/index.css`. Conditional styling is just a JavaScript expression building the string (see the `active ? ... : ...` in `Sidebar.tsx`).
 
 Two gotchas worth knowing:
-- Tailwind finds classes by scanning your source for **complete strings**, so write `'border-rarity-rare'`, never `` `border-rarity-${x}` `` (see the `STYLES` table in `Toast.tsx`).
+- Tailwind finds classes by scanning your source for **complete strings**, so write `'border-rarity-rare'`, never `` `border-rarity-${x}` `` (see `FILL` and `ULTRA_FILL` in `components/RarityChip.tsx`).
 - **Don't name a colour token `base`, `sm`, `lg`...** They collide with Tailwind's font-size classes (`text-base` is a size). This exact mistake made the toast title invisible during development; the background colour is now called `canvas`.
 
 ### Testing components
