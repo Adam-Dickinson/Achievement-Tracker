@@ -212,11 +212,12 @@ The database file is `achievement-tracker.db` inside Electron's per-user data fo
 | &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
 | `overlay/` (the toast window, Real) | |
 | &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes to toasts via `window.api.onToast`, shows the newest for its duration, then removes it. Its padding decides how much room the toast's shadow has. |
-| &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: rarity styles table (`STYLES`), slide-in/out animation with Motion, reduced-motion support. Being restyled to the Afterglow design. |
+| &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: rarity styles table (`STYLES`), slide-in/out animation with Motion, reduced-motion support. Shows a `RarityGem` beside its heading. Being restyled to the Afterglow design. |
 | &nbsp;&nbsp;[main.tsx](../src/renderer/src/overlay/main.tsx) | Entry for the overlay window. |
 | &nbsp;&nbsp;`OverlayApp.test.tsx`, `Toast.test.tsx` | Component tests. |
 | `components/` (shared UI, Real) | |
 | &nbsp;&nbsp;[Button.tsx](../src/renderer/src/components/Button.tsx) | Primary and secondary button; extra props pass through. |
+| &nbsp;&nbsp;[RarityGem.tsx](../src/renderer/src/components/RarityGem.tsx) | The rarity's gem shape (circle, diamond, hexagon, sparkle), picked from a `Record<Rarity, LucideIcon>` table and coloured with a `text-*` class. Decorative (`aria-hidden`): the rarity is always written out as text too. Used in the toast; the Library and Game detail screens will reuse it. |
 | &nbsp;&nbsp;[TrophyIcon.tsx](../src/renderer/src/components/TrophyIcon.tsx) | The app's trophy mark as an SVG you can colour with a `text-*` class. |
 | `features/` (Planned) | Seven empty folders with a `.gitkeep`: `dashboard`, `library`, `game-detail`, `activity`, `accounts`, `settings`, `onboarding`. **This is where each real screen will live.** |
 | [styles/index.css](../src/renderer/src/styles/index.css) | Global CSS and the design tokens: fonts, colours, radii, shadows, plus a `.bg-aurora` background class (defined, not applied yet) and base styles. See section 8. |
@@ -318,7 +319,8 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (27 tests in 9 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the overlay, and the toast.
+- **Coverage today** (33 tests in 10 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the overlay, the toast and the rarity gem.
+- **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/` is empty (just `.gitkeep`). Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **Not tested by automation:** the real windows, tray, and overlay behaviour. Those are checked by running the app.
 
