@@ -49,6 +49,29 @@
     inset 0 1px 0 rgb(255 255 255 / 0.07), 0 28px 56px -22px rgb(0 0 0 / 0.8),
     0 10px 22px -10px rgb(0 0 0 / 0.55);
   --shadow-glow-primary: 0 12px 28px -10px rgb(196 245 66 / 0.7);
+  /* The unlock toast's shadow, one per rarity: an inset top highlight, a faint 4px ring, a big
+     dark drop shadow and a glow in the rarity's colour. Written out four times because a shared
+     variable would be resolved here at :root, where no rarity is known yet. */
+  --shadow-toast-common:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 4px color-mix(in srgb, var(--color-rarity-common) 10%, transparent),
+    0 26px 50px -16px rgb(0 0 0 / 0.9),
+    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-common) 45%, transparent);
+  --shadow-toast-uncommon:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 4px color-mix(in srgb, var(--color-rarity-uncommon) 10%, transparent),
+    0 26px 50px -16px rgb(0 0 0 / 0.9),
+    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-uncommon) 45%, transparent);
+  --shadow-toast-rare:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 4px color-mix(in srgb, var(--color-rarity-rare) 10%, transparent),
+    0 26px 50px -16px rgb(0 0 0 / 0.9),
+    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-rare) 45%, transparent);
+  --shadow-toast-ultra:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 4px color-mix(in srgb, var(--color-rarity-ultra) 10%, transparent),
+    0 26px 50px -16px rgb(0 0 0 / 0.9),
+    0 12px 44px -6px color-mix(in srgb, var(--color-rarity-ultra) 45%, transparent);
 }
 
 @layer components {
