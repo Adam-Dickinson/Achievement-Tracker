@@ -69,15 +69,21 @@ Exclusive-fullscreen games render over normal windows. Mitigations:
 ### First-sync rule
 The first sync of a game establishes a **baseline**: existing unlocks are stored silently. Only unlocks that happen **after** baseline trigger pop-ups. This prevents a flood of hundreds of toasts on first connect.
 
-## 7. Visual direction (to be refined in design tool)
+## 7. Visual direction: "Afterglow"
 
-- Dark-first theme with a light option
-- Trophy-case feel: game art forward, generous cards, rarity accent colors
-- Platform colors used sparingly as badges only (Steam blue, Xbox green, PlayStation blue, Epic dark grey, Ubisoft blue, EA red, emulator purple)
-- Type: a clean geometric sans for UI, tabular figures for counts and percentages
-- Motion: subtle; rings animate on load, toast slide + fade, and respect OS "reduce motion"
+Designed on the Superdesign canvas (see [design/README.md](design/README.md)). The tokens live in `src/renderer/src/styles/index.css`.
 
-Design work (mockups for Dashboard, Library, Game detail, Toast, Onboarding) is tracked in [ROADMAP](ROADMAP.md) M0 and can be produced with Superdesign.
+- **Floating cards on a midnight canvas.** No sidebar. Every surface is a rounded card lifted off the page by a hairline border, a soft drop shadow and a glow tinted by its game's art. Navigation is a floating "island" bar at the top of the window.
+- **Game art is the interface, and it colours in.** A game's art is shown desaturated, with the full-colour art revealed up to its completion %, marked by a glowing lime edge. 100% is fully vivid with a gold crown. Completion is never shown as a ring.
+- **One accent.** Lime (`#C4F542`) marks active navigation, primary actions, progress, toggles and focus. Gold is reserved for Ultra Rare and completed games.
+- **Dark-first**, with a light theme as a later option.
+- **Rarity is always a gem icon + a text label + the %:** Common (slate circle), Uncommon (mint diamond), Rare (sky hexagon), Ultra Rare (gold sparkle with a glow). Never colour alone (see §10).
+- **Platform colours** appear only inside small circular platform badges (Steam blue, Xbox green, PlayStation blue, Epic grey, Ubisoft blue, EA red, emulator violet).
+- **Type:** Bricolage Grotesque for titles and big numerals, Figtree for UI text, tabular figures for every count and percentage.
+- **Shape:** generous radii (floating cards 26px, art 18px, buttons and inputs 14px, chips fully round).
+- **Motion:** springy but quick. The colour-in edge sweeps in on load, the toast springs in and fades out, and everything respects the OS "reduce motion" setting.
+
+Design work (mockups for Dashboard, Library, Game detail, Toast, Accounts, Notification settings, Onboarding) is tracked in [ROADMAP](ROADMAP.md) M0 and produced with Superdesign. Activity and the tray menu are not designed yet.
 
 ## 8. Cross-platform game linking
 

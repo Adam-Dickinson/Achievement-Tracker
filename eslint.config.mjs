@@ -5,7 +5,16 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['out', 'dist', 'node_modules', 'coverage', 'docs/design/mockups', 'resources'],
+    // .superdesign is git-ignored local design tooling, not part of the app.
+    ignores: [
+      'out',
+      'dist',
+      'node_modules',
+      'coverage',
+      'docs/design/mockups',
+      'resources',
+      '.superdesign',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

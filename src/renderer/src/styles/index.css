@@ -1,41 +1,67 @@
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/figtree';
 @import 'tailwindcss';
 
-/* Design tokens. Each --color-* becomes utility classes: --color-surface-1 -> bg-surface-1,
-   text-surface-1, border-surface-1... Keep in sync with docs/DESIGN.md §7 and the mockups. */
+/* Design tokens ("Afterglow" direction). Each --color-* becomes utility classes: --color-surface-1
+   -> bg-surface-1, text-surface-1, border-surface-1... Keep in sync with docs/DESIGN.md §7 and
+   the Superdesign canvas. */
 @theme {
-  --font-sans: 'Inter Variable', system-ui, sans-serif;
-  --font-display: 'Space Grotesk Variable', 'Inter Variable', sans-serif;
+  /* The names inside quotes are what @fontsource registers (note the "Variable" suffix). */
+  --font-sans: 'Figtree Variable', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', sans-serif;
 
   /* Named "canvas", not "base": Tailwind's text-base is a font size, so a colour called
      "base" would silently override it and turn text near-black. */
-  --color-canvas: #0b0d12;
-  --color-surface-1: #12151c;
-  --color-surface-2: #181c25;
-  --color-surface-3: #1f2430;
-  --color-line: #262c3a;
-  --color-fg: #e8eaf0;
-  --color-fg-muted: #8b93a7;
-  --color-fg-subtle: #5b6478;
+  --color-canvas: #080a10;
+  --color-surface-1: #121620;
+  --color-surface-2: #191e2b;
+  --color-surface-3: #222839;
+  /* Translucent white, so a border takes on the colour of whatever card it sits on. */
+  --color-line: rgb(255 255 255 / 0.07);
+  --color-fg: #f3f5fa;
+  --color-fg-muted: #9aa3b8;
+  --color-fg-subtle: #626b82;
 
-  --color-primary: #f5b942;
-  --color-primary-hover: #ffcb5c;
-  --color-on-primary: #1a1300;
+  /* Lime is the one accent: active nav, primary buttons, progress, toggles, focus rings.
+     Gold is kept for Ultra Rare and completed games (see rarity-ultra). */
+  --color-primary: #c4f542;
+  --color-primary-hover: #d6ff5c;
+  --color-on-primary: #0b1000;
 
-  --color-success: #3fb984;
-  --color-warning: #f2a33a;
-  --color-danger: #f0616d;
-  --color-info: #4c9bff;
+  --color-success: #4ade9a;
+  --color-warning: #ffb547;
+  --color-danger: #ff6b6b;
+  --color-info: #5ab0ff;
 
-  --color-rarity-common: #9aa3b5;
-  --color-rarity-uncommon: #3fb984;
-  --color-rarity-rare: #4c9bff;
-  --color-rarity-ultra: #f5a524;
+  --color-rarity-common: #9aa3b8;
+  --color-rarity-uncommon: #4ade9a;
+  --color-rarity-rare: #5ab0ff;
+  --color-rarity-ultra: #ffc94a;
 
-  --radius-control: 8px;
-  --radius-card: 12px;
-  --radius-panel: 16px;
+  /* Generous radii: control = buttons and inputs, card = art and small tiles, panel = floating cards. */
+  --radius-control: 14px;
+  --radius-card: 18px;
+  --radius-panel: 26px;
+
+  /* Tailwind turns --shadow-* into shadow-* classes. "float" is what makes a card look lifted:
+     a faint top highlight, then a large soft drop shadow. */
+  --shadow-float:
+    inset 0 1px 0 rgb(255 255 255 / 0.07), 0 28px 56px -22px rgb(0 0 0 / 0.8),
+    0 10px 22px -10px rgb(0 0 0 / 0.55);
+  --shadow-glow-primary: 0 12px 28px -10px rgb(196 245 66 / 0.7);
+}
+
+@layer components {
+  /* Use as className="bg-aurora": the soft teal / indigo / lime glow behind every screen. Put it
+     on the main window's outermost element. Not for the overlay: that window must stay
+     transparent. */
+  .bg-aurora {
+    background:
+      radial-gradient(1100px 540px at 4% -10%, rgb(22 150 132 / 0.36), transparent 62%),
+      radial-gradient(900px 520px at 100% 0%, rgb(70 80 200 / 0.26), transparent 62%),
+      radial-gradient(1000px 600px at 55% 112%, rgb(160 215 40 / 0.1), transparent 60%),
+      var(--color-canvas);
+  }
 }
 
 @layer base {
