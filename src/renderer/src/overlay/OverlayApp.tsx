@@ -34,7 +34,7 @@ export function OverlayApp() {
   }, [toast])
 
   return (
-    <div className="flex h-full items-end justify-end p-6">
+    <div className="flex h-full items-end justify-end px-10 pt-8 pb-16">
       <AnimatePresence>{toast && <Toast key={toast.id} {...toast.payload} />}</AnimatePresence>
     </div>
   )

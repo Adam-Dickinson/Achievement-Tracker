@@ -59,7 +59,7 @@ Status: the scaffold is real and verified (lint, typecheck, 27 tests, production
 - TypeScript strict (`noUncheckedIndexedAccess` on), no `any`; prefer `interface` for object shapes, string-literal unions over enums, and `Record<Union, ...>` tables so the compiler enforces exhaustiveness
 - Prettier formatting (no semicolons, single quotes); ESLint must pass with zero warnings; fix rather than disable rules, and explain any disable in a comment
 - React: function components and hooks; state as local as possible; effects must clean up after themselves; components under `features/<area>/`; shared UI in `components/`
-- Styling: Tailwind utility classes using the design tokens (`bg-surface-1`, `text-fg-muted`, `border-rarity-rare`...). **Don't name a colour token `base`, `sm`, `lg`, `xl` etc.** These collide with Tailwind's font-size utilities and silently break text colour. Never hard-code hex colours in components (the toast's 96% surface is the one documented exception).
+- Styling: Tailwind utility classes using the design tokens (`bg-surface-1`, `text-fg-muted`, `border-rarity-rare`...). **Don't name a colour token `base`, `sm`, `lg`, `xl` etc.** These collide with Tailwind's font-size utilities and silently break text colour. Never hard-code hex colours in components.
 - Match surrounding code; keep functions small; comments explain *why*
 
 ## Project skills
@@ -69,3 +69,12 @@ Local project skills live in `.claude/skills/` (git-ignored, so only present on 
 ## Definition of done
 
 `npm run lint`, `npm run typecheck` and `npm test` pass, `npm run format:check` is clean, docs are updated if behaviour or the spec changed, UI changes were checked by actually running the app, and for provider work: fixtures added and PROVIDERS.md updated with what was actually verified.
+
+## When the owner says they've committed
+
+Treat that as a request to sync the docs with the commit. Read the change (`git show`, or `git diff <base>..HEAD`), then update whatever it made stale:
+
+- `docs/ROADMAP.md` (tick or add items), `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, `docs/PROVIDERS.md` (only what was actually verified), `README.md`. A new ADR is only for an architectural decision.
+- The **Status** paragraph and any counts in this file (tests, providers, and so on).
+- Code comments the change made wrong, such as one describing removed behaviour.
+- Edit docs and comments only, never behaviour. Leave the edits uncommitted, and list what changed and anything you're unsure about.
