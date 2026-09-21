@@ -66,7 +66,7 @@ The renderer imports only `shared`, never `main`. Providers never touch the data
 | Change the tray menu | [main/tray.ts](../src/main/tray.ts) | The actions it calls are wired in `main/index.ts`. |
 | Change startup, single-instance or close-to-tray behaviour | [main/index.ts](../src/main/index.ts) | |
 | Add a screen | A folder under [renderer/src/features/](../src/renderer/src/features/) | Wire it into `app/App.tsx`; add a nav entry in `app/navigation.ts`. |
-| Change the sidebar or navigation | [app/Sidebar.tsx](../src/renderer/src/app/Sidebar.tsx), [app/navigation.ts](../src/renderer/src/app/navigation.ts) | |
+| Change the navigation (the island bar) | [app/IslandNav.tsx](../src/renderer/src/app/IslandNav.tsx), [app/navigation.ts](../src/renderer/src/app/navigation.ts) | |
 | Add a reusable UI piece (button, gem, card) | [renderer/src/components/](../src/renderer/src/components/) | |
 | Let the UI ask the main process for something | Section 11, recipe A | `shared/ipc.ts`, `main/ipc.ts`, `preload/index.ts`, `main/index.ts` |
 | Change the database schema | A **new** file in [main/store/migrations/](../src/main/store/migrations/) | Never edit `0001_init.sql`. Project skill: `db-migration`. |
@@ -206,10 +206,11 @@ The database file is `achievement-tracker.db` inside Electron's per-user data fo
 | [main.tsx](../src/renderer/src/main.tsx) | Entry for the main window: mounts `<App />` into `#root` and imports the global CSS. |
 | [env.d.ts](../src/renderer/src/env.d.ts) | Tells TypeScript that `window.api` exists and what type it has. |
 | `app/` (main window shell, Placeholder) | |
-| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected (`useState`) and the app info fetched from the main process (`useEffect`). Shows the sidebar and a placeholder page with the "Send test notification" button. **There is no router**: pages are just a value in state. |
-| &nbsp;&nbsp;[Sidebar.tsx](../src/renderer/src/app/Sidebar.tsx) | The current left sidebar. The Afterglow design replaces it with a floating "island" nav (not built yet). |
+| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected (`useState`) and the app info fetched from the main process (`useEffect`). Shows the island nav and a placeholder page with the "Send test notification" button. **There is no router**: pages are just a value in state. |
+| &nbsp;&nbsp;[IslandNav.tsx](../src/renderer/src/app/IslandNav.tsx) | The floating "island" bar at the top of the window: brand, one button per page (the current page is a lime pill) and the app version. It only shows what it is given (`selected`, `onSelect`, `info`); `App` owns the state. |
 | &nbsp;&nbsp;[navigation.ts](../src/renderer/src/app/navigation.ts) | `PageId` and `NAV_ITEMS`: Dashboard, Library, Activity, Accounts, Settings, each with a label, description and icon. |
 | &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
+| &nbsp;&nbsp;[IslandNav.test.tsx](../src/renderer/src/app/IslandNav.test.tsx) | Tests the "Main" navigation landmark, the current page, click reporting and the version text. |
 | `overlay/` (the toast window, Real) | |
 | &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes to toasts via `window.api.onToast`, shows the newest for its duration, then removes it. Its padding decides how much room the toast's shadow has. |
 | &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: gradient icon tile, a `RarityGem` heading, display-font title and percentage, a `RarityChip`, a spring-in and slide-out with Motion, a gold glint on ultra rare, and reduced-motion support. The card sits in its rarity colour scope (`data-rarity`), so it has no per-rarity class table. |
@@ -321,7 +322,7 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (48 tests in 12 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (57 tests in 13 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/` is empty (just `.gitkeep`). Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
@@ -400,7 +401,7 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Backoff helper | Real |
 | App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
 | Toast component | Real, in the Afterglow look (platform badge, stacking and queue still to do) |
-| Main window shell (sidebar, placeholder pages) | Placeholder |
+| Main window shell (island nav, placeholder pages) | Placeholder |
 | All providers | Stubs |
 | Sync scheduler, diff engine, baseline rule, `UnlockEvent` | Planned (M1) |
 | Production `SecretStore` (`safeStorage`) | Planned (M1) |

@@ -117,7 +117,7 @@ achievement-tracker/
 │       ├── index.html  overlay.html # one entry per window
 │       └── src/
 │           ├── main.tsx  env.d.ts   # window entry; types for window.api
-│           ├── app/                 # App.tsx, Sidebar.tsx, navigation.ts
+│           ├── app/                 # App.tsx, IslandNav.tsx, navigation.ts
 │           ├── overlay/             # main.tsx, OverlayApp.tsx, Toast.tsx
 │           ├── components/          # Button.tsx, TrophyIcon.tsx (shared UI)
 │           ├── features/            # dashboard/ library/ game-detail/ activity/
