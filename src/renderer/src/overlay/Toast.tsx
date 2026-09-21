@@ -48,7 +48,7 @@ export function Toast({ rarity, title, description, game, platform, percent }: T
       animate={{ opacity: 1, x: 0 }}
       exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: SLIDE_PX }}
       transition={{ duration: 0.26, ease: [0.2, 0.8, 0.2, 1] }}
-      className={`relative flex h-24 w-95 items-center gap-3 overflow-hidden rounded-panel border bg-surface-2 p-4 ${style.border} ${style.shadow}`}
+      className={`relative flex h-23 w-100 items-center gap-3 overflow-hidden rounded-panel border bg-surface-2 px-4 ${style.border} ${style.shadow}`}
     >
       <div
         className={`flex size-16 shrink-0 items-center justify-center rounded-card border-2 bg-surface-3 ${style.border}`}

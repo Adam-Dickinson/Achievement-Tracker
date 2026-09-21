@@ -69,3 +69,12 @@ Local project skills live in `.claude/skills/` (git-ignored, so only present on 
 ## Definition of done
 
 `npm run lint`, `npm run typecheck` and `npm test` pass, `npm run format:check` is clean, docs are updated if behaviour or the spec changed, UI changes were checked by actually running the app, and for provider work: fixtures added and PROVIDERS.md updated with what was actually verified.
+
+## When the owner says they've committed
+
+Treat that as a request to sync the docs with the commit. Read the change (`git show`, or `git diff <base>..HEAD`), then update whatever it made stale:
+
+- `docs/ROADMAP.md` (tick or add items), `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, `docs/PROVIDERS.md` (only what was actually verified), `README.md`. A new ADR is only for an architectural decision.
+- The **Status** paragraph and any counts in this file (tests, providers, and so on).
+- Code comments the change made wrong, such as one describing removed behaviour.
+- Edit docs and comments only, never behaviour. Leave the edits uncommitted, and list what changed and anything you're unsure about.
