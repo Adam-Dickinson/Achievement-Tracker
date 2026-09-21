@@ -4,6 +4,8 @@ Initial designs for every core screen, generated with [Superdesign](https://supe
 
 **Live canvas** (comment/iterate): https://superdesign.dev/teams/7cc1c153-6043-4e66-95ae-8dc30811ca1d/projects/4bd4cb42-4e16-4fb7-8ef0-f9cf56409448
 
+> **The canvas has moved on.** On 2026-09-21 the designs were reworked into the "Afterglow" direction (floating cards, colour-in game art, lime accent; see [DESIGN.md](../DESIGN.md) §7). The live canvas above is the source of truth. The HTML snapshots below still show the earlier gold-on-navy look until they are re-exported with the command at the bottom of this file. Activity is not designed yet.
+
 Static HTML snapshots live in [`mockups/`](mockups/); open them directly in a browser. Sizes are 1440x900.
 
 | Screen | Snapshot | Superdesign draft id | Build under `src/renderer/src/` |

@@ -74,4 +74,4 @@ Adding a platform or emulator? Read [docs/PROVIDERS.md](docs/PROVIDERS.md) for w
 
 ## License
 
-TBD (see [ROADMAP](docs/ROADMAP.md), open decisions).
+Licensed under the [GNU General Public License v3.0](LICENSE) (`GPL-3.0-only`).

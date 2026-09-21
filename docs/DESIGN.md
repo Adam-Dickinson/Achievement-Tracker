@@ -107,9 +107,11 @@ The same game appears under different IDs on each platform. We maintain a **cano
 - Toast content also exposed as OS notification text for screen readers (when fallback enabled)
 - Rarity is never conveyed by color alone (label + icon)
 
-## 11. Open questions
+## 11. Decisions
 
-- Windows-only v1, or ship macOS/Linux builds early?
-- Steam API key: ask the user to create one, or use OpenID + a shared key with a small proxy? (Leaning: user's own key, no server)
-- Hidden achievement handling: reveal descriptions after unlock only?
-- License choice (MIT / Apache-2.0 / GPL)
+These were open questions until 2026-09-21.
+
+- **Platforms:** Windows only for v1. macOS and Linux may follow later.
+- **Steam API key:** the user creates their own Steam Web API key and pastes it in. No server and no shared key, so nothing leaves the user's machine (see §9).
+- **Hidden achievements:** show the name, and reveal the description only after the achievement is unlocked. To be confirmed against a real Steam response when the Steam provider is built (see [PROVIDERS.md](PROVIDERS.md)).
+- **Licence:** GPL-3.0 (see the `LICENSE` file).

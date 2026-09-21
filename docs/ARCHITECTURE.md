@@ -46,6 +46,9 @@ Closing the main window destroys it (freeing its renderer, ~90 MB). The tray ico
 ### Dependency rule
 `shared` ← `main/store`, `main/providers` ← `main/sync` ← `main` (app). The renderer imports only `shared` (types, rarity helpers) and never anything from `main`. Providers never touch the store; the UI never calls providers (it asks the main process through IPC).
 
+### Service composition
+The main process is wired by hand, with no dependency-injection library. Each service (the store, the secret store, the sync engine, the notification service...) is a plain function or class that receives what it needs as arguments. `src/main/index.ts` is the one place that creates them and hands them to each other, which keeps every service easy to test with fakes. Revisit this only if the wiring in `index.ts` becomes hard to follow. Decided 2026-09-21.
+
 ## 3. Key data flows
 
 ### Unlock detection (polling provider)

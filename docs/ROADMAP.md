@@ -4,14 +4,14 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 ## M0: Foundations and spikes (1-2 weeks)
 
-- [ ] Decide open questions in DESIGN.md §11 (license, OS scope, Steam key strategy)
+- [x] Decide open questions in DESIGN.md §11 (license, OS scope, Steam key strategy): Windows only for v1, the user's own Steam key (no server), GPL-3.0, and hidden achievements show their name with the description revealed after unlock
 - [x] Scaffold: Electron + TypeScript + React project per [ARCHITECTURE.md](ARCHITECTURE.md) §6. Verified: lint, typecheck, 27 tests and the production build pass, and the built app was run: window, IPC and SQLite schema, tray-driven close, single instance, and a click-through toast. `npm run dev` also verified
-- [x] CI workflow written (`.github/workflows/ci.yml`); confirm it passes on first push
-- [ ] Decide how main-process services are composed and shared (simple modules vs a tiny DI container) before M1 grows them
+- [x] CI workflow written (`.github/workflows/ci.yml`); confirmed passing on GitHub Actions
+- [x] Decide how main-process services are composed and shared: plain modules wired by hand in `src/main/index.ts`, no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2)
 - [~] **Spike A:** overlay window: transparent, click-through, no focus steal. Built and verified on Windows (window carries `WS_EX_TRANSPARENT` and `WS_EX_NOACTIVATE`; toast shown over a Steam window). Still to verify over a real borderless-windowed game and with multiple monitors / mixed DPI
 - [ ] **Spike B:** RPCS3 trophy file format parse (fixture from real files)
 - [ ] **Spike C:** feasibility notes for Xenia, Epic, Ubisoft, EA (write verdicts into PROVIDERS.md)
-- [x] Mockups: Dashboard, Library, Game detail, Toast, Accounts, Notification settings, Onboarding ([docs/design](design/README.md)); Activity + tray menu still to design
+- [~] Mockups: Dashboard, Library, Game detail, Toast, Accounts, Notification settings, Onboarding are designed on the canvas in the "Afterglow" direction ([docs/design](design/README.md), [DESIGN.md](DESIGN.md) §7). Still to do: design Activity, and re-export the HTML snapshots in `docs/design/mockups/` (they still show the earlier look). The tray menu is a native Electron menu, so it needs no visual design
 - **Exit:** scaffold builds in CI, overlay spike works, spike verdicts recorded
 
 ## M1: Vertical slice, Steam and toasts (MVP core)
