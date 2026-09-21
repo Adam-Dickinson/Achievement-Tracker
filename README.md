@@ -42,6 +42,7 @@ Details and risks for each: [docs/PROVIDERS.md](docs/PROVIDERS.md).
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, folder structure |
 | [docs/PROVIDERS.md](docs/PROVIDERS.md) | Per-platform integration notes and risks |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Milestones and task breakdown |
+| [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md) | Where everything is: every folder and file, how they connect, and where to work for each kind of change |
 | [docs/SCAFFOLD-GUIDE.md](docs/SCAFFOLD-GUIDE.md) | What's in the scaffold, how to run it, and a React + Electron primer |
 | [docs/adr/](docs/adr/) | Architecture decision records |
 | [CLAUDE.md](CLAUDE.md) | Guide for Claude Code working in this repo |

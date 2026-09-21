@@ -1,0 +1,414 @@
+# Project Map: where everything is
+
+A guide to finding your way around the repo: what each folder and file is for, how the pieces connect, and where to work for each kind of change.
+
+- New to the codebase? Read sections 1 to 3, then follow the walkthrough in section 5.
+- Know what you want to change? Jump to the lookup table in section 2, or the recipes in section 11.
+- New to React or Electron? [SCAFFOLD-GUIDE.md](SCAFFOLD-GUIDE.md) is the primer; this document is the map.
+
+**Status labels used below.** **Real**: implemented and tested. **Placeholder**: works but is temporary. **Stub**: an empty file that marks where code will go. **Planned**: does not exist yet.
+
+**Keep this document current.** It is listed in the "when the owner says they've committed" rule in [CLAUDE.md](../CLAUDE.md), so it gets synced after commits. Paths change more often than concepts, so it names files and folders, not line numbers.
+
+---
+
+## 1. The 60-second picture
+
+Electron apps run as several separate programs. This one has three kinds of code, and knowing which kind a file belongs to tells you what it may do.
+
+```
+ src/main  ("main process": Node.js)         src/renderer  ("renderer": a web page)
+ ┌──────────────────────────────────┐        ┌────────────────────────────────────┐
+ │ owns the OS: windows, tray, DB,  │        │ React UI. Draws pixels. Untrusted: │
+ │ files, network, providers, sync  │        │ no Node.js, no file access.        │
+ └───────────────▲──────────────────┘        └───────────────▲────────────────────┘
+                 │  IPC (messages)                            │  window.api
+                 │                                            │
+                 └────────────►  src/preload  ◄───────────────┘
+                              (the one small, safe bridge)
+
+                     src/shared: types and tiny helpers imported by all three
+```
+
+- **Main process** (`src/main`): a Node.js program. It creates the windows, the tray icon and the database, and (from milestone M1) will talk to the platforms and run the sync. It can do anything on the machine.
+- **Renderer** (`src/renderer`): each window is a small web page running React. It is treated as untrusted web content, so it cannot touch the machine directly.
+- **Preload** (`src/preload`): a tiny script that runs before each page loads and hands the page one object, `window.api`. Everything the UI can ask the main process to do is on that object.
+- **Shared** (`src/shared`): plain TypeScript both sides import: the domain types, the provider interface, the IPC contract. It must not use Node or browser APIs.
+
+**Two windows** are created by [windows.ts](../src/main/windows.ts):
+
+| Window | HTML entry | React root | What it is |
+|---|---|---|---|
+| Main window | [index.html](../src/renderer/index.html) | [main.tsx](../src/renderer/src/main.tsx) then `app/App.tsx` | The normal app window. Closing it destroys it; the tray recreates it. |
+| Overlay | [overlay.html](../src/renderer/overlay.html) | [overlay/main.tsx](../src/renderer/src/overlay/main.tsx) then `overlay/OverlayApp.tsx` | A transparent, click-through, always-on-top window that only shows toasts. Created hidden at startup. |
+
+**The dependency rule** (also in [CLAUDE.md](../CLAUDE.md) and [ARCHITECTURE.md](ARCHITECTURE.md) §2):
+
+```
+shared  ←  main/store, main/providers  ←  main/sync  ←  main
+```
+
+The renderer imports only `shared`, never `main`. Providers never touch the database. The UI never calls providers. Every request from the UI to the main process goes through the IPC contract in `shared/ipc.ts`.
+
+---
+
+## 2. "I want to..." lookup
+
+| I want to... | Go to | Also touch / read |
+|---|---|---|
+| Change how the toast looks | [overlay/Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | Colours, shadows and radii come from [styles/index.css](../src/renderer/src/styles/index.css). The test is `Toast.test.tsx` next to it. |
+| Change the toast's corner, margin, or how long it stays | [main/overlay-service.ts](../src/main/overlay-service.ts) | `SCREEN_MARGIN` and `EXIT_ANIMATION_MS` are constants there; the 5000 ms default duration is a parameter of `show()`. |
+| Change the overlay window's size | [main/windows.ts](../src/main/windows.ts) (`OVERLAY_SIZE`) | **Must match** the padding in `overlay/OverlayApp.tsx` and the toast's size, or shadows get clipped. |
+| Change the sample toasts behind "Send test notification" | [main/sample-toasts.ts](../src/main/sample-toasts.ts) | They cycle ultra-rare, rare, uncommon, common. |
+| Change what counts as Rare, Ultra Rare and so on | [shared/rarity.ts](../src/shared/rarity.ts) | `STYLES` in `Toast.tsx` and the `--color-rarity-*` tokens; DESIGN.md §6. |
+| Add or change a colour, font, radius or shadow | [styles/index.css](../src/renderer/src/styles/index.css) (`@theme`) | [DESIGN.md](DESIGN.md) §7. See section 8 for the gotchas. |
+| Change the main window (size, background, security) | [main/windows.ts](../src/main/windows.ts) (`createMainWindow`, `webPreferences`) | Keep `contextIsolation` and `sandbox` on. |
+| Change the tray menu | [main/tray.ts](../src/main/tray.ts) | The actions it calls are wired in `main/index.ts`. |
+| Change startup, single-instance or close-to-tray behaviour | [main/index.ts](../src/main/index.ts) | |
+| Add a screen | A folder under [renderer/src/features/](../src/renderer/src/features/) | Wire it into `app/App.tsx`; add a nav entry in `app/navigation.ts`. |
+| Change the sidebar or navigation | [app/Sidebar.tsx](../src/renderer/src/app/Sidebar.tsx), [app/navigation.ts](../src/renderer/src/app/navigation.ts) | |
+| Add a reusable UI piece (button, gem, card) | [renderer/src/components/](../src/renderer/src/components/) | |
+| Let the UI ask the main process for something | Section 11, recipe A | `shared/ipc.ts`, `main/ipc.ts`, `preload/index.ts`, `main/index.ts` |
+| Change the database schema | A **new** file in [main/store/migrations/](../src/main/store/migrations/) | Never edit `0001_init.sql`. Project skill: `db-migration`. |
+| Write any SQL | Only under [src/main/store/](../src/main/store/) | Rule 8 in CLAUDE.md. |
+| Add a platform (Steam, Xbox, ...) | [main/providers/&lt;name&gt;/](../src/main/providers/) | [shared/platform.ts](../src/shared/platform.ts), [PROVIDERS.md](PROVIDERS.md). Skill: `add-provider`. |
+| Add an emulator or file-based source | [main/providers/](../src/main/providers/) | Skill: `add-emulator-adapter`. |
+| Work on sync (polling, diffing, backoff) | [src/main/sync/](../src/main/sync/) | [SPEC.md](SPEC.md) §5. First-sync rule: no toasts on the first sync of a game. |
+| Store a token or API key | [shared/secret.ts](../src/shared/secret.ts), [shared/secret-store.ts](../src/shared/secret-store.ts) | Never in SQLite, config or logs. The real `safeStorage` version is planned for M1. |
+| Change domain types (games, achievements, unlocks) | [shared/models.ts](../src/shared/models.ts) | |
+| Change the provider interface | [shared/provider.ts](../src/shared/provider.ts) | [SPEC.md](SPEC.md) §4. Every provider is affected. |
+| Add an error kind | [shared/errors.ts](../src/shared/errors.ts) | |
+| Change the build, path aliases or the production CSP | [electron.vite.config.ts](../electron.vite.config.ts) | |
+| Change lint rules | [eslint.config.mjs](../eslint.config.mjs) | |
+| Change formatting | [.prettierrc.json](../.prettierrc.json) | |
+| Change CI | [.github/workflows/ci.yml](../.github/workflows/ci.yml) | |
+| Change the app icon | [resources/](../resources/) (`icon.png`, `icon.ico`, `icon.svg`) | `windows.ts` and `tray.ts` import `icon.png`. |
+| Record an architectural decision | A new file in [docs/adr/](adr/) | Skill: `write-adr`. |
+| See what to build next | [ROADMAP.md](ROADMAP.md) | |
+| See what a screen should look like | The Superdesign canvas (link in [design/README.md](design/README.md)) | The HTML in `docs/design/mockups/` is out of date. |
+
+---
+
+## 3. Top-level files and folders
+
+```
+Achievement-Tracker/
+├── src/                     the app's code (section 4)
+├── tests/                   shared test data (fixtures only, for now)
+├── docs/                    all documentation (section 9)
+├── resources/               app icon
+├── .github/workflows/       CI
+├── out/                     build output (git-ignored)
+├── node_modules/            installed packages (git-ignored)
+├── .claude/                 local Claude Code project skills (git-ignored)
+├── .superdesign/            local design tooling (git-ignored)
+├── .vscode/                 your editor settings (git-ignored)
+└── config files             see below
+```
+
+| File | What it does | When you touch it |
+|---|---|---|
+| [package.json](../package.json) | Name, version, licence, `npm` scripts, dependencies. `"main"` points at the built main process (`out/main/index.js`). | Adding a package or script. **Never add `"type": "module"`** (main and preload must build as CommonJS). |
+| `package-lock.json` | Exact installed versions. CI uses it via `npm ci`. | Only by running npm. |
+| [electron.vite.config.ts](../electron.vite.config.ts) | Build config for all three parts: main, preload, renderer. Defines the `@shared` and `@` aliases, the two HTML entries (`index`, `overlay`), the React and Tailwind plugins, and a Content-Security-Policy that is injected only in production builds. Marks `node:sqlite` as external for main. | Adding an entry page, an alias, or changing the CSP. |
+| [vitest.config.ts](../vitest.config.ts) | Test runner config: aliases, and which files count as tests (`src/**/*.test.ts` and `.tsx`). Runs in Node by default. | Rarely. |
+| [tsconfig.json](../tsconfig.json) | Just points at the two below. | Never. |
+| [tsconfig.node.json](../tsconfig.node.json) | Type-checks `src/main`, `src/preload`, `src/shared` and the two config files, with Node types. | Adding a path alias. |
+| [tsconfig.web.json](../tsconfig.web.json) | Type-checks `src/renderer/src` and `src/shared` with browser types and JSX. Excludes `src/shared/**/*.test.ts`. | Adding a path alias. |
+| [eslint.config.mjs](../eslint.config.mjs) | Lint rules. Node globals for main/preload/shared, browser globals plus React-hooks rules for the renderer. Ignores build output, mockups, `resources` and `.superdesign`. | Changing rules (fix warnings rather than disabling them). |
+| [.prettierrc.json](../.prettierrc.json) | Formatting: 100 columns, no semicolons, single quotes, trailing commas. | Rarely. |
+| `.prettierignore` | What the formatter skips. | Rarely. |
+| `.editorconfig` | Editor basics: UTF-8, LF, 2-space indent. | Rarely. |
+| `.gitattributes` | Forces LF line endings and marks images and fonts as binary. | Never. |
+| `.gitignore` | Keeps out `node_modules`, `out`, databases, secrets, `tests/fixtures/_raw/`, `.claude`, `.vscode`, `.superdesign`. | Adding a new kind of local-only file. |
+| [CLAUDE.md](../CLAUDE.md) | Rules and commands for Claude Code in this repo. | When a project rule changes. |
+| [README.md](../README.md) | Public overview, links to the docs, how to run. | When setup or scope changes. |
+| `LICENSE` | GPL-3.0 text. | Never. |
+
+**Path aliases.** Two shortcuts are used in imports:
+
+- `@shared/...` means `src/shared/...` (main, preload and renderer).
+- `@/...` means `src/renderer/src/...` (renderer only).
+
+An alias has to be declared in **three** places, or something breaks: `electron.vite.config.ts` (the bundler), the `paths` in `tsconfig.node.json` and `tsconfig.web.json` (the type-checker), and `vitest.config.ts` (tests).
+
+---
+
+## 4. `src/`: the code, folder by folder
+
+### 4.1 `src/shared/`: types and contracts (Real)
+
+Runs in both worlds, so it may not import from `main` or `renderer`, and may not use Node or browser APIs.
+
+| File | What it holds |
+|---|---|
+| [index.ts](../src/shared/index.ts) | Re-exports everything below. Code in this repo imports the specific file instead (for example `@shared/ipc`). |
+| [platform.ts](../src/shared/platform.ts) | `PLATFORMS`: every source achievements can come from (steam, xbox, playstation, epic, ubisoft, ea, retroachievements, rpcs3, xenia, local_file). `PLATFORM_INFO` gives each a display name and an `unofficial` flag. **These ids are stored in the database, so never rename one.** `PLATFORM_INFO` is a `Record<Platform, ...>`, so adding a platform is a compile error until it is described. |
+| [rarity.ts](../src/shared/rarity.ts) | The `Rarity` type (`common`, `uncommon`, `rare`, `ultra_rare`), `rarityFromPercent()` (under 2% ultra rare, under 10% rare, up to 30% uncommon, else common), and `RARITY_LABEL`. |
+| [models.ts](../src/shared/models.ts) | The normalized shapes providers return: `RemoteGame`, `RemoteAchievement`, `RemoteUnlock`, `RemoteGameAchievements`, plus `AccountCredentials`, `AccountInfo` and `UnlockEvent`. Note `RemoteGame` has `iconUrl` only; the Library screens will need a cover URL added. |
+| [provider.ts](../src/shared/provider.ts) | The `AchievementProvider` interface every platform adapter implements (`authenticate`, `validate`, `listGames`, `fetchGame`, optional `watch`), `ProviderCapabilities` and `AuthInput`. |
+| [errors.ts](../src/shared/errors.ts) | `ProviderError` with a `kind` (`auth_expired`, `rate_limited`, `network`, `parse`, `unsupported`, `other`), an optional retry delay, and `isRetryable`. |
+| [secret.ts](../src/shared/secret.ts) | `Secret`: wraps a token so printing or serializing it shows `Secret(<redacted>)`. The only way to read it is `expose()`. |
+| [secret-store.ts](../src/shared/secret-store.ts) | The `SecretStore` interface and an in-memory implementation used by tests. The production version (Electron `safeStorage`) is **Planned** for M1. |
+| [ipc.ts](../src/shared/ipc.ts) | **The IPC contract.** Channel names (`IPC`), payload types (`AppInfo`, `ToastPayload`), and `AchievementTrackerApi`, the exact shape of `window.api`. This is the first place to look when the UI and main process need to talk. |
+
+Tests sit beside the code: `errors.test.ts`, `platform.test.ts`, `rarity.test.ts`, `secret.test.ts`.
+
+### 4.2 `src/main/`: the main process (Node.js)
+
+Top-level files (Real unless noted):
+
+| File | What it does |
+|---|---|
+| [index.ts](../src/main/index.ts) | **The entry point and wiring.** Takes the single-instance lock (a second launch just shows the first window); creates the main window on demand; keeps the app alive with no windows open (the tray keeps it reachable); hardens every window (no popups, no navigation away); opens the database; creates the overlay and the tray; registers IPC handlers. Services are plain modules wired together here by hand. There is no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2). |
+| [windows.ts](../src/main/windows.ts) | Creates both windows. Holds the shared security settings (`contextIsolation` on, `nodeIntegration` off, `sandbox` on, preload script). `createMainWindow()`: 1440x900, minimum 1024x680, shown once ready to avoid a white flash. `createOverlayWindow()`: transparent, frameless, always on top, click-through, unable to take focus. Also exports `OVERLAY_SIZE`. Loads the dev server URL in development and the built file in production. |
+| [overlay-service.ts](../src/main/overlay-service.ts) | `OverlayService.show(toast)`: waits for the overlay page to load, positions the window in the bottom-right of the primary display's work area, shows it without stealing focus, sends the toast over IPC, and hides the window after the toast's duration plus time for the exit animation. **Placeholder for now:** a new toast replaces the current one. The queue and stacking arrive in M1. |
+| [tray.ts](../src/main/tray.ts) | The tray icon and its menu: Open Achievement Tracker, Send test notification, Quit. Clicking the icon opens the window. It is a native Electron menu, so it has no React and no visual design. |
+| [ipc.ts](../src/main/ipc.ts) | `registerIpcHandlers()`: one `ipcMain.handle` per channel. Each first checks the sender is one of our own pages (`isTrustedSender`), then calls the handler passed in from `index.ts`. |
+| [sample-toasts.ts](../src/main/sample-toasts.ts) | Four sample unlocks, one per rarity, cycled by `nextSampleToast()`. Only used by "Send test notification". |
+| [env.d.ts](../src/main/env.d.ts) | Type declarations for Vite and electron-vite features such as `import.meta.glob` and the `?asset` import suffix. |
+
+`?asset`: `windows.ts` and `tray.ts` import the icon as `icon.png?asset`. That is an electron-vite feature that gives you a file path which still works after the app is built.
+
+**`store/`: the database (Real)**
+
+| File | What it does |
+|---|---|
+| [database.ts](../src/main/store/database.ts) | `openDatabase(path)`: opens SQLite through Node's built-in `node:sqlite`, turns on WAL mode and foreign keys, runs pending migrations and returns the handle and schema version. Today `index.ts` only uses the version; the handle is not yet passed to anything. |
+| [migrations.ts](../src/main/store/migrations.ts) | Loads every `migrations/NNNN_name.sql` file as text at build time, checks the filename, and sorts by version. |
+| [migrate.ts](../src/main/store/migrate.ts) | `applyMigrations()`: applies each migration newer than the database's version, each in its own transaction, tracking progress in SQLite's `user_version`. A failing migration rolls back and stops. |
+| [migrations/0001_init.sql](../src/main/store/migrations/0001_init.sql) | The schema: `account`, `game` (canonical, cross-platform), `platform_game` (a game on one account/platform, with `baseline_done` for the first-sync rule), `achievement`, `unlock` (with `notified`), `sync_state`, `setting`, plus two indexes. **Never edit a migration that has shipped**: add `0002_...sql`. |
+| [migrate.test.ts](../src/main/store/migrate.test.ts) | Tests numbering, creating the schema, running twice, and rollback. New migrations need an upgrade test here (rule 8). |
+
+The database file is `achievement-tracker.db` inside Electron's per-user data folder (`app.getPath('userData')`, normally under `%APPDATA%` on Windows).
+
+**`sync/`: keeping data fresh (mostly Planned)**
+
+- [backoff.ts](../src/main/sync/backoff.ts): Real. `backoffDelayMs()` gives exponential retry delays. Its test is `backoff.test.ts`.
+- Planned in M1/M2: the scheduler (one supervised task per account), the diff engine that applies the baseline rule and emits `UnlockEvent`s, and a running-game detector. Design: [SPEC.md](SPEC.md) §5.
+
+**`providers/`: one folder per platform (all Stubs)**
+
+`steam/`, `xbox/`, `playstation/`, `retroachievements/`, `rpcs3/`, `xenia/`, `epic/`, `ubisoft/`, `ea/`, `local-file/`. Each contains an `index.ts` with a comment describing the plan and `export {}`. Steam is first (M1), then RetroAchievements, RPCS3 and Xbox (M2). Providers are pure adapters: they return `Remote*` objects and never touch SQL, notifications or the UI. Notes on each platform are in [PROVIDERS.md](PROVIDERS.md); endpoints there are unverified until you capture a real response.
+
+### 4.3 `src/preload/`: the bridge (Real)
+
+[index.ts](../src/preload/index.ts) builds the `window.api` object and exposes it with `contextBridge.exposeInMainWorld`. It has three entries today: `getAppInfo`, `sendTestNotification` (both `ipcRenderer.invoke`), and `onToast`, which subscribes to toast messages and returns an "unsubscribe" function. The UI never receives `ipcRenderer` itself. Its type is `AchievementTrackerApi` from `shared/ipc.ts`, so the compiler tells you if the two drift apart.
+
+### 4.4 `src/renderer/`: the UI
+
+**HTML entry pages** (one per window): [index.html](../src/renderer/index.html) loads `src/main.tsx`; [overlay.html](../src/renderer/overlay.html) loads `src/overlay/main.tsx` and forces a transparent background, because the overlay window must not paint anything except the toast.
+
+**`src/renderer/src/`**
+
+| Path | What it is |
+|---|---|
+| [main.tsx](../src/renderer/src/main.tsx) | Entry for the main window: mounts `<App />` into `#root` and imports the global CSS. |
+| [env.d.ts](../src/renderer/src/env.d.ts) | Tells TypeScript that `window.api` exists and what type it has. |
+| `app/` (main window shell, Placeholder) | |
+| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected (`useState`) and the app info fetched from the main process (`useEffect`). Shows the sidebar and a placeholder page with the "Send test notification" button. **There is no router**: pages are just a value in state. |
+| &nbsp;&nbsp;[Sidebar.tsx](../src/renderer/src/app/Sidebar.tsx) | The current left sidebar. The Afterglow design replaces it with a floating "island" nav (not built yet). |
+| &nbsp;&nbsp;[navigation.ts](../src/renderer/src/app/navigation.ts) | `PageId` and `NAV_ITEMS`: Dashboard, Library, Activity, Accounts, Settings, each with a label, description and icon. |
+| &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
+| `overlay/` (the toast window, Real) | |
+| &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes to toasts via `window.api.onToast`, shows the newest for its duration, then removes it. Its padding decides how much room the toast's shadow has. |
+| &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: rarity styles table (`STYLES`), slide-in/out animation with Motion, reduced-motion support. Being restyled to the Afterglow design. |
+| &nbsp;&nbsp;[main.tsx](../src/renderer/src/overlay/main.tsx) | Entry for the overlay window. |
+| &nbsp;&nbsp;`OverlayApp.test.tsx`, `Toast.test.tsx` | Component tests. |
+| `components/` (shared UI, Real) | |
+| &nbsp;&nbsp;[Button.tsx](../src/renderer/src/components/Button.tsx) | Primary and secondary button; extra props pass through. |
+| &nbsp;&nbsp;[TrophyIcon.tsx](../src/renderer/src/components/TrophyIcon.tsx) | The app's trophy mark as an SVG you can colour with a `text-*` class. |
+| `features/` (Planned) | Seven empty folders with a `.gitkeep`: `dashboard`, `library`, `game-detail`, `activity`, `accounts`, `settings`, `onboarding`. **This is where each real screen will live.** |
+| [styles/index.css](../src/renderer/src/styles/index.css) | Global CSS and the design tokens: fonts, colours, radii, shadows, plus a `.bg-aurora` background class (defined, not applied yet) and base styles. See section 8. |
+
+---
+
+## 5. Walkthrough: what happens when you click "Send test notification"
+
+Following one real feature through every layer is the fastest way to see how the pieces connect.
+
+1. **Click.** The button in [App.tsx](../src/renderer/src/app/App.tsx) calls `window.api.sendTestNotification()`.
+2. **Preload.** [preload/index.ts](../src/preload/index.ts) turns that into `ipcRenderer.invoke(IPC.sendTestNotification)`. The channel name comes from [shared/ipc.ts](../src/shared/ipc.ts).
+3. **Main process receives it.** [main/ipc.ts](../src/main/ipc.ts) has an `ipcMain.handle` for that channel. It checks the sender is one of our own pages, then calls the handler.
+4. **The handler.** In [main/index.ts](../src/main/index.ts), `sendTestNotification` is `overlay.show(nextSampleToast())`. `nextSampleToast()` (in `sample-toasts.ts`) returns the next sample, cycling the four rarities.
+5. **Overlay service.** [overlay-service.ts](../src/main/overlay-service.ts) positions the overlay window in the bottom-right of the screen, shows it without taking focus, and sends the toast to it with `webContents.send(IPC.showToast, ...)`. It also starts a timer to hide the window later.
+6. **The overlay page receives it.** [OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) subscribed earlier with `window.api.onToast(...)` (preload wires that to `ipcRenderer.on`). The callback stores the toast in state.
+7. **React draws it.** State changed, so React re-renders and mounts [Toast.tsx](../src/renderer/src/overlay/Toast.tsx). Motion animates it in. A timer in `OverlayApp` clears the state after the toast's duration, which plays the exit animation.
+8. **Hide.** After the exit animation, the main process hides the overlay window.
+
+The tray's "Send test notification" item follows the same path from step 4 onward.
+
+The real feature works the same way. In M1 the sync engine detects an unlock and calls `overlay.show(...)` with real data instead of a sample.
+
+---
+
+## 6. Two things that surprise people
+
+**The renderer hot-reloads; the main process does not.** With `npm run dev`, edits to renderer code appear straight away. Edits to `src/main`, `src/preload`, and any `src/shared` code the main process imports need a full restart (tray **Quit**, then `npm run dev` again). Symptom: the UI shows your new code, but window sizes, tray items and IPC handlers behave as before.
+
+**The overlay's numbers are linked.** The toast is 400x92 (`Toast.tsx`). The overlay window is 480x188 (`OVERLAY_SIZE` in `windows.ts`). `OverlayApp.tsx` pads the toast by 40px at the sides, 32px above and 64px below, and the window is the toast plus that padding. Shadows and glows are drawn outside the toast's box, so this padding is the room they have. If you change one of these, change the others, or shadows are cut off at the window edge.
+
+Other things worth knowing:
+
+- Closing the main window **destroys** it (this saves memory). The app keeps running in the tray. Only **Quit** in the tray exits.
+- Only one copy of the app can run. A second launch focuses the first, so an open dev instance can make a second launch appear to do nothing.
+- Launching Electron from a shell with `ELECTRON_RUN_AS_NODE` set (VS Code's terminal has it) makes it behave as plain Node. See [CLAUDE.md](../CLAUDE.md).
+- The main window's initial background colour in `createMainWindow` is still the old navy (`#0B0D12`), not the Afterglow canvas colour. It only shows for an instant before the page paints.
+- The app icon in `resources/` is still the old gold-on-navy design.
+
+---
+
+## 7. The database
+
+- **Engine:** Node's built-in `node:sqlite`, so nothing native to compile. It is marked experimental in Node; the rest of the code only depends on a small `SqlDatabase` interface in `migrate.ts`, so switching drivers later is contained.
+- **Where SQL lives:** only `src/main/store`. Nothing else may contain SQL.
+- **Schema versions:** kept in SQLite's `user_version`. On every start, `applyMigrations()` runs any `NNNN_name.sql` newer than that number.
+- **Tables today** (from `0001_init.sql`): `account`, `game`, `platform_game`, `achievement`, `unlock`, `sync_state`, `setting`. The full annotated schema is in [SPEC.md](SPEC.md) §3.
+- **Secrets are never stored here.** Tokens go through `SecretStore`, keyed by account id.
+- **Changing it:** add `src/main/store/migrations/0002_something.sql`, add an upgrade test in `migrate.test.ts`, and update SPEC.md §3. Never edit an applied migration. The `db-migration` project skill walks through it.
+
+---
+
+## 8. Styling
+
+- **Framework:** Tailwind CSS 4. You style with classes, such as `bg-surface-1 rounded-panel p-4`.
+- **Tokens live in one place:** the `@theme` block in [styles/index.css](../src/renderer/src/styles/index.css). Every `--color-*`, `--radius-*`, `--shadow-*` and `--font-*` variable there becomes classes automatically. `--color-surface-1` gives `bg-surface-1`, `text-surface-1` and `border-surface-1`. `--shadow-float` gives `shadow-float`.
+- **Fonts:** Bricolage Grotesque (`font-display`, for titles and big numbers) and Figtree (`font-sans`, for everything else), bundled through `@fontsource-variable` packages.
+- **The design source:** the Superdesign canvas (link in [design/README.md](design/README.md)); the written direction is [DESIGN.md](DESIGN.md) §7.
+
+Rules and traps:
+
+1. **Never hard-code a hex colour in a component.** Use a token. If a token is missing, add one to `@theme`.
+2. **Don't name a colour token `base`, `sm`, `lg`, `xl` and so on.** They collide with Tailwind's font-size classes (`text-base` is a size) and silently break text colour.
+3. **Write class names in full.** Tailwind finds classes by scanning your source for complete strings. `'border-rarity-rare'` works; `` `border-rarity-${x}` `` does not. This is why `STYLES` in `Toast.tsx` spells everything out.
+4. **Only one `shadow-*` class applies per element.** Two do not combine. To layer shadows, define one token that contains all the layers.
+5. **Inside an arbitrary value like `shadow-[...]`, spaces must be underscores.** A real space splits the class in two.
+6. **Opacity on a token colour:** `bg-surface-1/60` or `border-rarity-rare/45` (any whole number).
+7. **A token that refers to a per-element variable will not work in `@theme`.** Variables resolve where they are declared, so it would be resolved at the page root. That is why the toast has four shadow tokens rather than one.
+
+---
+
+## 9. Documentation and design files
+
+`docs/`:
+
+| File | Answers |
+|---|---|
+| [DESIGN.md](DESIGN.md) | What the product is, who it is for, the screens, notification behaviour, the Afterglow visual direction (§7), privacy, accessibility, and the decisions made (§11). |
+| [SPEC.md](SPEC.md) | Requirements (functional and non-functional), the full DB schema (§3), the provider interface (§4), the sync algorithm (§5), the IPC contract (§6), settings defaults, security and testing strategy. |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Code areas and the dependency rule (§2), key data flows (§3), concurrency, overlay window details (§5), the planned folder structure (§6), technology summary (§7), extension points (§8). |
+| [PROVIDERS.md](PROVIDERS.md) | Per-platform notes and risks. **Endpoints are unverified**: confirm against a real response before coding. |
+| [ROADMAP.md](ROADMAP.md) | Milestones M0 to M6 and what is ticked off. |
+| [SCAFFOLD-GUIDE.md](SCAFFOLD-GUIDE.md) | A React and Electron primer using this code, a command cheat sheet, and known gaps. |
+| [adr/](adr/) | Architecture decision records. ADR-0003 (Electron, TypeScript, React) is current; 0001 and 0002 are superseded. |
+| [design/README.md](design/README.md) | The canvas link, the draft ids for each screen, and which file each screen becomes. |
+| `design/mockups/*.html` | Seven static snapshots (dashboard, library, game detail, toast, accounts, notification settings, onboarding). **Out of date:** they show the earlier gold-on-navy look. The canvas is the source of truth until they are re-exported. |
+| PROJECT-MAP.md | This file. |
+
+Other docs-like things:
+
+- [CLAUDE.md](../CLAUDE.md): the rules Claude Code follows here, including the docs-sync rule.
+- `.claude/skills/` (git-ignored, so only on machines that have it): four project skills, `add-provider`, `add-emulator-adapter`, `db-migration`, `write-adr`.
+- `.superdesign/` (git-ignored): local design tooling, the design-system files and scripts used to produce the canvas drafts. Not part of the app.
+
+---
+
+## 10. Tests
+
+- **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
+- **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
+- **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
+- **Coverage today** (27 tests in 9 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the overlay, and the toast.
+- **Fixtures:** `tests/fixtures/` is empty (just `.gitkeep`). Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
+- **Not tested by automation:** the real windows, tray, and overlay behaviour. Those are checked by running the app.
+
+---
+
+## 11. Recipes
+
+### A. Add something the UI can ask the main process for (a new IPC call)
+
+Four files, in this order. TypeScript flags any you forget.
+
+1. [shared/ipc.ts](../src/shared/ipc.ts): add a channel to `IPC`, add any payload types, and add the method to `AchievementTrackerApi`.
+2. [main/ipc.ts](../src/main/ipc.ts): add it to the `IpcHandlers` interface and add an `ipcMain.handle(...)` that checks `isTrustedSender` first. Validate any payload you accept.
+3. [main/index.ts](../src/main/index.ts): implement the handler in the object passed to `registerIpcHandlers`.
+4. [preload/index.ts](../src/preload/index.ts): add the method to the `api` object.
+
+Then update any test that fakes `window.api` (`App.test.tsx`, `OverlayApp.test.tsx`), and mention it in SPEC.md §6.
+
+### B. Build a real screen (for example Library)
+
+1. Create components in `src/renderer/src/features/library/` (the folder already exists).
+2. If it needs data, add an IPC call (recipe A), backed by a query in `src/main/store`.
+3. In [App.tsx](../src/renderer/src/app/App.tsx), render your component when `page` is `'library'` instead of the placeholder text. There is no router.
+4. Reuse `components/` and the tokens. Add a test file beside your component.
+5. Check the design on the canvas first.
+
+### C. Add a design token
+
+Add it to `@theme` in `styles/index.css`, use the class in a component, and note it in DESIGN.md §7 if it is part of the visual direction.
+
+### D. Change the toast
+
+Colours, shadows and radii: tokens in `styles/index.css`. Layout, per-rarity classes and animation: `overlay/Toast.tsx`. Size: `Toast.tsx`, plus `OVERLAY_SIZE` and `OverlayApp.tsx` (section 6). Try it with the tray's "Send test notification".
+
+### E. Add a database table or column
+
+New migration file plus an upgrade test (section 7). Update the row types in `shared` if a provider or the UI needs them.
+
+### F. Add a platform
+
+Add its id to `PLATFORMS` and `PLATFORM_INFO` in `shared/platform.ts` (the compiler lists what else needs updating), implement `AchievementProvider` under `main/providers/<name>/`, add sanitized fixtures and tests, record what you verified in PROVIDERS.md, and add a connect view under `features/accounts/`. Follow the `add-provider` skill.
+
+---
+
+## 12. Commands and workflow
+
+| Command | Does |
+|---|---|
+| `npm run dev` | Runs the app. Hot reload covers renderer code only; main-process changes need a restart (section 6). |
+| `npm run format:check` | Checks formatting without changing files. |
+| `npm run format` | Fixes formatting. |
+| `npm run lint` | ESLint, zero warnings allowed. |
+| `npm run typecheck` | TypeScript for main/preload/shared and for the renderer. |
+| `npm test` | Vitest. |
+| `npm run build` | Typecheck, then a production build into `out/`. |
+| `npm start` | Runs the built app from `out/`. |
+
+**Workflow:** branch from `main`, make a change, run the four checks (format:check, lint, typecheck, test), commit, push, and open a pull request to `main`. CI runs the same checks plus `npm run build` on `windows-latest` for every pull request and every push to `main`. After a commit, docs and comments get synced (rule in CLAUDE.md).
+
+**Done means:** the four checks pass, docs are updated if behaviour changed, and UI changes were checked in the running app.
+
+---
+
+## 13. What is real and what is not yet
+
+| Area | Status |
+|---|---|
+| Shared types, provider interface, errors, secrets (in-memory store) | Real |
+| Database, migrations, schema | Real |
+| Backoff helper | Real |
+| App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
+| Toast component | Real, being restyled to Afterglow |
+| Main window shell (sidebar, placeholder pages) | Placeholder |
+| All providers | Stubs |
+| Sync scheduler, diff engine, baseline rule, `UnlockEvent` | Planned (M1) |
+| Production `SecretStore` (`safeStorage`) | Planned (M1) |
+| Toast queue and stacking | Planned (M1) |
+| Autostart, extra tray items (Sync now, Do Not Disturb, Recent unlocks) | Planned (M1 and later) |
+| Real screens under `features/*` | Planned (M1 onward) |
+| Floating "island" nav | Planned |
+| Activity screen design | Not designed yet |
+| Installer, signing, auto-update | Planned (M6) |
+
+For the order things will be built in, see [ROADMAP.md](ROADMAP.md).
+
+---
+
+## 14. Where to read next
+
+- New to React: [SCAFFOLD-GUIDE.md](SCAFFOLD-GUIDE.md) §5, which explains components, props, state, effects and keys using this code.
+- Before a non-trivial change: the docs listed at the top of [CLAUDE.md](../CLAUDE.md).
+- Before touching a platform: [PROVIDERS.md](PROVIDERS.md).
+- To see the design: the Superdesign canvas, via [design/README.md](design/README.md).

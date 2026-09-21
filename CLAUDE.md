@@ -74,7 +74,7 @@ Local project skills live in `.claude/skills/` (git-ignored, so only present on 
 
 Treat that as a request to sync the docs with the commit. Read the change (`git show`, or `git diff <base>..HEAD`), then update whatever it made stale:
 
-- `docs/ROADMAP.md` (tick or add items), `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, `docs/PROVIDERS.md` (only what was actually verified), `README.md`. A new ADR is only for an architectural decision.
+- `docs/ROADMAP.md` (tick or add items), `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, `docs/PROVIDERS.md` (only what was actually verified), `docs/PROJECT-MAP.md` (the file map: new, moved or removed files and changed status labels), `README.md`. A new ADR is only for an architectural decision.
 - The **Status** paragraph and any counts in this file (tests, providers, and so on).
 - Code comments the change made wrong, such as one describing removed behaviour.
 - Edit docs and comments only, never behaviour. Leave the edits uncommitted, and list what changed and anything you're unsure about.
