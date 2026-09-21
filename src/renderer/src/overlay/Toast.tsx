@@ -49,7 +49,7 @@ export function Toast({ rarity, title, description, game, platform, percent }: T
       exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: SLIDE_PX }}
       transition={{ duration: 0.26, ease: [0.2, 0.8, 0.2, 1] }}
       // 96%-opaque surface-2: the one documented exception to "colours come from tokens".
-      className={`relative flex h-24 w-[380px] items-center gap-3 overflow-hidden rounded-panel border bg-[#181c25f5] p-4 ${style.border} ${style.shadow}`}
+      className={`relative flex h-24 w-95 items-center gap-3 overflow-hidden rounded-panel border bg-[#181c25f5] p-4 ${style.border} ${style.shadow}`}
     >
       <div
         className={`flex size-16 shrink-0 items-center justify-center rounded-card border-2 bg-surface-3 ${style.border}`}
@@ -77,7 +77,7 @@ export function Toast({ rarity, title, description, game, platform, percent }: T
         // A single shimmer sweep across ultra-rare toasts.
         <motion.div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+          className="pointer-events-none absolute inset-0 bg-linear-to-r from-transparent via-white/15 to-transparent"
           initial={{ x: '-100%' }}
           animate={{ x: '100%' }}
           transition={{ duration: 0.9, delay: 0.35, ease: 'easeInOut' }}
