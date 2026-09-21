@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/Button'
 import type { AppInfo } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
-import { Sidebar } from './Sidebar'
+import { IslandNav } from './IslandNav'
 
 /**
  * The main window's shell. Screens are built milestone by milestone under `features/`; target
@@ -22,8 +22,8 @@ export function App() {
   const current = NAV_ITEMS.find((item) => item.id === page) ?? NAV_ITEMS[0]!
 
   return (
-    <div className="flex h-full">
-      <Sidebar selected={page} onSelect={setPage} info={info} />
+    <div className="flex h-full flex-col">
+      <IslandNav selected={page} onSelect={setPage} info={info} />
 
       <main className="flex-1 overflow-y-auto p-8">
         <h1 className="font-display text-3xl font-semibold">{current.label}</h1>
