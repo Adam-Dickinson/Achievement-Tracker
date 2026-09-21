@@ -38,7 +38,7 @@ electron-vite looks for Electron's binary itself and fails with `Error: Electron
 
 **Launching Electron from a shell that has `ELECTRON_RUN_AS_NODE` set (VS Code's extension host does, so Claude Code's shell has it) makes Electron behave as plain Node** and the app fails with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`. Unset it first (`env -u ELECTRON_RUN_AS_NODE ...` in bash, `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell).
 
-Status: the scaffold is real and verified (lint, typecheck, 48 tests, production build, and a scripted run of the built app). `shared` and `main/store` have real code; `main/providers` and most of `main/sync` are stubs. The UI is a placeholder shell plus a working animated toast. UI targets are on the Superdesign canvas (link in `docs/design/README.md`); the HTML snapshots in `docs/design/mockups/` still show the pre-"Afterglow" look until they are re-exported. Design tokens are in `src/renderer/src/styles/index.css`.
+Status: the scaffold is real and verified (lint, typecheck, 57 tests, production build, and a scripted run of the built app). `shared` and `main/store` have real code; `main/providers` and most of `main/sync` are stubs. The UI is a placeholder shell under the floating island nav, plus a working animated toast. UI targets are on the Superdesign canvas (link in `docs/design/README.md`); the HTML snapshots in `docs/design/mockups/` still show the pre-"Afterglow" look until they are re-exported. Design tokens are in `src/renderer/src/styles/index.css`.
 
 ## Rules
 

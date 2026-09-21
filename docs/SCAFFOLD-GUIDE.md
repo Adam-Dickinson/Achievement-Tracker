@@ -2,7 +2,7 @@
 
 Explains what was built, how the pieces connect, how to run it, and the React and Electron ideas you will meet when reading the code. It is written for someone who is new to React. Read it once, then keep it as a reference.
 
-> **Status:** everything here has been built and checked. `npm run lint`, `npm run typecheck` and `npm test` (48 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `npm run dev` (hot reload) was also verified.
+> **Status:** everything here has been built and checked. `npm run lint`, `npm run typecheck` and `npm test` (57 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `npm run dev` (hot reload) was also verified.
 
 ---
 
@@ -43,7 +43,7 @@ Decision and reasoning: [ADR-0003](adr/0003-electron-typescript-react.md).
 | `src/main/store` | SQLite schema, migration runner, database opener | Real, tested against a real SQLite database |
 | `src/main` | Windows, tray, single instance, overlay service, IPC handlers | Working |
 | `src/main/providers`, `sync` | Per-platform stubs; backoff calculation | Stubs / one small piece |
-| `src/renderer` | App shell (sidebar + placeholder pages), animated toast, Button, icons | Working, placeholder content |
+| `src/renderer` | App shell (island nav + placeholder pages), animated toast, Button, icons | Working, placeholder content |
 | CI | `.github/workflows/ci.yml` | Written, not yet run on GitHub (same commands pass locally) |
 
 The main window is a placeholder. The mockups in `docs/design/mockups/` show what it should become, milestone by milestone ([roadmap](ROADMAP.md)).
@@ -90,8 +90,8 @@ The main window is a placeholder. The mockups in `docs/design/mockups/` show wha
 | File | What it is |
 |---|---|
 | `main.tsx` | Starts React in the main window |
-| `app/App.tsx` | The shell: holds which page is selected, renders `Sidebar` and the page |
-| `app/Sidebar.tsx`, `app/navigation.ts` | The nav list (data in `navigation.ts`, UI in `Sidebar.tsx`) |
+| `app/App.tsx` | The shell: holds which page is selected, renders `IslandNav` and the page |
+| `app/IslandNav.tsx`, `app/navigation.ts` | The nav list (data in `navigation.ts`, UI in `IslandNav.tsx`) |
 | `components/Button.tsx`, `TrophyIcon.tsx` | Small reusable components |
 | `overlay/OverlayApp.tsx` | Root of the overlay window: listens for toasts and shows one |
 | `overlay/Toast.tsx` | The unlock toast, with rarity colours and animation |
@@ -124,7 +124,7 @@ export function Button({ variant = 'primary', className = '', ...props }: Button
 That is why `<Button onClick={...} disabled>` just works. Props flow **down** (parent to child) and are read-only.
 
 ### Rendering lists and conditionals
-In `Sidebar.tsx`, `NAV_ITEMS.map(...)` turns an array into a list of buttons. Each item needs a stable `key` so React can track it. For "show this only if...", JSX uses `&&`:
+In `IslandNav.tsx`, `NAV_ITEMS.map(...)` turns an array into a list of buttons. Each item needs a stable `key` so React can track it. For "show this only if...", JSX uses `&&`:
 
 ```tsx
 {toast && <Toast key={toast.id} {...toast.payload} />}   // renders nothing when toast is null
@@ -140,7 +140,7 @@ const [page, setPage] = useState<PageId>('dashboard')
 `page` is the current value; `setPage(x)` changes it **and makes React re-run the component** to redraw with the new value. Never change state by assigning to it directly; always call the setter. This "state changes → UI redraws" loop is the core idea of React.
 
 ### Lifting state up
-`App` owns `page`, and passes `selected={page}` and `onSelect={setPage}` down to `Sidebar`. The sidebar doesn't own the selection; it just reports clicks upward. When two components need the same data, keep it in their nearest common parent.
+`App` owns `page`, and passes `selected={page}` and `onSelect={setPage}` down to `IslandNav`. The nav doesn't own the selection; it just reports clicks upward. When two components need the same data, keep it in their nearest common parent.
 
 ### Effects: doing something outside React (`useEffect`)
 In `App.tsx`, asking the main process for the app info:
@@ -180,7 +180,7 @@ Giving `<Toast key={toast.id} />` a new `key` for each toast tells React "this i
 `onClick={() => onSelect(item.id)}` attaches a handler. Handlers are normal functions; write them inline while small.
 
 ### Tailwind: styling with classes
-There is no separate CSS file per component. `className="flex items-center gap-3 rounded-control px-3 py-2.5 text-fg-muted"` reads: flex row, centred, 12px gap, our `control` corner radius, padding, muted text colour. Class names like `bg-surface-1`, `text-fg-muted` and `border-rarity-rare` come from the tokens in `styles/index.css`. Conditional styling is just a JavaScript expression building the string (see the `active ? ... : ...` in `Sidebar.tsx`).
+There is no separate CSS file per component. `className="flex items-center gap-3 rounded-control px-3 py-2.5 text-fg-muted"` reads: flex row, centred, 12px gap, our `control` corner radius, padding, muted text colour. Class names like `bg-surface-1`, `text-fg-muted` and `border-rarity-rare` come from the tokens in `styles/index.css`. Conditional styling is just a JavaScript expression building the string (see the `active ? ... : ...` in `IslandNav.tsx`).
 
 Two gotchas worth knowing:
 - Tailwind finds classes by scanning your source for **complete strings**, so write `'border-rarity-rare'`, never `` `border-rarity-${x}` `` (see `FILL` and `ULTRA_FILL` in `components/RarityChip.tsx`).
