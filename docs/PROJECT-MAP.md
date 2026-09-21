@@ -60,7 +60,7 @@ The renderer imports only `shared`, never `main`. Providers never touch the data
 | Change the toast's corner, margin, or how long it stays | [main/overlay-service.ts](../src/main/overlay-service.ts) | `SCREEN_MARGIN` and `EXIT_ANIMATION_MS` are constants there; the 5000 ms default duration is a parameter of `show()`. |
 | Change the overlay window's size | [main/windows.ts](../src/main/windows.ts) (`OVERLAY_SIZE`) | **Must match** the padding in `overlay/OverlayApp.tsx` and the toast's size, or shadows get clipped. |
 | Change the sample toasts behind "Send test notification" | [main/sample-toasts.ts](../src/main/sample-toasts.ts) | They cycle ultra-rare, rare, uncommon, common. |
-| Change what counts as Rare, Ultra Rare and so on | [shared/rarity.ts](../src/shared/rarity.ts) | `STYLES` in `Toast.tsx` and the `--color-rarity-*` tokens; DESIGN.md §6. |
+| Change what counts as Rare, Ultra Rare and so on | [shared/rarity.ts](../src/shared/rarity.ts) | The `[data-rarity]` rules in `styles/index.css` (every rarity needs one; a test checks) and the `--color-rarity-*` tokens; DESIGN.md §6. Recipe G. |
 | Add or change a colour, font, radius or shadow | [styles/index.css](../src/renderer/src/styles/index.css) (`@theme`) | [DESIGN.md](DESIGN.md) §7. See section 8 for the gotchas. |
 | Change the main window (size, background, security) | [main/windows.ts](../src/main/windows.ts) (`createMainWindow`, `webPreferences`) | Keep `contextIsolation` and `sandbox` on. |
 | Change the tray menu | [main/tray.ts](../src/main/tray.ts) | The actions it calls are wired in `main/index.ts`. |
@@ -212,15 +212,16 @@ The database file is `achievement-tracker.db` inside Electron's per-user data fo
 | &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
 | `overlay/` (the toast window, Real) | |
 | &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes to toasts via `window.api.onToast`, shows the newest for its duration, then removes it. Its padding decides how much room the toast's shadow has. |
-| &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: rarity styles table (`STYLES`), slide-in/out animation with Motion, reduced-motion support. Shows a `RarityGem` beside its heading. Being restyled to the Afterglow design. |
+| &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: gradient icon tile, a `RarityGem` heading, display-font title and percentage, a `RarityChip`, a spring-in and slide-out with Motion, a gold glint on ultra rare, and reduced-motion support. The card sits in its rarity colour scope (`data-rarity`), so it has no per-rarity class table. |
 | &nbsp;&nbsp;[main.tsx](../src/renderer/src/overlay/main.tsx) | Entry for the overlay window. |
 | &nbsp;&nbsp;`OverlayApp.test.tsx`, `Toast.test.tsx` | Component tests. |
 | `components/` (shared UI, Real) | |
 | &nbsp;&nbsp;[Button.tsx](../src/renderer/src/components/Button.tsx) | Primary and secondary button; extra props pass through. |
+| &nbsp;&nbsp;[RarityChip.tsx](../src/renderer/src/components/RarityChip.tsx) | A small pill with the rarity's gem and name. Ultra rare gets a gradient fill and a glow. Uses the rarity scope, so it can go anywhere: the toast, Library cards, Game detail. |
 | &nbsp;&nbsp;[RarityGem.tsx](../src/renderer/src/components/RarityGem.tsx) | The rarity's gem shape (circle, diamond, hexagon, sparkle), picked from a `Record<Rarity, LucideIcon>` table and coloured with a `text-*` class. Decorative (`aria-hidden`): the rarity is always written out as text too. Used in the toast; the Library and Game detail screens will reuse it. |
 | &nbsp;&nbsp;[TrophyIcon.tsx](../src/renderer/src/components/TrophyIcon.tsx) | The app's trophy mark as an SVG you can colour with a `text-*` class. |
 | `features/` (Planned) | Seven empty folders with a `.gitkeep`: `dashboard`, `library`, `game-detail`, `activity`, `accounts`, `settings`, `onboarding`. **This is where each real screen will live.** |
-| [styles/index.css](../src/renderer/src/styles/index.css) | Global CSS and the design tokens: fonts, colours, radii, shadows, plus a `.bg-aurora` background class (defined, not applied yet) and base styles. See section 8. |
+| [styles/index.css](../src/renderer/src/styles/index.css) | Global CSS and the design tokens: fonts, colours, radii, shadows, the rarity scope (`[data-rarity]` rules that set `--rarity` and friends), plus a `.bg-aurora` background class (defined, not applied yet) and base styles. See section 8. |
 
 ---
 
@@ -281,11 +282,12 @@ Rules and traps:
 
 1. **Never hard-code a hex colour in a component.** Use a token. If a token is missing, add one to `@theme`.
 2. **Don't name a colour token `base`, `sm`, `lg`, `xl` and so on.** They collide with Tailwind's font-size classes (`text-base` is a size) and silently break text colour.
-3. **Write class names in full.** Tailwind finds classes by scanning your source for complete strings. `'border-rarity-rare'` works; `` `border-rarity-${x}` `` does not. This is why `STYLES` in `Toast.tsx` spells everything out.
+3. **Write class names in full.** Tailwind finds classes by scanning your source for complete strings. `'border-rarity-rare'` works; `` `border-rarity-${x}` `` does not. This is why `FILL` and `ULTRA_FILL` in `RarityChip.tsx` are written out in full.
 4. **Only one `shadow-*` class applies per element.** Two do not combine. To layer shadows, define one token that contains all the layers.
 5. **Inside an arbitrary value like `shadow-[...]`, spaces must be underscores.** A real space splits the class in two.
 6. **Opacity on a token colour:** `bg-surface-1/60` or `border-rarity-rare/45` (any whole number).
-7. **A token that refers to a per-element variable will not work in `@theme`.** Variables resolve where they are declared, so it would be resolved at the page root. That is why the toast has four shadow tokens rather than one.
+7. **A token that reads a per-element variable needs `@theme inline`.** A normal `@theme` token is resolved once, at the page root, where `--rarity` is not set. `--shadow-toast` and `--shadow-tile` live in an `@theme inline` block, which copies the value into the class so the variable is read on the element.
+8. **Rarity colours come from the rarity scope.** Put `data-rarity={rarity}` on an element, then use `text-(--rarity)`, `border-(--rarity)/45`, `bg-(--rarity)/14`, `from-(--rarity-light)`, `to-(--rarity-dark)` and `text-(--rarity-on)`. Adding a rarity means adding a `[data-rarity='...']` rule in `styles/index.css`; the `rarity-scope` test fails if one is missing. Two traps: Tailwind turns an underscore inside `data-[rarity=ultra_rare]:` into a space, so do not use data-attribute variants for rarity; and Motion writes the whole `transform`, so pass skew and similar through Motion (`skewX`), not a Tailwind class.
 
 ---
 
@@ -319,9 +321,10 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (33 tests in 10 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the overlay, the toast and the rarity gem.
+- **Coverage today** (48 tests in 12 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/` is empty (just `.gitkeep`). Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
+- **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
 - **Not tested by automation:** the real windows, tray, and overlay behaviour. Those are checked by running the app.
 
 ---
@@ -363,6 +366,10 @@ New migration file plus an upgrade test (section 7). Update the row types in `sh
 
 Add its id to `PLATFORMS` and `PLATFORM_INFO` in `shared/platform.ts` (the compiler lists what else needs updating), implement `AchievementProvider` under `main/providers/<name>/`, add sanitized fixtures and tests, record what you verified in PROVIDERS.md, and add a connect view under `features/accounts/`. Follow the `add-provider` skill.
 
+### G. Add a rarity
+
+Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/rarity.ts`. The compiler then flags `RarityGem` until it has a shape. Add its colour, gradient-end and glyph tokens to `@theme` in `styles/index.css`, and a `[data-rarity='...']` rule that sets the four `--rarity` variables (the `rarity-scope` test fails until you do). Check the toast and the chip in the running app.
+
 ---
 
 ## 12. Commands and workflow
@@ -392,7 +399,7 @@ Add its id to `PLATFORMS` and `PLATFORM_INFO` in `shared/platform.ts` (the compi
 | Database, migrations, schema | Real |
 | Backoff helper | Real |
 | App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
-| Toast component | Real, being restyled to Afterglow |
+| Toast component | Real, in the Afterglow look (platform badge, stacking and queue still to do) |
 | Main window shell (sidebar, placeholder pages) | Placeholder |
 | All providers | Stubs |
 | Sync scheduler, diff engine, baseline rule, `UnlockEvent` | Planned (M1) |
