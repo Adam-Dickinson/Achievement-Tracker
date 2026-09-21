@@ -1,100 +1,80 @@
 import { motion, useReducedMotion } from 'motion/react'
+import { RarityChip } from '@/components/RarityChip'
 import { RarityGem } from '@/components/RarityGem'
 import { TrophyIcon } from '@/components/TrophyIcon'
 import type { ToastPayload } from '@shared/ipc'
-import { RARITY_LABEL, type Rarity } from '@shared/rarity'
 
 /** What the toast draws. How long it stays on screen is the overlay's concern, not the toast's. */
 export type ToastProps = Omit<ToastPayload, 'durationMs'>
 
-interface ToastStyle {
-  border: string // the icon tile's border, full strength
-  cardBorder: string // the card's own border, softer so the glow does the talking
-  text: string
-  shadow: string
-}
-
-// Full class names must appear literally so Tailwind can find them at build time.
-const STYLES: Record<Rarity, ToastStyle> = {
-  common: {
-    border: 'border-rarity-common',
-    cardBorder: 'border-rarity-common/45',
-    text: 'text-rarity-common',
-    shadow: 'shadow-toast-common',
-  },
-  uncommon: {
-    border: 'border-rarity-uncommon',
-    cardBorder: 'border-rarity-uncommon/45',
-    text: 'text-rarity-uncommon',
-    shadow: 'shadow-toast-uncommon',
-  },
-  rare: {
-    border: 'border-rarity-rare',
-    cardBorder: 'border-rarity-rare/45',
-    text: 'text-rarity-rare',
-    shadow: 'shadow-toast-rare',
-  },
-  ultra_rare: {
-    border: 'border-rarity-ultra',
-    cardBorder: 'border-rarity-ultra/75',
-    text: 'text-rarity-ultra',
-    shadow: 'shadow-toast-ultra',
-  },
-}
-
 const SLIDE_PX = 56
+
+// Springs in from the side while fading in quickly; leaves with a short fade and slide. Opacity is
+// kept off the spring so it cannot overshoot.
+const ENTER = {
+  x: { type: 'spring', stiffness: 420, damping: 32 },
+  opacity: { duration: 0.15 },
+} as const
+const EXIT = { duration: 0.2, ease: 'easeIn' } as const
 
 /**
  * The unlock toast. Spec: docs/DESIGN.md §6. Design: the toast draft on the Superdesign canvas
  * (docs/design/README.md); the HTML snapshot in mockups/ is pre-Afterglow.
  * It slides in and out when it is mounted/unmounted inside an <AnimatePresence>.
+ *
+ * Every colour comes from the --rarity variables that `data-rarity` sets (see index.css).
  */
 export function Toast({ rarity, title, description, game, platform, percent }: ToastProps) {
-  const style = STYLES[rarity]
   const reduceMotion = useReducedMotion() // honour the OS "reduce motion" setting
+  const isUltra = rarity === 'ultra_rare'
 
   return (
     <motion.div
+      data-rarity={rarity}
       role="status"
       aria-live="polite"
       initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: SLIDE_PX }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: SLIDE_PX }}
-      transition={{ duration: 0.26, ease: [0.2, 0.8, 0.2, 1] }}
-      className={`relative flex h-23 w-100 items-center gap-3 overflow-hidden rounded-panel border bg-surface-1 bg-linear-to-b from-white/6 to-white/1 px-4 ${style.cardBorder} ${style.shadow}`}
+      animate={{ opacity: 1, x: 0, transition: ENTER }}
+      exit={
+        reduceMotion
+          ? { opacity: 0, transition: EXIT }
+          : { opacity: 0, x: SLIDE_PX, transition: EXIT }
+      }
+      className={`relative flex h-23 w-100 items-center gap-3 overflow-hidden rounded-panel border bg-surface-1 bg-linear-to-b from-white/6 to-white/1 px-4 shadow-toast ${isUltra ? 'border-(--rarity)/75' : 'border-(--rarity)/45'}`}
     >
-      <div
-        className={`flex size-16 shrink-0 items-center justify-center rounded-card border-2 bg-surface-3 ${style.border}`}
-      >
-        <TrophyIcon className={`h-7 w-6 ${style.text}`} />
+      <div className="flex size-15 shrink-0 items-center justify-center rounded-card bg-linear-140 from-(--rarity-light) to-(--rarity-dark) text-(--rarity-on) shadow-tile">
+        <TrophyIcon className="h-7 w-6" />
       </div>
 
       <div className="min-w-0 flex-1">
-        <div
-          className={`flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.06em] uppercase ${style.text}`}
-        >
+        <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-widest text-(--rarity) uppercase">
           <RarityGem rarity={rarity} className="size-3" />
           Achievement unlocked
         </div>
-        <div className="truncate text-base font-semibold">{title}</div>
+        <div className="font-display truncate text-lg leading-6 font-bold">{title}</div>
         <div className="truncate text-xs text-fg-muted">{description}</div>
-        <div className="truncate text-xs text-fg-subtle">
+        <div className="mt-0.5 truncate text-[11px] text-fg-subtle">
           {game} · {platform}
         </div>
       </div>
 
-      <div className="text-right">
-        <div className={`text-xs font-semibold ${style.text}`}>{RARITY_LABEL[rarity]}</div>
-        <div className="text-xs text-fg-muted">{percent}%</div>
+      <div className="flex min-w-19 shrink-0 flex-col items-end gap-1">
+        <span
+          className={`font-display text-[28px] leading-7 font-extrabold ${isUltra ? 'text-(--rarity)' : 'text-fg'}`}
+        >
+          {percent}%
+        </span>
+        <RarityChip rarity={rarity} />
       </div>
 
-      {rarity === 'ultra_rare' && !reduceMotion && (
-        // A single shimmer sweep across ultra-rare toasts.
+      {isUltra && !reduceMotion && (
+        // One gold glint sweeping across the card. skewX goes through Motion, not a Tailwind
+        // class, because Motion writes the whole transform and would overwrite a class's skew.
         <motion.div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-linear-to-r from-transparent via-white/15 to-transparent"
-          initial={{ x: '-100%' }}
-          animate={{ x: '100%' }}
+          className="pointer-events-none absolute inset-y-0 left-0 w-15 bg-linear-to-r from-transparent via-(--rarity-light)/30 to-transparent"
+          initial={{ x: -80, skewX: -18 }}
+          animate={{ x: 440, skewX: -18 }}
           transition={{ duration: 0.9, delay: 0.35, ease: 'easeInOut' }}
         />
       )}

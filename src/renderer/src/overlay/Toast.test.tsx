@@ -60,4 +60,19 @@ describe('Toast', () => {
     const heading = screen.getByText('Achievement unlocked')
     expect(heading.querySelector('svg')).not.toBeNull()
   })
+
+  it('puts the whole card in its rarity colour scope', () => {
+    render(
+      <Toast
+        rarity="uncommon"
+        title="Fleet Footed"
+        description="Win a race using only the starter car"
+        game="Forza Horizon 5"
+        platform="Xbox"
+        percent={18.5}
+      />,
+    )
+
+    expect(screen.getByRole('status')).toHaveAttribute('data-rarity', 'uncommon')
+  })
 })
