@@ -6,27 +6,38 @@ import { RARITY_LABEL, type Rarity } from '@shared/rarity'
 /** What the toast draws. How long it stays on screen is the overlay's concern, not the toast's. */
 export type ToastProps = Omit<ToastPayload, 'durationMs'>
 
+interface ToastStyle {
+  border: string // the icon tile's border, full strength
+  cardBorder: string // the card's own border, softer so the glow does the talking
+  text: string
+  shadow: string
+}
+
 // Full class names must appear literally so Tailwind can find them at build time.
-const STYLES: Record<Rarity, { border: string; text: string; shadow: string }> = {
+const STYLES: Record<Rarity, ToastStyle> = {
   common: {
     border: 'border-rarity-common',
+    cardBorder: 'border-rarity-common/45',
     text: 'text-rarity-common',
-    shadow: 'shadow-[0_12px_40px_rgba(0,0,0,0.55)]',
+    shadow: 'shadow-toast-common',
   },
   uncommon: {
     border: 'border-rarity-uncommon',
+    cardBorder: 'border-rarity-uncommon/45',
     text: 'text-rarity-uncommon',
-    shadow: 'shadow-[0_12px_40px_rgba(0,0,0,0.55)]',
+    shadow: 'shadow-toast-uncommon',
   },
   rare: {
     border: 'border-rarity-rare',
+    cardBorder: 'border-rarity-rare/45',
     text: 'text-rarity-rare',
-    shadow: 'shadow-[0_12px_40px_rgba(0,0,0,0.55)]',
+    shadow: 'shadow-toast-rare',
   },
   ultra_rare: {
     border: 'border-rarity-ultra',
+    cardBorder: 'border-rarity-ultra/75',
     text: 'text-rarity-ultra',
-    shadow: 'shadow-[0_12px_40px_rgba(0,0,0,0.55),0_0_32px_rgb(255_201_74/0.35)]',
+    shadow: 'shadow-toast-ultra',
   },
 }
 
@@ -49,7 +60,7 @@ export function Toast({ rarity, title, description, game, platform, percent }: T
       animate={{ opacity: 1, x: 0 }}
       exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: SLIDE_PX }}
       transition={{ duration: 0.26, ease: [0.2, 0.8, 0.2, 1] }}
-      className={`relative flex h-23 w-100 items-center gap-3 overflow-hidden rounded-panel border bg-surface-2 px-4 ${style.border} ${style.shadow}`}
+      className={`relative flex h-23 w-100 items-center gap-3 overflow-hidden rounded-panel border bg-surface-1 bg-linear-to-b from-white/6 to-white/1 px-4 ${style.cardBorder} ${style.shadow}`}
     >
       <div
         className={`flex size-16 shrink-0 items-center justify-center rounded-card border-2 bg-surface-3 ${style.border}`}
