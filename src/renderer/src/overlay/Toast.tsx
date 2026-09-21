@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react'
+import { RarityGem } from '@/components/RarityGem'
 import { TrophyIcon } from '@/components/TrophyIcon'
 import type { ToastPayload } from '@shared/ipc'
 import { RARITY_LABEL, type Rarity } from '@shared/rarity'
@@ -69,7 +70,10 @@ export function Toast({ rarity, title, description, game, platform, percent }: T
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className={`text-[11px] font-semibold tracking-[0.06em] uppercase ${style.text}`}>
+        <div
+          className={`flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.06em] uppercase ${style.text}`}
+        >
+          <RarityGem rarity={rarity} className="size-3" />
           Achievement unlocked
         </div>
         <div className="truncate text-base font-semibold">{title}</div>

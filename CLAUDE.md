@@ -38,7 +38,7 @@ electron-vite looks for Electron's binary itself and fails with `Error: Electron
 
 **Launching Electron from a shell that has `ELECTRON_RUN_AS_NODE` set (VS Code's extension host does, so Claude Code's shell has it) makes Electron behave as plain Node** and the app fails with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`. Unset it first (`env -u ELECTRON_RUN_AS_NODE ...` in bash, `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell).
 
-Status: the scaffold is real and verified (lint, typecheck, 27 tests, production build, and a scripted run of the built app). `shared` and `main/store` have real code; `main/providers` and most of `main/sync` are stubs. The UI is a placeholder shell plus a working animated toast. UI targets are on the Superdesign canvas (link in `docs/design/README.md`); the HTML snapshots in `docs/design/mockups/` still show the pre-"Afterglow" look until they are re-exported. Design tokens are in `src/renderer/src/styles/index.css`.
+Status: the scaffold is real and verified (lint, typecheck, 33 tests, production build, and a scripted run of the built app). `shared` and `main/store` have real code; `main/providers` and most of `main/sync` are stubs. The UI is a placeholder shell plus a working animated toast. UI targets are on the Superdesign canvas (link in `docs/design/README.md`); the HTML snapshots in `docs/design/mockups/` still show the pre-"Afterglow" look until they are re-exported. Design tokens are in `src/renderer/src/styles/index.css`.
 
 ## Rules
 
@@ -69,6 +69,16 @@ Local project skills live in `.claude/skills/` (git-ignored, so only present on 
 ## Definition of done
 
 `npm run lint`, `npm run typecheck` and `npm test` pass, `npm run format:check` is clean, docs are updated if behaviour or the spec changed, UI changes were checked by actually running the app, and for provider work: fixtures added and PROVIDERS.md updated with what was actually verified.
+
+## Tests are written by Claude
+
+The owner does not write tests; Claude does, as part of getting a change ready. Before any commit or pull request:
+
+1. Check the change is covered. Add or update tests beside the code (`*.test.ts` / `*.test.tsx`) for new behaviour, changed behaviour and every bug fixed. Test what the code does, not how it is styled: content and accessibility text, props and states, data mapping, edge cases. Pure styling (a token, a class name) needs no test; say so.
+2. Run `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, then commit, then open the PR.
+3. Say which tests were added or changed in the commit message and the PR description.
+
+Tests describe intended behaviour. If one fails because the owner's code is wrong or unfinished, report it and leave the production code to the owner; never weaken a test to make it pass. If the owner says they've already committed, add the tests in a follow-up commit before the PR.
 
 ## When the owner says they've committed
 

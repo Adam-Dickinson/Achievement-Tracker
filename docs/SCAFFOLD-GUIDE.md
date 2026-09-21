@@ -2,7 +2,7 @@
 
 Explains what was built, how the pieces connect, how to run it, and the React and Electron ideas you will meet when reading the code. It is written for someone who is new to React. Read it once, then keep it as a reference.
 
-> **Status:** everything here has been built and checked. `npm run lint`, `npm run typecheck` and `npm test` (27 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `npm run dev` (hot reload) was also verified.
+> **Status:** everything here has been built and checked. `npm run lint`, `npm run typecheck` and `npm test` (33 tests) pass, the production build works, and the built app was run and driven by script: window, IPC, SQLite schema, the click-through toast, close-to-tray and single instance. `npm run dev` (hot reload) was also verified.
 
 ---
 
