@@ -33,7 +33,8 @@ const STYLES: Record<Rarity, { border: string; text: string; shadow: string }> =
 const SLIDE_PX = 56
 
 /**
- * The unlock toast. Spec: docs/DESIGN.md §6; mockup: docs/design/mockups/unlock-toast.html.
+ * The unlock toast. Spec: docs/DESIGN.md §6. Design: the toast draft on the Superdesign canvas
+ * (docs/design/README.md); the HTML snapshot in mockups/ is pre-Afterglow.
  * It slides in and out when it is mounted/unmounted inside an <AnimatePresence>.
  */
 export function Toast({ rarity, title, description, game, platform, percent }: ToastProps) {
