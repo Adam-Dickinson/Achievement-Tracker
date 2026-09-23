@@ -1,6 +1,8 @@
 // The contract between the main process and the UI. Channel names and payload types live here
 // so both sides import the same definitions (docs/SPEC.md §6).
 
+import type { DashboardStats } from './dashboard'
+import type { GameDetail, LibraryGame } from './library'
 import type { AccountStatus } from './models'
 import type { Platform } from './platform'
 import type { Rarity } from './rarity'
@@ -11,7 +13,10 @@ export const IPC = {
   setToasts: 'overlay:set-toasts',
   listAccounts: 'accounts:list',
   connectSteam: 'accounts:connect-steam',
-  accountsChanged: 'accounts:changed',
+  listLibrary: 'library:list',
+  getGame: 'library:get-game',
+  getDashboard: 'dashboard:get',
+  dataChanged: 'data:changed',
 } as const
 
 export interface AppInfo {
@@ -67,8 +72,12 @@ export interface AchievementTrackerApi {
   sendTestNotification(): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
-  /** Called when the account list may have changed (games found, a lost login). Returns an unsubscribe function. */
-  onAccountsChanged(listener: () => void): () => void
+  listLibrary(): Promise<LibraryGame[]>
+  /** Null if there is no game with that id. */
+  getGame(id: number): Promise<GameDetail | null>
+  getDashboard(): Promise<DashboardStats>
+  /** Called when synced data may have changed (accounts, games, unlocks). Returns an unsubscribe function. */
+  onDataChanged(listener: () => void): () => void
   /** Subscribe to the toasts on screen, oldest first (used by the overlay window). Returns an unsubscribe function. */
   onToasts(listener: (toasts: readonly VisibleToast[]) => void): () => void
 }

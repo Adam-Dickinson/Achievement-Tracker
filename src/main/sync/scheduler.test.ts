@@ -118,7 +118,7 @@ function accountStatus(db: DatabaseSync, id: number): string {
 interface Harness {
   readonly scheduler: Scheduler
   readonly onUnlocks: ReturnType<typeof vi.fn<(events: UnlockEvent[]) => void>>
-  readonly onAccountsChanged: ReturnType<typeof vi.fn<() => void>>
+  readonly onDataChanged: ReturnType<typeof vi.fn<() => void>>
   /** Moves the scheduler's clock forward. */
   advance(ms: number): void
   now(): Date
@@ -131,20 +131,20 @@ function harness(
 ): Harness {
   let now = START
   const onUnlocks = vi.fn<(events: UnlockEvent[]) => void>()
-  const onAccountsChanged = vi.fn<() => void>()
+  const onDataChanged = vi.fn<() => void>()
   const scheduler = new Scheduler({
     db,
     providers,
     secrets,
     onUnlocks,
-    onAccountsChanged,
+    onDataChanged,
     now: () => now,
     random: () => 0,
   })
   return {
     scheduler,
     onUnlocks,
-    onAccountsChanged,
+    onDataChanged,
     advance: (ms) => {
       now = new Date(now.getTime() + ms)
     },
@@ -428,6 +428,7 @@ function libraryGame(externalId: string, recentlyPlayed = true): RemoteGame {
     ref: { externalId },
     title: `Game ${externalId}`,
     iconUrl: null,
+    coverUrl: null,
     lastPlayed: null,
     recentlyPlayed,
   }
@@ -602,41 +603,52 @@ describe('Scheduler.syncLibrary', () => {
     expect(await scheduler.syncLibrary(1)).toBeNull()
   })
 
-  it('reports a change to the accounts when a look finds new games, and only then', async () => {
+  it('reports a change when a look finds new games, and only then', async () => {
     const db = seedDb([{ id: 1, games: [] }])
     const provider = fakeProvider(vi.fn(), 'steam', () => Promise.resolve([libraryGame('g1')]))
-    const { scheduler, advance, onAccountsChanged } = harness(db, { steam: provider })
+    const { scheduler, advance, onDataChanged } = harness(db, { steam: provider })
 
     await scheduler.syncLibrary(1)
-    expect(onAccountsChanged).toHaveBeenCalledOnce()
+    expect(onDataChanged).toHaveBeenCalledOnce()
 
     advance(SYNC_INTERVAL_MS)
     await scheduler.syncLibrary(1)
-    expect(onAccountsChanged).toHaveBeenCalledOnce()
+    expect(onDataChanged).toHaveBeenCalledOnce()
   })
 
-  it('reports a change to the accounts when a login expires', async () => {
+  it('reports a change when a login expires', async () => {
     const db = seedDb()
     const provider = fakeProvider(vi.fn(), 'steam', () =>
       Promise.reject(new ProviderError('auth_expired', 'key revoked')),
     )
-    const { scheduler, onAccountsChanged } = harness(db, { steam: provider })
+    const { scheduler, onDataChanged } = harness(db, { steam: provider })
 
     await scheduler.syncLibrary(1)
 
-    expect(onAccountsChanged).toHaveBeenCalledOnce()
+    expect(onDataChanged).toHaveBeenCalledOnce()
   })
 
-  it('does not report a change for a failure that leaves the account as it was', async () => {
+  it('reports a change after each game it syncs', async () => {
+    const db = seedDb([{ id: 1, games: ['g1', 'g2'] }])
+    const { scheduler, onDataChanged } = harness(db, {
+      steam: fakeProvider(() => Promise.resolve(gameData([]))),
+    })
+
+    await scheduler.syncDueGames(1)
+
+    expect(onDataChanged).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not report a change for a failure that leaves the data as it was', async () => {
     const db = seedDb()
     const provider = fakeProvider(vi.fn(), 'steam', () =>
       Promise.reject(new ProviderError('network', 'offline')),
     )
-    const { scheduler, onAccountsChanged } = harness(db, { steam: provider })
+    const { scheduler, onDataChanged } = harness(db, { steam: provider })
 
     await scheduler.syncLibrary(1)
 
-    expect(onAccountsChanged).not.toHaveBeenCalled()
+    expect(onDataChanged).not.toHaveBeenCalled()
   })
 })
 

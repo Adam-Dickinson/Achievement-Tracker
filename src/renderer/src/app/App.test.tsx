@@ -3,19 +3,15 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
+import { fakeApi } from '@/test/fake-api'
 
 const sendTestNotification = vi.fn()
 
 beforeEach(() => {
   // In the real app the preload script provides window.api; in tests we provide a fake.
-  window.api = {
-    getAppInfo: vi.fn().mockResolvedValue({ version: '0.1.0', schemaVersion: 1 }),
+  window.api = fakeApi({
     sendTestNotification,
-    onToasts: vi.fn(() => () => {}),
-    listAccounts: vi.fn().mockResolvedValue([]),
-    connectSteam: vi.fn(),
-    onAccountsChanged: vi.fn(() => () => {}),
-  }
+  })
 })
 
 afterEach(() => {

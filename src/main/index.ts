@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { app, BrowserWindow, Menu, safeStorage } from 'electron'
 import { IPC } from '@shared/ipc'
 import { connectSteam } from './accounts'
+import { coalesce } from './coalesce'
 import { registerIpcHandlers } from './ipc'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
@@ -10,6 +11,7 @@ import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
+import { getDashboardStats, getGameDetail, listLibraryGames } from './store/library-store'
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { createTray } from './tray'
@@ -70,14 +72,16 @@ async function start(): Promise<void> {
     join(app.getPath('userData'), 'secrets.json'),
     safeStorage,
   )
+  // A first sync touches every game; the UI refetches at most once a second.
+  const dataChanged = coalesce(() => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.dataChanged)
+  }, 1000)
   const scheduler = new Scheduler({
     db,
     providers: { steam },
     secrets,
     onUnlocks: (events) => notifications.notify(events),
-    onAccountsChanged: () => {
-      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.accountsChanged)
-    },
+    onDataChanged: dataChanged,
   })
   scheduler.start()
   app.on('before-quit', () => {
@@ -90,6 +94,9 @@ async function start(): Promise<void> {
     sendTestNotification,
     listAccounts: () => listAccountSummaries(db),
     connectSteam: (input) => connectSteam({ db, steam, secrets, scheduler }, input),
+    listLibrary: () => listLibraryGames(db),
+    getGame: (id) => getGameDetail(db, id),
+    getDashboard: () => getDashboardStats(db),
   })
 
   createTray({

@@ -365,6 +365,7 @@ describe('listAccountSummaries', () => {
         ref: { externalId: '1' },
         title: 'A',
         iconUrl: null,
+        coverUrl: null,
         lastPlayed: null,
         recentlyPlayed: false,
       },
@@ -372,6 +373,7 @@ describe('listAccountSummaries', () => {
         ref: { externalId: '2' },
         title: 'B',
         iconUrl: null,
+        coverUrl: null,
         lastPlayed: null,
         recentlyPlayed: false,
       },
@@ -463,6 +465,7 @@ describe('addPlatformGames', () => {
       ref: { externalId },
       title: `Game ${externalId}`,
       iconUrl: `https://img/${externalId}.jpg`,
+      coverUrl: `https://img/${externalId}-cover.jpg`,
       lastPlayed: new Date('2026-09-01T12:00:00Z'),
       recentlyPlayed: false,
       ...overrides,
@@ -525,6 +528,21 @@ describe('addPlatformGames', () => {
     addPlatformGames(db, account, [remoteGame('1'), remoteGame('2')])
 
     expect(platformGames(db).map((game) => game.game_id)).toEqual([1, 2])
+  })
+
+  it('stores the cover on the game, and updates it when a later list has one', () => {
+    const { db, account } = setup()
+    const cover = (): unknown =>
+      (db.prepare('SELECT cover_url FROM game').get() as { cover_url: string | null }).cover_url
+
+    addPlatformGames(db, account, [remoteGame('1', { coverUrl: null })])
+    expect(cover()).toBeNull()
+
+    addPlatformGames(db, account, [remoteGame('1')])
+    expect(cover()).toBe('https://img/1-cover.jpg')
+
+    addPlatformGames(db, account, [remoteGame('1', { coverUrl: null })])
+    expect(cover()).toBe('https://img/1-cover.jpg')
   })
 
   it('stores a never-played game, or one without an icon, with nulls', () => {

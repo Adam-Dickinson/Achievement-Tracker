@@ -6,4 +6,6 @@ export const SAMPLE_STATS: DashboardStats = {
   gamesTracked: 214,
   completedGames: 27,
   unlockedThisWeek: 41,
+  nearlyThere: [],
+  recentUnlocks: [],
 }

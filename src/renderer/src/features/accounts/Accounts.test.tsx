@@ -5,6 +5,7 @@ import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AccountSummary, ConnectResult, SteamConnectInput } from '@shared/ipc'
 import { Accounts } from './Accounts'
+import { fakeApi } from '@/test/fake-api'
 
 const STEAM: AccountSummary = {
   id: 1,
@@ -24,20 +25,17 @@ const XBOX: AccountSummary = {
 const listAccounts = vi.fn<() => Promise<AccountSummary[]>>()
 const connectSteam = vi.fn<(input: SteamConnectInput) => Promise<ConnectResult>>()
 const unsubscribe = vi.fn()
-let accountsChanged: () => void = () => {}
+let dataChanged: () => void = () => {}
 
 beforeEach(() => {
-  window.api = {
-    getAppInfo: vi.fn(),
-    sendTestNotification: vi.fn(),
-    onToasts: vi.fn(() => () => {}),
+  window.api = fakeApi({
     listAccounts,
     connectSteam,
-    onAccountsChanged: (listener) => {
-      accountsChanged = listener
+    onDataChanged: (listener) => {
+      dataChanged = listener
       return unsubscribe
     },
-  }
+  })
 })
 
 afterEach(() => {
@@ -107,14 +105,14 @@ describe('Accounts', () => {
     expect(listAccounts).toHaveBeenCalledTimes(2)
   })
 
-  it('reloads the list when the main process says the accounts changed', async () => {
+  it('reloads the list when the main process says the data changed', async () => {
     listAccounts
       .mockResolvedValueOnce([{ ...STEAM, gameCount: 0 }])
       .mockResolvedValueOnce([{ ...STEAM, gameCount: 212 }])
     render(<Accounts />)
     expect(await screen.findByText('0 games')).toBeInTheDocument()
 
-    act(() => accountsChanged())
+    act(() => dataChanged())
 
     expect(await screen.findByText('212 games')).toBeInTheDocument()
   })

@@ -28,6 +28,8 @@ export interface RemoteGame {
   readonly ref: RemoteGameRef
   readonly title: string
   readonly iconUrl: string | null
+  /** Wide art for the Library card (Steam: the store header, 460x215). */
+  readonly coverUrl: string | null
   readonly lastPlayed: Date | null
   /** Played lately, by the platform's own measure (Steam: its two-week list). Sets how often it is polled. */
   readonly recentlyPlayed: boolean

@@ -232,7 +232,10 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 |---|---|---|
 | `getAppInfo()` | `app:get-info` | App version and database schema version |
 | `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers) |
-| `onAccountsChanged(listener)` | `accounts:changed` (main → main window) | Called when a library look finds new games or an account loses its login, so the Accounts screen reloads. Returns an unsubscribe function |
+| `listLibrary()` | `library:list` | Every game on every platform as a `LibraryGame` (cover, unlocked/total, last unlock), most recently unlocked first |
+| `getGame(id)` | `library:get-game` | One game and all its achievements (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
+| `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, "Nearly there" and recent unlocks |
+| `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
 | `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
 | `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
 | `connectSteam({ steamId, apiKey })` | `accounts:connect-steam` | Checks the key with Steam, saves the account (reconnecting keeps its id) and the key (`SecretStore`), and starts syncing it. Returns a `ConnectResult`: `{ ok: true, account }` or `{ ok: false, reason, message }` with `reason` `invalid_input`, `key_rejected`, `network` or `other`. A result rather than a thrown error, because across IPC an error keeps only its message |

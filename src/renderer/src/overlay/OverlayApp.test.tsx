@@ -4,6 +4,7 @@ import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { VisibleToast } from '@shared/ipc'
 import { OverlayApp } from './OverlayApp'
+import { fakeApi } from '@/test/fake-api'
 
 let deliver: (toasts: readonly VisibleToast[]) => void = () => {}
 const unsubscribe = vi.fn()
@@ -22,17 +23,12 @@ function toast(id: number, title: string): VisibleToast {
 }
 
 beforeEach(() => {
-  window.api = {
-    getAppInfo: vi.fn(),
-    sendTestNotification: vi.fn(),
+  window.api = fakeApi({
     onToasts: (listener) => {
       deliver = listener
       return unsubscribe
     },
-    listAccounts: vi.fn(),
-    connectSteam: vi.fn(),
-    onAccountsChanged: vi.fn(() => () => {}),
-  }
+  })
 })
 
 afterEach(() => {

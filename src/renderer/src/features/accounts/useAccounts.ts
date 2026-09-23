@@ -21,8 +21,8 @@ export function useAccounts() {
     }
   }, [version])
 
-  // The main process says when a sync has changed what this list shows.
-  useEffect(() => window.api.onAccountsChanged(() => setVersion((v) => v + 1)), [])
+  // The main process says when a sync may have changed what this list shows.
+  useEffect(() => window.api.onDataChanged(() => setVersion((v) => v + 1)), [])
 
   const reload = () => setVersion((v) => v + 1)
 

@@ -41,6 +41,7 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 - **The ids line up:** schema `name` = player `apiname` = rarity `name`, with no extras on any side (checked on Resident Evil 2, 44 achievements).
 - **Titles:** use the `GetOwnedGames` name. The schema's `gameName` can differ ("RESIDENT EVIL 2 / BIOHAZARD RE:2" vs "Resident Evil 2").
 - **Game icon URL:** `https://media.steampowered.com/steamcommunity/public/images/apps/<appid>/<img_icon_url>.jpg` (HTTP 200, `image/jpeg`; the `cdn.cloudflare.steamstatic.com` host serves the same path).
+- **Game cover (store header, 460x215):** `https://cdn.akamai.steamstatic.com/steam/apps/<appid>/header.jpg`, built from the appid alone. Verified 2026-09-23: HTTP 200 `image/jpeg` for appids 400, 6060, 883710, 1245620, 1817070 and 2358720, old and new; `shared.akamai.steamstatic.com/store_item_assets/steam/apps/<appid>/header.jpg` and the `cdn.cloudflare` host serve the same file, and `library_hero.jpg` (a wide banner) exists for all six. A game with no store page may have none, so the UI must cope with a missing image.
 - **`has_community_visible_stats` is a good filter:** every flagged game had a non-empty schema (168 of 168 in the live run below).
 - **Unlock times:** no unlocked achievement had `unlocktime` 0, including Portal (2007), but map 0 to `null` anyway.
 - **Errors** (these decide the `ProviderError` kind):
