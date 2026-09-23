@@ -19,8 +19,6 @@ export async function runSyncPass(
 ): Promise<UnlockEvent[]> {
   const platformGame = getPlatformGameByExternalId(db, account.id, externalGameId)
 
-  // Fetch before opening the transaction: node:sqlite transactions are synchronous, so holding
-  // one open across a network await would block other writes for as long as the call takes.
   const remote = await provider.fetchGame(credentials, { externalId: externalGameId }, signal)
 
   db.exec('BEGIN')
