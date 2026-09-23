@@ -12,6 +12,7 @@ export interface AccountRow {
 
 export interface PlatformGameRow {
   readonly id: number
+  readonly title: string
   readonly baselineDone: boolean
 }
 
@@ -28,8 +29,10 @@ export function getPlatformGameByExternalId(
   externalId: string,
 ): PlatformGameRow {
   const row = db
-    .prepare('SELECT id, baseline_done FROM platform_game WHERE account_id = ? AND external_id = ?')
-    .get(accountId, externalId) as { id: number; baseline_done: number } | undefined
+    .prepare(
+      'SELECT id, title, baseline_done FROM platform_game WHERE account_id = ? AND external_id = ?',
+    )
+    .get(accountId, externalId) as { id: number; title: string; baseline_done: number } | undefined
 
   if (!row) {
     throw new Error(
@@ -37,7 +40,7 @@ export function getPlatformGameByExternalId(
     )
   }
 
-  return { id: row.id, baselineDone: row.baseline_done === 1 }
+  return { id: row.id, title: row.title, baselineDone: row.baseline_done === 1 }
 }
 
 export function upsertAchievements(

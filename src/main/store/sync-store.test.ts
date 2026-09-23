@@ -36,8 +36,12 @@ describe('getPlatformGameByExternalId', () => {
     db = seedDb()
   })
 
-  it('reads the row and converts baseline_done to a real boolean', () => {
-    expect(getPlatformGameByExternalId(db, 1, 'g1')).toEqual({ id: 1, baselineDone: false })
+  it('reads the row, including its title, and converts baseline_done to a real boolean', () => {
+    expect(getPlatformGameByExternalId(db, 1, 'g1')).toEqual({
+      id: 1,
+      title: 'A Game',
+      baselineDone: false,
+    })
   })
 
   it('throws for a game that does not exist, rather than returning null', () => {
