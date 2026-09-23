@@ -72,8 +72,10 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 
 ### Local files and plan
 
-- **Local (real-time):** Steam's `appcache/stats/` folder holds binary-VDF stats files per user/app (`UserGameStats_<accountid>_<appid>.bin` and schema files). Watching them gives instant unlock detection, but they don't reveal *what* changed without diffing against the schema. *(Verify format.)*
-- **Plan:** poll Web API (fast when a game is running) plus optional local-file watcher to trigger an immediate poll.
+- **Local (real-time):** Steam's `appcache/stats/` folder holds binary-VDF stats files per user/app (`UserGameStats_<accountid>_<appid>.bin` and `UserGameStatsSchema_<appid>.bin`). Watching them gives instant unlock detection, but they don't reveal *what* changed without diffing against the schema. *(Verify format.)*
+  - **Seen 2026-09-23 on a real Windows install:** the Steam folder comes from `HKCU\Software\Valve\Steam\SteamPath` (`c:/program files (x86)/steam`); `appcache/stats` held 366 files, and the file for a game played that evening (Rainbow Six Siege, 359550) had been rewritten during the session. **Not yet verified:** whether Steam rewrites it at the moment of an unlock or only when the game saves its stats.
+- **Running game:** `HKCU\Software\Valve\Steam\RunningAppID` holds the appid of the game Steam is running, `0` when none (seen as `0` with no game running, 2026-09-23; the value while a game runs is still to check). Reading Steam's registry key is not reading the game, so it stays within rule 4.
+- **Plan:** watch `appcache/stats` and sync a game as soon as its file changes; while `RunningAppID` is not 0, poll that game about every 30 s as a safety net (about 3,000 requests a day, well within the limit). Still to verify: how soon `GetPlayerAchievements` shows a new unlock (ROADMAP M2).
 - **Risks:** API rate limits (~100k calls/day, be conservative), and possibly private profiles if the own-key result above turns out to be caching.
 
 ## RetroAchievements (P0)
