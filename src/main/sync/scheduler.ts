@@ -15,7 +15,7 @@ import {
   type SyncStateRow,
   upsertSyncState,
 } from '../store/sync-store'
-import { backoffDelayMs } from './backoff'
+import { backoffDelayMs, withJitter } from './backoff'
 import { runSyncPass } from './sync-pass'
 
 export const SYNC_INTERVAL_MS = 5 * 60_000
@@ -35,6 +35,8 @@ export interface SchedulerDeps {
   readonly onAccountsChanged?: () => void
   readonly intervalMs?: number
   readonly now?: () => Date
+  /** Source of randomness for retry jitter; tests pass a fixed one. */
+  readonly random?: () => number
 }
 
 export class Scheduler {
@@ -45,6 +47,7 @@ export class Scheduler {
   readonly #onAccountsChanged: () => void
   readonly #intervalMs: number
   readonly #now: () => Date
+  readonly #random: () => number
 
   readonly #timers = new Map<number, ReturnType<typeof setTimeout>>()
   readonly #attempts = new Map<string, number>()
@@ -61,6 +64,7 @@ export class Scheduler {
     this.#onAccountsChanged = deps.onAccountsChanged ?? (() => undefined)
     this.#intervalMs = deps.intervalMs ?? SYNC_INTERVAL_MS
     this.#now = deps.now ?? (() => new Date())
+    this.#random = deps.random ?? Math.random
   }
 
   start(): void {
@@ -236,9 +240,9 @@ export class Scheduler {
     if (err instanceof ProviderError && err.isRetryable) {
       const attempt = this.#attempts.get(attemptKey) ?? 0
       this.#attempts.set(attemptKey, attempt + 1)
-      const delay = Math.max(
-        err.retryAfterMs ?? 0,
-        backoffDelayMs(attempt, BACKOFF_BASE_MS, BACKOFF_MAX_MS),
+      const delay = withJitter(
+        Math.max(err.retryAfterMs ?? 0, backoffDelayMs(attempt, BACKOFF_BASE_MS, BACKOFF_MAX_MS)),
+        this.#random,
       )
       const nextDueAt = this.#after(delay)
       record(nextDueAt)

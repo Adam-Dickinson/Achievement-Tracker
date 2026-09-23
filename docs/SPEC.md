@@ -214,14 +214,14 @@ Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watch
 | Outcome of a pass | `sync_state` | Next attempt |
 |---|---|---|
 | Success | `last_ok_at` = now, `last_error` cleared | normal interval (5 min, §7 `sync.intervalSec`), or the idle interval (6 h) for a game not played lately; backoff reset |
-| `ProviderError` that is retryable (`network`, `rate_limited`) | `last_error` set | exponential backoff, 30 s doubling to 30 min, or the platform's `retryAfterMs` if longer |
+| `ProviderError` that is retryable (`network`, `rate_limited`) | `last_error` set | exponential backoff, 30 s doubling to 30 min, or the platform's `retryAfterMs` if longer, plus up to 20% random jitter so failed games don't all retry at once |
 | `ProviderError('auth_expired')` | `last_error` set; `account.status` = `needs_reauth` | none: the account's loop stops until it is reconnected |
 | Any other error (`parse`, `unsupported`, a bug) | `last_error` set | normal interval |
 | Cancelled by `stop()` | unchanged | none |
 
 On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attempt counts live in memory only, so a restart starts them again.
 
-**Not built yet:** jitter on the backoff delay (F-15), fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
+**Not built yet:** fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
 
 ## 6. IPC contract (main process ⇄ UI)
 

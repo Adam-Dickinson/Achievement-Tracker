@@ -139,6 +139,7 @@ function harness(
     onUnlocks,
     onAccountsChanged,
     now: () => now,
+    random: () => 0,
   })
   return {
     scheduler,
@@ -794,5 +795,22 @@ describe('Scheduler rounds: finding games and the baseline', () => {
     const events = onUnlocks.mock.calls[0]?.[0]
     expect(events?.map((event) => event.gameTitle)).toEqual(['Game borrowed'])
     expect(events?.map((event) => event.achievement.externalId)).toEqual(['a2'])
+  })
+})
+
+describe('Scheduler retry jitter', () => {
+  it('adds random jitter on top of the backoff delay', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(() => Promise.reject(new ProviderError('network', 'offline')))
+    const scheduler = new Scheduler({
+      db,
+      providers: { steam: provider },
+      secrets: new InMemorySecretStore(),
+      onUnlocks: vi.fn(),
+      now: () => START,
+      random: () => 0.5,
+    })
+
+    expect(await scheduler.syncDueGames(1)).toEqual(after(START, 33 * SECONDS))
   })
 })

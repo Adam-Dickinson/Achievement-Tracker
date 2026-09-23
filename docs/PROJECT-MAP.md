@@ -198,7 +198,7 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 
 - [sync-pass.ts](../src/main/sync/sync-pass.ts): `runSyncPass()`, **what** one sync of one game does. Fetches from the provider, then in one transaction upserts achievements, inserts unlocks and applies the baseline rule (the first sync of a game records everything but returns no events). Returns the `UnlockEvent`s only after the commit.
 - [scheduler.ts](../src/main/sync/scheduler.ts): the `Scheduler`, **when** syncs happen. One loop per connected account; each round first reads the library (`syncLibrary`: `listGames`, then `addPlatformGames` with the baseline cutoff), then syncs the games that are due (`syncDueGames`), with recently played games every 5 minutes and the rest every 6 hours. `startAccount(id)` syncs a newly connected account straight away, never running two rounds of one account at once. `onAccountsChanged` fires when a library look adds games or a login expires; `main/index.ts` forwards it to the main window as `accounts:changed`. Outcomes go in `sync_state` (backoff on network trouble, `needs_reauth` on an expired login). `stop()` cancels timers and in-flight calls. New unlocks go to its `onUnlocks` callback.
-- [backoff.ts](../src/main/sync/backoff.ts): `backoffDelayMs()` gives exponential retry delays.
+- [backoff.ts](../src/main/sync/backoff.ts): `backoffDelayMs()` gives exponential retry delays, and `withJitter()` adds up to 20% at random.
 - Tests beside each: `sync-pass.test.ts` and `scheduler.test.ts` use a fake provider and a fake clock; `backoff.test.ts`.
 - Planned: finding new games (library scope, with the Accounts flow) and a running-game detector (M2).
 
@@ -355,7 +355,7 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (367 tests in 32 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the notification service (unlock and burst toasts, at most 3 on screen, queueing, duplicates, pausing, stop), the tray menu and "Start with Windows", the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (370 tests in 32 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the notification service (unlock and burst toasts, at most 3 on screen, queueing, duplicates, pausing, stop), the tray menu and "Start with Windows", the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/steam/` holds sanitized Steam Web API replies (see PROVIDERS.md). Fixtures are in `.prettierignore` so they stay byte-for-byte as captured. Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
@@ -433,18 +433,17 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Database, migrations, schema | Real |
 | Backoff helper | Real |
 | App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
-| Toast component | Real, in the Afterglow look (platform badge, stacking and queue still to do) |
+| Toast component | Real, in the Afterglow look, stacking up to 3 (platform badge still to do) |
 | Floating "island" nav | Real |
 | Main window shell (island nav real; Dashboard's stats header real with sample data; other pages placeholder) | Mixed |
-| Steam provider | Real, verified live; registered, waiting on the Accounts screen to connect an account |
+| Steam provider | Real, verified live, connected from the Accounts screen |
 | Other providers | Stubs |
-| Accounts screen (connect Steam, store the key) | Planned (M1) |
-| Sync scheduler (library + game scopes, tiered polling), sync pass, baseline cutoff, `UnlockEvent` | Real, started with the app with Steam registered; idle until an account is connected |
-| Backoff jitter | Planned (M1) |
-| Delivering unlocks to toasts (notification service) | Planned (M1) |
+| Accounts screen (connect Steam, list accounts, updates itself) | Real |
+| Sync scheduler (library + game scopes, tiered polling, backoff with jitter), sync pass, baseline cutoff, `UnlockEvent` | Real, started with the app with Steam registered |
+| Notification service (unlocks to toasts, queue, stacking, bursts, pause) | Real |
 | Production `SecretStore` (`safeStorage`, `secrets.json`) | Real |
-| Toast queue and stacking | Planned (M1) |
-| Autostart, extra tray items (Sync now, Do Not Disturb, Recent unlocks) | Planned (M1 and later) |
+| Tray: Pause notifications, Start with Windows | Real (Start with Windows only in the installed app) |
+| Toast sound, tray "Sync now" and "Recent unlocks" | Planned |
 | Dashboard: Recent unlocks, Closest to 100%, Rarest, per-platform breakdown | Planned |
 | Real screens under `features/*` other than Dashboard | Planned (M1 onward) |
 | Activity screen design | Not designed yet |
