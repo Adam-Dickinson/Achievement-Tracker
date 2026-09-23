@@ -11,6 +11,7 @@ export const IPC = {
   setToasts: 'overlay:set-toasts',
   listAccounts: 'accounts:list',
   connectSteam: 'accounts:connect-steam',
+  accountsChanged: 'accounts:changed',
 } as const
 
 export interface AppInfo {
@@ -66,6 +67,8 @@ export interface AchievementTrackerApi {
   sendTestNotification(): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
+  /** Called when the account list may have changed (games found, a lost login). Returns an unsubscribe function. */
+  onAccountsChanged(listener: () => void): () => void
   /** Subscribe to the toasts on screen, oldest first (used by the overlay window). Returns an unsubscribe function. */
   onToasts(listener: (toasts: readonly VisibleToast[]) => void): () => void
 }

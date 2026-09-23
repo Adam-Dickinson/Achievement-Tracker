@@ -118,6 +118,7 @@ function accountStatus(db: DatabaseSync, id: number): string {
 interface Harness {
   readonly scheduler: Scheduler
   readonly onUnlocks: ReturnType<typeof vi.fn<(events: UnlockEvent[]) => void>>
+  readonly onAccountsChanged: ReturnType<typeof vi.fn<() => void>>
   /** Moves the scheduler's clock forward. */
   advance(ms: number): void
   now(): Date
@@ -130,10 +131,19 @@ function harness(
 ): Harness {
   let now = START
   const onUnlocks = vi.fn<(events: UnlockEvent[]) => void>()
-  const scheduler = new Scheduler({ db, providers, secrets, onUnlocks, now: () => now })
+  const onAccountsChanged = vi.fn<() => void>()
+  const scheduler = new Scheduler({
+    db,
+    providers,
+    secrets,
+    onUnlocks,
+    onAccountsChanged,
+    now: () => now,
+  })
   return {
     scheduler,
     onUnlocks,
+    onAccountsChanged,
     advance: (ms) => {
       now = new Date(now.getTime() + ms)
     },
@@ -589,6 +599,43 @@ describe('Scheduler.syncLibrary', () => {
     const { scheduler } = harness(db, { steam: fakeProvider(vi.fn()) })
 
     expect(await scheduler.syncLibrary(1)).toBeNull()
+  })
+
+  it('reports a change to the accounts when a look finds new games, and only then', async () => {
+    const db = seedDb([{ id: 1, games: [] }])
+    const provider = fakeProvider(vi.fn(), 'steam', () => Promise.resolve([libraryGame('g1')]))
+    const { scheduler, advance, onAccountsChanged } = harness(db, { steam: provider })
+
+    await scheduler.syncLibrary(1)
+    expect(onAccountsChanged).toHaveBeenCalledOnce()
+
+    advance(SYNC_INTERVAL_MS)
+    await scheduler.syncLibrary(1)
+    expect(onAccountsChanged).toHaveBeenCalledOnce()
+  })
+
+  it('reports a change to the accounts when a login expires', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(vi.fn(), 'steam', () =>
+      Promise.reject(new ProviderError('auth_expired', 'key revoked')),
+    )
+    const { scheduler, onAccountsChanged } = harness(db, { steam: provider })
+
+    await scheduler.syncLibrary(1)
+
+    expect(onAccountsChanged).toHaveBeenCalledOnce()
+  })
+
+  it('does not report a change for a failure that leaves the account as it was', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(vi.fn(), 'steam', () =>
+      Promise.reject(new ProviderError('network', 'offline')),
+    )
+    const { scheduler, onAccountsChanged } = harness(db, { steam: provider })
+
+    await scheduler.syncLibrary(1)
+
+    expect(onAccountsChanged).not.toHaveBeenCalled()
   })
 })
 

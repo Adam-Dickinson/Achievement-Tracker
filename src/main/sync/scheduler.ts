@@ -31,6 +31,8 @@ export interface SchedulerDeps {
   readonly providers: Partial<Record<Platform, AchievementProvider>>
   readonly secrets: SecretStore
   readonly onUnlocks: (events: UnlockEvent[]) => void
+  /** Called when what the Accounts screen shows has changed: games found, or a lost login. */
+  readonly onAccountsChanged?: () => void
   readonly intervalMs?: number
   readonly now?: () => Date
 }
@@ -40,6 +42,7 @@ export class Scheduler {
   readonly #providers: Partial<Record<Platform, AchievementProvider>>
   readonly #secrets: SecretStore
   readonly #onUnlocks: (events: UnlockEvent[]) => void
+  readonly #onAccountsChanged: () => void
   readonly #intervalMs: number
   readonly #now: () => Date
 
@@ -55,6 +58,7 @@ export class Scheduler {
     this.#providers = deps.providers
     this.#secrets = deps.secrets
     this.#onUnlocks = deps.onUnlocks
+    this.#onAccountsChanged = deps.onAccountsChanged ?? (() => undefined)
     this.#intervalMs = deps.intervalMs ?? SYNC_INTERVAL_MS
     this.#now = deps.now ?? (() => new Date())
   }
@@ -104,9 +108,10 @@ export class Scheduler {
     }
 
     // New games announce unlocks made since the last look; on the very first look, none (F-16).
+    let added: number
     this.#db.exec('BEGIN')
     try {
-      addPlatformGames(this.#db, account, games, state?.lastOkAt ?? null)
+      added = addPlatformGames(this.#db, account, games, state?.lastOkAt ?? null)
       this.#db.exec('COMMIT')
     } catch (err) {
       this.#db.exec('ROLLBACK')
@@ -125,6 +130,7 @@ export class Scheduler {
       lastError: null,
       nextDueAt,
     })
+    if (added > 0) this.#onAccountsChanged()
     return nextDueAt
   }
 
@@ -223,6 +229,7 @@ export class Scheduler {
     if (err instanceof ProviderError && err.kind === 'auth_expired') {
       setAccountStatus(this.#db, account.id, 'needs_reauth')
       record(null)
+      this.#onAccountsChanged()
       return 'stop'
     }
 

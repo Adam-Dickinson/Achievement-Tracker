@@ -8,6 +8,11 @@ const api: AchievementTrackerApi = {
   sendTestNotification: () => ipcRenderer.invoke(IPC.sendTestNotification),
   listAccounts: () => ipcRenderer.invoke(IPC.listAccounts),
   connectSteam: (input) => ipcRenderer.invoke(IPC.connectSteam, input),
+  onAccountsChanged: (listener) => {
+    const handler = (): void => listener()
+    ipcRenderer.on(IPC.accountsChanged, handler)
+    return () => ipcRenderer.removeListener(IPC.accountsChanged, handler)
+  },
   onToasts: (listener) => {
     const handler = (_event: IpcRendererEvent, toasts: readonly VisibleToast[]): void =>
       listener(toasts)

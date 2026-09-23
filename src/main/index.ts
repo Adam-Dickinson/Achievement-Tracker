@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, Menu, safeStorage } from 'electron'
+import { IPC } from '@shared/ipc'
 import { connectSteam } from './accounts'
 import { registerIpcHandlers } from './ipc'
 import { NotificationService } from './notifications'
@@ -73,6 +74,9 @@ async function start(): Promise<void> {
     providers: { steam },
     secrets,
     onUnlocks: (events) => notifications.notify(events),
+    onAccountsChanged: () => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.accountsChanged)
+    },
   })
   scheduler.start()
   app.on('before-quit', () => {

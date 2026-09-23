@@ -31,6 +31,7 @@ beforeEach(() => {
     },
     listAccounts: vi.fn(),
     connectSteam: vi.fn(),
+    onAccountsChanged: vi.fn(() => () => {}),
   }
 })
 

@@ -21,7 +21,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 - [~] Steam provider (Web API): library, schema, unlocks, rarity. Built, tested against captured replies, verified live against a real account, and registered with the Scheduler. The library includes games borrowed through Steam Families while they are in the two-week recently-played window. The Accounts screen connects an account: it checks the key with Steam, stores it in the `SecretStore` and starts syncing straight away
 - [~] Notification service + overlay toast (queue, sound, preview). Built: unlocks from the sync engine become toasts, up to 3 stacked on screen with the rest queued, duplicates dropped, more than 5 at once collapsed into one; the test notification goes through the same queue. Still to do: sound
 - [ ] Tray, close-to-tray, single instance, autostart
-- [~] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard's stats header (completion hero + tiles) is built, on sample data. Accounts is built for Steam (connect form and account list; the list doesn't yet update by itself as a sync finds games). Library and Game detail still to do
+- [~] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard's stats header (completion hero + tiles) is built, on sample data. Accounts is built for Steam (connect form, and an account list that updates itself as a sync finds games). Library and Game detail still to do
 - **Exit:** unlock a Steam achievement in a real game and a toast appears within the poll interval
 
 ## M2: Emulators and Xbox (P0 complete)

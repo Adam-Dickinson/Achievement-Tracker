@@ -22,6 +22,7 @@ beforeEach(() => {
     onToasts: vi.fn(() => () => {}),
     listAccounts: vi.fn(),
     connectSteam,
+    onAccountsChanged: vi.fn(() => () => {}),
   }
 })
 

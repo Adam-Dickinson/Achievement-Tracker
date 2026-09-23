@@ -14,6 +14,7 @@ beforeEach(() => {
     onToasts: vi.fn(() => () => {}),
     listAccounts: vi.fn().mockResolvedValue([]),
     connectSteam: vi.fn(),
+    onAccountsChanged: vi.fn(() => () => {}),
   }
 })
 

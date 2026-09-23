@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AccountSummary, ConnectResult, SteamConnectInput } from '@shared/ipc'
@@ -23,6 +23,8 @@ const XBOX: AccountSummary = {
 
 const listAccounts = vi.fn<() => Promise<AccountSummary[]>>()
 const connectSteam = vi.fn<(input: SteamConnectInput) => Promise<ConnectResult>>()
+const unsubscribe = vi.fn()
+let accountsChanged: () => void = () => {}
 
 beforeEach(() => {
   window.api = {
@@ -31,6 +33,10 @@ beforeEach(() => {
     onToasts: vi.fn(() => () => {}),
     listAccounts,
     connectSteam,
+    onAccountsChanged: (listener) => {
+      accountsChanged = listener
+      return unsubscribe
+    },
   }
 })
 
@@ -99,5 +105,26 @@ describe('Accounts', () => {
 
     expect(await screen.findByText('Steam Player')).toBeInTheDocument()
     expect(listAccounts).toHaveBeenCalledTimes(2)
+  })
+
+  it('reloads the list when the main process says the accounts changed', async () => {
+    listAccounts
+      .mockResolvedValueOnce([{ ...STEAM, gameCount: 0 }])
+      .mockResolvedValueOnce([{ ...STEAM, gameCount: 212 }])
+    render(<Accounts />)
+    expect(await screen.findByText('0 games')).toBeInTheDocument()
+
+    act(() => accountsChanged())
+
+    expect(await screen.findByText('212 games')).toBeInTheDocument()
+  })
+
+  it('stops listening for changes when the page closes', () => {
+    listAccounts.mockReturnValue(new Promise(() => {}))
+    const { unmount } = render(<Accounts />)
+
+    unmount()
+
+    expect(unsubscribe).toHaveBeenCalledOnce()
   })
 })
