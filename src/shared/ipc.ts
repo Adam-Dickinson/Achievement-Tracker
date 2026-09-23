@@ -8,7 +8,7 @@ import type { Rarity } from './rarity'
 export const IPC = {
   getAppInfo: 'app:get-info',
   sendTestNotification: 'notifications:send-test',
-  showToast: 'overlay:show-toast',
+  setToasts: 'overlay:set-toasts',
   listAccounts: 'accounts:list',
   connectSteam: 'accounts:connect-steam',
 } as const
@@ -21,14 +21,21 @@ export interface AppInfo {
 
 /** Everything the overlay needs to draw one unlock toast. */
 export interface ToastPayload {
+  /** The line above the title, such as "Achievement unlocked" or "7 achievements unlocked". */
+  readonly heading: string
   readonly rarity: Rarity
   readonly title: string
-  readonly description: string
+  /** Null for hidden achievements, which have none. */
+  readonly description: string | null
   readonly game: string
   readonly platform: string
-  readonly percent: number
-  /** How long the toast stays on screen. */
-  readonly durationMs: number
+  /** Share of players who have it, when the platform says. */
+  readonly percent: number | null
+}
+
+/** A toast on screen. The id stays the same while it is shown, so React can animate it. */
+export interface VisibleToast extends ToastPayload {
+  readonly id: number
 }
 
 /** One connected account, as the Accounts screen shows it. Never carries the key. */
@@ -59,6 +66,6 @@ export interface AchievementTrackerApi {
   sendTestNotification(): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
-  /** Subscribe to toasts (used by the overlay window). Returns an unsubscribe function. */
-  onToast(listener: (toast: ToastPayload) => void): () => void
+  /** Subscribe to the toasts on screen, oldest first (used by the overlay window). Returns an unsubscribe function. */
+  onToasts(listener: (toasts: readonly VisibleToast[]) => void): () => void
 }

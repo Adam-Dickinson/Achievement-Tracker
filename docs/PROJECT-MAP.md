@@ -57,7 +57,8 @@ The renderer imports only `shared`, never `main`. Providers never touch the data
 | I want to... | Go to | Also touch / read |
 |---|---|---|
 | Change how the toast looks | [overlay/Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | Colours, shadows and radii come from [styles/index.css](../src/renderer/src/styles/index.css). The test is `Toast.test.tsx` next to it. |
-| Change the toast's corner, margin, or how long it stays | [main/overlay-service.ts](../src/main/overlay-service.ts) | `SCREEN_MARGIN` and `EXIT_ANIMATION_MS` are constants there; the 5000 ms default duration is a parameter of `show()`. |
+| Change the toast's corner or margin | [main/overlay-service.ts](../src/main/overlay-service.ts) | `SCREEN_MARGIN` and `EXIT_ANIMATION_MS` are constants there. |
+| Change how long toasts stay, how many stack, or when a burst collapses | [main/notifications.ts](../src/main/notifications.ts) | `TOAST_DURATION_MS`, `MAX_VISIBLE` (also change `OVERLAY_SIZE`) and `BURST_SIZE`. |
 | Change the overlay window's size | [main/windows.ts](../src/main/windows.ts) (`OVERLAY_SIZE`) | **Must match** the padding in `overlay/OverlayApp.tsx` and the toast's size, or shadows get clipped. |
 | Change the sample toasts behind "Send test notification" | [main/sample-toasts.ts](../src/main/sample-toasts.ts) | They cycle ultra-rare, rare, uncommon, common. |
 | Change what counts as Rare, Ultra Rare and so on | [shared/rarity.ts](../src/shared/rarity.ts) | The `[data-rarity]` rules in `styles/index.css` (every rarity needs one; a test checks) and the `--color-rarity-*` tokens; DESIGN.md §6. Recipe G. |
@@ -164,11 +165,12 @@ Top-level files (Real unless noted):
 | [index.ts](../src/main/index.ts) | **The entry point and wiring.** Takes the single-instance lock (a second launch just shows the first window); creates the main window on demand; keeps the app alive with no windows open (the tray keeps it reachable); hardens every window (no popups, no navigation away); opens the database; starts the sync `Scheduler` with the Steam provider and the `SafeStorageSecretStore` (it idles until an account is connected) and stops it on quit; creates the overlay and the tray; registers IPC handlers. Services are plain modules wired together here by hand. There is no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2). |
 | [windows.ts](../src/main/windows.ts) | Creates both windows. Holds the shared security settings (`contextIsolation` on, `nodeIntegration` off, `sandbox` on, preload script). `createMainWindow()`: 1440x900, minimum 1024x680, shown once ready to avoid a white flash. `createOverlayWindow()`: transparent, frameless, always on top, click-through, unable to take focus. Also exports `OVERLAY_SIZE`. Loads the dev server URL in development and the built file in production. |
 | [safe-storage-secret-store.ts](../src/main/safe-storage-secret-store.ts) | `SafeStorageSecretStore`, the production `SecretStore`. Encrypts each secret with Electron `safeStorage` (Windows DPAPI) and keeps it as base64 in `secrets.json` in the app's data folder, keyed by account id. Refuses to save without OS encryption; a secret it can't decrypt reads as missing; a damaged file throws rather than being overwritten; writes go to a temporary file first, then a rename. `safeStorage` is passed in, so `safe-storage-secret-store.test.ts` uses a fake. |
-| [overlay-service.ts](../src/main/overlay-service.ts) | `OverlayService.show(toast)`: waits for the overlay page to load, positions the window in the bottom-right of the primary display's work area, shows it without stealing focus, sends the toast over IPC, and hides the window after the toast's duration plus time for the exit animation. **Placeholder for now:** a new toast replaces the current one. The queue and stacking arrive in M1. |
+| [notifications.ts](../src/main/notifications.ts) | `NotificationService`: turns `UnlockEvent`s into toasts (`unlockToast`, `burstToast`), keeps at most 3 on screen for 5 s each and queues the rest, drops duplicates, and collapses more than 5 at once into one toast. Hands the on-screen list to a `display` callback. Tested with fake timers in `notifications.test.ts`. |
+| [overlay-service.ts](../src/main/overlay-service.ts) | `OverlayService.display(toasts)`: waits for the overlay page to load, then either positions and shows the window without stealing focus, or (for an empty list) hides it after the exit animation, and sends the list over IPC. |
 | [tray.ts](../src/main/tray.ts) | The tray icon and its menu: Open Achievement Tracker, Send test notification, Quit. Clicking the icon opens the window. It is a native Electron menu, so it has no React and no visual design. |
 | [ipc.ts](../src/main/ipc.ts) | `registerIpcHandlers()`: one `ipcMain.handle` per channel. Each first checks the sender is one of our own pages (`isTrustedSender`); `connectSteam` then checks its payload with a zod schema (answering `invalid_input` if it fails) before calling the handler passed in from `index.ts`. `ipc.test.ts` replaces `electron` with a stand-in to test both checks. |
 | [accounts.ts](../src/main/accounts.ts) | `connectSteam()`: `authenticate` and `validate` with Steam, `upsertAccount`, save the key in the `SecretStore` under the account's id, `Scheduler.startAccount`. Turns failures into a `ConnectResult` (a rejected key, a connection problem, or the provider's own message) and never throws. Tested in `accounts.test.ts` with a fake provider. |
-| [sample-toasts.ts](../src/main/sample-toasts.ts) | Four sample unlocks, one per rarity, cycled by `nextSampleToast()`. Only used by "Send test notification". |
+| [sample-toasts.ts](../src/main/sample-toasts.ts) | Four sample unlocks, one per rarity, cycled by `nextSampleToast()`. Only used by "Send test notification", which queues them like real unlocks. |
 | [env.d.ts](../src/main/env.d.ts) | Type declarations for Vite and electron-vite features such as `import.meta.glob` and the `?asset` import suffix. |
 
 `?asset`: `windows.ts` and `tray.ts` import the icon as `icon.png?asset`. That is an electron-vite feature that gives you a file path which still works after the app is built.
@@ -209,7 +211,7 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 
 ### 4.3 `src/preload/`: the bridge (Real)
 
-[index.ts](../src/preload/index.ts) builds the `window.api` object and exposes it with `contextBridge.exposeInMainWorld`. Its entries today: `getAppInfo`, `sendTestNotification`, `listAccounts` and `connectSteam` (all `ipcRenderer.invoke`), and `onToast`, which subscribes to toast messages and returns an "unsubscribe" function. The UI never receives `ipcRenderer` itself. Its type is `AchievementTrackerApi` from `shared/ipc.ts`, so the compiler tells you if the two drift apart.
+[index.ts](../src/preload/index.ts) builds the `window.api` object and exposes it with `contextBridge.exposeInMainWorld`. Its entries today: `getAppInfo`, `sendTestNotification`, `listAccounts` and `connectSteam` (all `ipcRenderer.invoke`), and `onToasts`, which subscribes to the list of toasts on screen and returns an "unsubscribe" function. The UI never receives `ipcRenderer` itself. Its type is `AchievementTrackerApi` from `shared/ipc.ts`, so the compiler tells you if the two drift apart.
 
 ### 4.4 `src/renderer/`: the UI
 
@@ -228,7 +230,7 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 | &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
 | &nbsp;&nbsp;[IslandNav.test.tsx](../src/renderer/src/app/IslandNav.test.tsx) | Tests the "Main" navigation landmark, the current page, click reporting and the version text. |
 | `overlay/` (the toast window, Real) | |
-| &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes to toasts via `window.api.onToast`, shows the newest for its duration, then removes it. Its padding decides how much room the toast's shadow has. |
+| &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes via `window.api.onToasts` and draws the list it is given, stacked with the newest at the bottom; it has no timers of its own. Its padding and gap decide how much room the toasts' shadows have. |
 | &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: gradient icon tile, a `RarityGem` heading, display-font title and percentage, a `RarityChip`, a spring-in and slide-out with Motion, a gold glint on ultra rare, and reduced-motion support. The card sits in its rarity colour scope (`data-rarity`), so it has no per-rarity class table. |
 | &nbsp;&nbsp;[main.tsx](../src/renderer/src/overlay/main.tsx) | Entry for the overlay window. |
 | &nbsp;&nbsp;`OverlayApp.test.tsx`, `Toast.test.tsx` | Component tests. |
@@ -261,15 +263,16 @@ Following one real feature through every layer is the fastest way to see how the
 1. **Click.** The button in [App.tsx](../src/renderer/src/app/App.tsx) calls `window.api.sendTestNotification()`.
 2. **Preload.** [preload/index.ts](../src/preload/index.ts) turns that into `ipcRenderer.invoke(IPC.sendTestNotification)`. The channel name comes from [shared/ipc.ts](../src/shared/ipc.ts).
 3. **Main process receives it.** [main/ipc.ts](../src/main/ipc.ts) has an `ipcMain.handle` for that channel. It checks the sender is one of our own pages, then calls the handler.
-4. **The handler.** In [main/index.ts](../src/main/index.ts), `sendTestNotification` is `overlay.show(nextSampleToast())`. `nextSampleToast()` (in `sample-toasts.ts`) returns the next sample, cycling the four rarities.
-5. **Overlay service.** [overlay-service.ts](../src/main/overlay-service.ts) positions the overlay window in the bottom-right of the screen, shows it without taking focus, and sends the toast to it with `webContents.send(IPC.showToast, ...)`. It also starts a timer to hide the window later.
-6. **The overlay page receives it.** [OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) subscribed earlier with `window.api.onToast(...)` (preload wires that to `ipcRenderer.on`). The callback stores the toast in state.
-7. **React draws it.** State changed, so React re-renders and mounts [Toast.tsx](../src/renderer/src/overlay/Toast.tsx). Motion animates it in. A timer in `OverlayApp` clears the state after the toast's duration, which plays the exit animation.
-8. **Hide.** After the exit animation, the main process hides the overlay window.
+4. **The handler.** In [main/index.ts](../src/main/index.ts), `sendTestNotification` calls `notifications.show(nextSampleToast())`. `nextSampleToast()` (in `sample-toasts.ts`) returns the next sample, cycling the four rarities.
+5. **Notification service.** [notifications.ts](../src/main/notifications.ts) queues it. If fewer than 3 toasts are on screen, it goes on screen now with a new id and a 5-second timer, and the service hands the whole on-screen list to its `display` callback.
+6. **Overlay service.** [overlay-service.ts](../src/main/overlay-service.ts) positions the overlay window in the bottom-right of the screen, shows it without taking focus, and sends the list with `webContents.send(IPC.setToasts, ...)`.
+7. **The overlay page receives it.** [OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) subscribed earlier with `window.api.onToasts(...)` (preload wires that to `ipcRenderer.on`). The callback stores the list in state.
+8. **React draws it.** State changed, so React re-renders and mounts a [Toast.tsx](../src/renderer/src/overlay/Toast.tsx) for the new id. Motion animates it in.
+9. **Leave and hide.** When its timer fires, the service sends the list without it (Motion plays its exit) and brings in the next queued toast, if any. Once the list is empty, the main process hides the window after the exit animation.
 
 The tray's "Send test notification" item follows the same path from step 4 onward.
 
-The real feature will work the same way. The sync engine already detects unlocks and hands them to the `Scheduler`'s `onUnlocks` callback; once the notification service exists, that callback will call `overlay.show(...)` with real data instead of a sample.
+A real unlock joins at step 5: the `Scheduler`'s `onUnlocks` callback calls `notifications.notify(events)`, which builds the toasts from the unlock data.
 
 ---
 
@@ -277,7 +280,7 @@ The real feature will work the same way. The sync engine already detects unlocks
 
 **The renderer hot-reloads; the main process does not.** With `npm run dev`, edits to renderer code appear straight away. Edits to `src/main`, `src/preload`, and any `src/shared` code the main process imports need a full restart (tray **Quit**, then `npm run dev` again). Symptom: the UI shows your new code, but window sizes, tray items and IPC handlers behave as before.
 
-**The overlay's numbers are linked.** The toast is 400x92 (`Toast.tsx`). The overlay window is 480x188 (`OVERLAY_SIZE` in `windows.ts`). `OverlayApp.tsx` pads the toast by 40px at the sides, 32px above and 64px below, and the window is the toast plus that padding. Shadows and glows are drawn outside the toast's box, so this padding is the room they have. If you change one of these, change the others, or shadows are cut off at the window edge.
+**The overlay's numbers are linked.** The toast is 400x92 (`Toast.tsx`), and up to 3 stack 12px apart (`MAX_VISIBLE` in `notifications.ts`, `gap-3` in `OverlayApp.tsx`). The overlay window is 480x396 (`OVERLAY_SIZE` in `windows.ts`). `OverlayApp.tsx` pads the stack by 40px at the sides, 32px above and 64px below, and the window is the stack plus that padding. Shadows and glows are drawn outside the toast's box, so this padding is the room they have. If you change one of these, change the others, or shadows are cut off at the window edge.
 
 Other things worth knowing:
 
@@ -350,7 +353,7 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (334 tests in 29 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (353 tests in 30 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the notification service (unlock and burst toasts, at most 3 on screen, queueing, duplicates, stop), the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/steam/` holds sanitized Steam Web API replies (see PROVIDERS.md). Fixtures are in `.prettierignore` so they stay byte-for-byte as captured. Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
@@ -369,7 +372,7 @@ Four files, in this order. TypeScript flags any you forget.
 3. [main/index.ts](../src/main/index.ts): implement the handler in the object passed to `registerIpcHandlers`.
 4. [preload/index.ts](../src/preload/index.ts): add the method to the `api` object.
 
-Then update any test that fakes `window.api` (`App.test.tsx`, `OverlayApp.test.tsx`), and mention it in SPEC.md §6.
+Then update every test that fakes `window.api` (search for `window.api = `: `App.test.tsx`, `OverlayApp.test.tsx`, the Accounts tests), and mention it in SPEC.md §6.
 
 ### B. Build a real screen (for example Library)
 

@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { app, BrowserWindow, Menu, safeStorage } from 'electron'
 import { connectSteam } from './accounts'
 import { registerIpcHandlers } from './ipc'
+import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
 import { SteamProvider } from './providers/steam'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
@@ -52,8 +53,16 @@ async function start(): Promise<void> {
     join(app.getPath('userData'), 'achievement-tracker.db'),
   )
 
-  // The sync engine. It idles until an account is connected on the Accounts screen. The
-  // notification service that will receive onUnlocks is its own M1 item.
+  const overlay = new OverlayService(createOverlayWindow())
+  const notifications = new NotificationService({
+    display: (toasts) => void overlay.display(toasts),
+  })
+  const sendTestNotification = (): Promise<void> => {
+    notifications.show(nextSampleToast())
+    return Promise.resolve()
+  }
+
+  // The sync engine. It idles until an account is connected on the Accounts screen.
   const steam = new SteamProvider()
   const secrets = new SafeStorageSecretStore(
     join(app.getPath('userData'), 'secrets.json'),
@@ -63,13 +72,13 @@ async function start(): Promise<void> {
     db,
     providers: { steam },
     secrets,
-    onUnlocks: () => undefined,
+    onUnlocks: (events) => notifications.notify(events),
   })
   scheduler.start()
-  app.on('before-quit', () => scheduler.stop())
-
-  const overlay = new OverlayService(createOverlayWindow())
-  const sendTestNotification = (): Promise<void> => overlay.show(nextSampleToast())
+  app.on('before-quit', () => {
+    scheduler.stop()
+    notifications.stop()
+  })
 
   registerIpcHandlers({
     getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),

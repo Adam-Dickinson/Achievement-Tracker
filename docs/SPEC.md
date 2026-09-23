@@ -221,7 +221,7 @@ Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watch
 
 On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attempt counts live in memory only, so a restart starts them again.
 
-**Not built yet:** jitter on the backoff delay (F-15), fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14), and delivering `UnlockEvent`s to the notification service (`onUnlocks` is a no-op in `main/index.ts` until that exists).
+**Not built yet:** jitter on the backoff delay (F-15), fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
 
 ## 6. IPC contract (main process ⇄ UI)
 
@@ -231,8 +231,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | API (`window.api`) | Channel | Description |
 |---|---|---|
 | `getAppInfo()` | `app:get-info` | App version and database schema version |
-| `sendTestNotification()` | `notifications:send-test` | Show the next sample toast (cycles rarity tiers) |
-| `onToast(listener)` | `overlay:show-toast` (main → overlay) | Subscribe to toasts; returns an unsubscribe function |
+| `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers) |
+| `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
 | `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
 | `connectSteam({ steamId, apiKey })` | `accounts:connect-steam` | Checks the key with Steam, saves the account (reconnecting keeps its id) and the key (`SecretStore`), and starts syncing it. Returns a `ConnectResult`: `{ ok: true, account }` or `{ ok: false, reason, message }` with `reason` `invalid_input`, `key_rejected`, `network` or `other`. A result rather than a thrown error, because across IPC an error keeps only its message |
 

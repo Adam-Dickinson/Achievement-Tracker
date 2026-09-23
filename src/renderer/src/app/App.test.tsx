@@ -11,7 +11,7 @@ beforeEach(() => {
   window.api = {
     getAppInfo: vi.fn().mockResolvedValue({ version: '0.1.0', schemaVersion: 1 }),
     sendTestNotification,
-    onToast: vi.fn(() => () => {}),
+    onToasts: vi.fn(() => () => {}),
     listAccounts: vi.fn().mockResolvedValue([]),
     connectSteam: vi.fn(),
   }

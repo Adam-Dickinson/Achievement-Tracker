@@ -23,7 +23,7 @@ src/main/*                                src/renderer/*   <- React lives here
 
 - **Main process**: normal Node.js. It can do anything the computer can do, so it holds all the dangerous, privileged code.
 - **Renderer**: a web page inside a window. You build it with React just like a website. For safety it is *sandboxed*: no Node, no file access.
-- **Preload script**: runs before the page loads and hands the page a small `window.api` object with only the calls we allow (`getAppInfo`, `sendTestNotification`, `onToast`).
+- **Preload script**: runs before the page loads and hands the page a small `window.api` object with only the calls we allow (`getAppInfo`, `sendTestNotification`, `onToasts`, ...).
 - **IPC** (inter-process communication) is how they talk: the page calls `window.api.something()`, the main process answers.
 - `src/shared` holds types both sides use, including the list of IPC calls (`ipc.ts`), so TypeScript catches a mismatch.
 
@@ -93,7 +93,7 @@ The main window is a placeholder. The mockups in `docs/design/mockups/` show wha
 | `app/App.tsx` | The shell: holds which page is selected, renders `IslandNav` and the page |
 | `app/IslandNav.tsx`, `app/navigation.ts` | The nav list (data in `navigation.ts`, UI in `IslandNav.tsx`) |
 | `components/Button.tsx`, `TrophyIcon.tsx` | Small reusable components |
-| `overlay/OverlayApp.tsx` | Root of the overlay window: listens for toasts and shows one |
+| `overlay/OverlayApp.tsx` | Root of the overlay window: listens for the list of toasts on screen and draws them |
 | `overlay/Toast.tsx` | The unlock toast, with rarity colours and animation |
 | `styles/index.css` | Design tokens and base styles |
 
@@ -154,27 +154,31 @@ useEffect(() => {
 The `[]` (the *dependency list*) means "run once, after the first render". An effect is for side effects: talking to the outside world, timers, subscriptions.
 
 ### Effects must clean up after themselves
-`overlay/OverlayApp.tsx` has two good examples:
+Two examples from the app:
 
 ```tsx
-useEffect(() => {
-  return window.api.onToast((payload) => { ... })   // onToast returns an "unsubscribe" function
-}, [])
+// overlay/OverlayApp.tsx
+useEffect(() => window.api.onToasts(setToasts), [])  // onToasts returns an "unsubscribe" function
 
+// features/accounts/useAccounts.ts
 useEffect(() => {
-  if (!toast) return
-  const timer = setTimeout(() => setToast(null), toast.payload.durationMs)
-  return () => clearTimeout(timer)                   // cancel the timer if a new toast arrives first
-}, [toast])                                          // re-run whenever `toast` changes
+  let cancelled = false
+  void window.api.listAccounts().then((data) => {
+    if (!cancelled) setAccounts(data)                 // ignore a reply that arrives too late
+  })
+  return () => {
+    cancelled = true
+  }
+}, [version])                                        // re-run whenever `version` changes
 ```
 
 The function you **return** from an effect is its cleanup. React runs it before re-running the effect and when the component disappears. In development, `<StrictMode>` deliberately runs effects twice to expose missing cleanups, so forgetting one shows up quickly as duplicated behaviour.
 
 ### Refs: a value that survives re-renders without causing one
-`const nextId = useRef(0)` in `OverlayApp` is a counter for toast ids. Changing `nextId.current` doesn't redraw anything, unlike state.
+`const count = useRef(0)` gives you a box (`count.current`) that keeps its value between renders. Changing it doesn't redraw anything, unlike state, so it suits things like a timer id or a counter the screen doesn't show. The app doesn't need one at the moment.
 
 ### The `key` trick for animations
-Giving `<Toast key={toast.id} />` a new `key` for each toast tells React "this is a different element", so it unmounts the old toast and mounts a new one, which is what triggers the slide-in animation. `AnimatePresence` (from Motion) keeps the old one around just long enough to play its exit animation.
+In `OverlayApp`, each toast is drawn as `<Toast key={id} />`, and the main process gives every toast its own id that stays the same while it is on screen. So React knows which card is new (and slides it in), which have stayed (and are left alone), and which have gone. `AnimatePresence` (from Motion) keeps the old one around just long enough to play its exit animation.
 
 ### Events
 `onClick={() => onSelect(item.id)}` attaches a handler. Handlers are normal functions; write them inline while small.
@@ -209,7 +213,7 @@ contextBridge.exposeInMainWorld('api', {
   ...
 })
 ```
-`invoke` sends a request and returns a promise for the reply. The matching `ipcMain.handle(IPC.getAppInfo, ...)` in `main/ipc.ts` produces it. `onToast` is the other direction: the main process pushes with `webContents.send(...)` and the page subscribes.
+`invoke` sends a request and returns a promise for the reply. The matching `ipcMain.handle(IPC.getAppInfo, ...)` in `main/ipc.ts` produces it. `onToasts` is the other direction: the main process pushes with `webContents.send(...)` and the page subscribes.
 
 ### The overlay window (`windows.ts`, `overlay-service.ts`)
 The trick that makes a toast safe to show over a game:

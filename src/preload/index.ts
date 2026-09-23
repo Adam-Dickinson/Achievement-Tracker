@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import { IPC, type AchievementTrackerApi, type ToastPayload } from '@shared/ipc'
+import { IPC, type AchievementTrackerApi, type VisibleToast } from '@shared/ipc'
 
 // The preload script runs in a sandbox with access to both worlds. It exposes a small, explicit
 // API to the UI as `window.api`. The UI never gets `ipcRenderer` or Node.js itself.
@@ -8,10 +8,11 @@ const api: AchievementTrackerApi = {
   sendTestNotification: () => ipcRenderer.invoke(IPC.sendTestNotification),
   listAccounts: () => ipcRenderer.invoke(IPC.listAccounts),
   connectSteam: (input) => ipcRenderer.invoke(IPC.connectSteam, input),
-  onToast: (listener) => {
-    const handler = (_event: IpcRendererEvent, toast: ToastPayload): void => listener(toast)
-    ipcRenderer.on(IPC.showToast, handler)
-    return () => ipcRenderer.removeListener(IPC.showToast, handler)
+  onToasts: (listener) => {
+    const handler = (_event: IpcRendererEvent, toasts: readonly VisibleToast[]): void =>
+      listener(toasts)
+    ipcRenderer.on(IPC.setToasts, handler)
+    return () => ipcRenderer.removeListener(IPC.setToasts, handler)
   },
 }
 

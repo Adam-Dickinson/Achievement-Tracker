@@ -3,10 +3,11 @@ import { BrowserWindow } from 'electron'
 import appIcon from '../../resources/icon.png?asset'
 
 /**
- * Overlay window size in DIPs: the 400x92 toast plus room for its glow and shadow (40px at each
- * side, 32px above, 64px below). Keep in step with the padding in overlay/OverlayApp.tsx.
+ * Overlay window size in DIPs: room for three stacked 400x92 toasts 12px apart, plus room for
+ * their glow and shadow (40px at each side, 32px above, 64px below). Keep in step with the
+ * padding and gap in overlay/OverlayApp.tsx and MAX_VISIBLE in notifications.ts.
  */
-export const OVERLAY_SIZE = { width: 480, height: 188 } as const
+export const OVERLAY_SIZE = { width: 480, height: 396 } as const
 
 // Security defaults for every window: the UI is web content, so it gets no Node.js access.
 // It talks to the main process only through the small API the preload script exposes.

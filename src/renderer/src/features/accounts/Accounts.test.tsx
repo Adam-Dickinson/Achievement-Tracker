@@ -28,7 +28,7 @@ beforeEach(() => {
   window.api = {
     getAppInfo: vi.fn(),
     sendTestNotification: vi.fn(),
-    onToast: vi.fn(() => () => {}),
+    onToasts: vi.fn(() => () => {}),
     listAccounts,
     connectSteam,
   }
