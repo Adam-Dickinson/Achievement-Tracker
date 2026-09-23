@@ -50,3 +50,47 @@ describe('App', () => {
     await screen.findByText('v0.1.0 · schema 1') // let the pending state update settle
   })
 })
+
+describe('App: opening a game', () => {
+  const PORTAL = {
+    id: 7,
+    title: 'Portal',
+    platform: 'steam' as const,
+    coverUrl: null,
+    unlocked: 1,
+    total: 2,
+    lastUnlockAt: null,
+  }
+
+  beforeEach(() => {
+    window.api = fakeApi({
+      listLibrary: vi.fn().mockResolvedValue([PORTAL]),
+      getGame: vi.fn().mockResolvedValue({ game: PORTAL, achievements: [] }),
+    })
+  })
+
+  it('opens a game from the Library, and goes back to it', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+
+    fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
+    expect(await screen.findByRole('heading', { name: 'Portal' })).toBeInTheDocument()
+    expect(window.api.getGame).toHaveBeenCalledWith(7)
+
+    // The back button, not the nav item (which is marked as the current page).
+    fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
+    expect(await screen.findByRole('heading', { name: 'Library' })).toBeInTheDocument()
+  })
+
+  it('leaves a game when another page is picked in the nav', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
+    await screen.findByRole('heading', { name: 'Portal' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accounts' }))
+
+    expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Portal' })).not.toBeInTheDocument()
+  })
+})

@@ -122,9 +122,11 @@ achievement-tracker/
 │           ├── main.tsx  env.d.ts   # window entry; types for window.api
 │           ├── app/                 # App.tsx, IslandNav.tsx, navigation.ts
 │           ├── overlay/             # main.tsx, OverlayApp.tsx, Toast.tsx
-│           ├── components/          # Button.tsx, TrophyIcon.tsx (shared UI)
+│           ├── components/          # Button.tsx, TrophyIcon.tsx, RarityChip.tsx... (shared UI)
+│           ├── lib/                 # format.ts: shared text formatting
+│           ├── test/                # fake-api.ts: the fake window.api for component tests
 │           ├── features/            # dashboard/ library/ game-detail/ activity/
-│           │                        #   accounts/ settings/ onboarding/   (dashboard and accounts started)
+│           │                        #   accounts/ settings/ onboarding/   (dashboard, library, game-detail and accounts started)
 │           └── styles/index.css     # design tokens (Tailwind @theme) + base styles
 └── tests/fixtures/                  # sanitized provider responses / sample trophy files
 ```

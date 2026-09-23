@@ -228,11 +228,11 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 |---|---|
 | [main.tsx](../src/renderer/src/main.tsx) | Entry for the main window: mounts `<App />` into `#root` and imports the global CSS. |
 | [env.d.ts](../src/renderer/src/env.d.ts) | Tells TypeScript that `window.api` exists and what type it has. |
-| `app/` (main window shell, Placeholder) | |
-| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected (`useState`) and the app info fetched from the main process (`useEffect`). Shows the island nav, then the selected page: `PageContent` is a `switch` on the page id (Dashboard and Accounts are real; the rest show placeholder text), then the "Send test notification" button. **There is no router**: pages are just a value in state. |
+| `app/` (main window shell, Real) | |
+| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected and which game is open (`useState`), and the app info fetched from the main process (`useEffect`). Shows the island nav, then either the page (`PageContent`, a `switch` on the page id: Dashboard, Library and Accounts are real; the rest show placeholder text) or, when a game is open, `GameDetail` (keyed by the game id). Picking a page in the nav closes the game. **There is no router**: pages are just values in state. |
 | &nbsp;&nbsp;[IslandNav.tsx](../src/renderer/src/app/IslandNav.tsx) | The floating "island" bar at the top of the window: brand, one button per page (the current page is a lime pill) and the app version. It only shows what it is given (`selected`, `onSelect`, `info`); `App` owns the state. |
 | &nbsp;&nbsp;[navigation.ts](../src/renderer/src/app/navigation.ts) | `PageId` and `NAV_ITEMS`: Dashboard, Library, Activity, Accounts, Settings, each with a label, description and icon. |
-| &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
+| &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching, opening a game from the Library and leaving it, and the test-notification button, with `fakeApi()`. |
 | &nbsp;&nbsp;[IslandNav.test.tsx](../src/renderer/src/app/IslandNav.test.tsx) | Tests the "Main" navigation landmark, the current page, click reporting and the version text. |
 | `overlay/` (the toast window, Real) | |
 | &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes via `window.api.onToasts` and draws the list it is given, stacked with the newest at the bottom; it has no timers of its own. Its padding and gap decide how much room the toasts' shadows have. |
@@ -256,7 +256,18 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 | &nbsp;&nbsp;[useDashboardStats.ts](../src/renderer/src/features/dashboard/useDashboardStats.ts) | The one place that knows where the Dashboard's numbers come from. Resolves `sample-stats.ts` today; swapping in a real `getDashboardStats()` IPC call is a one-line change inside it. Guards against React StrictMode's double-invoked effect with a `cancelled` flag. |
 | &nbsp;&nbsp;[sample-stats.ts](../src/renderer/src/features/dashboard/sample-stats.ts) | Stand-in `DashboardStats`, deleted once real IPC exists. |
 | &nbsp;&nbsp;`*.test.tsx` | Component tests for the four files above. |
-| `features/{library,game-detail,activity,accounts,settings,onboarding}/` (Planned) | Six empty folders with a `.gitkeep`. **This is where each real screen will live.** |
+| `features/library/` (Real) | |
+| &nbsp;&nbsp;[Library.tsx](../src/renderer/src/features/library/Library.tsx) | The Library page: the game count, a Last unlock / Completion / Name sort (buttons with `aria-pressed`), and a grid of cards. Loading and empty states. |
+| &nbsp;&nbsp;[GameCard.tsx](../src/renderer/src/features/library/GameCard.tsx) | One game: cover, completion % (a gold crown badge at 100%), title, platform, "34 / 42 achievements" and "8 left" or "Completed". "Syncing…" until the game's first sync has read its achievements. Clicking it opens Game detail. |
+| &nbsp;&nbsp;[CoverArt.tsx](../src/renderer/src/features/library/CoverArt.tsx) | The Afterglow "colour-in" art: the cover in grey, then in colour up to the completion % (`clip-path`), with a lime line at the edge. Shows the title if there is no image or it fails to load. |
+| &nbsp;&nbsp;[useLibrary.ts](../src/renderer/src/features/library/useLibrary.ts) | Calls `window.api.listLibrary()`, and again whenever `onDataChanged` fires, so the grid fills in while the first sync runs. |
+| `features/game-detail/` (Real) | |
+| &nbsp;&nbsp;[GameDetail.tsx](../src/renderer/src/features/game-detail/GameDetail.tsx) | One game: a header with a blurred cover behind the title and a back button, four tiles (unlocked with a progress bar, completion, rarest achievement held, last unlock), All / Unlocked / Locked filters with counts, and the achievements rarest first in two columns. |
+| &nbsp;&nbsp;[AchievementRow.tsx](../src/renderer/src/features/game-detail/AchievementRow.tsx) | One achievement: its icon (colour when unlocked, Steam's grey one when locked), name, description, unlock date or "Locked", percentage and `RarityChip`. A hidden achievement shows as "Hidden achievement" until unlocked. |
+| &nbsp;&nbsp;[useGame.ts](../src/renderer/src/features/game-detail/useGame.ts) | Calls `window.api.getGame(id)`, and again on `onDataChanged`. `undefined` while loading, `null` if the game is gone. |
+| [lib/format.ts](../src/renderer/src/lib/format.ts) | Shared text formatting: `formatPercent` (two decimals below 1%), `formatUnlockDate` ("Today, 13:42", "Yesterday, ...", or a date in the user's locale) and `plural`. |
+| [test/fake-api.ts](../src/renderer/src/test/fake-api.ts) | `fakeApi()`: the fake `window.api` for component tests. |
+| `features/{activity,settings,onboarding}/` (Planned) | Empty folders with a `.gitkeep`. **This is where the remaining screens will live.** |
 | [styles/index.css](../src/renderer/src/styles/index.css) | Global CSS and the design tokens: fonts, colours, radii, shadows, the rarity scope (`[data-rarity]` rules that set `--rarity` and friends), plus a `.bg-aurora` background class (defined, not applied yet) and base styles. See section 8. |
 
 ---
@@ -358,7 +369,7 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. Tests assign `fakeApi({...})` from `renderer/src/test/fake-api.ts`: every call is a `vi.fn()`, and a test passes only the ones it cares about.
-- **Coverage today** (395 tests in 34 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the notification service (unlock and burst toasts, at most 3 on screen, queueing, duplicates, pausing, stop), the tray menu and "Start with Windows", the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (426 tests in 39 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the notification service (unlock and burst toasts, at most 3 on screen, queueing, duplicates, pausing, stop), the tray menu and "Start with Windows", the Library (loading, sort, opening a game, live reload), the game card (colour-in, completed, syncing, missing art), Game detail (tiles, filters, rarest first, hidden achievements), text formatting, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/steam/` holds sanitized Steam Web API replies (see PROVIDERS.md). Fixtures are in `.prettierignore` so they stay byte-for-byte as captured. Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
@@ -379,11 +390,11 @@ Four files, in this order. TypeScript flags any you forget.
 
 Then add a default for it in `renderer/src/test/fake-api.ts`, and mention it in SPEC.md §6.
 
-### B. Build a real screen (for example Library)
+### B. Build a real screen (for example Activity)
 
-1. Create components in `src/renderer/src/features/library/` (the folder already exists).
-2. If it needs data, add an IPC call (recipe A), backed by a query in `src/main/store`.
-3. In [App.tsx](../src/renderer/src/app/App.tsx), add a `case 'library'` to `PageContent` that returns your component. There is no router.
+1. Create components in `src/renderer/src/features/<area>/` (Activity's folder already exists). `features/library/` is a complete example.
+2. If it needs data, add an IPC call (recipe A), backed by a query in `src/main/store` (`library-store.ts` for read-only screen queries). Have its hook refetch on `window.api.onDataChanged`.
+3. In [App.tsx](../src/renderer/src/app/App.tsx), add a `case` to `PageContent` that returns your component. There is no router.
 4. Reuse `components/` and the tokens. Add a test file beside your component.
 5. Check the design on the canvas first.
 
@@ -438,7 +449,7 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
 | Toast component | Real, in the Afterglow look, stacking up to 3 (platform badge still to do) |
 | Floating "island" nav | Real |
-| Main window shell (island nav real; Dashboard's stats header real with sample data; other pages placeholder) | Mixed |
+| Main window shell (island nav, Library, Game detail and Accounts real; Dashboard's stats header on sample data; Activity and Settings placeholder) | Mixed |
 | Steam provider | Real, verified live, connected from the Accounts screen |
 | Other providers | Stubs |
 | Accounts screen (connect Steam, list accounts, updates itself) | Real |
@@ -448,7 +459,7 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Tray: Pause notifications, Start with Windows | Real (Start with Windows only in the installed app) |
 | Toast sound, tray "Sync now" and "Recent unlocks" | Planned |
 | Dashboard: Recent unlocks, Closest to 100%, Rarest, per-platform breakdown | Planned |
-| Real screens under `features/*` other than Dashboard | Planned (M1 onward) |
+| Activity, Settings and Onboarding screens | Planned |
 | Activity screen design | Not designed yet |
 | Installer, signing, auto-update | Planned (M6) |
 
