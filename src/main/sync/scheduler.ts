@@ -17,30 +17,20 @@ import {
 import { backoffDelayMs } from './backoff'
 import { runSyncPass } from './sync-pass'
 
-/** How often a game is synced when all is well: SPEC §7's `sync.intervalSec` default, until settings exist. */
 export const SYNC_INTERVAL_MS = 5 * 60_000
 
-// Retryable failures (network, rate limits) back off from 30 seconds up to 30 minutes.
 const BACKOFF_BASE_MS = 30_000
 const BACKOFF_MAX_MS = 30 * 60_000
 
 export interface SchedulerDeps {
   readonly db: DatabaseSync
-  /** The provider for each platform. A platform with none registered is not synced. */
   readonly providers: Partial<Record<Platform, AchievementProvider>>
   readonly secrets: SecretStore
-  /** Receives the unlocks a pass found, after they have been committed. Must not throw. */
   readonly onUnlocks: (events: UnlockEvent[]) => void
   readonly intervalMs?: number
-  /** The clock. Tests pass a fake one. */
   readonly now?: () => Date
 }
 
-/**
- * Decides when each game is synced (docs/SPEC.md §5); `runSyncPass` decides what a sync does.
- * Each connected account gets its own loop (ARCHITECTURE §4), so a failing or slow provider
- * can't hold up another account.
- */
 export class Scheduler {
   readonly #db: DatabaseSync
   readonly #providers: Partial<Record<Platform, AchievementProvider>>
@@ -50,8 +40,6 @@ export class Scheduler {
   readonly #now: () => Date
 
   readonly #timers = new Map<number, ReturnType<typeof setTimeout>>()
-  // Consecutive retryable failures per `${accountId}:${scope}`. Kept in memory only (the schema
-  // has no column for it), so a restart simply starts the backoff again.
   readonly #attempts = new Map<string, number>()
   #abort = new AbortController()
   #running = false
@@ -65,7 +53,6 @@ export class Scheduler {
     this.#now = deps.now ?? (() => new Date())
   }
 
-  /** Starts a loop for every connected account that has a provider. */
   start(): void {
     if (this.#running) return
     this.#running = true
@@ -76,7 +63,6 @@ export class Scheduler {
     }
   }
 
-  /** Stops every loop and cancels any provider call in flight (on quit). */
   stop(): void {
     this.#running = false
     this.#abort.abort()
@@ -84,13 +70,7 @@ export class Scheduler {
     this.#timers.clear()
   }
 
-  /**
-   * One round for one account: syncs each of its games that is due and records the outcome.
-   * Returns when the account next needs attention, or `null` if it should no longer be polled
-   * (no provider, it needs re-login, or the scheduler was stopped).
-   */
   async syncDueGames(accountId: number): Promise<Date | null> {
-    // Captured now, so a stop() during this round is still seen after a later start().
     const signal = this.#abort.signal
     const account = getAccount(this.#db, accountId)
     const provider = this.#providers[account.platform]
@@ -99,7 +79,7 @@ export class Scheduler {
     const credentials: AccountCredentials = {
       platform: account.platform,
       externalId: account.externalId,
-      secret: this.#secrets.find(String(account.id)) ?? null, // SPEC §3: keyed by account id
+      secret: this.#secrets.find(String(account.id)) ?? null,
     }
 
     let earliest: Date | null = null
@@ -108,7 +88,6 @@ export class Scheduler {
 
       const scope = `game:${gameId}`
       const state = getSyncState(this.#db, account.id, scope)
-      // No row, or no due time, means it has never synced: due now.
       let nextDueAt = state?.nextDueAt ?? null
 
       if (!nextDueAt || nextDueAt <= this.#now()) {
@@ -120,11 +99,9 @@ export class Scheduler {
       if (!earliest || nextDueAt < earliest) earliest = nextDueAt
     }
 
-    // An account with no games yet is checked again after a normal interval.
     return earliest ?? this.#after(this.#intervalMs)
   }
 
-  /** Syncs one game and records the outcome. Returns its next due time, or 'stop'. */
   async #syncGame(
     account: AccountRow,
     gameId: string,
@@ -163,7 +140,6 @@ export class Scheduler {
     previous: SyncStateRow | null,
     err: unknown,
   ): Date | 'stop' {
-    // Keep the last success and cursor; only the error and the next attempt change.
     const record = (nextDueAt: Date | null): void =>
       upsertSyncState(this.#db, account.id, scope, {
         cursor: previous?.cursor ?? null,
@@ -172,15 +148,12 @@ export class Scheduler {
         nextDueAt,
       })
 
-    // A dead login can't succeed on retry. Mark the account so the UI can ask for a reconnect,
-    // and stop polling it; reconnecting starts it again. No due time, so it syncs straight away.
     if (err instanceof ProviderError && err.kind === 'auth_expired') {
       setAccountStatus(this.#db, account.id, 'needs_reauth')
       record(null)
       return 'stop'
     }
 
-    // Network trouble or rate limiting: back off exponentially, or longer if the platform asked.
     if (err instanceof ProviderError && err.isRetryable) {
       const attempt = this.#attempts.get(attemptKey) ?? 0
       this.#attempts.set(attemptKey, attempt + 1)
@@ -193,22 +166,16 @@ export class Scheduler {
       return nextDueAt
     }
 
-    // Anything else (a parse error, unsupported, a bug): retrying sooner won't help, but a later
-    // fix or data change might, so try again at the normal pace.
     const nextDueAt = this.#after(this.#intervalMs)
     record(nextDueAt)
     return nextDueAt
   }
 
-  /** Runs one round for an account, then schedules the next. Never lets an error escape. */
   async #runLoop(accountId: number): Promise<void> {
     let next: Date | null
     try {
       next = await this.syncDueGames(accountId)
     } catch (err) {
-      // Supervised (ARCHITECTURE §4): an unexpected error, such as a database problem, must not
-      // end this account's polling. Sync failures are already in sync_state.last_error; this is
-      // for everything else. Replace with the app logger once it exists (SPEC §10).
       console.error(`Sync round for account ${accountId} failed`, err)
       next = this.#after(this.#intervalMs)
     }
