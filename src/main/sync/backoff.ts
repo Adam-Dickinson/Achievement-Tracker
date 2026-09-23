@@ -1,6 +1,4 @@
-// Sync engine building blocks (docs/SPEC.md §5). Planned for M1: a scheduler (one supervised
-// task per account), a diff engine that applies the baseline rule (the first sync of a game
-// emits no events), and a running-game detector (M2).
+// Retry delays for the sync Scheduler (scheduler.ts, docs/SPEC.md §5).
 
 const MAX_EXPONENT = 16
 

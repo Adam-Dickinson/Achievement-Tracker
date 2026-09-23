@@ -38,7 +38,7 @@ Closing the main window destroys it (freeing its renderer, ~90 MB). The tray ico
 | `src/shared` | both | Domain types (`Platform`, `Rarity`, `RemoteGame`, `UnlockEvent`...), the `AchievementProvider` interface, `ProviderError`, `Secret`, `SecretStore`, and the **IPC contract** (`ipc.ts`). Depends on nothing else in the repo. |
 | `src/main/store` | main | SQLite access, SQL migrations, migration runner. **The only place SQL lives.** |
 | `src/main/providers` | main | One folder per platform/emulator implementing `AchievementProvider` |
-| `src/main/sync` | main | Scheduler, diff engine (baseline rule), backoff, game detector |
+| `src/main/sync` | main | Scheduler (`scheduler.ts`), one sync pass with the baseline rule (`sync-pass.ts`), backoff; game detector later (M2) |
 | `src/main` (root files) | main | App lifecycle (`index.ts`), windows, tray, overlay service, IPC handlers |
 | `src/preload` | preload (sandboxed) | Builds `window.api` from the IPC contract |
 | `src/renderer` | renderer | The React UI: `app/` shell, `features/*` screens, `components/` shared UI, `overlay/` toast, `styles/` |
@@ -69,8 +69,8 @@ Button click in React → `window.api.sendTestNotification()` → preload `ipcRe
 
 ## 4. Concurrency model
 
-- Everything in main is `async`/`await` on the Node event loop; **one supervised long-running task per (account, provider)** so a failing provider can't affect others (N-10)
-- Every provider call takes an `AbortSignal` (cancel on disconnect and on quit)
+- Everything in main is `async`/`await` on the Node event loop; **one supervised long-running task per (account, provider)** so a failing provider can't affect others (N-10). Built as the `Scheduler`'s per-account loop: each round re-arms itself with `setTimeout`, so rounds never overlap, and an unexpected error is logged and retried at the normal interval instead of ending the loop.
+- Every provider call takes an `AbortSignal` (cancel on disconnect and on quit). `Scheduler.stop()` aborts it on quit.
 - The database is SQLite in WAL mode via the synchronous `node:sqlite` API. Keep queries small and batch writes in transactions so the event loop is never blocked for long (move to a worker thread if profiling shows a need).
 - The renderer never blocks main: it only awaits IPC calls
 
@@ -106,10 +106,11 @@ achievement-tracker/
 │   │   ├── models.ts  errors.ts  provider.ts
 │   │   └── ipc.ts                   # channel names, payload types, the window.api interface
 │   ├── main/
-│   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC wiring
+│   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC, sync wiring
 │   │   ├── windows.ts  tray.ts  overlay-service.ts  ipc.ts  sample-toasts.ts
-│   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts
-│   │   ├── sync/                    # backoff.ts (+ scheduler, diff, detector in M1/M2)
+│   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts,
+│   │   │                            #   sync-store.ts (the sync engine's SQL)
+│   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts (+ detector in M2)
 │   │   └── providers/               # steam/ xbox/ playstation/ retroachievements/ rpcs3/
 │   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (stubs)
 │   ├── preload/index.ts             # exposes window.api

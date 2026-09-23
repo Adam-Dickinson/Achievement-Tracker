@@ -30,7 +30,7 @@ Electron apps run as several separate programs. This one has three kinds of code
                      src/shared: types and tiny helpers imported by all three
 ```
 
-- **Main process** (`src/main`): a Node.js program. It creates the windows, the tray icon and the database, and (from milestone M1) will talk to the platforms and run the sync. It can do anything on the machine.
+- **Main process** (`src/main`): a Node.js program. It creates the windows, the tray icon and the database, and runs the sync engine (which will talk to the platforms once their providers exist). It can do anything on the machine.
 - **Renderer** (`src/renderer`): each window is a small web page running React. It is treated as untrusted web content, so it cannot touch the machine directly.
 - **Preload** (`src/preload`): a tiny script that runs before each page loads and hands the page one object, `window.api`. Everything the UI can ask the main process to do is on that object.
 - **Shared** (`src/shared`): plain TypeScript both sides import: the domain types, the provider interface, the IPC contract. It must not use Node or browser APIs.
@@ -161,7 +161,7 @@ Top-level files (Real unless noted):
 
 | File | What it does |
 |---|---|
-| [index.ts](../src/main/index.ts) | **The entry point and wiring.** Takes the single-instance lock (a second launch just shows the first window); creates the main window on demand; keeps the app alive with no windows open (the tray keeps it reachable); hardens every window (no popups, no navigation away); opens the database; creates the overlay and the tray; registers IPC handlers. Services are plain modules wired together here by hand. There is no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2). |
+| [index.ts](../src/main/index.ts) | **The entry point and wiring.** Takes the single-instance lock (a second launch just shows the first window); creates the main window on demand; keeps the app alive with no windows open (the tray keeps it reachable); hardens every window (no popups, no navigation away); opens the database; starts the sync `Scheduler` (no providers registered yet, so it idles) and stops it on quit; creates the overlay and the tray; registers IPC handlers. Services are plain modules wired together here by hand. There is no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2). |
 | [windows.ts](../src/main/windows.ts) | Creates both windows. Holds the shared security settings (`contextIsolation` on, `nodeIntegration` off, `sandbox` on, preload script). `createMainWindow()`: 1440x900, minimum 1024x680, shown once ready to avoid a white flash. `createOverlayWindow()`: transparent, frameless, always on top, click-through, unable to take focus. Also exports `OVERLAY_SIZE`. Loads the dev server URL in development and the built file in production. |
 | [overlay-service.ts](../src/main/overlay-service.ts) | `OverlayService.show(toast)`: waits for the overlay page to load, positions the window in the bottom-right of the primary display's work area, shows it without stealing focus, sends the toast over IPC, and hides the window after the toast's duration plus time for the exit animation. **Placeholder for now:** a new toast replaces the current one. The queue and stacking arrive in M1. |
 | [tray.ts](../src/main/tray.ts) | The tray icon and its menu: Open Achievement Tracker, Send test notification, Quit. Clicking the icon opens the window. It is a native Electron menu, so it has no React and no visual design. |
@@ -175,18 +175,25 @@ Top-level files (Real unless noted):
 
 | File | What it does |
 |---|---|
-| [database.ts](../src/main/store/database.ts) | `openDatabase(path)`: opens SQLite through Node's built-in `node:sqlite`, turns on WAL mode and foreign keys, runs pending migrations and returns the handle and schema version. Today `index.ts` only uses the version; the handle is not yet passed to anything. |
+| [database.ts](../src/main/store/database.ts) | `openDatabase(path)`: opens SQLite through Node's built-in `node:sqlite`, turns on WAL mode and foreign keys, runs pending migrations and returns the handle and schema version. `index.ts` passes the handle to the sync `Scheduler`. |
 | [migrations.ts](../src/main/store/migrations.ts) | Loads every `migrations/NNNN_name.sql` file as text at build time, checks the filename, and sorts by version. |
 | [migrate.ts](../src/main/store/migrate.ts) | `applyMigrations()`: applies each migration newer than the database's version, each in its own transaction, tracking progress in SQLite's `user_version`. A failing migration rolls back and stops. |
 | [migrations/0001_init.sql](../src/main/store/migrations/0001_init.sql) | The schema: `account`, `game` (canonical, cross-platform), `platform_game` (a game on one account/platform, with `baseline_done` for the first-sync rule), `achievement`, `unlock` (with `notified`), `sync_state`, `setting`, plus two indexes. **Never edit a migration that has shipped**: add `0002_...sql`. |
 | [migrate.test.ts](../src/main/store/migrate.test.ts) | Tests numbering, creating the schema, running twice, and rollback. New migrations need an upgrade test here (rule 8). |
+| [sync-store.ts](../src/main/store/sync-store.ts) | The sync engine's SQL, one small function per query: read an account or a platform game, list connected accounts and an account's games, upsert achievements, insert unlocks and report which were genuinely new (`INSERT OR IGNORE`), set `baseline_done`, read and write `sync_state`, set an account's status. Row types `AccountRow`, `PlatformGameRow`, `SyncStateRow`. |
+| [sync-store.test.ts](../src/main/store/sync-store.test.ts) | Each query against a real migrated in-memory database, plus the baseline rule end to end. |
 
 The database file is `achievement-tracker.db` inside Electron's per-user data folder (`app.getPath('userData')`, normally under `%APPDATA%` on Windows).
 
-**`sync/`: keeping data fresh (mostly Planned)**
+**`sync/`: keeping data fresh (Real, game scope; idle until a provider exists)**
 
-- [backoff.ts](../src/main/sync/backoff.ts): Real. `backoffDelayMs()` gives exponential retry delays. Its test is `backoff.test.ts`.
-- Planned in M1/M2: the scheduler (one supervised task per account), the diff engine that applies the baseline rule and emits `UnlockEvent`s, and a running-game detector. Design: [SPEC.md](SPEC.md) §5.
+The design and the as-built behaviour (outcomes table, what is not built yet) are in [SPEC.md](SPEC.md) §5.
+
+- [sync-pass.ts](../src/main/sync/sync-pass.ts): `runSyncPass()`, **what** one sync of one game does. Fetches from the provider, then in one transaction upserts achievements, inserts unlocks and applies the baseline rule (the first sync of a game records everything but returns no events). Returns the `UnlockEvent`s only after the commit.
+- [scheduler.ts](../src/main/sync/scheduler.ts): the `Scheduler`, **when** syncs happen. One loop per connected account; each round syncs the games that are due and records the outcome in `sync_state` (backoff on network trouble, `needs_reauth` on an expired login). `stop()` cancels timers and in-flight calls. New unlocks go to its `onUnlocks` callback.
+- [backoff.ts](../src/main/sync/backoff.ts): `backoffDelayMs()` gives exponential retry delays.
+- Tests beside each: `sync-pass.test.ts` and `scheduler.test.ts` use a fake provider and a fake clock; `backoff.test.ts`.
+- Planned: finding new games (library scope, with the Accounts flow) and a running-game detector (M2).
 
 **`providers/`: one folder per platform (all Stubs)**
 
@@ -249,7 +256,7 @@ Following one real feature through every layer is the fastest way to see how the
 
 The tray's "Send test notification" item follows the same path from step 4 onward.
 
-The real feature works the same way. In M1 the sync engine detects an unlock and calls `overlay.show(...)` with real data instead of a sample.
+The real feature will work the same way. The sync engine already detects unlocks and hands them to the `Scheduler`'s `onUnlocks` callback; once the notification service exists, that callback will call `overlay.show(...)` with real data instead of a sample.
 
 ---
 
@@ -330,7 +337,7 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (75 tests in 17 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (115 tests in 20 files): migrations, the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/` is empty (just `.gitkeep`). Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
@@ -412,7 +419,9 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Floating "island" nav | Real |
 | Main window shell (island nav real; Dashboard's stats header real with sample data; other pages placeholder) | Mixed |
 | All providers | Stubs |
-| Sync scheduler, diff engine, baseline rule, `UnlockEvent` | Planned (M1) |
+| Sync scheduler, sync pass, baseline rule, `UnlockEvent` | Real for game scope, started with the app; idle until a provider exists |
+| Finding new games (library scope), backoff jitter | Planned (M1) |
+| Delivering unlocks to toasts (notification service) | Planned (M1) |
 | Production `SecretStore` (`safeStorage`) | Planned (M1) |
 | Toast queue and stacking | Planned (M1) |
 | Autostart, extra tray items (Sync now, Do Not Disturb, Recent unlocks) | Planned (M1 and later) |
