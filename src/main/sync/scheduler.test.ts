@@ -1,14 +1,24 @@
 import { DatabaseSync } from 'node:sqlite'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProviderError } from '@shared/errors'
-import type { RemoteAchievement, RemoteGameAchievements, UnlockEvent } from '@shared/models'
+import type {
+  RemoteAchievement,
+  RemoteGame,
+  RemoteGameAchievements,
+  UnlockEvent,
+} from '@shared/models'
 import type { Platform } from '@shared/platform'
 import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { InMemorySecretStore, type SecretStore } from '@shared/secret-store'
 import { applyMigrations } from '../store/migrate'
-import { getSyncState, upsertSyncState } from '../store/sync-store'
-import { Scheduler, SYNC_INTERVAL_MS } from './scheduler'
+import {
+  getPlatformGameByExternalId,
+  getSyncState,
+  listPlatformGameExternalIds,
+  upsertSyncState,
+} from '../store/sync-store'
+import { IDLE_INTERVAL_MS, LIBRARY_SCOPE, Scheduler, SYNC_INTERVAL_MS } from './scheduler'
 
 const START = new Date('2026-03-01T12:00:00.000Z')
 const SECONDS = 1000
@@ -41,6 +51,7 @@ function gameData(unlocked: string[]): RemoteGameAchievements {
 function fakeProvider(
   fetchGame: AchievementProvider['fetchGame'],
   platform: Platform = 'steam',
+  listGames?: AchievementProvider['listGames'],
 ): AchievementProvider {
   const notUsed = (): never => {
     throw new Error('not used by the scheduler')
@@ -56,7 +67,7 @@ function fakeProvider(
     },
     authenticate: notUsed,
     validate: notUsed,
-    listGames: notUsed,
+    listGames: listGames ?? notUsed,
     fetchGame,
   }
 }
@@ -398,5 +409,253 @@ describe('Scheduler.start / stop', () => {
     expect(signal?.aborted).toBe(true)
     await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS * 3)
     expect(fetchGame).toHaveBeenCalledOnce()
+  })
+})
+
+function libraryGame(externalId: string, recentlyPlayed = true): RemoteGame {
+  return {
+    ref: { externalId },
+    title: `Game ${externalId}`,
+    iconUrl: null,
+    lastPlayed: null,
+    recentlyPlayed,
+  }
+}
+
+describe('Scheduler.syncLibrary', () => {
+  it('on the first look, adds every listed game with no cutoff, so their first syncs stay silent', async () => {
+    const db = seedDb([{ id: 1, games: [] }])
+    const listGames = vi.fn<AchievementProvider['listGames']>(() =>
+      Promise.resolve([libraryGame('g1'), libraryGame('g2')]),
+    )
+    const { scheduler } = harness(db, { steam: fakeProvider(vi.fn(), 'steam', listGames) })
+
+    const next = await scheduler.syncLibrary(1)
+
+    expect(next).toEqual(after(START, SYNC_INTERVAL_MS))
+    expect(listPlatformGameExternalIds(db, 1)).toEqual(['g1', 'g2'])
+    expect(getPlatformGameByExternalId(db, 1, 'g1').baselineCutoff).toBeNull()
+    expect(getSyncState(db, 1, LIBRARY_SCOPE)).toEqual({
+      cursor: null,
+      lastOkAt: START,
+      lastError: null,
+      nextDueAt: after(START, SYNC_INTERVAL_MS),
+    })
+  })
+
+  it('gives a game found on a later look the previous look as its cutoff', async () => {
+    const db = seedDb([{ id: 1, games: [] }])
+    let games = [libraryGame('g1')]
+    const provider = fakeProvider(vi.fn(), 'steam', () => Promise.resolve(games))
+    const { scheduler, advance } = harness(db, { steam: provider })
+    await scheduler.syncLibrary(1)
+
+    games = [libraryGame('g1'), libraryGame('new')]
+    advance(SYNC_INTERVAL_MS)
+    await scheduler.syncLibrary(1)
+
+    expect(getPlatformGameByExternalId(db, 1, 'new').baselineCutoff).toEqual(START)
+    expect(getPlatformGameByExternalId(db, 1, 'g1').baselineCutoff).toBeNull()
+  })
+
+  it('does not ask for the library again until it is due', async () => {
+    const db = seedDb([{ id: 1, games: [] }])
+    const listGames = vi.fn<AchievementProvider['listGames']>(() => Promise.resolve([]))
+    const { scheduler, advance } = harness(db, {
+      steam: fakeProvider(vi.fn(), 'steam', listGames),
+    })
+    await scheduler.syncLibrary(1)
+
+    advance(SYNC_INTERVAL_MS - 1)
+    expect(await scheduler.syncLibrary(1)).toEqual(after(START, SYNC_INTERVAL_MS))
+    expect(listGames).toHaveBeenCalledOnce()
+  })
+
+  it('backs off on a network error and leaves the known games alone', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(vi.fn(), 'steam', () =>
+      Promise.reject(new ProviderError('network', 'offline')),
+    )
+    const { scheduler } = harness(db, { steam: provider })
+
+    expect(await scheduler.syncLibrary(1)).toEqual(after(START, 30 * SECONDS))
+    expect(getSyncState(db, 1, LIBRARY_SCOPE)?.lastError).toBe('offline')
+    expect(listPlatformGameExternalIds(db, 1)).toEqual(['g1'])
+  })
+
+  it('on an expired login, marks the account needs_reauth and stops', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(vi.fn(), 'steam', () =>
+      Promise.reject(new ProviderError('auth_expired', 'key revoked')),
+    )
+    const { scheduler } = harness(db, { steam: provider })
+
+    expect(await scheduler.syncLibrary(1)).toBeNull()
+    expect(accountStatus(db, 1)).toBe('needs_reauth')
+  })
+
+  it('returns null for an account whose platform has no provider', async () => {
+    const db = seedDb([{ id: 1, platform: 'xbox', games: [] }])
+    const { scheduler } = harness(db, { steam: fakeProvider(vi.fn()) })
+
+    expect(await scheduler.syncLibrary(1)).toBeNull()
+  })
+})
+
+describe('Scheduler tiered polling', () => {
+  function libraryOf(games: RemoteGame[]): AchievementProvider['listGames'] {
+    return () => Promise.resolve(games)
+  }
+
+  it('polls recently played games every interval, and the rest only every idle interval', async () => {
+    const db = seedDb([{ id: 1, games: ['recent', 'idle'] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const listGames = libraryOf([libraryGame('recent'), libraryGame('idle', false)])
+    const { scheduler, advance } = harness(db, {
+      steam: fakeProvider(fetchGame, 'steam', listGames),
+    })
+    await scheduler.syncLibrary(1)
+
+    // Both are synced once straight away (their first sync), then tiered.
+    expect(await scheduler.syncDueGames(1)).toEqual(after(START, SYNC_INTERVAL_MS))
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+
+    advance(SYNC_INTERVAL_MS)
+    await scheduler.syncDueGames(1)
+    expect(fetchGame.mock.calls.map((call) => call[1].externalId)).toEqual([
+      'recent',
+      'idle',
+      'recent',
+    ])
+
+    advance(IDLE_INTERVAL_MS - SYNC_INTERVAL_MS)
+    await scheduler.syncDueGames(1)
+    expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'idle')).toHaveLength(2)
+  })
+
+  it('reports an idle game as due one idle interval after its last success', async () => {
+    const db = seedDb([{ id: 1, games: ['idle'] }])
+    const listGames = libraryOf([libraryGame('idle', false)])
+    const { scheduler } = harness(db, {
+      steam: fakeProvider(() => Promise.resolve(gameData([])), 'steam', listGames),
+    })
+    await scheduler.syncLibrary(1)
+
+    expect(await scheduler.syncDueGames(1)).toEqual(after(START, IDLE_INTERVAL_MS))
+  })
+
+  it('polls an idle game again soon after it starts being played', async () => {
+    const db = seedDb([{ id: 1, games: ['g1'] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    let games = [libraryGame('g1', false)]
+    const { scheduler, advance } = harness(db, {
+      steam: fakeProvider(fetchGame, 'steam', () => Promise.resolve(games)),
+    })
+    await scheduler.syncLibrary(1)
+    await scheduler.syncDueGames(1)
+
+    games = [libraryGame('g1', true)]
+    advance(SYNC_INTERVAL_MS)
+    await scheduler.syncLibrary(1)
+    await scheduler.syncDueGames(1)
+
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+  })
+
+  it('treats every game as recent until the library has been read', async () => {
+    const db = seedDb([{ id: 1, games: ['g1'] }])
+    const { scheduler } = harness(db, {
+      steam: fakeProvider(() => Promise.resolve(gameData([]))),
+    })
+
+    expect(await scheduler.syncDueGames(1)).toEqual(after(START, SYNC_INTERVAL_MS))
+  })
+
+  it('stays within Steam’s daily budget: 171 games, 11 of them recent, over a day', async () => {
+    vi.useFakeTimers({ now: START })
+    const ids = Array.from({ length: 171 }, (_, index) => `g${index}`)
+    const db = seedDb([{ id: 1, games: [] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const listGames = vi.fn(libraryOf(ids.map((id, index) => libraryGame(id, index < 11))))
+    const scheduler = new Scheduler({
+      db,
+      providers: { steam: fakeProvider(fetchGame, 'steam', listGames) },
+      secrets: new InMemorySecretStore(),
+      onUnlocks: () => undefined,
+    })
+
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(24 * 60 * 60_000)
+    scheduler.stop()
+    vi.useRealTimers()
+
+    // Steam's fetchGame is 3 requests and listGames 2; the key's limit is 100,000 a day.
+    const requests = fetchGame.mock.calls.length * 3 + listGames.mock.calls.length * 2
+    expect(requests).toBeLessThan(15_000)
+    expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g0').length).toBe(289)
+    expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g170').length).toBe(5)
+  })
+})
+
+describe('Scheduler rounds: finding games and the baseline', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('finds games and syncs them in the same round, silently on the first look', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: [] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() =>
+      Promise.resolve({
+        achievements: [achievement('a1')],
+        unlocks: [{ achievementExternalId: 'a1', unlockedAt: START, progress: null }],
+      }),
+    )
+    const onUnlocks = vi.fn()
+    const scheduler = new Scheduler({
+      db,
+      providers: {
+        steam: fakeProvider(fetchGame, 'steam', () => Promise.resolve([libraryGame('g1')])),
+      },
+      secrets: new InMemorySecretStore(),
+      onUnlocks,
+    })
+
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    scheduler.stop()
+
+    expect(fetchGame).toHaveBeenCalledOnce()
+    expect(getPlatformGameByExternalId(db, 1, 'g1').baselineDone).toBe(true)
+    expect(onUnlocks).not.toHaveBeenCalled()
+  })
+
+  it('announces what was unlocked in a newly found game since the last look, but not before it', async () => {
+    const db = seedDb([{ id: 1, games: [] }])
+    let games = [libraryGame('known')]
+    const lookedAt = START
+    const unlocks = [
+      { achievementExternalId: 'a1', unlockedAt: after(lookedAt, -60 * SECONDS), progress: null },
+      { achievementExternalId: 'a2', unlockedAt: after(lookedAt, 60 * SECONDS), progress: null },
+    ]
+    const provider = fakeProvider(
+      () => Promise.resolve({ achievements: [achievement('a1'), achievement('a2')], unlocks }),
+      'steam',
+      () => Promise.resolve(games),
+    )
+    const { scheduler, onUnlocks, advance } = harness(db, { steam: provider })
+    await scheduler.syncLibrary(1)
+    await scheduler.syncDueGames(1)
+    expect(onUnlocks).not.toHaveBeenCalled()
+
+    games = [libraryGame('known'), libraryGame('borrowed')]
+    advance(SYNC_INTERVAL_MS)
+    await scheduler.syncLibrary(1)
+    await scheduler.syncDueGames(1)
+
+    expect(onUnlocks).toHaveBeenCalledOnce()
+    const events = onUnlocks.mock.calls[0]?.[0]
+    expect(events?.map((event) => event.gameTitle)).toEqual(['Game borrowed'])
+    expect(events?.map((event) => event.achievement.externalId)).toEqual(['a2'])
   })
 })

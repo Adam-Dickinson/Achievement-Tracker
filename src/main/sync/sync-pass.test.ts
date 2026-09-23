@@ -131,6 +131,72 @@ describe('runSyncPass', () => {
     expect(events[0]?.detectedAt).toBeInstanceOf(Date)
   })
 
+  describe('first sync of a game found after the account was connected (baseline cutoff)', () => {
+    const CUTOFF = '2026-09-23T10:00:00.000Z'
+
+    function datedUnlock(achievementExternalId: string, at: string | null): RemoteUnlock {
+      return { achievementExternalId, unlockedAt: at ? new Date(at) : null, progress: null }
+    }
+
+    it('announces only the unlocks dated after the cutoff, and records all of them', async () => {
+      const db = seedDb()
+      db.exec(`UPDATE platform_game SET baseline_cutoff = '${CUTOFF}' WHERE id = 1`)
+      const provider = returning({
+        achievements: [achievement('old'), achievement('new'), achievement('undated')],
+        unlocks: [
+          datedUnlock('old', '2026-09-23T09:59:59.000Z'),
+          datedUnlock('new', '2026-09-23T10:00:01.000Z'),
+          datedUnlock('undated', null),
+        ],
+      })
+
+      const events = await runSyncPass(db, getAccount(db, 1), 'g1', provider, CREDENTIALS)
+
+      expect(events.map((event) => event.achievement.externalId)).toEqual(['new'])
+      expect(count(db, 'unlock')).toBe(3)
+      expect(baselineDone(db)).toBe(1)
+    })
+
+    it('treats an unlock at exactly the cutoff as already known', async () => {
+      const db = seedDb()
+      db.exec(`UPDATE platform_game SET baseline_cutoff = '${CUTOFF}' WHERE id = 1`)
+      const provider = returning({
+        achievements: [achievement('a1')],
+        unlocks: [datedUnlock('a1', CUTOFF)],
+      })
+
+      expect(await runSyncPass(db, getAccount(db, 1), 'g1', provider, CREDENTIALS)).toEqual([])
+    })
+
+    it('stays fully silent without a cutoff, however recent the unlocks', async () => {
+      const db = seedDb()
+      const provider = returning({
+        achievements: [achievement('a1')],
+        unlocks: [datedUnlock('a1', '2099-01-01T00:00:00.000Z')],
+      })
+
+      expect(await runSyncPass(db, getAccount(db, 1), 'g1', provider, CREDENTIALS)).toEqual([])
+    })
+
+    it('ignores the cutoff after the first sync: every new unlock is announced', async () => {
+      const db = seedDb()
+      db.exec(`UPDATE platform_game SET baseline_cutoff = '${CUTOFF}' WHERE id = 1`)
+      const account = getAccount(db, 1)
+      const achievements = [achievement('a1'), achievement('a2')]
+      await runSyncPass(db, account, 'g1', returning({ achievements, unlocks: [] }), CREDENTIALS)
+
+      const events = await runSyncPass(
+        db,
+        account,
+        'g1',
+        returning({ achievements, unlocks: [datedUnlock('a2', '2026-01-01T00:00:00.000Z')] }),
+        CREDENTIALS,
+      )
+
+      expect(events.map((event) => event.achievement.externalId)).toEqual(['a2'])
+    })
+  })
+
   it('returns no events when nothing new has unlocked since the last pass', async () => {
     const db = seedDb()
     const account = getAccount(db, 1)

@@ -25,7 +25,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | F-13 | Local-file providers use filesystem watchers (event-driven, no polling) | P0 |
 | F-14 | Manual "Sync now" (all / per account / per game) | P0 |
 | F-15 | Respect provider rate limits with backoff + jitter; surface status in UI | P0 |
-| F-16 | Baseline rule: first sync of a game emits no notifications | P0 |
+| F-16 | Baseline rule: a game's first sync announces only unlocks dated after its cutoff, the previous library look (none when an account is first connected, so no flood) | P0 |
 | F-17 | Sync is idempotent and resumable after crash | P0 |
 
 ### Notifications
@@ -90,7 +90,7 @@ CREATE TABLE account (
   last_sync_at  TEXT,                   -- ISO-8601 UTC
   created_at    TEXT NOT NULL,
   UNIQUE (platform, external_id)
-);                                       -- secrets live in the OS keychain, keyed by account.id
+);                                       -- secrets live in secrets.json, encrypted by the OS (DPAPI), keyed by account.id
 
 CREATE TABLE game (                      -- canonical (cross-platform) game
   id            INTEGER PRIMARY KEY,
@@ -108,8 +108,9 @@ CREATE TABLE platform_game (             -- a game as it exists on one platform/
   external_id   TEXT NOT NULL,          -- appid, titleId, NPWR id, RA game id
   title         TEXT NOT NULL,
   icon_url      TEXT,
-  baseline_done INTEGER NOT NULL DEFAULT 0,   -- 0 = silent first sync pending
+  baseline_done INTEGER NOT NULL DEFAULT 0,   -- 0 = first sync pending
   last_played   TEXT,
+  baseline_cutoff TEXT,                 -- first sync toasts only unlocks after this; NULL = fully silent (0002)
   UNIQUE (account_id, external_id)
 );
 
@@ -202,16 +203,17 @@ Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watch
 
 **As built (M1, game scope).** One pass is `runSyncPass` in `src/main/sync/sync-pass.ts`; *when* passes run is the `Scheduler` in `src/main/sync/scheduler.ts`. Its SQL is in `src/main/store/sync-store.ts`.
 
-- **Scope.** Each `platform_game` row is its own `sync_state` scope, `game:<externalId>`. Finding new games (a `library` scope calling `listGames`) is not built yet; it arrives with the Accounts flow, which is what creates the rows.
+- **Scopes.** Each account round starts with the `library` scope: `listGames`, then `addPlatformGames` in one transaction, which adds new games and updates known ones. Then each `platform_game` row is its own scope, `game:<externalId>`. Both use the outcomes table below. Decided in [ADR-0005](adr/0005-library-scope-baseline-cutoff-tiered-polling.md).
 - **A found game is never forgotten.** When the library scope is built, a game that stops appearing in `listGames` must keep its `platform_game` row and go on being synced. `listGames` is not a complete list: Steam's includes games borrowed through Steam Families only while they are in the two-week recently-played window (docs/PROVIDERS.md), and refunded or delisted games can also drop out. Removing a game is a user action, never a side effect of a sync.
-- **Open: the baseline for a newly found game.** Today a game's first sync is always silent. That is right when an account is first connected (no flood of old unlocks), but wrong for a game the library scope finds later while it is being played (a newly bought game, or one borrowed through Steam Families): unlocks earned before its first sync would never toast. A likely fix is to stay silent only for unlocks dated before the game was found (or before the account was connected) and still emit events for later ones, since Steam reports exact unlock times. Decide this when the library scope is built; it changes F-16.
+- **Baseline cutoff (F-16).** A game added by a library look gets `baseline_cutoff` = the previous look's `last_ok_at`; on the account's first look it is `NULL`. A game's first sync announces only unlocks dated after the cutoff. Undated unlocks, and all of them when the cutoff is `NULL`, are recorded silently. So connecting an account stays silent, while a game bought or borrowed later toasts what was unlocked since the app last looked.
+- **Tiered polling.** A game the platform counts as recently played (`RemoteGame.recentlyPlayed`; Steam: in `GetRecentlyPlayedGames`) syncs every interval; any other game at most every 6 hours after its last success (`IDLE_INTERVAL_MS`). This keeps Steam around 12,000 requests a day for 171 games instead of about 148,000 (the key's limit is 100,000). Until the library has been read in the current session, every game counts as recent.
 - **Fetch first.** The provider call happens *before* `BEGIN`. `node:sqlite` transactions are synchronous, so one must never stay open across a network await.
 - **Loops.** `start()` runs one loop per `connected` account whose platform has a registered provider. Each round syncs that account's due games in turn (no `next_due_at` means due now), then sleeps until the earliest next due time. `stop()` (on quit) clears the timers and aborts any provider call in flight through its `AbortSignal`.
 - **Credentials.** The token comes from `SecretStore`, keyed by `String(account.id)` (see §3).
 
 | Outcome of a pass | `sync_state` | Next attempt |
 |---|---|---|
-| Success | `last_ok_at` = now, `last_error` cleared | normal interval (5 min, §7 `sync.intervalSec`); backoff reset |
+| Success | `last_ok_at` = now, `last_error` cleared | normal interval (5 min, §7 `sync.intervalSec`), or the idle interval (6 h) for a game not played lately; backoff reset |
 | `ProviderError` that is retryable (`network`, `rate_limited`) | `last_error` set | exponential backoff, 30 s doubling to 30 min, or the platform's `retryAfterMs` if longer |
 | `ProviderError('auth_expired')` | `last_error` set; `account.status` = `needs_reauth` | none: the account's loop stops until it is reconnected |
 | Any other error (`parse`, `unsupported`, a bug) | `last_error` set | normal interval |
@@ -272,7 +274,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 - **Renderer isolation:** `contextIsolation: true`, `sandbox: true`, `nodeIntegration: false`; the UI only gets the explicit `window.api`. New windows and navigation away from our own pages are blocked.
 - **CSP:** a strict Content-Security-Policy is injected into production builds (`script-src 'self'`, no remote content).
 - **IPC:** validate the sender of every call; validate and narrow every payload in the main process (never trust the renderer).
-- **Secrets** only via `SecretStore` (Electron `safeStorage` in production); `Secret` redacts itself in strings, JSON and `console.log`, so never log credentials; redact tokens in any logs.
+- **Secrets** only via `SecretStore`. In production that is `SafeStorageSecretStore`: each secret is encrypted with Electron `safeStorage` (Windows DPAPI, so only the same Windows user can decrypt it) and kept as base64 in `secrets.json` in the app's data folder, never in SQLite. It refuses to save if OS encryption is unavailable, and a secret it can't decrypt reads as missing, so the account asks for its key again; `Secret` redacts itself in strings, JSON and `console.log`, so never log credentials; redact tokens in any logs.
 - **Auth flows** (OAuth) run in the system browser (loopback redirect) or a separate short-lived window, and are closed after completion.
 - **The overlay** only changes its own window; nothing is injected into other processes.
 - **Updates:** auto-update packages signed; signature verified before install (M6).

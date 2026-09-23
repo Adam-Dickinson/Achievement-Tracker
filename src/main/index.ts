@@ -1,9 +1,9 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, Menu } from 'electron'
-import { InMemorySecretStore } from '@shared/secret-store'
+import { app, BrowserWindow, Menu, safeStorage } from 'electron'
 import { registerIpcHandlers } from './ipc'
 import { OverlayService } from './overlay-service'
 import { SteamProvider } from './providers/steam'
+import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { Scheduler } from './sync/scheduler'
@@ -51,12 +51,12 @@ async function start(): Promise<void> {
   )
 
   // The sync engine. Steam is registered, but nothing can connect an account until the Accounts
-  // screen exists, so it starts and idles. The production SecretStore (safeStorage) and the
-  // notification service that will receive onUnlocks are their own M1 items.
+  // screen exists, so it starts and idles. The notification service that will receive onUnlocks
+  // is its own M1 item.
   const scheduler = new Scheduler({
     db,
     providers: { steam: new SteamProvider() },
-    secrets: new InMemorySecretStore(),
+    secrets: new SafeStorageSecretStore(join(app.getPath('userData'), 'secrets.json'), safeStorage),
     onUnlocks: () => undefined,
   })
   scheduler.start()

@@ -139,7 +139,7 @@ Tests live next to the code they test (`*.test.ts`, `*.test.tsx`).
 | Fonts | Bricolage Grotesque and Figtree, bundled with `@fontsource-variable/*` |
 | Build | electron-vite 5 on Vite 7 |
 | DB | `node:sqlite` (built into Node), plain SQL migrations |
-| Secrets | Electron `safeStorage` behind `SecretStore` (M1) |
+| Secrets | Electron `safeStorage` (DPAPI) behind `SecretStore`, stored encrypted in `secrets.json` |
 | HTTP | Node `fetch` (M1) |
 | Validating provider replies | zod 4 schemas, main process only ([ADR-0004](adr/0004-zod-for-provider-responses.md)) |
 | File watching | `fs.watch` + debounce |

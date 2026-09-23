@@ -1,8 +1,6 @@
-import { RemoteAchievement, RemoteUnlock } from '@shared/models'
+import { AccountStatus, RemoteAchievement, RemoteGame, RemoteUnlock } from '@shared/models'
 import { Platform } from '@shared/platform'
 import { DatabaseSync } from 'node:sqlite'
-
-export type AccountStatus = 'connected' | 'needs_reauth' | 'error' | 'disabled'
 
 export interface AccountRow {
   readonly id: number
@@ -14,6 +12,7 @@ export interface PlatformGameRow {
   readonly id: number
   readonly title: string
   readonly baselineDone: boolean
+  readonly baselineCutoff: Date | null
 }
 
 export interface SyncStateRow {
@@ -30,9 +29,10 @@ export function getPlatformGameByExternalId(
 ): PlatformGameRow {
   const row = db
     .prepare(
-      'SELECT id, title, baseline_done FROM platform_game WHERE account_id = ? AND external_id = ?',
+      'SELECT id, title, baseline_done, baseline_cutoff FROM platform_game WHERE account_id = ? AND external_id = ?',
     )
-    .get(accountId, externalId) as { id: number; title: string; baseline_done: number } | undefined
+    .get(accountId, externalId) as
+    { id: number; title: string; baseline_done: number; baseline_cutoff: string | null } | undefined
 
   if (!row) {
     throw new Error(
@@ -40,7 +40,12 @@ export function getPlatformGameByExternalId(
     )
   }
 
-  return { id: row.id, title: row.title, baselineDone: row.baseline_done === 1 }
+  return {
+    id: row.id,
+    title: row.title,
+    baselineDone: row.baseline_done === 1,
+    baselineCutoff: row.baseline_cutoff ? new Date(row.baseline_cutoff) : null,
+  }
 }
 
 export function upsertAchievements(
@@ -207,6 +212,78 @@ export function listConnectedAccounts(db: DatabaseSync): AccountRow[] {
     .all() as { id: number; platform: Platform; external_id: string }[]
 
   return rows.map((row) => ({ id: row.id, platform: row.platform, externalId: row.external_id }))
+}
+
+export function upsertAccount(
+  db: DatabaseSync,
+  account: { platform: Platform; externalId: string; displayName: string },
+  now = new Date(),
+): AccountRow {
+  const row = db
+    .prepare(
+      `
+    INSERT INTO account (platform, external_id, display_name, status, created_at)
+    VALUES (?, ?, ?, 'connected', ?)
+    ON CONFLICT(platform, external_id) DO UPDATE SET
+      display_name = excluded.display_name,
+      status = 'connected'
+    RETURNING id
+  `,
+    )
+    .get(account.platform, account.externalId, account.displayName, now.toISOString()) as {
+    id: number
+  }
+
+  return { id: row.id, platform: account.platform, externalId: account.externalId }
+}
+
+// Only adds or updates: a game missing from `games` keeps its row (SPEC §5).
+export function addPlatformGames(
+  db: DatabaseSync,
+  account: AccountRow,
+  games: readonly RemoteGame[],
+  baselineCutoff: Date | null = null,
+): number {
+  const findGame = db.prepare(
+    'SELECT id FROM platform_game WHERE account_id = ? AND external_id = ?',
+  )
+  const updateGame = db.prepare(`
+    UPDATE platform_game
+    SET title = ?, icon_url = ?, last_played = COALESCE(?, last_played)
+    WHERE id = ?
+  `)
+  const insertGame = db.prepare('INSERT INTO game (title, sort_title) VALUES (?, ?)')
+  const insertPlatformGame = db.prepare(`
+    INSERT INTO platform_game
+      (game_id, account_id, platform, external_id, title, icon_url, last_played, baseline_done,
+       baseline_cutoff)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+  `)
+
+  let added = 0
+  for (const game of games) {
+    const lastPlayed = game.lastPlayed?.toISOString() ?? null
+    const existing = findGame.get(account.id, game.ref.externalId) as { id: number } | undefined
+
+    if (existing) {
+      updateGame.run(game.title, game.iconUrl, lastPlayed, existing.id)
+      continue
+    }
+
+    const gameId = Number(insertGame.run(game.title, game.title.toLowerCase()).lastInsertRowid)
+    insertPlatformGame.run(
+      gameId,
+      account.id,
+      account.platform,
+      game.ref.externalId,
+      game.title,
+      game.iconUrl,
+      lastPlayed,
+      baselineCutoff?.toISOString() ?? null,
+    )
+    added++
+  }
+  return added
 }
 
 /** The external ids of every game known for an account: each is one `game:<id>` sync scope. */

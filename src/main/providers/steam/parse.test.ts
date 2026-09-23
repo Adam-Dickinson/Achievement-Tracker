@@ -333,6 +333,7 @@ const PORTAL = {
   title: 'Portal',
   iconUrl: `${APP_IMAGES}/400/cfa928ab4119dd137e50d728e8fe703e4e970aff.jpg`,
   lastPlayed: new Date(1621685363 * 1000),
+  recentlyPlayed: false,
 }
 
 const RESIDENT_EVIL_2 = {
@@ -340,6 +341,7 @@ const RESIDENT_EVIL_2 = {
   title: 'Resident Evil 2',
   iconUrl: `${APP_IMAGES}/883710/86ef2fdebeced746313994ccf2d7afb1f2887bf0.jpg`,
   lastPlayed: new Date(1790160642 * 1000),
+  recentlyPlayed: false,
 }
 
 const SPIDER_MAN = {
@@ -347,6 +349,7 @@ const SPIDER_MAN = {
   title: 'Marvel’s Spider-Man Remastered',
   iconUrl: `${APP_IMAGES}/1817070/346333cb340139ad8b697005e5c79a3162c387b0.jpg`,
   lastPlayed: null,
+  recentlyPlayed: true,
 }
 
 describe('parseLibrary', () => {
@@ -357,7 +360,7 @@ describe('parseLibrary', () => {
   it('adds recently played games the account doesn’t own (Steam Families), once each', () => {
     expect(parseLibrary(fixture('owned-games.json'), fixture('recently-played.json'))).toEqual([
       PORTAL,
-      RESIDENT_EVIL_2,
+      { ...RESIDENT_EVIL_2, recentlyPlayed: true },
       SPIDER_MAN,
     ])
   })
@@ -379,7 +382,17 @@ describe('parseLibrary', () => {
       title: 'Borrowed',
       iconUrl: null,
       lastPlayed: null,
+      recentlyPlayed: true,
     })
+  })
+
+  it('marks exactly the games in the recently played list as recently played', () => {
+    const library = parseLibrary(fixture('owned-games.json'), fixture('recently-played.json'))
+
+    expect(library.filter((game) => game.recentlyPlayed).map((game) => game.title)).toEqual([
+      'Resident Evil 2',
+      'Marvel’s Spider-Man Remastered',
+    ])
   })
 
   it('gives a never-played game (last played 0) no date', () => {
