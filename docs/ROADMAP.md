@@ -21,7 +21,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 - [ ] Steam provider (Web API): library, schema, unlocks, rarity
 - [ ] Notification service + overlay toast (queue, sound, preview)
 - [ ] Tray, close-to-tray, single instance, autostart
-- [ ] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard
+- [~] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard's stats header (completion hero + tiles) is built, on sample data; Accounts, Library and Game detail still to do
 - **Exit:** unlock a Steam achievement in a real game and a toast appears within the poll interval
 
 ## M2: Emulators and Xbox (P0 complete)

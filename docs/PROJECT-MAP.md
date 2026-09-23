@@ -151,8 +151,9 @@ Runs in both worlds, so it may not import from `main` or `renderer`, and may not
 | [secret.ts](../src/shared/secret.ts) | `Secret`: wraps a token so printing or serializing it shows `Secret(<redacted>)`. The only way to read it is `expose()`. |
 | [secret-store.ts](../src/shared/secret-store.ts) | The `SecretStore` interface and an in-memory implementation used by tests. The production version (Electron `safeStorage`) is **Planned** for M1. |
 | [ipc.ts](../src/shared/ipc.ts) | **The IPC contract.** Channel names (`IPC`), payload types (`AppInfo`, `ToastPayload`), and `AchievementTrackerApi`, the exact shape of `window.api`. This is the first place to look when the UI and main process need to talk. |
+| [dashboard.ts](../src/shared/dashboard.ts) | `DashboardStats` (the Dashboard header's numbers) and `completionPercent()`, a floor-not-round percentage shared by the UI and, later, the main process. |
 
-Tests sit beside the code: `errors.test.ts`, `platform.test.ts`, `rarity.test.ts`, `secret.test.ts`.
+Tests sit beside the code: `errors.test.ts`, `platform.test.ts`, `rarity.test.ts`, `secret.test.ts`, `dashboard.test.ts`.
 
 ### 4.2 `src/main/`: the main process (Node.js)
 
@@ -221,7 +222,14 @@ The database file is `achievement-tracker.db` inside Electron's per-user data fo
 | &nbsp;&nbsp;[RarityChip.tsx](../src/renderer/src/components/RarityChip.tsx) | A small pill with the rarity's gem and name. Ultra rare gets a gradient fill and a glow. Uses the rarity scope, so it can go anywhere: the toast, Library cards, Game detail. |
 | &nbsp;&nbsp;[RarityGem.tsx](../src/renderer/src/components/RarityGem.tsx) | The rarity's gem shape (circle, diamond, hexagon, sparkle), picked from a `Record<Rarity, LucideIcon>` table and coloured with a `text-*` class. Decorative (`aria-hidden`): the rarity is always written out as text too. Used in the toast; the Library and Game detail screens will reuse it. |
 | &nbsp;&nbsp;[TrophyIcon.tsx](../src/renderer/src/components/TrophyIcon.tsx) | The app's trophy mark as an SVG you can colour with a `text-*` class. |
-| `features/` (Planned) | Seven empty folders with a `.gitkeep`: `dashboard`, `library`, `game-detail`, `activity`, `accounts`, `settings`, `onboarding`. **This is where each real screen will live.** |
+| `features/dashboard/` (Real, sample data) | |
+| &nbsp;&nbsp;[Dashboard.tsx](../src/renderer/src/features/dashboard/Dashboard.tsx) | The Dashboard page: the completion hero, then a row of stat tiles. Shows a `role="status"` "Loading…" message until `useDashboardStats()` resolves. |
+| &nbsp;&nbsp;[CompletionHero.tsx](../src/renderer/src/features/dashboard/CompletionHero.tsx) | The big completion % and an accessible progress bar (`role="progressbar"`, `aria-value*`), not colour alone. |
+| &nbsp;&nbsp;[StatTile.tsx](../src/renderer/src/features/dashboard/StatTile.tsx) | One floating-card stat: a label, a `toLocaleString()`-formatted value, and an optional hint line. |
+| &nbsp;&nbsp;[useDashboardStats.ts](../src/renderer/src/features/dashboard/useDashboardStats.ts) | The one place that knows where the Dashboard's numbers come from. Resolves `sample-stats.ts` today; swapping in a real `getDashboardStats()` IPC call is a one-line change inside it. Guards against React StrictMode's double-invoked effect with a `cancelled` flag. |
+| &nbsp;&nbsp;[sample-stats.ts](../src/renderer/src/features/dashboard/sample-stats.ts) | Stand-in `DashboardStats`, deleted once real IPC exists. |
+| &nbsp;&nbsp;`*.test.tsx` | Component tests for the four files above. |
+| `features/{library,game-detail,activity,accounts,settings,onboarding}/` (Planned) | Six empty folders with a `.gitkeep`. **This is where each real screen will live.** |
 | [styles/index.css](../src/renderer/src/styles/index.css) | Global CSS and the design tokens: fonts, colours, radii, shadows, the rarity scope (`[data-rarity]` rules that set `--rarity` and friends), plus a `.bg-aurora` background class (defined, not applied yet) and base styles. See section 8. |
 
 ---
@@ -322,7 +330,7 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (57 tests in 13 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (75 tests in 17 files): migrations, backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/` is empty (just `.gitkeep`). Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
@@ -401,14 +409,15 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Backoff helper | Real |
 | App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
 | Toast component | Real, in the Afterglow look (platform badge, stacking and queue still to do) |
-| Main window shell (island nav, placeholder pages) | Placeholder |
+| Floating "island" nav | Real |
+| Main window shell (island nav real; Dashboard's stats header real with sample data; other pages placeholder) | Mixed |
 | All providers | Stubs |
 | Sync scheduler, diff engine, baseline rule, `UnlockEvent` | Planned (M1) |
 | Production `SecretStore` (`safeStorage`) | Planned (M1) |
 | Toast queue and stacking | Planned (M1) |
 | Autostart, extra tray items (Sync now, Do Not Disturb, Recent unlocks) | Planned (M1 and later) |
-| Real screens under `features/*` | Planned (M1 onward) |
-| Floating "island" nav | Planned |
+| Dashboard: Recent unlocks, Closest to 100%, Rarest, per-platform breakdown | Planned |
+| Real screens under `features/*` other than Dashboard | Planned (M1 onward) |
 | Activity screen design | Not designed yet |
 | Installer, signing, auto-update | Planned (M6) |
 
