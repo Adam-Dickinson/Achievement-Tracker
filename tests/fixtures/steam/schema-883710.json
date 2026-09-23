@@ -1,0 +1,44 @@
+{
+  "game": {
+    "gameName": "RESIDENT EVIL 2 / BIOHAZARD RE:2",
+    "gameVersion": "13",
+    "availableGameStats": {
+      "achievements": [
+        {
+          "name": "NEW_ACHIEVEMENT_1_1",
+          "defaultvalue": 0,
+          "displayName": "Welcome to the City of the Dead",
+          "hidden": 1,
+          "icon": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/61eab059da93026fdff6dd4597ee87c5939f0929.jpg",
+          "icongray": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/16cfc49d01344913528c25ea11df2bfcd1b1f1cf.jpg"
+        },
+        {
+          "name": "NEW_ACHIEVEMENT_1_7",
+          "defaultvalue": 0,
+          "displayName": "A Hero Emerges",
+          "hidden": 0,
+          "description": "Complete Leon's story.",
+          "icon": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/6fd6449a3aa8909f9760cd5899e78b00846357c3.jpg",
+          "icongray": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/aec9f3abc08a82e4c9fef76857cc4c24a2816bf8.jpg"
+        },
+        {
+          "name": "NEW_ACHIEVEMENT_1_9",
+          "defaultvalue": 0,
+          "displayName": "Broken Umbrella",
+          "hidden": 1,
+          "icon": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/d8eb06689661e95b79fc5c63ac5c43269f680000.jpg",
+          "icongray": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/8c5e050107b73a7fface6abb85313c67bced0b25.jpg"
+        },
+        {
+          "name": "NEW_ACHIEVEMENT_1_31",
+          "defaultvalue": 0,
+          "displayName": "Lore Explorer",
+          "hidden": 0,
+          "description": "Read all of the files.",
+          "icon": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/9297e09446a0c9f2ad4b4c3ac910d3127175b042.jpg",
+          "icongray": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/883710/b910c560e396641ff09e3b2b2629495fa13955e1.jpg"
+        }
+      ]
+    }
+  }
+}

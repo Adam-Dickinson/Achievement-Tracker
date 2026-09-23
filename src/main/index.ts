@@ -3,6 +3,7 @@ import { app, BrowserWindow, Menu } from 'electron'
 import { InMemorySecretStore } from '@shared/secret-store'
 import { registerIpcHandlers } from './ipc'
 import { OverlayService } from './overlay-service'
+import { SteamProvider } from './providers/steam'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { Scheduler } from './sync/scheduler'
@@ -49,12 +50,12 @@ async function start(): Promise<void> {
     join(app.getPath('userData'), 'achievement-tracker.db'),
   )
 
-  // The sync engine. No provider is registered yet (Steam is next on the roadmap), so with no
-  // accounts it starts and idles. The production SecretStore (safeStorage) and the notification
-  // service that will receive onUnlocks are their own M1 items.
+  // The sync engine. Steam is registered, but nothing can connect an account until the Accounts
+  // screen exists, so it starts and idles. The production SecretStore (safeStorage) and the
+  // notification service that will receive onUnlocks are their own M1 items.
   const scheduler = new Scheduler({
     db,
-    providers: {},
+    providers: { steam: new SteamProvider() },
     secrets: new InMemorySecretStore(),
     onUnlocks: () => undefined,
   })

@@ -5,3 +5,5 @@ coverage
 package-lock.json
 docs/design/mockups
 resources
+# Recorded provider responses must stay byte-for-byte as captured
+tests/fixtures
