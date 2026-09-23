@@ -1,9 +1,11 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, Menu } from 'electron'
+import { InMemorySecretStore } from '@shared/secret-store'
 import { registerIpcHandlers } from './ipc'
 import { OverlayService } from './overlay-service'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
+import { Scheduler } from './sync/scheduler'
 import { createTray } from './tray'
 import { createMainWindow, createOverlayWindow } from './windows'
 
@@ -43,7 +45,21 @@ async function start(): Promise<void> {
   // (Ctrl+Shift+I, or Alt > View > Toggle Developer Tools) is available for debugging the UI.
   if (app.isPackaged) Menu.setApplicationMenu(null)
 
-  const { schemaVersion } = openDatabase(join(app.getPath('userData'), 'achievement-tracker.db'))
+  const { db, schemaVersion } = openDatabase(
+    join(app.getPath('userData'), 'achievement-tracker.db'),
+  )
+
+  // The sync engine. No provider is registered yet (Steam is next on the roadmap), so with no
+  // accounts it starts and idles. The production SecretStore (safeStorage) and the notification
+  // service that will receive onUnlocks are their own M1 items.
+  const scheduler = new Scheduler({
+    db,
+    providers: {},
+    secrets: new InMemorySecretStore(),
+    onUnlocks: () => undefined,
+  })
+  scheduler.start()
+  app.on('before-quit', () => scheduler.stop())
 
   const overlay = new OverlayService(createOverlayWindow())
   const sendTestNotification = (): Promise<void> => overlay.show(nextSampleToast())

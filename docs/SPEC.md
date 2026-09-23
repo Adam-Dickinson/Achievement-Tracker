@@ -200,6 +200,25 @@ for each due (account, scope):
 
 Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watcher events are safe.
 
+**As built (M1, game scope).** One pass is `runSyncPass` in `src/main/sync/sync-pass.ts`; *when* passes run is the `Scheduler` in `src/main/sync/scheduler.ts`. Its SQL is in `src/main/store/sync-store.ts`.
+
+- **Scope.** Each `platform_game` row is its own `sync_state` scope, `game:<externalId>`. Finding new games (a `library` scope calling `listGames`) is not built yet; it arrives with the Accounts flow, which is what creates the rows.
+- **Fetch first.** The provider call happens *before* `BEGIN`. `node:sqlite` transactions are synchronous, so one must never stay open across a network await.
+- **Loops.** `start()` runs one loop per `connected` account whose platform has a registered provider. Each round syncs that account's due games in turn (no `next_due_at` means due now), then sleeps until the earliest next due time. `stop()` (on quit) clears the timers and aborts any provider call in flight through its `AbortSignal`.
+- **Credentials.** The token comes from `SecretStore`, keyed by `String(account.id)` (see §3).
+
+| Outcome of a pass | `sync_state` | Next attempt |
+|---|---|---|
+| Success | `last_ok_at` = now, `last_error` cleared | normal interval (5 min, §7 `sync.intervalSec`); backoff reset |
+| `ProviderError` that is retryable (`network`, `rate_limited`) | `last_error` set | exponential backoff, 30 s doubling to 30 min, or the platform's `retryAfterMs` if longer |
+| `ProviderError('auth_expired')` | `last_error` set; `account.status` = `needs_reauth` | none: the account's loop stops until it is reconnected |
+| Any other error (`parse`, `unsupported`, a bug) | `last_error` set | normal interval |
+| Cancelled by `stop()` | unchanged | none |
+
+On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attempt counts live in memory only, so a restart starts them again.
+
+**Not built yet:** jitter on the backoff delay (F-15), fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14), and delivering `UnlockEvent`s to the notification service (`onUnlocks` is a no-op in `main/index.ts` until that exists).
+
 ## 6. IPC contract (main process ⇄ UI)
 
 The UI has no Node.js access. It calls the main process through `window.api`, which the preload script builds from the contract in `src/shared/ipc.ts` (channel names and payload types shared by all three sides). Every handler validates that the sender is one of our own pages.

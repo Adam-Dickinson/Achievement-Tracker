@@ -17,7 +17,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M1: Vertical slice, Steam and toasts (MVP core)
 
 - [x] Domain types + provider interface (`src/shared`); database + migration runner (`src/main/store`); `SecretStore` (in-memory; `safeStorage` implementation still to do)
-- [ ] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`
+- [~] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`. Built and tested for game scope, and started with the app (idle until a provider is registered). Still to do: finding new games (library scope, with the Accounts flow) and jitter on the backoff
 - [ ] Steam provider (Web API): library, schema, unlocks, rarity
 - [ ] Notification service + overlay toast (queue, sound, preview)
 - [ ] Tray, close-to-tray, single instance, autostart
