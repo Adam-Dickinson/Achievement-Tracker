@@ -1,0 +1,22 @@
+{
+  "achievementpercentages": {
+    "achievements": [
+      {
+        "name": "NEW_ACHIEVEMENT_1_1",
+        "percent": "94.9"
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_1_7",
+        "percent": "52.0"
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_1_9",
+        "percent": "28.3"
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_1_31",
+        "percent": "6.0"
+      }
+    ]
+  }
+}

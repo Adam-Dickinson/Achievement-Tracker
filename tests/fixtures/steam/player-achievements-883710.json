@@ -1,0 +1,37 @@
+{
+  "playerstats": {
+    "steamID": "76561190000000001",
+    "gameName": "Resident Evil 2",
+    "achievements": [
+      {
+        "apiname": "NEW_ACHIEVEMENT_1_1",
+        "achieved": 1,
+        "unlocktime": 1772049064,
+        "name": "Welcome to the City of the Dead",
+        "description": ""
+      },
+      {
+        "apiname": "NEW_ACHIEVEMENT_1_7",
+        "achieved": 1,
+        "unlocktime": 1773077038,
+        "name": "A Hero Emerges",
+        "description": "Complete Leon's story."
+      },
+      {
+        "apiname": "NEW_ACHIEVEMENT_1_9",
+        "achieved": 0,
+        "unlocktime": 0,
+        "name": "Broken Umbrella",
+        "description": ""
+      },
+      {
+        "apiname": "NEW_ACHIEVEMENT_1_31",
+        "achieved": 0,
+        "unlocktime": 0,
+        "name": "Lore Explorer",
+        "description": "Read all of the files."
+      }
+    ],
+    "success": true
+  }
+}

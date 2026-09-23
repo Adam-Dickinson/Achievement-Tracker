@@ -17,8 +17,8 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M1: Vertical slice, Steam and toasts (MVP core)
 
 - [x] Domain types + provider interface (`src/shared`); database + migration runner (`src/main/store`); `SecretStore` (in-memory; `safeStorage` implementation still to do)
-- [~] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`. Built and tested for game scope, and started with the app (idle until a provider is registered). Still to do: finding new games (library scope, with the Accounts flow) and jitter on the backoff
-- [ ] Steam provider (Web API): library, schema, unlocks, rarity
+- [~] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`. Built and tested for game scope, and started with the app (idle until a provider is registered). Still to do: finding new games (library scope, with the Accounts flow, keeping found games and settling the open baseline question in SPEC §5) and jitter on the backoff
+- [~] Steam provider (Web API): library, schema, unlocks, rarity. Built, tested against captured replies, verified live against a real account, and registered with the Scheduler. The library includes games borrowed through Steam Families while they are in the two-week recently-played window. Still to do: the Accounts screen that connects an account (`authenticate` takes the key and SteamID64) and stores the key
 - [ ] Notification service + overlay toast (queue, sound, preview)
 - [ ] Tray, close-to-tray, single instance, autostart
 - [~] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard's stats header (completion hero + tiles) is built, on sample data; Accounts, Library and Game detail still to do
@@ -28,6 +28,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 - [ ] RetroAchievements provider
 - [ ] RPCS3 provider with file watcher (< 2 s latency)
+- [ ] Steam local stats files (`appcache/stats/`): find borrowed Steam Families games last played more than two weeks ago, which the Web API can't list, and trigger an immediate poll on change. Format to verify
 - [ ] Xbox provider (OAuth via browser/loopback redirect, token refresh)
 - [ ] Running-game detection → fast polling
 - [ ] Activity feed screen

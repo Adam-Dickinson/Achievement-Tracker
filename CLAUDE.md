@@ -9,7 +9,7 @@ An Electron desktop app (TypeScript everywhere, React UI) that tracks achievemen
 - [docs/SPEC.md](docs/SPEC.md): requirements, DB schema, provider interface, IPC contract
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): code areas, data flow, folder structure
 - [docs/PROVIDERS.md](docs/PROVIDERS.md): per-platform notes (endpoints there are **unverified**)
-- [docs/adr/](docs/adr/): decisions already made (ADR-0003 is current). Don't relitigate without a new ADR.
+- [docs/adr/](docs/adr/): decisions already made (ADR-0003 is the stack; ADR-0004 is zod for provider replies). Don't relitigate without a new ADR.
 
 The owner is **new to React**: when writing UI code, favour clear, idiomatic code and short "why" comments on hooks and state; explain non-obvious React concepts in your replies.
 
@@ -38,7 +38,7 @@ electron-vite looks for Electron's binary itself and fails with `Error: Electron
 
 **Launching Electron from a shell that has `ELECTRON_RUN_AS_NODE` set (VS Code's extension host does, so Claude Code's shell has it) makes Electron behave as plain Node** and the app fails with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`. Unset it first (`env -u ELECTRON_RUN_AS_NODE ...` in bash, `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell).
 
-Status: the scaffold is real and verified (lint, typecheck, 115 tests, production build, and a scripted run of the built app). `shared`, `main/store` and `main/sync` have real code: the sync engine (scheduler + sync pass with the baseline rule, game scope only) starts with the app but idles, because `main/providers` are still stubs. The UI has a real floating island nav and a working animated toast; the Dashboard's stats header (completion hero + tiles) is built on sample data, and the rest of the UI is still a placeholder shell. UI targets are on the Superdesign canvas (link in `docs/design/README.md`); the HTML snapshots in `docs/design/mockups/` still show the pre-"Afterglow" look until they are re-exported. Design tokens are in `src/renderer/src/styles/index.css`.
+Status: the scaffold is real and verified (lint, typecheck, 233 tests, production build, and a scripted run of the built app). `shared`, `main/store`, `main/sync` and the Steam provider have real code: the sync engine (scheduler + sync pass with the baseline rule, game scope only) starts with the app with Steam registered, but idles until the Accounts screen can connect an account. The other providers are still stubs. The UI has a real floating island nav and a working animated toast; the Dashboard's stats header (completion hero + tiles) is built on sample data, and the rest of the UI is still a placeholder shell. UI targets are on the Superdesign canvas (link in `docs/design/README.md`); the HTML snapshots in `docs/design/mockups/` still show the pre-"Afterglow" look until they are re-exported. Design tokens are in `src/renderer/src/styles/index.css`.
 
 ## Rules
 
@@ -47,7 +47,7 @@ Status: the scaffold is real and verified (lint, typecheck, 115 tests, productio
 3. **Secrets only via `SecretStore`.** Never in SQLite, config, logs or the renderer. Keep tokens wrapped in `Secret`, which redacts itself.
 4. **Never inject into or read memory of game processes.** Non-negotiable (anti-cheat safety). The overlay only changes its own window.
 5. **Unofficial APIs are opt-in and labelled.** Don't add a provider that requires storing a user's password.
-6. **Parsers for local files must be defensive:** size limits, throw `ProviderError('parse', ...)` on malformed input, fixture tests.
+6. **Parsers must be defensive:** check JSON replies with a zod schema (ADR-0004); for local files also enforce size limits; throw `ProviderError('parse', ...)` on malformed input; fixture tests.
 7. **Fixtures must be sanitized.** No real account IDs, tokens or emails in `tests/fixtures/`. Raw recordings go in `tests/fixtures/_raw/` (gitignored).
 8. **SQL lives only in `src/main/store`.** Schema changes are a new `migrations/NNNN_name.sql`, never an edit to an applied one; add an upgrade test.
 9. **The renderer is untrusted web content.** Keep `contextIsolation` and `sandbox` on and Node integration off. New capabilities go through `shared/ipc.ts` → `main/ipc.ts` (validate the sender and the payload) → `preload/index.ts`.

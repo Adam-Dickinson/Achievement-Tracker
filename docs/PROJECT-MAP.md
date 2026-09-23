@@ -185,7 +185,7 @@ Top-level files (Real unless noted):
 
 The database file is `achievement-tracker.db` inside Electron's per-user data folder (`app.getPath('userData')`, normally under `%APPDATA%` on Windows).
 
-**`sync/`: keeping data fresh (Real, game scope; idle until a provider exists)**
+**`sync/`: keeping data fresh (Real, game scope; idle until an account is connected)**
 
 The design and the as-built behaviour (outcomes table, what is not built yet) are in [SPEC.md](SPEC.md) §5.
 
@@ -195,9 +195,14 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 - Tests beside each: `sync-pass.test.ts` and `scheduler.test.ts` use a fake provider and a fake clock; `backoff.test.ts`.
 - Planned: finding new games (library scope, with the Accounts flow) and a running-game detector (M2).
 
-**`providers/`: one folder per platform (all Stubs)**
+**`providers/`: one folder per platform (Steam Real, the rest Stubs)**
 
-`steam/`, `xbox/`, `playstation/`, `retroachievements/`, `rpcs3/`, `xenia/`, `epic/`, `ubisoft/`, `ea/`, `local-file/`. Each contains an `index.ts` with a comment describing the plan and `export {}`. Steam is first (M1), then RetroAchievements, RPCS3 and Xbox (M2). Providers are pure adapters: they return `Remote*` objects and never touch SQL, notifications or the UI. Notes on each platform are in [PROVIDERS.md](PROVIDERS.md); endpoints there are unverified until you capture a real response.
+- `steam/` (Real, verified live; notes and captured replies in [PROVIDERS.md](PROVIDERS.md)):
+  - [index.ts](../src/main/providers/steam/index.ts): `SteamProvider`. `authenticate` checks the key and SteamID64 format, then confirms them with Steam; `validate` returns the display name; `listGames` returns the owned games with achievements plus recently played games you don't own (Steam Families); `fetchGame` makes three requests at once (schema, the player's unlocks, rarity) and merges them. Registered in `src/main/index.ts`.
+  - [api.ts](../src/main/providers/steam/api.ts): `steamGet()`, the only code that calls Steam. Turns HTTP failures into `ProviderError` kinds (HTML 401/403 = `auth_expired`, 429 = `rate_limited`, 5xx and connection failures = `network`) and hands any JSON body, even on a 400/403, to the parsers. Never puts the URL (which holds the key) in an error.
+  - [parse.ts](../src/main/providers/steam/parse.ts): zod schemas for each reply (ADR-0004) and the mapping to `Remote*` types.
+  - Tests beside each, using the fixtures in `tests/fixtures/steam/` and a stubbed `fetch`.
+- `xbox/`, `playstation/`, `retroachievements/`, `rpcs3/`, `xenia/`, `epic/`, `ubisoft/`, `ea/`, `local-file/`: Stubs. Each contains an `index.ts` with a comment describing the plan and `export {}`. Next are RetroAchievements, RPCS3 and Xbox (M2). Providers are pure adapters: they return `Remote*` objects and never touch SQL, notifications or the UI. Notes on each platform are in [PROVIDERS.md](PROVIDERS.md); endpoints there are unverified until you capture a real response.
 
 ### 4.3 `src/preload/`: the bridge (Real)
 
@@ -319,7 +324,7 @@ Rules and traps:
 | [PROVIDERS.md](PROVIDERS.md) | Per-platform notes and risks. **Endpoints are unverified**: confirm against a real response before coding. |
 | [ROADMAP.md](ROADMAP.md) | Milestones M0 to M6 and what is ticked off. |
 | [SCAFFOLD-GUIDE.md](SCAFFOLD-GUIDE.md) | A React and Electron primer using this code, a command cheat sheet, and known gaps. |
-| [adr/](adr/) | Architecture decision records. ADR-0003 (Electron, TypeScript, React) is current; 0001 and 0002 are superseded. |
+| [adr/](adr/) | Architecture decision records. ADR-0003 (Electron, TypeScript, React) is the current stack and ADR-0004 (zod for provider replies) adds to it; 0001 and 0002 are superseded. |
 | [design/README.md](design/README.md) | The canvas link, the draft ids for each screen, and which file each screen becomes. |
 | `design/mockups/*.html` | Seven static snapshots (dashboard, library, game detail, toast, accounts, notification settings, onboarding). **Out of date:** they show the earlier gold-on-navy look. The canvas is the source of truth until they are re-exported. |
 | PROJECT-MAP.md | This file. |
@@ -337,9 +342,9 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (115 tests in 20 files): migrations, the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (233 tests in 23 files): migrations, the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
-- **Fixtures:** `tests/fixtures/` is empty (just `.gitkeep`). Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
+- **Fixtures:** `tests/fixtures/steam/` holds sanitized Steam Web API replies (see PROVIDERS.md). Fixtures are in `.prettierignore` so they stay byte-for-byte as captured. Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
 - **Not tested by automation:** the real windows, tray, and overlay behaviour. Those are checked by running the app.
 
@@ -418,8 +423,10 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Toast component | Real, in the Afterglow look (platform badge, stacking and queue still to do) |
 | Floating "island" nav | Real |
 | Main window shell (island nav real; Dashboard's stats header real with sample data; other pages placeholder) | Mixed |
-| All providers | Stubs |
-| Sync scheduler, sync pass, baseline rule, `UnlockEvent` | Real for game scope, started with the app; idle until a provider exists |
+| Steam provider | Real, verified live; registered, waiting on the Accounts screen to connect an account |
+| Other providers | Stubs |
+| Accounts screen (connect Steam, store the key) | Planned (M1) |
+| Sync scheduler, sync pass, baseline rule, `UnlockEvent` | Real for game scope, started with the app with Steam registered; idle until an account is connected |
 | Finding new games (library scope), backoff jitter | Planned (M1) |
 | Delivering unlocks to toasts (notification service) | Planned (M1) |
 | Production `SecretStore` (`safeStorage`) | Planned (M1) |

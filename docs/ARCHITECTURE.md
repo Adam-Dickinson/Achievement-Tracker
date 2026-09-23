@@ -141,6 +141,7 @@ Tests live next to the code they test (`*.test.ts`, `*.test.tsx`).
 | DB | `node:sqlite` (built into Node), plain SQL migrations |
 | Secrets | Electron `safeStorage` behind `SecretStore` (M1) |
 | HTTP | Node `fetch` (M1) |
+| Validating provider replies | zod 4 schemas, main process only ([ADR-0004](adr/0004-zod-for-provider-responses.md)) |
 | File watching | `fs.watch` + debounce |
 | Process detection | `tasklist` / a small library (M2) |
 | Testing | Vitest; Testing Library + jsdom for UI |

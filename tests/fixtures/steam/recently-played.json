@@ -1,0 +1,29 @@
+{
+  "response": {
+    "total_count": 2,
+    "games": [
+      {
+        "appid": 883710,
+        "name": "Resident Evil 2",
+        "playtime_2weeks": 9,
+        "playtime_forever": 1027,
+        "img_icon_url": "86ef2fdebeced746313994ccf2d7afb1f2887bf0",
+        "playtime_windows_forever": 1027,
+        "playtime_mac_forever": 0,
+        "playtime_linux_forever": 0,
+        "playtime_deck_forever": 0
+      },
+      {
+        "appid": 1817070,
+        "name": "Marvel’s Spider-Man Remastered",
+        "playtime_2weeks": 493,
+        "playtime_forever": 1560,
+        "img_icon_url": "346333cb340139ad8b697005e5c79a3162c387b0",
+        "playtime_windows_forever": 1560,
+        "playtime_mac_forever": 0,
+        "playtime_linux_forever": 0,
+        "playtime_deck_forever": 0
+      }
+    ]
+  }
+}
