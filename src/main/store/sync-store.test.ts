@@ -6,6 +6,8 @@ import {
   getPlatformGameByExternalId,
   getSyncState,
   insertNewUnlocks,
+  listConnectedAccounts,
+  listPlatformGameExternalIds,
   setAccountStatus,
   setBaselineDone,
   upsertAchievements,
@@ -222,6 +224,51 @@ describe('getAccount / setAccountStatus', () => {
       status: string
     }
     expect(row.status).toBe('needs_reauth')
+  })
+})
+
+describe('listConnectedAccounts', () => {
+  it('lists only connected accounts, leaving out ones needing re-login or disabled', () => {
+    const db = seedDb()
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at) VALUES
+        (2, 'xbox', 'acc2', 'Needs login', 'needs_reauth', '2026-01-01'),
+        (3, 'steam', 'acc3', 'Off', 'disabled', '2026-01-01'),
+        (4, 'retroachievements', 'acc4', 'Also on', 'connected', '2026-01-01')
+    `)
+
+    expect(listConnectedAccounts(db)).toEqual([
+      { id: 1, platform: 'steam', externalId: 'acc1' },
+      { id: 4, platform: 'retroachievements', externalId: 'acc4' },
+    ])
+  })
+})
+
+describe('listPlatformGameExternalIds', () => {
+  it("lists one account's games only", () => {
+    const db = seedDb()
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (2, 'steam', 'acc2', 'Other', 'connected', '2026-01-01')
+    `)
+    db.exec(`INSERT INTO game (id, title, sort_title) VALUES (2, 'B', 'b'), (3, 'C', 'c')`)
+    db.exec(`
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title) VALUES
+        (2, 2, 1, 'steam', 'g2', 'B'),
+        (3, 3, 2, 'steam', 'other-account-game', 'C')
+    `)
+
+    expect(listPlatformGameExternalIds(db, 1)).toEqual(['g1', 'g2'])
+  })
+
+  it('is empty for an account with no games yet', () => {
+    const db = seedDb()
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (2, 'steam', 'acc2', 'New', 'connected', '2026-01-01')
+    `)
+
+    expect(listPlatformGameExternalIds(db, 2)).toEqual([])
   })
 })
 

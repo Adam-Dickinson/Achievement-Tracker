@@ -199,3 +199,21 @@ export function getAccount(db: DatabaseSync, accountId: number): AccountRow {
 export function setAccountStatus(db: DatabaseSync, accountId: number, status: AccountStatus): void {
   db.prepare('UPDATE account SET status = ? WHERE id = ?').run(status, accountId)
 }
+
+/** Accounts the scheduler should poll. One needing re-login or disabled is left alone. */
+export function listConnectedAccounts(db: DatabaseSync): AccountRow[] {
+  const rows = db
+    .prepare("SELECT id, platform, external_id FROM account WHERE status = 'connected' ORDER BY id")
+    .all() as { id: number; platform: Platform; external_id: string }[]
+
+  return rows.map((row) => ({ id: row.id, platform: row.platform, externalId: row.external_id }))
+}
+
+/** The external ids of every game known for an account: each is one `game:<id>` sync scope. */
+export function listPlatformGameExternalIds(db: DatabaseSync, accountId: number): string[] {
+  const rows = db
+    .prepare('SELECT external_id FROM platform_game WHERE account_id = ? ORDER BY id')
+    .all(accountId) as { external_id: string }[]
+
+  return rows.map((row) => row.external_id)
+}
