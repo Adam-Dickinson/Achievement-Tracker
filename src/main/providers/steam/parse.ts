@@ -131,10 +131,11 @@ export function parseLibrary(ownedJson: unknown, recentJson: unknown): RemoteGam
     check(recentlyPlayedResponseSchema, recentJson, 'recently played').response.games ?? []
 
   const ownedIds = new Set(owned.map((game) => game.appid))
+  const recentIds = new Set(recent.map((game) => game.appid))
   const withStats = owned.filter((game) => game.has_community_visible_stats === true)
   // Games borrowed through Steam Families only show up here (docs/PROVIDERS.md).
   const notOwned = recent.filter((game) => !ownedIds.has(game.appid))
-  return [...withStats, ...notOwned].map(toRemoteGame)
+  return [...withStats, ...notOwned].map((game) => toRemoteGame(game, recentIds.has(game.appid)))
 }
 
 export function parseGlobalPercentages(json: unknown): Map<string, number> {
@@ -170,13 +171,14 @@ export function toGameAchievements(
   return { achievements, unlocks }
 }
 
-function toRemoteGame(game: SteamLibraryGame): RemoteGame {
+function toRemoteGame(game: SteamLibraryGame, recentlyPlayed: boolean): RemoteGame {
   const iconHash = textOrNull(game.img_icon_url)
   return {
     ref: { externalId: String(game.appid) },
     title: game.name,
     iconUrl: iconHash === null ? null : `${STEAM_APP_IMAGES}/${game.appid}/${iconHash}.jpg`,
     lastPlayed: fromUnixSeconds(game.rtime_last_played ?? 0),
+    recentlyPlayed,
   }
 }
 

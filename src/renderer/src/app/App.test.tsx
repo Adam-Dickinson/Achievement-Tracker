@@ -12,6 +12,8 @@ beforeEach(() => {
     getAppInfo: vi.fn().mockResolvedValue({ version: '0.1.0', schemaVersion: 1 }),
     sendTestNotification,
     onToast: vi.fn(() => () => {}),
+    listAccounts: vi.fn().mockResolvedValue([]),
+    connectSteam: vi.fn(),
   }
 })
 
@@ -31,6 +33,15 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current', 'page')
     // The footer fills in once the main process replies.
     expect(await screen.findByText('v0.1.0 · schema 1')).toBeInTheDocument()
+  })
+
+  it('shows the Accounts screen on the Accounts page', async () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accounts' }))
+
+    expect(await screen.findByText('No accounts connected yet.')).toBeInTheDocument()
+    expect(window.api.listAccounts).toHaveBeenCalledOnce()
   })
 
   it('asks the main process for a test notification', async () => {

@@ -3,6 +3,9 @@
 import type { Platform } from './platform'
 import type { Secret } from './secret'
 
+/** Stored in `account.status`. Only `connected` accounts are synced. */
+export type AccountStatus = 'connected' | 'needs_reauth' | 'error' | 'disabled'
+
 /** What a provider needs to talk to the platform for one account. */
 export interface AccountCredentials {
   readonly platform: Platform
@@ -26,6 +29,8 @@ export interface RemoteGame {
   readonly title: string
   readonly iconUrl: string | null
   readonly lastPlayed: Date | null
+  /** Played lately, by the platform's own measure (Steam: its two-week list). Sets how often it is polled. */
+  readonly recentlyPlayed: boolean
 }
 
 export interface RemoteAchievement {

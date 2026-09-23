@@ -74,7 +74,7 @@ The renderer imports only `shared`, never `main`. Providers never touch the data
 | Add a platform (Steam, Xbox, ...) | [main/providers/&lt;name&gt;/](../src/main/providers/) | [shared/platform.ts](../src/shared/platform.ts), [PROVIDERS.md](PROVIDERS.md). Skill: `add-provider`. |
 | Add an emulator or file-based source | [main/providers/](../src/main/providers/) | Skill: `add-emulator-adapter`. |
 | Work on sync (polling, diffing, backoff) | [src/main/sync/](../src/main/sync/) | [SPEC.md](SPEC.md) §5. First-sync rule: no toasts on the first sync of a game. |
-| Store a token or API key | [shared/secret.ts](../src/shared/secret.ts), [shared/secret-store.ts](../src/shared/secret-store.ts) | Never in SQLite, config or logs. The real `safeStorage` version is planned for M1. |
+| Store a token or API key | [shared/secret.ts](../src/shared/secret.ts), [shared/secret-store.ts](../src/shared/secret-store.ts) | Never in SQLite, config or logs. In the app, secrets go through [main/safe-storage-secret-store.ts](../src/main/safe-storage-secret-store.ts). |
 | Change domain types (games, achievements, unlocks) | [shared/models.ts](../src/shared/models.ts) | |
 | Change the provider interface | [shared/provider.ts](../src/shared/provider.ts) | [SPEC.md](SPEC.md) §4. Every provider is affected. |
 | Add an error kind | [shared/errors.ts](../src/shared/errors.ts) | |
@@ -149,8 +149,8 @@ Runs in both worlds, so it may not import from `main` or `renderer`, and may not
 | [provider.ts](../src/shared/provider.ts) | The `AchievementProvider` interface every platform adapter implements (`authenticate`, `validate`, `listGames`, `fetchGame`, optional `watch`), `ProviderCapabilities` and `AuthInput`. |
 | [errors.ts](../src/shared/errors.ts) | `ProviderError` with a `kind` (`auth_expired`, `rate_limited`, `network`, `parse`, `unsupported`, `other`), an optional retry delay, and `isRetryable`. |
 | [secret.ts](../src/shared/secret.ts) | `Secret`: wraps a token so printing or serializing it shows `Secret(<redacted>)`. The only way to read it is `expose()`. |
-| [secret-store.ts](../src/shared/secret-store.ts) | The `SecretStore` interface and an in-memory implementation used by tests. The production version (Electron `safeStorage`) is **Planned** for M1. |
-| [ipc.ts](../src/shared/ipc.ts) | **The IPC contract.** Channel names (`IPC`), payload types (`AppInfo`, `ToastPayload`), and `AchievementTrackerApi`, the exact shape of `window.api`. This is the first place to look when the UI and main process need to talk. |
+| [secret-store.ts](../src/shared/secret-store.ts) | The `SecretStore` interface and an in-memory implementation used by tests. The production version is `main/safe-storage-secret-store.ts`. |
+| [ipc.ts](../src/shared/ipc.ts) | **The IPC contract.** Channel names (`IPC`), payload types (`AppInfo`, `ToastPayload`, `AccountSummary`, `SteamConnectInput`, `ConnectResult`), and `AchievementTrackerApi`, the exact shape of `window.api`. This is the first place to look when the UI and main process need to talk. |
 | [dashboard.ts](../src/shared/dashboard.ts) | `DashboardStats` (the Dashboard header's numbers) and `completionPercent()`, a floor-not-round percentage shared by the UI and, later, the main process. |
 
 Tests sit beside the code: `errors.test.ts`, `platform.test.ts`, `rarity.test.ts`, `secret.test.ts`, `dashboard.test.ts`.
@@ -161,11 +161,13 @@ Top-level files (Real unless noted):
 
 | File | What it does |
 |---|---|
-| [index.ts](../src/main/index.ts) | **The entry point and wiring.** Takes the single-instance lock (a second launch just shows the first window); creates the main window on demand; keeps the app alive with no windows open (the tray keeps it reachable); hardens every window (no popups, no navigation away); opens the database; starts the sync `Scheduler` (no providers registered yet, so it idles) and stops it on quit; creates the overlay and the tray; registers IPC handlers. Services are plain modules wired together here by hand. There is no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2). |
+| [index.ts](../src/main/index.ts) | **The entry point and wiring.** Takes the single-instance lock (a second launch just shows the first window); creates the main window on demand; keeps the app alive with no windows open (the tray keeps it reachable); hardens every window (no popups, no navigation away); opens the database; starts the sync `Scheduler` with the Steam provider and the `SafeStorageSecretStore` (it idles until an account is connected) and stops it on quit; creates the overlay and the tray; registers IPC handlers. Services are plain modules wired together here by hand. There is no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2). |
 | [windows.ts](../src/main/windows.ts) | Creates both windows. Holds the shared security settings (`contextIsolation` on, `nodeIntegration` off, `sandbox` on, preload script). `createMainWindow()`: 1440x900, minimum 1024x680, shown once ready to avoid a white flash. `createOverlayWindow()`: transparent, frameless, always on top, click-through, unable to take focus. Also exports `OVERLAY_SIZE`. Loads the dev server URL in development and the built file in production. |
+| [safe-storage-secret-store.ts](../src/main/safe-storage-secret-store.ts) | `SafeStorageSecretStore`, the production `SecretStore`. Encrypts each secret with Electron `safeStorage` (Windows DPAPI) and keeps it as base64 in `secrets.json` in the app's data folder, keyed by account id. Refuses to save without OS encryption; a secret it can't decrypt reads as missing; a damaged file throws rather than being overwritten; writes go to a temporary file first, then a rename. `safeStorage` is passed in, so `safe-storage-secret-store.test.ts` uses a fake. |
 | [overlay-service.ts](../src/main/overlay-service.ts) | `OverlayService.show(toast)`: waits for the overlay page to load, positions the window in the bottom-right of the primary display's work area, shows it without stealing focus, sends the toast over IPC, and hides the window after the toast's duration plus time for the exit animation. **Placeholder for now:** a new toast replaces the current one. The queue and stacking arrive in M1. |
 | [tray.ts](../src/main/tray.ts) | The tray icon and its menu: Open Achievement Tracker, Send test notification, Quit. Clicking the icon opens the window. It is a native Electron menu, so it has no React and no visual design. |
-| [ipc.ts](../src/main/ipc.ts) | `registerIpcHandlers()`: one `ipcMain.handle` per channel. Each first checks the sender is one of our own pages (`isTrustedSender`), then calls the handler passed in from `index.ts`. |
+| [ipc.ts](../src/main/ipc.ts) | `registerIpcHandlers()`: one `ipcMain.handle` per channel. Each first checks the sender is one of our own pages (`isTrustedSender`); `connectSteam` then checks its payload with a zod schema (answering `invalid_input` if it fails) before calling the handler passed in from `index.ts`. `ipc.test.ts` replaces `electron` with a stand-in to test both checks. |
+| [accounts.ts](../src/main/accounts.ts) | `connectSteam()`: `authenticate` and `validate` with Steam, `upsertAccount`, save the key in the `SecretStore` under the account's id, `Scheduler.startAccount`. Turns failures into a `ConnectResult` (a rejected key, a connection problem, or the provider's own message) and never throws. Tested in `accounts.test.ts` with a fake provider. |
 | [sample-toasts.ts](../src/main/sample-toasts.ts) | Four sample unlocks, one per rarity, cycled by `nextSampleToast()`. Only used by "Send test notification". |
 | [env.d.ts](../src/main/env.d.ts) | Type declarations for Vite and electron-vite features such as `import.meta.glob` and the `?asset` import suffix. |
 
@@ -178,9 +180,10 @@ Top-level files (Real unless noted):
 | [database.ts](../src/main/store/database.ts) | `openDatabase(path)`: opens SQLite through Node's built-in `node:sqlite`, turns on WAL mode and foreign keys, runs pending migrations and returns the handle and schema version. `index.ts` passes the handle to the sync `Scheduler`. |
 | [migrations.ts](../src/main/store/migrations.ts) | Loads every `migrations/NNNN_name.sql` file as text at build time, checks the filename, and sorts by version. |
 | [migrate.ts](../src/main/store/migrate.ts) | `applyMigrations()`: applies each migration newer than the database's version, each in its own transaction, tracking progress in SQLite's `user_version`. A failing migration rolls back and stops. |
-| [migrations/0001_init.sql](../src/main/store/migrations/0001_init.sql) | The schema: `account`, `game` (canonical, cross-platform), `platform_game` (a game on one account/platform, with `baseline_done` for the first-sync rule), `achievement`, `unlock` (with `notified`), `sync_state`, `setting`, plus two indexes. **Never edit a migration that has shipped**: add `0002_...sql`. |
+| [migrations/0001_init.sql](../src/main/store/migrations/0001_init.sql) | The schema: `account`, `game` (canonical, cross-platform), `platform_game` (a game on one account/platform, with `baseline_done` for the first-sync rule), `achievement`, `unlock` (with `notified`), `sync_state`, `setting`, plus two indexes. **Never edit a migration that has shipped**: add a new numbered file. |
+| [migrations/0002_baseline_cutoff.sql](../src/main/store/migrations/0002_baseline_cutoff.sql) | Adds `platform_game.baseline_cutoff`: a game's first sync announces only unlocks dated after it (`NULL` = fully silent). See ADR-0005. |
 | [migrate.test.ts](../src/main/store/migrate.test.ts) | Tests numbering, creating the schema, running twice, and rollback. New migrations need an upgrade test here (rule 8). |
-| [sync-store.ts](../src/main/store/sync-store.ts) | The sync engine's SQL, one small function per query: read an account or a platform game, list connected accounts and an account's games, upsert achievements, insert unlocks and report which were genuinely new (`INSERT OR IGNORE`), set `baseline_done`, read and write `sync_state`, set an account's status. Row types `AccountRow`, `PlatformGameRow`, `SyncStateRow`. |
+| [sync-store.ts](../src/main/store/sync-store.ts) | The sync engine's SQL, one small function per query: read an account or a platform game, list connected accounts and an account's games, upsert achievements, insert unlocks and report which were genuinely new (`INSERT OR IGNORE`), set `baseline_done`, read and write `sync_state`, set an account's status, create or reconnect an account (`upsertAccount`: same platform and id keeps the same row, so its key and games stay attached), and add games found by `listGames` (`addPlatformGames`: new games get a `game` + `platform_game` row awaiting their silent first sync; known ones are updated without resetting the baseline or blanking the last-played time; nothing is ever deleted). Row types `AccountRow`, `PlatformGameRow`, `SyncStateRow`. |
 | [sync-store.test.ts](../src/main/store/sync-store.test.ts) | Each query against a real migrated in-memory database, plus the baseline rule end to end. |
 
 The database file is `achievement-tracker.db` inside Electron's per-user data folder (`app.getPath('userData')`, normally under `%APPDATA%` on Windows).
@@ -190,7 +193,7 @@ The database file is `achievement-tracker.db` inside Electron's per-user data fo
 The design and the as-built behaviour (outcomes table, what is not built yet) are in [SPEC.md](SPEC.md) §5.
 
 - [sync-pass.ts](../src/main/sync/sync-pass.ts): `runSyncPass()`, **what** one sync of one game does. Fetches from the provider, then in one transaction upserts achievements, inserts unlocks and applies the baseline rule (the first sync of a game records everything but returns no events). Returns the `UnlockEvent`s only after the commit.
-- [scheduler.ts](../src/main/sync/scheduler.ts): the `Scheduler`, **when** syncs happen. One loop per connected account; each round syncs the games that are due and records the outcome in `sync_state` (backoff on network trouble, `needs_reauth` on an expired login). `stop()` cancels timers and in-flight calls. New unlocks go to its `onUnlocks` callback.
+- [scheduler.ts](../src/main/sync/scheduler.ts): the `Scheduler`, **when** syncs happen. One loop per connected account; each round first reads the library (`syncLibrary`: `listGames`, then `addPlatformGames` with the baseline cutoff), then syncs the games that are due (`syncDueGames`), with recently played games every 5 minutes and the rest every 6 hours. `startAccount(id)` syncs a newly connected account straight away, never running two rounds of one account at once. Outcomes go in `sync_state` (backoff on network trouble, `needs_reauth` on an expired login). `stop()` cancels timers and in-flight calls. New unlocks go to its `onUnlocks` callback.
 - [backoff.ts](../src/main/sync/backoff.ts): `backoffDelayMs()` gives exponential retry delays.
 - Tests beside each: `sync-pass.test.ts` and `scheduler.test.ts` use a fake provider and a fake clock; `backoff.test.ts`.
 - Planned: finding new games (library scope, with the Accounts flow) and a running-game detector (M2).
@@ -206,7 +209,7 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 
 ### 4.3 `src/preload/`: the bridge (Real)
 
-[index.ts](../src/preload/index.ts) builds the `window.api` object and exposes it with `contextBridge.exposeInMainWorld`. It has three entries today: `getAppInfo`, `sendTestNotification` (both `ipcRenderer.invoke`), and `onToast`, which subscribes to toast messages and returns an "unsubscribe" function. The UI never receives `ipcRenderer` itself. Its type is `AchievementTrackerApi` from `shared/ipc.ts`, so the compiler tells you if the two drift apart.
+[index.ts](../src/preload/index.ts) builds the `window.api` object and exposes it with `contextBridge.exposeInMainWorld`. Its entries today: `getAppInfo`, `sendTestNotification`, `listAccounts` and `connectSteam` (all `ipcRenderer.invoke`), and `onToast`, which subscribes to toast messages and returns an "unsubscribe" function. The UI never receives `ipcRenderer` itself. Its type is `AchievementTrackerApi` from `shared/ipc.ts`, so the compiler tells you if the two drift apart.
 
 ### 4.4 `src/renderer/`: the UI
 
@@ -219,7 +222,7 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 | [main.tsx](../src/renderer/src/main.tsx) | Entry for the main window: mounts `<App />` into `#root` and imports the global CSS. |
 | [env.d.ts](../src/renderer/src/env.d.ts) | Tells TypeScript that `window.api` exists and what type it has. |
 | `app/` (main window shell, Placeholder) | |
-| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected (`useState`) and the app info fetched from the main process (`useEffect`). Shows the island nav and a placeholder page with the "Send test notification" button. **There is no router**: pages are just a value in state. |
+| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected (`useState`) and the app info fetched from the main process (`useEffect`). Shows the island nav, then the selected page: `PageContent` is a `switch` on the page id (Dashboard and Accounts are real; the rest show placeholder text), then the "Send test notification" button. **There is no router**: pages are just a value in state. |
 | &nbsp;&nbsp;[IslandNav.tsx](../src/renderer/src/app/IslandNav.tsx) | The floating "island" bar at the top of the window: brand, one button per page (the current page is a lime pill) and the app version. It only shows what it is given (`selected`, `onSelect`, `info`); `App` owns the state. |
 | &nbsp;&nbsp;[navigation.ts](../src/renderer/src/app/navigation.ts) | `PageId` and `NAV_ITEMS`: Dashboard, Library, Activity, Accounts, Settings, each with a label, description and icon. |
 | &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
@@ -234,6 +237,11 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 | &nbsp;&nbsp;[RarityChip.tsx](../src/renderer/src/components/RarityChip.tsx) | A small pill with the rarity's gem and name. Ultra rare gets a gradient fill and a glow. Uses the rarity scope, so it can go anywhere: the toast, Library cards, Game detail. |
 | &nbsp;&nbsp;[RarityGem.tsx](../src/renderer/src/components/RarityGem.tsx) | The rarity's gem shape (circle, diamond, hexagon, sparkle), picked from a `Record<Rarity, LucideIcon>` table and coloured with a `text-*` class. Decorative (`aria-hidden`): the rarity is always written out as text too. Used in the toast; the Library and Game detail screens will reuse it. |
 | &nbsp;&nbsp;[TrophyIcon.tsx](../src/renderer/src/components/TrophyIcon.tsx) | The app's trophy mark as an SVG you can colour with a `text-*` class. |
+| `features/accounts/` (Real: Steam only) | |
+| &nbsp;&nbsp;[Accounts.tsx](../src/renderer/src/features/accounts/Accounts.tsx) | The Accounts page: the Steam connect form, then the account list: a `role="status"` "Loading…" message, then either "No accounts connected yet." or a list (`<ul>`) with one card per account, keyed by id. Passes the hook's `reload` to the form, so a new account appears straight away. |
+| &nbsp;&nbsp;[SteamConnectForm.tsx](../src/renderer/src/features/accounts/SteamConnectForm.tsx) | SteamID64 and Steam API key inputs (controlled; the key field is `type="password"`). Submitting calls `window.api.connectSteam`: on success it clears both fields and calls `onConnected`; on failure it shows `ConnectResult.message` in a `role="alert"`. The button is disabled while waiting. The key crosses to the main process once and is never sent back. |
+| &nbsp;&nbsp;[AccountCard.tsx](../src/renderer/src/features/accounts/AccountCard.tsx) | One account: platform name (`platformName`), display name, status (a `Record<AccountStatus, ...>` of labels and colours) and "1 game" / "N games". |
+| &nbsp;&nbsp;[useAccounts.ts](../src/renderer/src/features/accounts/useAccounts.ts) | Calls `window.api.listAccounts()` and returns `{ accounts, reload }`. `null` means not loaded yet, `[]` means none connected. `reload()` bumps a `version` state that the effect depends on, so the effect runs again. Same `cancelled` guard as `useDashboardStats`. |
 | `features/dashboard/` (Real, sample data) | |
 | &nbsp;&nbsp;[Dashboard.tsx](../src/renderer/src/features/dashboard/Dashboard.tsx) | The Dashboard page: the completion hero, then a row of stat tiles. Shows a `role="status"` "Loading…" message until `useDashboardStats()` resolves. |
 | &nbsp;&nbsp;[CompletionHero.tsx](../src/renderer/src/features/dashboard/CompletionHero.tsx) | The big completion % and an accessible progress bar (`role="progressbar"`, `aria-value*`), not colour alone. |
@@ -286,7 +294,7 @@ Other things worth knowing:
 - **Engine:** Node's built-in `node:sqlite`, so nothing native to compile. It is marked experimental in Node; the rest of the code only depends on a small `SqlDatabase` interface in `migrate.ts`, so switching drivers later is contained.
 - **Where SQL lives:** only `src/main/store`. Nothing else may contain SQL.
 - **Schema versions:** kept in SQLite's `user_version`. On every start, `applyMigrations()` runs any `NNNN_name.sql` newer than that number.
-- **Tables today** (from `0001_init.sql`): `account`, `game`, `platform_game`, `achievement`, `unlock`, `sync_state`, `setting`. The full annotated schema is in [SPEC.md](SPEC.md) §3.
+- **Tables today** (from `0001_init.sql`, plus `platform_game.baseline_cutoff` from `0002`): `account`, `game`, `platform_game`, `achievement`, `unlock`, `sync_state`, `setting`. The full annotated schema is in [SPEC.md](SPEC.md) §3.
 - **Secrets are never stored here.** Tokens go through `SecretStore`, keyed by account id.
 - **Changing it:** add `src/main/store/migrations/0002_something.sql`, add an upgrade test in `migrate.test.ts`, and update SPEC.md §3. Never edit an applied migration. The `db-migration` project skill walks through it.
 
@@ -324,7 +332,7 @@ Rules and traps:
 | [PROVIDERS.md](PROVIDERS.md) | Per-platform notes and risks. **Endpoints are unverified**: confirm against a real response before coding. |
 | [ROADMAP.md](ROADMAP.md) | Milestones M0 to M6 and what is ticked off. |
 | [SCAFFOLD-GUIDE.md](SCAFFOLD-GUIDE.md) | A React and Electron primer using this code, a command cheat sheet, and known gaps. |
-| [adr/](adr/) | Architecture decision records. ADR-0003 (Electron, TypeScript, React) is the current stack and ADR-0004 (zod for provider replies) adds to it; 0001 and 0002 are superseded. |
+| [adr/](adr/) | Architecture decision records. ADR-0003 (Electron, TypeScript, React) is the current stack; ADR-0004 (zod for provider replies) and ADR-0005 (library scope, baseline cutoff, tiered polling) add to it; 0001 and 0002 are superseded. |
 | [design/README.md](design/README.md) | The canvas link, the draft ids for each screen, and which file each screen becomes. |
 | `design/mockups/*.html` | Seven static snapshots (dashboard, library, game detail, toast, accounts, notification settings, onboarding). **Out of date:** they show the earlier gold-on-navy look. The canvas is the source of truth until they are re-exported. |
 | PROJECT-MAP.md | This file. |
@@ -342,7 +350,7 @@ Other docs-like things:
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
 - **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (233 tests in 23 files): migrations, the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Coverage today** (334 tests in 29 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/steam/` holds sanitized Steam Web API replies (see PROVIDERS.md). Fixtures are in `.prettierignore` so they stay byte-for-byte as captured. Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
@@ -367,7 +375,7 @@ Then update any test that fakes `window.api` (`App.test.tsx`, `OverlayApp.test.t
 
 1. Create components in `src/renderer/src/features/library/` (the folder already exists).
 2. If it needs data, add an IPC call (recipe A), backed by a query in `src/main/store`.
-3. In [App.tsx](../src/renderer/src/app/App.tsx), render your component when `page` is `'library'` instead of the placeholder text. There is no router.
+3. In [App.tsx](../src/renderer/src/app/App.tsx), add a `case 'library'` to `PageContent` that returns your component. There is no router.
 4. Reuse `components/` and the tokens. Add a test file beside your component.
 5. Check the design on the canvas first.
 
@@ -416,7 +424,7 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 
 | Area | Status |
 |---|---|
-| Shared types, provider interface, errors, secrets (in-memory store) | Real |
+| Shared types, provider interface, errors, secrets | Real |
 | Database, migrations, schema | Real |
 | Backoff helper | Real |
 | App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
@@ -426,10 +434,10 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Steam provider | Real, verified live; registered, waiting on the Accounts screen to connect an account |
 | Other providers | Stubs |
 | Accounts screen (connect Steam, store the key) | Planned (M1) |
-| Sync scheduler, sync pass, baseline rule, `UnlockEvent` | Real for game scope, started with the app with Steam registered; idle until an account is connected |
-| Finding new games (library scope), backoff jitter | Planned (M1) |
+| Sync scheduler (library + game scopes, tiered polling), sync pass, baseline cutoff, `UnlockEvent` | Real, started with the app with Steam registered; idle until an account is connected |
+| Backoff jitter | Planned (M1) |
 | Delivering unlocks to toasts (notification service) | Planned (M1) |
-| Production `SecretStore` (`safeStorage`) | Planned (M1) |
+| Production `SecretStore` (`safeStorage`, `secrets.json`) | Real |
 | Toast queue and stacking | Planned (M1) |
 | Autostart, extra tray items (Sync now, Do Not Disturb, Recent unlocks) | Planned (M1 and later) |
 | Dashboard: Recent unlocks, Closest to 100%, Rarest, per-platform breakdown | Planned |

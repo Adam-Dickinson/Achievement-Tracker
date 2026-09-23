@@ -39,6 +39,38 @@ describe('migrations', () => {
     }
   })
 
+  it('give platform_game a baseline_cutoff column', () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db)
+
+    const columns = db
+      .prepare('PRAGMA table_info(platform_game)')
+      .all()
+      .map((row) => String(row['name']))
+    expect(columns).toContain('baseline_cutoff')
+  })
+
+  it('upgrade a version 1 database with data to the latest, keeping every row', () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 1))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 'acc1', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'Portal', 'portal');
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title, baseline_done)
+      VALUES (1, 1, 1, 'steam', '400', 'Portal', 1);
+    `)
+
+    applyMigrations(db)
+
+    expect(getSchemaVersion(db)).toBe(MIGRATIONS.at(-1)?.version)
+    expect(
+      db
+        .prepare('SELECT external_id, title, baseline_done, baseline_cutoff FROM platform_game')
+        .all(),
+    ).toEqual([{ external_id: '400', title: 'Portal', baseline_done: 1, baseline_cutoff: null }])
+  })
+
   it('are a no-op when applied twice', () => {
     const db = new DatabaseSync(':memory:')
     const first = applyMigrations(db)

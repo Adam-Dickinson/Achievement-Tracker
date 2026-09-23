@@ -1,11 +1,13 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, Menu } from 'electron'
-import { InMemorySecretStore } from '@shared/secret-store'
+import { app, BrowserWindow, Menu, safeStorage } from 'electron'
+import { connectSteam } from './accounts'
 import { registerIpcHandlers } from './ipc'
 import { OverlayService } from './overlay-service'
 import { SteamProvider } from './providers/steam'
+import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
+import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { createTray } from './tray'
 import { createMainWindow, createOverlayWindow } from './windows'
@@ -50,13 +52,17 @@ async function start(): Promise<void> {
     join(app.getPath('userData'), 'achievement-tracker.db'),
   )
 
-  // The sync engine. Steam is registered, but nothing can connect an account until the Accounts
-  // screen exists, so it starts and idles. The production SecretStore (safeStorage) and the
-  // notification service that will receive onUnlocks are their own M1 items.
+  // The sync engine. It idles until an account is connected on the Accounts screen. The
+  // notification service that will receive onUnlocks is its own M1 item.
+  const steam = new SteamProvider()
+  const secrets = new SafeStorageSecretStore(
+    join(app.getPath('userData'), 'secrets.json'),
+    safeStorage,
+  )
   const scheduler = new Scheduler({
     db,
-    providers: { steam: new SteamProvider() },
-    secrets: new InMemorySecretStore(),
+    providers: { steam },
+    secrets,
     onUnlocks: () => undefined,
   })
   scheduler.start()
@@ -68,6 +74,8 @@ async function start(): Promise<void> {
   registerIpcHandlers({
     getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),
     sendTestNotification,
+    listAccounts: () => listAccountSummaries(db),
+    connectSteam: (input) => connectSteam({ db, steam, secrets, scheduler }, input),
   })
 
   createTray({

@@ -1,15 +1,19 @@
 import { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { applyMigrations } from './migrate'
+import type { RemoteGame } from '@shared/models'
 import {
+  addPlatformGames,
   getAccount,
   getPlatformGameByExternalId,
   getSyncState,
   insertNewUnlocks,
+  listAccountSummaries,
   listConnectedAccounts,
   listPlatformGameExternalIds,
   setAccountStatus,
   setBaselineDone,
+  upsertAccount,
   upsertAchievements,
   upsertSyncState,
 } from './sync-store'
@@ -43,7 +47,16 @@ describe('getPlatformGameByExternalId', () => {
       id: 1,
       title: 'A Game',
       baselineDone: false,
+      baselineCutoff: null,
     })
+  })
+
+  it('reads a baseline cutoff as a Date', () => {
+    db.exec(`UPDATE platform_game SET baseline_cutoff = '2026-09-23T10:00:00.000Z' WHERE id = 1`)
+
+    expect(getPlatformGameByExternalId(db, 1, 'g1').baselineCutoff).toEqual(
+      new Date('2026-09-23T10:00:00.000Z'),
+    )
   })
 
   it('throws for a game that does not exist, rather than returning null', () => {
@@ -320,5 +333,286 @@ describe('sync-store pipeline (the baseline rule end to end)', () => {
     expect(secondPassNew).toHaveLength(1)
     expect(secondPassNew[0]?.achievementExternalId).toBe('ach2')
     expect(db.prepare('SELECT * FROM unlock').all()).toHaveLength(2)
+  })
+})
+
+function freshDb(): DatabaseSync {
+  const db = new DatabaseSync(':memory:')
+  applyMigrations(db)
+  return db
+}
+
+function accountRows(db: DatabaseSync): unknown[] {
+  return db.prepare('SELECT * FROM account ORDER BY id').all()
+}
+
+describe('listAccountSummaries', () => {
+  it('lists every account with its status and number of games, in id order', () => {
+    const db = freshDb()
+    const steam = upsertAccount(db, {
+      platform: 'steam',
+      externalId: '76561190000000001',
+      displayName: 'Player One',
+    })
+    const other = upsertAccount(db, {
+      platform: 'steam',
+      externalId: '76561190000000002',
+      displayName: 'Player Two',
+    })
+    setAccountStatus(db, other.id, 'needs_reauth')
+    addPlatformGames(db, steam, [
+      {
+        ref: { externalId: '1' },
+        title: 'A',
+        iconUrl: null,
+        lastPlayed: null,
+        recentlyPlayed: false,
+      },
+      {
+        ref: { externalId: '2' },
+        title: 'B',
+        iconUrl: null,
+        lastPlayed: null,
+        recentlyPlayed: false,
+      },
+    ])
+
+    expect(listAccountSummaries(db)).toEqual([
+      {
+        id: steam.id,
+        platform: 'steam',
+        displayName: 'Player One',
+        status: 'connected',
+        gameCount: 2,
+      },
+      {
+        id: other.id,
+        platform: 'steam',
+        displayName: 'Player Two',
+        status: 'needs_reauth',
+        gameCount: 0,
+      },
+    ])
+  })
+
+  it('is empty when no account is connected', () => {
+    expect(listAccountSummaries(freshDb())).toEqual([])
+  })
+})
+
+describe('upsertAccount', () => {
+  const STEAM = {
+    platform: 'steam' as const,
+    externalId: '76561190000000001',
+    displayName: 'Test',
+  }
+
+  it('creates a connected account and returns its row', () => {
+    const db = freshDb()
+
+    const account = upsertAccount(db, STEAM, new Date('2026-09-23T10:00:00Z'))
+
+    expect(account).toEqual({ id: 1, platform: 'steam', externalId: '76561190000000001' })
+    expect(accountRows(db)).toEqual([
+      {
+        id: 1,
+        platform: 'steam',
+        external_id: '76561190000000001',
+        display_name: 'Test',
+        status: 'connected',
+        last_sync_at: null,
+        created_at: '2026-09-23T10:00:00.000Z',
+      },
+    ])
+  })
+
+  it('reconnecting keeps the same id, refreshes the name and sets connected again', () => {
+    const db = freshDb()
+    const first = upsertAccount(db, STEAM, new Date('2026-09-23T10:00:00Z'))
+    setAccountStatus(db, first.id, 'needs_reauth')
+
+    const again = upsertAccount(
+      db,
+      { ...STEAM, displayName: 'Renamed' },
+      new Date('2026-09-24T10:00:00Z'),
+    )
+
+    expect(again.id).toBe(first.id)
+    expect(accountRows(db)).toHaveLength(1)
+    expect(accountRows(db)[0]).toMatchObject({
+      display_name: 'Renamed',
+      status: 'connected',
+      created_at: '2026-09-23T10:00:00.000Z',
+    })
+  })
+
+  it('keeps accounts apart when the platform or the external id differs', () => {
+    const db = freshDb()
+
+    const steam = upsertAccount(db, STEAM)
+    const other = upsertAccount(db, { ...STEAM, externalId: '76561190000000002' })
+    const ra = upsertAccount(db, { ...STEAM, platform: 'retroachievements' })
+
+    expect(new Set([steam.id, other.id, ra.id]).size).toBe(3)
+  })
+})
+
+describe('addPlatformGames', () => {
+  function remoteGame(externalId: string, overrides: Partial<RemoteGame> = {}): RemoteGame {
+    return {
+      ref: { externalId },
+      title: `Game ${externalId}`,
+      iconUrl: `https://img/${externalId}.jpg`,
+      lastPlayed: new Date('2026-09-01T12:00:00Z'),
+      recentlyPlayed: false,
+      ...overrides,
+    }
+  }
+
+  function platformGames(db: DatabaseSync): Record<string, unknown>[] {
+    return db
+      .prepare(
+        'SELECT game_id, external_id, title, icon_url, last_played, baseline_done FROM platform_game ORDER BY id',
+      )
+      .all()
+  }
+
+  function setup() {
+    const db = freshDb()
+    const account = upsertAccount(db, {
+      platform: 'steam',
+      externalId: '76561190000000001',
+      displayName: 'Test',
+    })
+    return { db, account }
+  }
+
+  it('adds a new game as a canonical game plus a platform game awaiting its silent first sync', () => {
+    const { db, account } = setup()
+
+    const added = addPlatformGames(db, account, [remoteGame('400', { title: 'Portal' })])
+
+    expect(added).toBe(1)
+    expect(platformGames(db)).toEqual([
+      {
+        game_id: 1,
+        external_id: '400',
+        title: 'Portal',
+        icon_url: 'https://img/400.jpg',
+        last_played: '2026-09-01T12:00:00.000Z',
+        baseline_done: 0,
+      },
+    ])
+    expect(db.prepare('SELECT id, title, sort_title FROM game').all()).toEqual([
+      { id: 1, title: 'Portal', sort_title: 'portal' },
+    ])
+  })
+
+  it('stores the baseline cutoff on new games only, leaving it null by default', () => {
+    const { db, account } = setup()
+    const cutoff = new Date('2026-09-23T10:00:00Z')
+
+    addPlatformGames(db, account, [remoteGame('first')])
+    addPlatformGames(db, account, [remoteGame('first'), remoteGame('later')], cutoff)
+
+    expect(getPlatformGameByExternalId(db, account.id, 'first').baselineCutoff).toBeNull()
+    expect(getPlatformGameByExternalId(db, account.id, 'later').baselineCutoff).toEqual(cutoff)
+  })
+
+  it('gives each new game its own canonical game row', () => {
+    const { db, account } = setup()
+
+    addPlatformGames(db, account, [remoteGame('1'), remoteGame('2')])
+
+    expect(platformGames(db).map((game) => game.game_id)).toEqual([1, 2])
+  })
+
+  it('stores a never-played game, or one without an icon, with nulls', () => {
+    const { db, account } = setup()
+
+    addPlatformGames(db, account, [remoteGame('1', { lastPlayed: null, iconUrl: null })])
+
+    expect(platformGames(db)[0]).toMatchObject({ icon_url: null, last_played: null })
+  })
+
+  it('adding the same list again creates no duplicates and reports nothing new', () => {
+    const { db, account } = setup()
+    addPlatformGames(db, account, [remoteGame('1'), remoteGame('2')])
+
+    const added = addPlatformGames(db, account, [remoteGame('1'), remoteGame('2')])
+
+    expect(added).toBe(0)
+    expect(platformGames(db)).toHaveLength(2)
+    expect(db.prepare('SELECT COUNT(*) AS n FROM game').get()).toEqual({ n: 2 })
+  })
+
+  it('counts only the games that are new', () => {
+    const { db, account } = setup()
+    addPlatformGames(db, account, [remoteGame('1')])
+
+    expect(addPlatformGames(db, account, [remoteGame('1'), remoteGame('2')])).toBe(1)
+  })
+
+  it('updates the title, icon and last played time of a known game', () => {
+    const { db, account } = setup()
+    addPlatformGames(db, account, [remoteGame('1')])
+
+    addPlatformGames(db, account, [
+      remoteGame('1', {
+        title: 'New title',
+        iconUrl: 'https://img/new.jpg',
+        lastPlayed: new Date('2026-09-20T08:00:00Z'),
+      }),
+    ])
+
+    expect(platformGames(db)[0]).toMatchObject({
+      title: 'New title',
+      icon_url: 'https://img/new.jpg',
+      last_played: '2026-09-20T08:00:00.000Z',
+    })
+  })
+
+  it('keeps the known last played time when the new list has none (a borrowed game)', () => {
+    const { db, account } = setup()
+    addPlatformGames(db, account, [remoteGame('1')])
+
+    addPlatformGames(db, account, [remoteGame('1', { lastPlayed: null })])
+
+    expect(platformGames(db)[0]?.last_played).toBe('2026-09-01T12:00:00.000Z')
+  })
+
+  it('never resets a finished baseline, so a known game is not silenced again', () => {
+    const { db, account } = setup()
+    addPlatformGames(db, account, [remoteGame('1')])
+    setBaselineDone(db, 1)
+
+    addPlatformGames(db, account, [remoteGame('1')])
+
+    expect(platformGames(db)[0]?.baseline_done).toBe(1)
+  })
+
+  it('never forgets a game that is missing from a later list (SPEC §5)', () => {
+    const { db, account } = setup()
+    addPlatformGames(db, account, [remoteGame('1'), remoteGame('borrowed')])
+
+    addPlatformGames(db, account, [remoteGame('1')])
+
+    expect(platformGames(db).map((game) => game.external_id)).toEqual(['1', 'borrowed'])
+  })
+
+  it('keeps each account’s games separate, even with the same external id', () => {
+    const { db, account } = setup()
+    const other = upsertAccount(db, {
+      platform: 'steam',
+      externalId: '76561190000000002',
+      displayName: 'Other',
+    })
+
+    addPlatformGames(db, account, [remoteGame('400')])
+    const added = addPlatformGames(db, other, [remoteGame('400')])
+
+    expect(added).toBe(1)
+    expect(listPlatformGameExternalIds(db, account.id)).toEqual(['400'])
+    expect(listPlatformGameExternalIds(db, other.id)).toEqual(['400'])
   })
 })

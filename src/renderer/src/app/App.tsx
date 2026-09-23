@@ -4,11 +4,27 @@ import type { AppInfo } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
 import { IslandNav } from './IslandNav'
 import { Dashboard } from '@/features/dashboard/Dashboard'
+import { Accounts } from '@/features/accounts/Accounts'
 
 /**
  * The main window's shell. Screens are built milestone by milestone under `features/`; target
- * designs are in docs/design/mockups/. Until then every page is a placeholder.
+ * designs are in docs/design/mockups/. Pages without a screen yet show a placeholder.
  */
+function PageContent({ page }: { page: PageId }) {
+  switch (page) {
+    case 'dashboard':
+      return <Dashboard />
+    case 'accounts':
+      return <Accounts />
+    default:
+      return (
+        <p className="mt-8 text-fg-subtle">
+          Scaffold ready. Screens are built milestone by milestone: see docs/ROADMAP.md.
+        </p>
+      )
+  }
+}
+
 export function App() {
   // State: React re-renders this component whenever a setter below is called.
   const [page, setPage] = useState<PageId>('dashboard')
@@ -29,13 +45,7 @@ export function App() {
       <main className="flex-1 overflow-y-auto p-8">
         <h1 className="font-display text-3xl font-semibold">{current.label}</h1>
         <p className="mt-2 text-fg-muted">{current.description}</p>
-        {page === 'dashboard' ? (
-          <Dashboard />
-        ) : (
-          <p className="mt-8 text-fg-subtle">
-            Scaffold ready. Screens are built milestone by milestone: see docs/ROADMAP.md.
-          </p>
-        )}
+        <PageContent page={page} />
         <Button className="mt-4" onClick={() => void window.api.sendTestNotification()}>
           Send test notification
         </Button>

@@ -16,12 +16,12 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 ## M1: Vertical slice, Steam and toasts (MVP core)
 
-- [x] Domain types + provider interface (`src/shared`); database + migration runner (`src/main/store`); `SecretStore` (in-memory; `safeStorage` implementation still to do)
-- [~] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`. Built and tested for game scope, and started with the app (idle until a provider is registered). Still to do: finding new games (library scope, with the Accounts flow, keeping found games and settling the open baseline question in SPEC §5) and jitter on the backoff
-- [~] Steam provider (Web API): library, schema, unlocks, rarity. Built, tested against captured replies, verified live against a real account, and registered with the Scheduler. The library includes games borrowed through Steam Families while they are in the two-week recently-played window. Still to do: the Accounts screen that connects an account (`authenticate` takes the key and SteamID64) and stores the key
+- [x] Domain types + provider interface (`src/shared`); database + migration runner (`src/main/store`); `SecretStore` (`SafeStorageSecretStore`: encrypted with `safeStorage`, kept in `secrets.json`)
+- [~] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`. Built and tested: library scope (finds games, never forgets one), game scopes with tiered polling, and the baseline cutoff for games found later (ADR-0005). Still to do: jitter on the backoff
+- [~] Steam provider (Web API): library, schema, unlocks, rarity. Built, tested against captured replies, verified live against a real account, and registered with the Scheduler. The library includes games borrowed through Steam Families while they are in the two-week recently-played window. The Accounts screen connects an account: it checks the key with Steam, stores it in the `SecretStore` and starts syncing straight away
 - [ ] Notification service + overlay toast (queue, sound, preview)
 - [ ] Tray, close-to-tray, single instance, autostart
-- [~] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard's stats header (completion hero + tiles) is built, on sample data; Accounts, Library and Game detail still to do
+- [~] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard's stats header (completion hero + tiles) is built, on sample data. Accounts is built for Steam (connect form and account list; the list doesn't yet update by itself as a sync finds games). Library and Game detail still to do
 - **Exit:** unlock a Steam achievement in a real game and a toast appears within the poll interval
 
 ## M2: Emulators and Xbox (P0 complete)

@@ -18,6 +18,8 @@ describe('OverlayApp', () => {
         deliver = listener
         return unsubscribe
       },
+      listAccounts: vi.fn(),
+      connectSteam: vi.fn(),
     }
 
     const { unmount } = render(<OverlayApp />)
