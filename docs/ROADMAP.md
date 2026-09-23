@@ -19,7 +19,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 - [x] Domain types + provider interface (`src/shared`); database + migration runner (`src/main/store`); `SecretStore` (`SafeStorageSecretStore`: encrypted with `safeStorage`, kept in `secrets.json`)
 - [x] Sync engine: scheduler, diff, baseline rule, backoff with jitter, `UnlockEvent`. Built and tested: library scope (finds games, never forgets one), game scopes with tiered polling, and the baseline cutoff for games found later (ADR-0005)
 - [~] Steam provider (Web API): library, schema, unlocks, rarity. Built, tested against captured replies, verified live against a real account, and registered with the Scheduler. The library includes games borrowed through Steam Families while they are in the two-week recently-played window. The Accounts screen connects an account: it checks the key with Steam, stores it in the `SecretStore` and starts syncing straight away
-- [~] Notification service + overlay toast (queue, sound, preview). Built: unlocks from the sync engine become toasts, up to 3 stacked on screen with the rest queued, duplicates dropped, more than 5 at once collapsed into one; the test notification goes through the same queue. Still to do: sound
+- [x] Notification service + overlay toast (queue, preview). Unlocks from the sync engine become toasts, up to 3 stacked on screen with the rest queued, duplicates dropped, more than 5 at once collapsed into one; the test notification goes through the same queue; Pause notifications in the tray. Sound moved to M4 (F-22 is P1)
 - [x] Tray, close-to-tray, single instance, autostart. The tray menu has Pause notifications and Start with Windows; a login start stays in the tray. Start with Windows only works in the installed app, so it is checked for real once the installer exists (M6)
 - [x] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard shows real totals, "Nearly there" and recent unlocks. Accounts is built for Steam (connect form, and an account list that updates itself as a sync finds games). Library (grid with colour-in covers, sort) and Game detail (tiles, filters, achievements rarest first) are built on real data and refresh as syncs land
 - **Exit:** unlock a Steam achievement in a real game and a toast appears within the poll interval
@@ -45,7 +45,8 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M4: Polish and notification depth
 
 - [ ] Notification settings (corner, monitor, scale, rarity styling, per-platform toggles)
-- [ ] Native toast fallback, Do Not Disturb (incl. schedule)
+- [ ] Toast sound per rarity tier, with volume and a mute (F-22)
+- [ ] Native toast fallback, Do Not Disturb schedule (manual pause is in the tray already)
 - [ ] Onboarding flow, empty/error states, provider health UI
 - [ ] Accessibility pass, reduced motion, high contrast
 - [ ] Data export, log viewer
