@@ -6,6 +6,8 @@ import { IPC, type AchievementTrackerApi, type ToastPayload } from '@shared/ipc'
 const api: AchievementTrackerApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC.getAppInfo),
   sendTestNotification: () => ipcRenderer.invoke(IPC.sendTestNotification),
+  listAccounts: () => ipcRenderer.invoke(IPC.listAccounts),
+  connectSteam: (input) => ipcRenderer.invoke(IPC.connectSteam, input),
   onToast: (listener) => {
     const handler = (_event: IpcRendererEvent, toast: ToastPayload): void => listener(toast)
     ipcRenderer.on(IPC.showToast, handler)

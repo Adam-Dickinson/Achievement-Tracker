@@ -46,6 +46,7 @@ export class Scheduler {
   readonly #timers = new Map<number, ReturnType<typeof setTimeout>>()
   readonly #attempts = new Map<string, number>()
   readonly #recent = new Map<number, ReadonlySet<string>>()
+  readonly #inRound = new Set<number>()
   #abort = new AbortController()
   #running = false
 
@@ -73,6 +74,14 @@ export class Scheduler {
     this.#abort.abort()
     for (const timer of this.#timers.values()) clearTimeout(timer)
     this.#timers.clear()
+  }
+
+  /** Syncs an account now (just connected, or reconnected), then keeps its loop going. */
+  startAccount(accountId: number): void {
+    if (!this.#running || this.#inRound.has(accountId)) return
+    clearTimeout(this.#timers.get(accountId))
+    this.#timers.delete(accountId)
+    void this.#runLoop(accountId)
   }
 
   async syncLibrary(accountId: number): Promise<Date | null> {
@@ -236,11 +245,14 @@ export class Scheduler {
 
   async #runLoop(accountId: number): Promise<void> {
     let next: Date | null
+    this.#inRound.add(accountId)
     try {
       next = await this.#runRound(accountId)
     } catch (err) {
       console.error(`Sync round for account ${accountId} failed`, err)
       next = this.#after(this.#intervalMs)
+    } finally {
+      this.#inRound.delete(accountId)
     }
 
     if (!this.#running || next === null) {

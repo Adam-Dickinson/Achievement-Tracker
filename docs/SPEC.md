@@ -225,7 +225,7 @@ On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attem
 
 ## 6. IPC contract (main process ⇄ UI)
 
-The UI has no Node.js access. It calls the main process through `window.api`, which the preload script builds from the contract in `src/shared/ipc.ts` (channel names and payload types shared by all three sides). Every handler validates that the sender is one of our own pages.
+The UI has no Node.js access. It calls the main process through `window.api`, which the preload script builds from the contract in `src/shared/ipc.ts` (channel names and payload types shared by all three sides). Every handler validates that the sender is one of our own pages, and payloads from the UI are checked with a zod schema in `main/ipc.ts` before anything uses them.
 
 **Implemented**
 | API (`window.api`) | Channel | Description |
@@ -233,12 +233,13 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `getAppInfo()` | `app:get-info` | App version and database schema version |
 | `sendTestNotification()` | `notifications:send-test` | Show the next sample toast (cycles rarity tiers) |
 | `onToast(listener)` | `overlay:show-toast` (main → overlay) | Subscribe to toasts; returns an unsubscribe function |
+| `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
+| `connectSteam({ steamId, apiKey })` | `accounts:connect-steam` | Checks the key with Steam, saves the account (reconnecting keeps its id) and the key (`SecretStore`), and starts syncing it. Returns a `ConnectResult`: `{ ok: true, account }` or `{ ok: false, reason, message }` with `reason` `invalid_input`, `key_rejected`, `network` or `other`. A result rather than a thrown error, because across IPC an error keeps only its message |
 
 **Planned** (added in the milestones that need them)
 | API | Description |
 |---|---|
-| `listAccounts()` | Accounts + status |
-| `beginConnect(platform)` / `completeConnect(platform, input)` | Auth flow |
+| `beginConnect(platform)` / `completeConnect(platform, input)` | Auth flow for OAuth platforms (Steam uses `connectSteam`) |
 | `disconnectAccount(id)` | Remove account (option: keep data) |
 | `listGames(filter, sort, page)` | Library query |
 | `getGame(id)` | Game + platform entries |

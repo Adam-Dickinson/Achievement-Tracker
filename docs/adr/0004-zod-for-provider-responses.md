@@ -54,5 +54,5 @@ Conventions:
 
 ## Revisit if
 
-- zod makes a breaking major release that is costly to adopt: valibot is the nearest substitute, and schemas are confined to `src/main/providers`.
-- We start validating IPC payloads from the renderer (CLAUDE.md rule 9). Using the same library there is likely, but it is not decided here.
+- zod makes a breaking major release that is costly to adopt: valibot is the nearest substitute, and schemas are confined to the main process (`src/main/providers` and `src/main/ipc.ts`).
+- ~~We start validating IPC payloads from the renderer.~~ Done 2026-09-23: `main/ipc.ts` checks UI payloads with zod too, the same way.

@@ -122,7 +122,7 @@ achievement-tracker/
 │           ├── overlay/             # main.tsx, OverlayApp.tsx, Toast.tsx
 │           ├── components/          # Button.tsx, TrophyIcon.tsx (shared UI)
 │           ├── features/            # dashboard/ library/ game-detail/ activity/
-│           │                        #   accounts/ settings/ onboarding/   (built in M1+)
+│           │                        #   accounts/ settings/ onboarding/   (dashboard and accounts started)
 │           └── styles/index.css     # design tokens (Tailwind @theme) + base styles
 └── tests/fixtures/                  # sanitized provider responses / sample trophy files
 ```

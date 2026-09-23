@@ -1,3 +1,4 @@
+import type { AccountSummary } from '@shared/ipc'
 import { AccountStatus, RemoteAchievement, RemoteGame, RemoteUnlock } from '@shared/models'
 import { Platform } from '@shared/platform'
 import { DatabaseSync } from 'node:sqlite'
@@ -203,6 +204,35 @@ export function getAccount(db: DatabaseSync, accountId: number): AccountRow {
 
 export function setAccountStatus(db: DatabaseSync, accountId: number, status: AccountStatus): void {
   db.prepare('UPDATE account SET status = ? WHERE id = ?').run(status, accountId)
+}
+
+export function listAccountSummaries(db: DatabaseSync): AccountSummary[] {
+  const rows = db
+    .prepare(
+      `
+    SELECT account.id, account.platform, account.display_name, account.status,
+           COUNT(platform_game.id) AS game_count
+    FROM account
+    LEFT JOIN platform_game ON platform_game.account_id = account.id
+    GROUP BY account.id
+    ORDER BY account.id
+  `,
+    )
+    .all() as {
+    id: number
+    platform: Platform
+    display_name: string
+    status: AccountStatus
+    game_count: number
+  }[]
+
+  return rows.map((row) => ({
+    id: row.id,
+    platform: row.platform,
+    displayName: row.display_name,
+    status: row.status,
+    gameCount: row.game_count,
+  }))
 }
 
 /** Accounts the scheduler should poll. One needing re-login or disabled is left alone. */

@@ -8,6 +8,7 @@ import {
   getPlatformGameByExternalId,
   getSyncState,
   insertNewUnlocks,
+  listAccountSummaries,
   listConnectedAccounts,
   listPlatformGameExternalIds,
   setAccountStatus,
@@ -344,6 +345,60 @@ function freshDb(): DatabaseSync {
 function accountRows(db: DatabaseSync): unknown[] {
   return db.prepare('SELECT * FROM account ORDER BY id').all()
 }
+
+describe('listAccountSummaries', () => {
+  it('lists every account with its status and number of games, in id order', () => {
+    const db = freshDb()
+    const steam = upsertAccount(db, {
+      platform: 'steam',
+      externalId: '76561190000000001',
+      displayName: 'Player One',
+    })
+    const other = upsertAccount(db, {
+      platform: 'steam',
+      externalId: '76561190000000002',
+      displayName: 'Player Two',
+    })
+    setAccountStatus(db, other.id, 'needs_reauth')
+    addPlatformGames(db, steam, [
+      {
+        ref: { externalId: '1' },
+        title: 'A',
+        iconUrl: null,
+        lastPlayed: null,
+        recentlyPlayed: false,
+      },
+      {
+        ref: { externalId: '2' },
+        title: 'B',
+        iconUrl: null,
+        lastPlayed: null,
+        recentlyPlayed: false,
+      },
+    ])
+
+    expect(listAccountSummaries(db)).toEqual([
+      {
+        id: steam.id,
+        platform: 'steam',
+        displayName: 'Player One',
+        status: 'connected',
+        gameCount: 2,
+      },
+      {
+        id: other.id,
+        platform: 'steam',
+        displayName: 'Player Two',
+        status: 'needs_reauth',
+        gameCount: 0,
+      },
+    ])
+  })
+
+  it('is empty when no account is connected', () => {
+    expect(listAccountSummaries(freshDb())).toEqual([])
+  })
+})
 
 describe('upsertAccount', () => {
   const STEAM = {

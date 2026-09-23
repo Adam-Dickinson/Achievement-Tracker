@@ -41,7 +41,7 @@ export class SteamProvider implements AchievementProvider {
 
   async authenticate(input: AuthInput, signal?: AbortSignal): Promise<AccountCredentials> {
     if (input.kind !== 'api_key') {
-      throw new ProviderError('unsupported', 'Steam: connect with a Web API key and a SteamID')
+      throw new ProviderError('unsupported', 'Steam: connect with an API key and a SteamID')
     }
     const steamId = input.accountId.trim()
     if (!STEAM_ID64.test(steamId)) {
@@ -49,7 +49,7 @@ export class SteamProvider implements AchievementProvider {
     }
     const key = new Secret(input.key.expose().trim())
     if (!API_KEY.test(key.expose())) {
-      throw new ProviderError('other', 'Steam: the Web API key should be 32 letters and digits')
+      throw new ProviderError('other', 'Steam: the API key should be 32 letters and digits')
     }
 
     const credentials: AccountCredentials = { platform: 'steam', externalId: steamId, secret: key }

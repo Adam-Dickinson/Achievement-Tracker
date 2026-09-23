@@ -422,6 +422,96 @@ function libraryGame(externalId: string, recentlyPlayed = true): RemoteGame {
   }
 }
 
+describe('Scheduler.startAccount', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function schedulerFor(db: DatabaseSync, fetchGame: AchievementProvider['fetchGame']): Scheduler {
+    return new Scheduler({
+      db,
+      providers: { steam: fakeProvider(fetchGame) },
+      secrets: new InMemorySecretStore(),
+      onUnlocks: () => undefined,
+    })
+  }
+
+  it('starts syncing an account connected after the app started', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const scheduler = schedulerFor(db, fetchGame)
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 'acc1', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'Game g1', 'game g1');
+      INSERT INTO platform_game (game_id, account_id, platform, external_id, title)
+      VALUES (1, 1, 'steam', 'g1', 'Game g1');
+    `)
+    scheduler.startAccount(1)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchGame).toHaveBeenCalledOnce()
+    await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS)
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+    scheduler.stop()
+  })
+
+  it('syncs a sleeping account straight away, without starting a second loop', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb()
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const scheduler = schedulerFor(db, fetchGame)
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    upsertSyncState(db, 1, 'game:g1', {
+      cursor: null,
+      lastOkAt: START,
+      lastError: null,
+      nextDueAt: START,
+    })
+
+    scheduler.startAccount(1)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+
+    await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS)
+    expect(fetchGame).toHaveBeenCalledTimes(3)
+    scheduler.stop()
+  })
+
+  it('does not start a second round while one is already running', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb()
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => new Promise(() => undefined))
+    const scheduler = schedulerFor(db, fetchGame)
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+
+    scheduler.startAccount(1)
+    scheduler.startAccount(1)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchGame).toHaveBeenCalledOnce()
+    scheduler.stop()
+  })
+
+  it('does nothing while the scheduler is stopped', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb()
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const scheduler = schedulerFor(db, fetchGame)
+
+    scheduler.startAccount(1)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchGame).not.toHaveBeenCalled()
+  })
+})
+
 describe('Scheduler.syncLibrary', () => {
   it('on the first look, adds every listed game with no cutoff, so their first syncs stay silent', async () => {
     const db = seedDb([{ id: 1, games: [] }])
