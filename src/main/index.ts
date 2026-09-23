@@ -7,6 +7,7 @@ import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
 import { SteamProvider } from './providers/steam'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
+import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { listAccountSummaries } from './store/sync-store'
@@ -95,7 +96,15 @@ async function start(): Promise<void> {
     open: showMainWindow,
     sendTestNotification: () => void sendTestNotification(),
     quit: () => app.quit(),
+    pauseNotifications: {
+      get: () => notifications.paused,
+      set: (on) => {
+        notifications.paused = on
+      },
+    },
+    startWithWindows: startWithWindows(app),
   })
 
-  showMainWindow()
+  // Started by Windows at login: stay in the tray until the user opens the window.
+  if (!launchedHidden(process.argv)) showMainWindow()
 }

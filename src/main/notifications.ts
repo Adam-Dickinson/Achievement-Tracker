@@ -33,13 +33,24 @@ export class NotificationService {
   readonly #queue: Pending[] = []
   #shown: Shown[] = []
   #nextId = 1
+  #paused = false
 
   constructor(deps: NotificationServiceDeps) {
     this.#display = deps.display
     this.#durationMs = deps.durationMs ?? TOAST_DURATION_MS
   }
 
+  /** While paused, unlocks are not shown (they are still recorded by the sync engine). */
+  get paused(): boolean {
+    return this.#paused
+  }
+
+  set paused(paused: boolean) {
+    this.#paused = paused
+  }
+
   notify(events: readonly UnlockEvent[]): void {
+    if (this.#paused) return
     const fresh = events.filter((event) => !this.#has(unlockKey(event)))
     if (fresh.length === 0) return
 
@@ -53,7 +64,7 @@ export class NotificationService {
     this.#fill()
   }
 
-  /** Queues a toast that isn't an unlock, such as the test notification. */
+  /** Queues a toast that isn't an unlock, such as the test notification. Shown even while paused. */
   show(toast: ToastPayload): void {
     this.#queue.push({ key: null, toast })
     this.#fill()

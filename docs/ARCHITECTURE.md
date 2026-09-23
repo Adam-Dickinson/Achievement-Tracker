@@ -29,7 +29,7 @@ Steam / Xbox / PSN / RA APIs   RPCS3 / Xenia / Steam files   Tokens & API keys
 
 The **main process** owns everything with side effects: windows, tray, database, network, files. The **renderer** processes only draw UI. They talk over IPC through the **preload** script, which exposes a tiny typed API as `window.api`; the UI has no Node.js access.
 
-Closing the main window destroys it (freeing its renderer, ~90 MB). The tray icon, the hidden overlay window and (from M1) the watchers and sync tasks keep running. "Quit" in the tray menu is the only way to exit.
+Closing the main window destroys it (freeing its renderer, ~90 MB). The tray icon, the hidden overlay window and (from M1) the watchers and sync tasks keep running. "Quit" in the tray menu is the only way to exit. With "Start with Windows" on (installed app only), Windows starts the app at login with `--hidden`, and it stays in the tray until opened.
 
 ## 2. Code areas
 
@@ -109,7 +109,7 @@ achievement-tracker/
 │   │   └── ipc.ts                   # channel names, payload types, the window.api interface
 │   ├── main/
 │   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC, sync wiring
-│   │   ├── windows.ts  tray.ts  overlay-service.ts  ipc.ts  sample-toasts.ts
+│   │   ├── windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  ipc.ts  accounts.ts  sample-toasts.ts
 │   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts,
 │   │   │                            #   sync-store.ts (the sync engine's SQL)
 │   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts (+ detector in M2)

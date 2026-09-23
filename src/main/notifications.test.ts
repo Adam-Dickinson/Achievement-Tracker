@@ -197,4 +197,23 @@ describe('NotificationService', () => {
 
     expect(frames).toHaveLength(before)
   })
+
+  it('shows no unlocks while paused, but still shows the test notification', () => {
+    service.paused = true
+    service.notify([unlock('a')])
+    expect(frames).toHaveLength(0)
+
+    service.show(SAMPLE)
+    expect(onScreen()).toEqual(['Sample'])
+  })
+
+  it('shows unlocks again once unpaused', () => {
+    service.paused = true
+    service.notify([unlock('a')])
+    service.paused = false
+
+    service.notify([unlock('b')])
+
+    expect(onScreen()).toEqual(['Achievement b'])
+  })
 })
