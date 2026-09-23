@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { LibraryGame } from '@shared/library'
 import { plural } from '@/lib/format'
-import { GameCard } from './GameCard'
+import { GameCard } from '@/components/GameCard'
 import { useLibrary } from './useLibrary'
 
 type SortId = 'recent' | 'completion' | 'title'

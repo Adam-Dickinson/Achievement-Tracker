@@ -20,7 +20,7 @@ interface PageContentProps {
 function PageContent({ page, onOpenGame }: PageContentProps) {
   switch (page) {
     case 'dashboard':
-      return <Dashboard />
+      return <Dashboard onOpenGame={onOpenGame} />
     case 'library':
       return <Library onOpenGame={onOpenGame} />
     case 'accounts':
