@@ -8,6 +8,8 @@ A guide to finding your way around the repo: what each folder and file is for, h
 
 **Status labels used below.** **Real**: implemented and tested. **Placeholder**: works but is temporary. **Stub**: an empty file that marks where code will go. **Planned**: does not exist yet.
 
+**The code has no comments.** Explanations live here and in the other docs; the only comments left are instructions to tools (`/// <reference types=...>` in `env.d.ts` and `// @vitest-environment jsdom` in UI tests). When you need to know why a file does something, look it up here first.
+
 **Keep this document current.** It is listed in the "when the owner says they've committed" rule in [CLAUDE.md](../CLAUDE.md), so it gets synced after commits. Paths change more often than concepts, so it names files and folders, not line numbers.
 
 ---
@@ -149,7 +151,7 @@ Runs in both worlds, so it may not import from `main` or `renderer`, and may not
 | [models.ts](../src/shared/models.ts) | The normalized shapes providers return: `RemoteGame`, `RemoteAchievement`, `RemoteUnlock`, `RemoteGameAchievements`, plus `AccountCredentials`, `AccountInfo` and `UnlockEvent`. Note `RemoteGame` has `iconUrl` only; the Library screens will need a cover URL added. |
 | [provider.ts](../src/shared/provider.ts) | The `AchievementProvider` interface every platform adapter implements (`authenticate`, `validate`, `listGames`, `fetchGame`, optional `watch`), `ProviderCapabilities` and `AuthInput`. |
 | [errors.ts](../src/shared/errors.ts) | `ProviderError` with a `kind` (`auth_expired`, `rate_limited`, `network`, `parse`, `unsupported`, `other`), an optional retry delay, and `isRetryable`. |
-| [secret.ts](../src/shared/secret.ts) | `Secret`: wraps a token so printing or serializing it shows `Secret(<redacted>)`. The only way to read it is `expose()`. |
+| [secret.ts](../src/shared/secret.ts) | `Secret`: wraps a token so printing or serializing it shows `Secret(<redacted>)` (it overrides `toString`, `toJSON` and Node's `util.inspect.custom`, which `console.log` uses). The only way to read it is `expose()`. |
 | [secret-store.ts](../src/shared/secret-store.ts) | The `SecretStore` interface and an in-memory implementation used by tests. The production version is `main/safe-storage-secret-store.ts`. |
 | [ipc.ts](../src/shared/ipc.ts) | **The IPC contract.** Channel names (`IPC`), payload types (`AppInfo`, `ToastPayload`, `AccountSummary`, `SteamConnectInput`, `ConnectResult`), and `AchievementTrackerApi`, the exact shape of `window.api`. This is the first place to look when the UI and main process need to talk. |
 | [dashboard.ts](../src/shared/dashboard.ts) | `DashboardStats` (the Dashboard's numbers, "Nearly there" and recent unlocks) and `completionPercent()`, a floor-not-round percentage. |
@@ -190,7 +192,7 @@ Top-level files (Real unless noted):
 | [migrations/0002_baseline_cutoff.sql](../src/main/store/migrations/0002_baseline_cutoff.sql) | Adds `platform_game.baseline_cutoff`: a game's first sync announces only unlocks dated after it (`NULL` = fully silent). See ADR-0005. |
 | [migrate.test.ts](../src/main/store/migrate.test.ts) | Tests numbering, creating the schema, running twice, and rollback. New migrations need an upgrade test here (rule 8). |
 | [sync-store.ts](../src/main/store/sync-store.ts) | The sync engine's SQL, one small function per query: read an account or a platform game, list connected accounts and an account's games, upsert achievements, insert unlocks and report which were genuinely new (`INSERT OR IGNORE`), set `baseline_done`, read and write `sync_state`, set an account's status, create or reconnect an account (`upsertAccount`: same platform and id keeps the same row, so its key and games stay attached), and add games found by `listGames` (`addPlatformGames`: new games get a `game` + `platform_game` row awaiting their silent first sync; known ones are updated without resetting the baseline or blanking the last-played time; nothing is ever deleted). Row types `AccountRow`, `PlatformGameRow`, `SyncStateRow`. |
-| [library-store.ts](../src/main/store/library-store.ts) | Read-only SQL for the screens: `listLibraryGames` (each game with its cover and unlocked/total), `getGameDetail`, `listRecentUnlocks` and `getDashboardStats`. Tested in `library-store.test.ts` on a real schema, with data added through `sync-store`. |
+| [library-store.ts](../src/main/store/library-store.ts) | Read-only SQL for the screens: `listLibraryGames` (each game with its cover and unlocked/total; most recent unlock first, relying on SQLite sorting NULL last in `DESC`), `getGameDetail`, `listRecentUnlocks` and `getDashboardStats`. Tested in `library-store.test.ts` on a real schema, with data added through `sync-store`. |
 | [sync-store.test.ts](../src/main/store/sync-store.test.ts) | Each query against a real migrated in-memory database, plus the baseline rule end to end. |
 
 The database file is `achievement-tracker.db` inside Electron's per-user data folder (`app.getPath('userData')`, normally under `%APPDATA%` on Windows).
@@ -336,6 +338,10 @@ Rules and traps:
 6. **Opacity on a token colour:** `bg-surface-1/60` or `border-rarity-rare/45` (any whole number).
 7. **A token that reads a per-element variable needs `@theme inline`.** A normal `@theme` token is resolved once, at the page root, where `--rarity` is not set. `--shadow-toast` and `--shadow-tile` live in an `@theme inline` block, which copies the value into the class so the variable is read on the element.
 8. **Rarity colours come from the rarity scope.** Put `data-rarity={rarity}` on an element, then use `text-(--rarity)`, `border-(--rarity)/45`, `bg-(--rarity)/14`, `from-(--rarity-light)`, `to-(--rarity-dark)` and `text-(--rarity-on)`. Adding a rarity means adding a `[data-rarity='...']` rule in `styles/index.css`; the `rarity-scope` test fails if one is missing. Two traps: Tailwind turns an underscore inside `data-[rarity=ultra_rare]:` into a space, so do not use data-attribute variants for rarity; and Motion writes the whole `transform`, so pass skew and similar through Motion (`skewX`), not a Tailwind class.
+9. **Font names end in "Variable".** `@fontsource-variable` registers `'Figtree Variable'` and `'Bricolage Grotesque Variable'`, so `--font-sans` and `--font-display` must use those names.
+10. **`--color-line` is translucent white**, so a border takes on the colour of the card it sits on.
+11. **`.bg-aurora` is for the main window only.** The overlay window must stay transparent.
+12. **In `Toast.tsx`, opacity is animated with a short tween, not the spring,** so it can't overshoot past fully visible.
 
 ---
 
@@ -372,6 +378,8 @@ Other docs-like things:
 - **Coverage today** (431 tests in 39 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the notification service (unlock and burst toasts, at most 3 on screen, queueing, duplicates, pausing, stop), the tray menu and "Start with Windows", the Library (loading, sort, opening a game, live reload), the game card (colour-in, completed, syncing, missing art), Game detail (tiles, filters, rarest first, hidden achievements), text formatting, the Dashboard (`completionPercent`, the hero, the stat tile, "Nearly there", recent unlocks, live reload, and loading/loaded states including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/steam/` holds sanitized Steam Web API replies (see PROVIDERS.md). Fixtures are in `.prettierignore` so they stay byte-for-byte as captured. Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
+- **Numbers in tests follow the machine's locale.** `toLocaleString()` gives "3,482" or "3 482" (with a non-breaking space), so tests build the expected text with `toLocaleString()` too, and replace `\s` with a plain space, because Testing Library normalizes whitespace in the rendered text.
+- **Electron menu clicks:** Electron flips a checkbox item's `checked` before calling its `click`, so `tray-menu.test.ts` passes the new state in the fake item.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
 - **Not tested by automation:** the real windows, tray, and overlay behaviour. Those are checked by running the app.
 

@@ -17,7 +17,6 @@ import { Scheduler } from './sync/scheduler'
 import { createTray } from './tray'
 import { createMainWindow, createOverlayWindow } from './windows'
 
-// Only one copy of the app may run: a second launch just brings the first one forward.
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
@@ -27,8 +26,6 @@ if (!app.requestSingleInstanceLock()) {
 async function start(): Promise<void> {
   let mainWindow: BrowserWindow | null = null
 
-  // Closing the main window destroys it (freeing its renderer process and memory); the app keeps
-  // running in the tray and recreates the window on demand. Only "Quit" exits.
   const showMainWindow = (): void => {
     if (!mainWindow || mainWindow.isDestroyed()) {
       mainWindow = createMainWindow()
@@ -39,18 +36,14 @@ async function start(): Promise<void> {
   }
 
   app.on('second-instance', showMainWindow)
-  // Stay alive with no windows open: the tray icon is what keeps the app reachable.
   app.on('window-all-closed', () => {})
 
-  // Hardening: app windows never open new windows or navigate away from our own pages.
   app.on('web-contents-created', (_event, contents) => {
     contents.setWindowOpenHandler(() => ({ action: 'deny' }))
     contents.on('will-navigate', (event) => event.preventDefault())
   })
 
   await app.whenReady()
-  // Packaged builds have no menu bar. In development the default menu stays, so DevTools
-  // (Ctrl+Shift+I, or Alt > View > Toggle Developer Tools) is available for debugging the UI.
   if (app.isPackaged) Menu.setApplicationMenu(null)
 
   const { db, schemaVersion } = openDatabase(
@@ -66,13 +59,11 @@ async function start(): Promise<void> {
     return Promise.resolve()
   }
 
-  // The sync engine. It idles until an account is connected on the Accounts screen.
   const steam = new SteamProvider()
   const secrets = new SafeStorageSecretStore(
     join(app.getPath('userData'), 'secrets.json'),
     safeStorage,
   )
-  // A first sync touches every game; the UI refetches at most once a second.
   const dataChanged = coalesce(() => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.dataChanged)
   }, 1000)
@@ -112,6 +103,5 @@ async function start(): Promise<void> {
     startWithWindows: startWithWindows(app),
   })
 
-  // Started by Windows at login: stay in the tray until the user opens the window.
   if (!launchedHidden(process.argv)) showMainWindow()
 }

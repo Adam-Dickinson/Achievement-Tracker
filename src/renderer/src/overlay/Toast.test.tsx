@@ -24,7 +24,6 @@ describe('Toast', () => {
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.getByText('Lord of Frenzied Flame')).toBeInTheDocument()
     expect(screen.getByText('Elden Ring · Steam')).toBeInTheDocument()
-    // Rarity is always shown as text, never by colour alone.
     expect(screen.getByText('Ultra Rare')).toBeInTheDocument()
     expect(screen.getByText('1.4%')).toBeInTheDocument()
   })

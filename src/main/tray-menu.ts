@@ -10,7 +10,6 @@ export interface TrayActions {
   sendTestNotification(): void
   quit(): void
   readonly pauseNotifications: Toggle
-  /** Null when this build can't start with Windows (development). */
   readonly startWithWindows: Toggle | null
 }
 

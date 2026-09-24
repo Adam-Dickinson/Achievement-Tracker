@@ -10,7 +10,6 @@ const SORTS: Record<
   SortId,
   { label: string; compare: (a: LibraryGame, b: LibraryGame) => number }
 > = {
-  // The main process already sends them most recently unlocked first.
   recent: { label: 'Last unlock', compare: () => 0 },
   completion: { label: 'Completion', compare: (a, b) => ratio(b) - ratio(a) },
   title: { label: 'Name', compare: (a, b) => a.title.localeCompare(b.title) },

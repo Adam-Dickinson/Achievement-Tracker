@@ -79,7 +79,6 @@ interface AccountSeed {
   readonly games?: readonly string[]
 }
 
-// Accounts and their known games, on a database built by the real migrations.
 function seedDb(accounts: readonly AccountSeed[] = [{ id: 1, games: ['g1'] }]): DatabaseSync {
   const db = new DatabaseSync(':memory:')
   applyMigrations(db)
@@ -119,7 +118,6 @@ interface Harness {
   readonly scheduler: Scheduler
   readonly onUnlocks: ReturnType<typeof vi.fn<(events: UnlockEvent[]) => void>>
   readonly onDataChanged: ReturnType<typeof vi.fn<() => void>>
-  /** Moves the scheduler's clock forward. */
   advance(ms: number): void
   now(): Date
 }
@@ -274,7 +272,6 @@ describe('Scheduler.syncDueGames', () => {
 
     expect(await scheduler.syncDueGames(1)).toBeNull()
     expect(accountStatus(db, 1)).toBe('needs_reauth')
-    // No due time, so the game syncs straight away once the account is reconnected.
     expect(getSyncState(db, 1, 'game:g1')).toMatchObject({
       lastError: 'token expired',
       nextDueAt: null,
@@ -337,8 +334,6 @@ describe('Scheduler.start / stop', () => {
     vi.useRealTimers()
   })
 
-  // These use the real clock inside the Scheduler (no `now` passed), which vi's fake timers
-  // control, so moving time forward both fires the timers and makes games due.
   function realClockScheduler(
     db: DatabaseSync,
     providers: Partial<Record<Platform, AchievementProvider>>,
@@ -398,8 +393,8 @@ describe('Scheduler.start / stop', () => {
     scheduler.start()
     await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS)
 
-    expect(failing.mock.calls.length).toBeGreaterThan(1) // retried on its own backoff
-    expect(healthy).toHaveBeenCalledTimes(2) // on its normal schedule regardless
+    expect(failing.mock.calls.length).toBeGreaterThan(1)
+    expect(healthy).toHaveBeenCalledTimes(2)
     scheduler.stop()
   })
 
@@ -409,7 +404,7 @@ describe('Scheduler.start / stop', () => {
     let signal: AbortSignal | undefined
     const fetchGame = vi.fn<AchievementProvider['fetchGame']>((_credentials, _game, s) => {
       signal = s
-      return new Promise(() => undefined) // never settles on its own
+      return new Promise(() => undefined)
     })
     const scheduler = realClockScheduler(db, { steam: fakeProvider(fetchGame) })
 
@@ -666,7 +661,6 @@ describe('Scheduler tiered polling', () => {
     })
     await scheduler.syncLibrary(1)
 
-    // Both are synced once straight away (their first sync), then tiered.
     expect(await scheduler.syncDueGames(1)).toEqual(after(START, SYNC_INTERVAL_MS))
     expect(fetchGame).toHaveBeenCalledTimes(2)
 
@@ -739,7 +733,6 @@ describe('Scheduler tiered polling', () => {
     scheduler.stop()
     vi.useRealTimers()
 
-    // Steam's fetchGame is 3 requests and listGames 2; the key's limit is 100,000 a day.
     const requests = fetchGame.mock.calls.length * 3 + listGames.mock.calls.length * 2
     expect(requests).toBeLessThan(15_000)
     expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g0').length).toBe(289)

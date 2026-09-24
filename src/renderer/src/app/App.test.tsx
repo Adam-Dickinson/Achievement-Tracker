@@ -8,7 +8,6 @@ import { fakeApi } from '@/test/fake-api'
 const sendTestNotification = vi.fn()
 
 beforeEach(() => {
-  // In the real app the preload script provides window.api; in tests we provide a fake.
   window.api = fakeApi({
     sendTestNotification,
   })
@@ -28,7 +27,6 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Library' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current', 'page')
-    // The footer fills in once the main process replies.
     expect(await screen.findByText('v0.1.0 · schema 1')).toBeInTheDocument()
   })
 
@@ -47,7 +45,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send test notification' }))
 
     expect(sendTestNotification).toHaveBeenCalledOnce()
-    await screen.findByText('v0.1.0 · schema 1') // let the pending state update settle
+    await screen.findByText('v0.1.0 · schema 1')
   })
 })
 
@@ -77,7 +75,6 @@ describe('App: opening a game', () => {
     expect(await screen.findByRole('heading', { name: 'Portal' })).toBeInTheDocument()
     expect(window.api.getGame).toHaveBeenCalledWith(7)
 
-    // The back button, not the nav item (which is marked as the current page).
     fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
     expect(await screen.findByRole('heading', { name: 'Library' })).toBeInTheDocument()
   })

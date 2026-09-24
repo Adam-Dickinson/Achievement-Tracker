@@ -8,7 +8,6 @@ export interface SteamRequestOptions {
   readonly signal?: AbortSignal
 }
 
-// Error messages never include the URL: the key is in its query string (docs/PROVIDERS.md).
 export async function steamGet(
   path: string,
   params: Readonly<Record<string, string | number>>,
@@ -37,7 +36,6 @@ export async function steamGet(
     throw new ProviderError('network', `Steam: server error (HTTP ${response.status})`)
   }
 
-  // Steam also answers some failures with JSON (a 403 `{}`, a 400 "no stats"): the parsers decide.
   if (response.headers.get('content-type')?.includes('application/json')) {
     try {
       return JSON.parse(body)

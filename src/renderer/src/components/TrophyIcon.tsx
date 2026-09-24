@@ -2,7 +2,6 @@ interface TrophyIconProps {
   className?: string
 }
 
-/** The app's trophy mark. `fill="currentColor"` lets the caller colour it with a text-* class. */
 export function TrophyIcon({ className }: TrophyIconProps) {
   return (
     <svg viewBox="296 224 432 608" fill="currentColor" aria-hidden="true" className={className}>

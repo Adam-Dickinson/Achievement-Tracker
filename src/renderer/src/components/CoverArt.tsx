@@ -3,14 +3,9 @@ import { useState } from 'react'
 interface CoverArtProps {
   url: string | null
   title: string
-  /** 0-100: how much of the art is in colour. */
   percent: number
 }
 
-/**
- * The game's art "colouring in" with completion: grey underneath, full colour up to the
- * completion point, with a lime line at the edge. Falls back to the title if there is no image.
- */
 export function CoverArt({ url, title, percent }: CoverArtProps) {
   const [failed, setFailed] = useState(false)
 

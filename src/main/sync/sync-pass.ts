@@ -26,7 +26,6 @@ export async function runSyncPass(
     upsertAchievements(db, platformGame.id, remote.achievements)
     const newUnlocks = insertNewUnlocks(db, platformGame.id, remote.unlocks)
 
-    // Baseline rule (SPEC F-16): a first sync announces only unlocks dated after the cutoff.
     const { baselineDone, baselineCutoff: cutoff } = platformGame
     const announced = baselineDone
       ? newUnlocks

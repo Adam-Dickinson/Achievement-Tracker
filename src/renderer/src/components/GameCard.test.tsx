@@ -44,7 +44,6 @@ describe('GameCard', () => {
       <GameCard game={game({ unlocked: 0, total: 0 })} onOpen={vi.fn()} />,
     )
 
-    // 0 of 0 is not a finished game: no crown.
     expect(container.querySelector('svg')).toBeNull()
 
     expect(screen.getByText('Syncing…')).toBeInTheDocument()

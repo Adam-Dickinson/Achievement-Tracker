@@ -8,21 +8,12 @@ export type ToastProps = ToastPayload
 
 const SLIDE_PX = 56
 
-// Springs in from the side while fading in quickly; leaves with a short fade and slide. Opacity is
-// kept off the spring so it cannot overshoot.
 const ENTER = {
   x: { type: 'spring', stiffness: 420, damping: 32 },
   opacity: { duration: 0.15 },
 } as const
 const EXIT = { duration: 0.2, ease: 'easeIn' } as const
 
-/**
- * The unlock toast. Spec: docs/DESIGN.md §6. Design: the toast draft on the Superdesign canvas
- * (docs/design/README.md); the HTML snapshot in mockups/ is pre-Afterglow.
- * It slides in and out when it is mounted/unmounted inside an <AnimatePresence>.
- *
- * Every colour comes from the --rarity variables that `data-rarity` sets (see index.css).
- */
 export function Toast({
   heading,
   rarity,
@@ -32,7 +23,7 @@ export function Toast({
   platform,
   percent,
 }: ToastProps) {
-  const reduceMotion = useReducedMotion() // honour the OS "reduce motion" setting
+  const reduceMotion = useReducedMotion()
   const isUltra = rarity === 'ultra_rare'
 
   return (
@@ -40,7 +31,6 @@ export function Toast({
       data-rarity={rarity}
       role="status"
       aria-live="polite"
-      // Slides the older toasts up when a new one joins the stack below them.
       layout="position"
       initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: SLIDE_PX }}
       animate={{ opacity: 1, x: 0, transition: ENTER }}
@@ -79,8 +69,6 @@ export function Toast({
       </div>
 
       {isUltra && !reduceMotion && (
-        // One gold glint sweeping across the card. skewX goes through Motion, not a Tailwind
-        // class, because Motion writes the whole transform and would overwrite a class's skew.
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 left-0 w-15 bg-linear-to-r from-transparent via-(--rarity-light)/30 to-transparent"

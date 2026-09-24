@@ -3,13 +3,8 @@ import { IPC, type VisibleToast } from '@shared/ipc'
 import { OVERLAY_SIZE } from './windows'
 
 const SCREEN_MARGIN = 16
-/** Time for the last toast's exit animation to finish before the window is hidden. */
 const EXIT_ANIMATION_MS = 400
 
-/**
- * Shows the overlay window while there are toasts and sends it the list to draw (docs/DESIGN.md
- * §6). Which toasts are on screen, and for how long, is NotificationService's job.
- */
 export class OverlayService {
   #hideTimer: NodeJS.Timeout | null = null
   #loaded: Promise<void>
@@ -29,7 +24,6 @@ export class OverlayService {
 
     if (toasts.length > 0) {
       this.#positionBottomRight()
-      // showInactive: display the window without activating it (i.e. without taking focus).
       if (!this.window.isVisible()) this.window.showInactive()
     } else {
       this.#hideTimer = setTimeout(() => {

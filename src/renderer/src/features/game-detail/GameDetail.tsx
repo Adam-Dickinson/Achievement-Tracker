@@ -17,7 +17,6 @@ const FILTERS: Record<FilterId, { label: string; keep: (a: GameAchievement) => b
   locked: { label: 'Locked', keep: (a) => !a.unlocked },
 }
 
-// Rarest first; achievements with no known rarity go last.
 function byRarity(a: GameAchievement, b: GameAchievement): number {
   return (a.globalPercent ?? 101) - (b.globalPercent ?? 101) || a.name.localeCompare(b.name)
 }

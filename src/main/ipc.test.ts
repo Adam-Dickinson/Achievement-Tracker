@@ -5,7 +5,6 @@ import { IPC, type AccountSummary, type ConnectResult } from '@shared/ipc'
 type Handler = (event: unknown, ...args: unknown[]) => unknown
 const handlers = new Map<string, Handler>()
 
-// ipcMain only exists inside a running Electron app: record what gets registered instead.
 vi.mock('electron', () => ({
   ipcMain: { handle: (channel: string, handler: Handler) => handlers.set(channel, handler) },
 }))

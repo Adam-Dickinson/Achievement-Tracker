@@ -2,7 +2,6 @@ import { Menu, nativeImage, Tray } from 'electron'
 import appIcon from '../../resources/icon.png?asset'
 import { trayMenuTemplate, type TrayActions } from './tray-menu'
 
-/** The tray icon keeps the app reachable while the main window is hidden. */
 export function createTray(actions: TrayActions): Tray {
   const tray = new Tray(nativeImage.createFromPath(appIcon).resize({ width: 16, height: 16 }))
   tray.setToolTip('Achievement Tracker')

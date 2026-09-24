@@ -11,7 +11,7 @@ An Electron desktop app (TypeScript everywhere, React UI) that tracks achievemen
 - [docs/PROVIDERS.md](docs/PROVIDERS.md): per-platform notes (endpoints there are **unverified**)
 - [docs/adr/](docs/adr/): decisions already made (ADR-0003 is the stack; ADR-0004 is zod for provider replies; ADR-0005 is the library scope, baseline cutoff and tiered polling). Don't relitigate without a new ADR.
 
-The owner is **new to React**: when writing UI code, favour clear, idiomatic code and short "why" comments on hooks and state; explain non-obvious React concepts in your replies.
+The owner is **new to React**: when writing UI code, favour clear, idiomatic code and explain non-obvious React concepts in your replies.
 
 ## Repo layout (short)
 
@@ -57,10 +57,11 @@ Status: the scaffold is real and verified (lint, typecheck, 431 tests, productio
 ## Style
 
 - TypeScript strict (`noUncheckedIndexedAccess` on), no `any`; prefer `interface` for object shapes, string-literal unions over enums, and `Record<Union, ...>` tables so the compiler enforces exhaustiveness
-- Prettier formatting (no semicolons, single quotes); ESLint must pass with zero warnings; fix rather than disable rules, and explain any disable in a comment
+- Prettier formatting (no semicolons, single quotes); ESLint must pass with zero warnings; fix rather than disable rules
 - React: function components and hooks; state as local as possible; effects must clean up after themselves; components under `features/<area>/`; shared UI in `components/`
 - Styling: Tailwind utility classes using the design tokens (`bg-surface-1`, `text-fg-muted`, `border-rarity-rare`...). **Don't name a colour token `base`, `sm`, `lg`, `xl` etc.** These collide with Tailwind's font-size utilities and silently break text colour. Never hard-code hex colours in components.
-- Match surrounding code; keep functions small; comments explain *why*
+- Match surrounding code; keep functions small
+- **No code comments** (the owner's choice): explanations go in the docs, mainly `docs/PROJECT-MAP.md`, and in your replies. Only tool directives stay: `/// <reference types=...>`, `// @vitest-environment jsdom`, and an `eslint-disable` if one is ever unavoidable (put the reason in the docs). Applied migration files keep theirs (rule 8)
 
 ## Project skills
 

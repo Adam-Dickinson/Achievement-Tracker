@@ -1,6 +1,5 @@
 import type { ToastPayload } from '@shared/ipc'
 
-// Sample unlocks, one per rarity tier, used by the "Send test notification" actions.
 const SAMPLE_TOASTS: readonly ToastPayload[] = [
   {
     heading: 'Achievement unlocked',
@@ -42,7 +41,6 @@ const SAMPLE_TOASTS: readonly ToastPayload[] = [
 
 let next = 0
 
-/** Returns the next sample toast, cycling through the rarity tiers. */
 export function nextSampleToast(): ToastPayload {
   const toast = SAMPLE_TOASTS[next % SAMPLE_TOASTS.length]!
   next += 1

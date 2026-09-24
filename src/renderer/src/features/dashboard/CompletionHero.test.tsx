@@ -11,9 +11,6 @@ describe('CompletionHero', () => {
     render(<CompletionHero unlocked={3482} total={5120} />)
 
     expect(screen.getByText('68%')).toBeInTheDocument()
-    // Grouping follows the machine's locale (e.g. "3,482" or "3 482" with a non-breaking space).
-    // A RegExp matcher is applied to the raw (non-normalized) text content, so normalize the
-    // locale's grouping character to a plain space ourselves before building the pattern.
     const unlocked = (3482).toLocaleString().replace(/\s/g, ' ')
     const total = (5120).toLocaleString().replace(/\s/g, ' ')
     expect(screen.getByText(new RegExp(unlocked))).toBeInTheDocument()

@@ -23,7 +23,6 @@ function item(template: MenuItemConstructorOptions[], label: RegExp): MenuItemCo
   return found
 }
 
-// Electron flips a checkbox's `checked` before calling click with the item.
 function click(entry: MenuItemConstructorOptions, checked = false): void {
   entry.click?.({ checked } as MenuItem, undefined, {} as never)
 }

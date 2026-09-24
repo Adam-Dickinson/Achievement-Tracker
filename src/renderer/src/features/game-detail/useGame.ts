@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { GameDetail } from '@shared/library'
 
-/** undefined while loading, null if there is no such game. */
 export function useGame(id: number) {
   const [game, setGame] = useState<GameDetail | null | undefined>(undefined)
-  // Bumped when the main process says synced data changed, which re-runs the fetch below.
   const [version, setVersion] = useState(0)
 
   useEffect(() => {

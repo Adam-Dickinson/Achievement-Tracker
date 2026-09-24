@@ -50,7 +50,6 @@ function achievement(
   }
 }
 
-/** Adds a game with `total` achievements, the first ones unlocked at the given times. */
 function seedGame(
   externalId: string,
   title: string,

@@ -235,7 +235,6 @@ export function listAccountSummaries(db: DatabaseSync): AccountSummary[] {
   }))
 }
 
-/** Accounts the scheduler should poll. One needing re-login or disabled is left alone. */
 export function listConnectedAccounts(db: DatabaseSync): AccountRow[] {
   const rows = db
     .prepare("SELECT id, platform, external_id FROM account WHERE status = 'connected' ORDER BY id")
@@ -267,7 +266,6 @@ export function upsertAccount(
   return { id: row.id, platform: account.platform, externalId: account.externalId }
 }
 
-// Only adds or updates: a game missing from `games` keeps its row (SPEC §5).
 export function addPlatformGames(
   db: DatabaseSync,
   account: AccountRow,
@@ -321,7 +319,6 @@ export function addPlatformGames(
   return added
 }
 
-/** The external ids of every game known for an account: each is one `game:<id>` sync scope. */
 export function listPlatformGameExternalIds(db: DatabaseSync, accountId: number): string[] {
   const rows = db
     .prepare('SELECT external_id FROM platform_game WHERE account_id = ? ORDER BY id')

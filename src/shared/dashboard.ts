@@ -6,9 +6,7 @@ export interface DashboardStats {
   readonly gamesTracked: number
   readonly completedGames: number
   readonly unlockedThisWeek: number
-  /** Unfinished games closest to 100%, closest first. */
   readonly nearlyThere: readonly LibraryGame[]
-  /** Newest first. Only unlocks the platform dated. */
   readonly recentUnlocks: readonly RecentUnlock[]
 }
 

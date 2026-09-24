@@ -18,7 +18,6 @@ function game(id: number, title: string, unlocked: number, total: number): Libra
   }
 }
 
-// In the order the main process sends them: most recently unlocked first.
 const GAMES = [game(1, 'Portal', 5, 10), game(2, 'Celeste', 10, 10), game(3, 'Hades', 0, 0)]
 
 const listLibrary = vi.fn<() => Promise<LibraryGame[]>>()

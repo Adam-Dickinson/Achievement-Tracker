@@ -28,7 +28,6 @@ interface FakeReply {
   readonly type?: string
 }
 
-// Steam as captured: each endpoint answers from its fixture unless a test overrides it.
 const DEFAULT_REPLIES: Record<string, FakeReply> = {
   '/ISteamUser/GetPlayerSummaries/v2/': { body: fixtureText('player-summaries.json') },
   '/IPlayerService/GetOwnedGames/v1/': { body: fixtureText('owned-games.json') },
@@ -253,7 +252,6 @@ describe('SteamProvider', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  // SPEC F-16 with the real provider: the first sync is silent, and a later unlock is one event.
   it('keeps the baseline rule through a real sync pass', async () => {
     const db = new DatabaseSync(':memory:')
     applyMigrations(db)

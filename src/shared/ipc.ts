@@ -1,6 +1,3 @@
-// The contract between the main process and the UI. Channel names and payload types live here
-// so both sides import the same definitions (docs/SPEC.md §6).
-
 import type { DashboardStats } from './dashboard'
 import type { GameDetail, LibraryGame } from './library'
 import type { AccountStatus } from './models'
@@ -21,30 +18,23 @@ export const IPC = {
 
 export interface AppInfo {
   readonly version: string
-  /** Database schema version (SQLite `user_version`). */
   readonly schemaVersion: number
 }
 
-/** Everything the overlay needs to draw one unlock toast. */
 export interface ToastPayload {
-  /** The line above the title, such as "Achievement unlocked" or "7 achievements unlocked". */
   readonly heading: string
   readonly rarity: Rarity
   readonly title: string
-  /** Null for hidden achievements, which have none. */
   readonly description: string | null
   readonly game: string
   readonly platform: string
-  /** Share of players who have it, when the platform says. */
   readonly percent: number | null
 }
 
-/** A toast on screen. The id stays the same while it is shown, so React can animate it. */
 export interface VisibleToast extends ToastPayload {
   readonly id: number
 }
 
-/** One connected account, as the Accounts screen shows it. Never carries the key. */
 export interface AccountSummary {
   readonly id: number
   readonly platform: Platform
@@ -53,7 +43,6 @@ export interface AccountSummary {
   readonly gameCount: number
 }
 
-/** What the Steam connect form sends. The key crosses as a plain string once, UI to main. */
 export interface SteamConnectInput {
   readonly steamId: string
   readonly apiKey: string
@@ -61,23 +50,18 @@ export interface SteamConnectInput {
 
 export type ConnectFailure = 'invalid_input' | 'key_rejected' | 'network' | 'other'
 
-// A result rather than a thrown error: across IPC an error keeps only its message text.
 export type ConnectResult =
   | { readonly ok: true; readonly account: AccountSummary }
   | { readonly ok: false; readonly reason: ConnectFailure; readonly message: string }
 
-/** What the preload script exposes to the UI as `window.api`. */
 export interface AchievementTrackerApi {
   getAppInfo(): Promise<AppInfo>
   sendTestNotification(): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
   listLibrary(): Promise<LibraryGame[]>
-  /** Null if there is no game with that id. */
   getGame(id: number): Promise<GameDetail | null>
   getDashboard(): Promise<DashboardStats>
-  /** Called when synced data may have changed (accounts, games, unlocks). Returns an unsubscribe function. */
   onDataChanged(listener: () => void): () => void
-  /** Subscribe to the toasts on screen, oldest first (used by the overlay window). Returns an unsubscribe function. */
   onToasts(listener: (toasts: readonly VisibleToast[]) => void): () => void
 }

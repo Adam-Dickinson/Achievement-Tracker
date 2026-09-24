@@ -5,7 +5,6 @@ interface CompletionHeroProps {
   total: number
 }
 
-/** The Dashboard's headline: overall completion as a big percentage and a progress bar. */
 export function CompletionHero({ unlocked, total }: CompletionHeroProps) {
   const percent = completionPercent(unlocked, total)
 

@@ -90,7 +90,6 @@ describe('GameDetail', () => {
     expect(screen.getByText('50%')).toBeInTheDocument()
     expect(screen.getByText('2 achievements left')).toBeInTheDocument()
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50')
-    // The rarest unlocked one, not the rarer locked one.
     expect(screen.getAllByText('Achievement 2')).toHaveLength(2)
   })
 

@@ -32,8 +32,6 @@ function unlock(achievementExternalId: string): RemoteUnlock {
   return { achievementExternalId, unlockedAt: null, progress: null }
 }
 
-// A provider whose fetchGame returns whatever the test hands it. The other methods are never
-// called by a sync pass, so they fail loudly if that ever changes.
 function fakeProvider(fetchGame: AchievementProvider['fetchGame']): AchievementProvider {
   const notUsed = (): never => {
     throw new Error('not used by a sync pass')
@@ -58,7 +56,6 @@ function returning(data: RemoteGameAchievements): AchievementProvider {
   return fakeProvider(() => Promise.resolve(data))
 }
 
-// One account and one known game ('g1', titled Hades) whose first sync has not happened yet.
 function seedDb(): DatabaseSync {
   const db = new DatabaseSync(':memory:')
   applyMigrations(db)
@@ -220,14 +217,13 @@ describe('runSyncPass', () => {
 
   it('rolls everything back if the pass fails partway through the transaction', async () => {
     const db = seedDb()
-    // The schema has a1, but the unlock points at an achievement the provider never described.
     const provider = returning({ achievements: [achievement('a1')], unlocks: [unlock('missing')] })
 
     await expect(runSyncPass(db, getAccount(db, 1), 'g1', provider, CREDENTIALS)).rejects.toThrow()
 
-    expect(count(db, 'achievement')).toBe(0) // the upsert before the failure was undone
+    expect(count(db, 'achievement')).toBe(0)
     expect(count(db, 'unlock')).toBe(0)
-    expect(baselineDone(db)).toBe(0) // still a first sync next time
+    expect(baselineDone(db)).toBe(0)
   })
 
   it('passes a provider error straight through, leaving the database untouched', async () => {

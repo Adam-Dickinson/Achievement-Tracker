@@ -5,7 +5,6 @@ import { rarityFromPercent } from '@shared/rarity'
 
 export const TOAST_DURATION_MS = 5000
 export const MAX_VISIBLE = 3
-/** More unlocks than this in one go collapse into a single toast (docs/DESIGN.md §6). */
 export const BURST_SIZE = 5
 
 export interface NotificationServiceDeps {
@@ -23,10 +22,6 @@ interface Shown extends Pending {
   readonly timer: ReturnType<typeof setTimeout>
 }
 
-/**
- * Decides which toasts are on screen: at most MAX_VISIBLE at once, each for durationMs, the rest
- * waiting in order. The overlay only draws the list it is given.
- */
 export class NotificationService {
   readonly #display: (toasts: readonly VisibleToast[]) => void
   readonly #durationMs: number
@@ -40,7 +35,6 @@ export class NotificationService {
     this.#durationMs = deps.durationMs ?? TOAST_DURATION_MS
   }
 
-  /** While paused, unlocks are not shown (they are still recorded by the sync engine). */
   get paused(): boolean {
     return this.#paused
   }
@@ -64,7 +58,6 @@ export class NotificationService {
     this.#fill()
   }
 
-  /** Queues a toast that isn't an unlock, such as the test notification. Shown even while paused. */
   show(toast: ToastPayload): void {
     this.#queue.push({ key: null, toast })
     this.#fill()
@@ -121,7 +114,6 @@ export function unlockToast(event: UnlockEvent): ToastPayload {
   }
 }
 
-/** One toast standing in for a burst, led by its rarest unlock. */
 export function burstToast(events: readonly UnlockEvent[]): ToastPayload {
   const [rarest, ...rest] = [...events].sort(
     (a, b) => (a.achievement.globalPercent ?? 101) - (b.achievement.globalPercent ?? 101),
@@ -139,7 +131,6 @@ export function burstToast(events: readonly UnlockEvent[]): ToastPayload {
   }
 }
 
-// One decimal place, or two below 1% so a very rare unlock doesn't read as 0%.
 function roundPercent(percent: number): number {
   const scale = percent < 1 ? 100 : 10
   return Math.round(percent * scale) / scale

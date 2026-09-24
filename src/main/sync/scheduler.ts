@@ -19,7 +19,6 @@ import { backoffDelayMs, withJitter } from './backoff'
 import { runSyncPass } from './sync-pass'
 
 export const SYNC_INTERVAL_MS = 5 * 60_000
-// Games not played lately can't unlock anything, so they are only checked now and then.
 export const IDLE_INTERVAL_MS = 6 * 60 * 60_000
 export const LIBRARY_SCOPE = 'library'
 
@@ -31,11 +30,9 @@ export interface SchedulerDeps {
   readonly providers: Partial<Record<Platform, AchievementProvider>>
   readonly secrets: SecretStore
   readonly onUnlocks: (events: UnlockEvent[]) => void
-  /** Called when synced data may have changed: games found, a game synced, or a lost login. */
   readonly onDataChanged?: () => void
   readonly intervalMs?: number
   readonly now?: () => Date
-  /** Source of randomness for retry jitter; tests pass a fixed one. */
   readonly random?: () => number
 }
 
@@ -84,7 +81,6 @@ export class Scheduler {
     this.#timers.clear()
   }
 
-  /** Syncs an account now (just connected, or reconnected), then keeps its loop going. */
   startAccount(accountId: number): void {
     if (!this.#running || this.#inRound.has(accountId)) return
     clearTimeout(this.#timers.get(accountId))
@@ -111,7 +107,6 @@ export class Scheduler {
       return outcome === 'stop' ? null : outcome
     }
 
-    // New games announce unlocks made since the last look; on the very first look, none (F-16).
     let added: number
     this.#db.exec('BEGIN')
     try {
@@ -152,7 +147,6 @@ export class Scheduler {
       if (signal.aborted) return null
 
       const scope = `game:${gameId}`
-      // Until the library has been read, treat every game as recent rather than miss an unlock.
       const isRecent = recent === undefined || recent.has(gameId)
       const state = getSyncState(this.#db, account.id, scope)
       let dueAt = this.#dueAt(state, isRecent)
@@ -199,7 +193,7 @@ export class Scheduler {
     try {
       events = await runSyncPass(this.#db, account, gameId, provider, credentials, signal)
     } catch (err) {
-      if (signal.aborted) return 'stop' // cancelled by stop(): not a failure worth recording
+      if (signal.aborted) return 'stop'
       return this.#recordFailure(account, scope, attemptKey, previous, err)
     }
 

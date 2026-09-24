@@ -13,7 +13,6 @@ import {
   toGameAchievements,
 } from './parse'
 
-// Sanitized real responses; see docs/PROVIDERS.md (Steam) for how they were captured.
 function fixture(name: string): unknown {
   return JSON.parse(readFileSync(resolve('tests/fixtures/steam', name), 'utf8'))
 }

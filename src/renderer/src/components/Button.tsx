@@ -11,7 +11,6 @@ const VARIANTS: Record<Variant, string> = {
   secondary: 'bg-surface-2 text-fg border border-line hover:bg-surface-3',
 }
 
-/** A button in the design system's style. Extra props (onClick, disabled...) pass straight through. */
 export function Button({ variant = 'primary', className = '', ...props }: ButtonProps) {
   return (
     <button

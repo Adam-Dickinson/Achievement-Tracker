@@ -3,14 +3,9 @@ import { useEffect, useState } from 'react'
 import type { VisibleToast } from '@shared/ipc'
 import { Toast } from './Toast'
 
-/**
- * Root of the overlay window: draws the toasts the main process says are on screen, newest at
- * the bottom. The main process decides when each appears and leaves (notifications.ts).
- */
 export function OverlayApp() {
   const [toasts, setToasts] = useState<readonly VisibleToast[]>([])
 
-  // onToasts returns its unsubscribe function, which React calls as the cleanup on unmount.
   useEffect(() => window.api.onToasts(setToasts), [])
 
   return (

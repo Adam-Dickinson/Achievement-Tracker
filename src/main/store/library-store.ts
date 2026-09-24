@@ -3,8 +3,6 @@ import type { DashboardStats } from '@shared/dashboard'
 import type { GameAchievement, GameDetail, LibraryGame, RecentUnlock } from '@shared/library'
 import type { Platform } from '@shared/platform'
 
-// Read-only queries for the Library, Game detail and Dashboard screens.
-
 const NEARLY_THERE_COUNT = 4
 const RECENT_UNLOCK_COUNT = 6
 const WEEK_MS = 7 * 24 * 60 * 60_000
@@ -27,7 +25,6 @@ const LIBRARY_GAMES = `
   LEFT JOIN achievement a ON a.platform_game_id = pg.id
   LEFT JOIN unlock u ON u.achievement_id = a.id`
 
-/** Every game on every platform, most recently unlocked first (SQLite sorts NULL last), then by title. */
 export function listLibraryGames(db: DatabaseSync): LibraryGame[] {
   const rows = db
     .prepare(
@@ -39,7 +36,6 @@ export function listLibraryGames(db: DatabaseSync): LibraryGame[] {
   return rows.map(toLibraryGame)
 }
 
-/** One game and all its achievements, or null if there is no such game. */
 export function getGameDetail(db: DatabaseSync, platformGameId: number): GameDetail | null {
   const row = db.prepare(`${LIBRARY_GAMES} WHERE pg.id = ? GROUP BY pg.id`).get(platformGameId) as
     LibraryGameRecord | undefined

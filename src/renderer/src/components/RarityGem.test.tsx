@@ -7,10 +7,8 @@ import { RarityGem } from './RarityGem'
 
 afterEach(cleanup)
 
-// Derived from the label table, so a rarity added later is covered without editing this test.
 const RARITIES = Object.keys(RARITY_LABEL) as Rarity[]
 
-/** Renders one gem and returns its <svg>, plus the markup for comparing shapes. */
 function renderGem(rarity: Rarity, className?: string) {
   const { container, unmount } = render(<RarityGem rarity={rarity} className={className} />)
   const svg = container.querySelector('svg')

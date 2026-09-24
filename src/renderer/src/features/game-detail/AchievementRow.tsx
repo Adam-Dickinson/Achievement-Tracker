@@ -11,7 +11,6 @@ interface AchievementRowProps {
 
 export function AchievementRow({ achievement }: AchievementRowProps) {
   const { unlocked, globalPercent } = achievement
-  // A hidden achievement keeps its secret until it is unlocked.
   const secret = achievement.hidden && !unlocked
   const rarity = globalPercent === null ? 'common' : rarityFromPercent(globalPercent)
   const highlight = unlocked && rarity === 'ultra_rare'
