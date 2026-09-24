@@ -1,6 +1,6 @@
 # Achievement Tracker
 
-A lightweight desktop app that tracks your achievements and trophies across **PlayStation, Xbox, Steam, Epic Games, Ubisoft Connect, EA** and **emulators** in one place. It runs quietly in the system tray and pops up a notification the moment you unlock something, whichever platform it came from.
+A lightweight desktop app that tracks your achievements and trophies across **PlayStation, Xbox, Steam, Epic Games, Ubisoft Connect** and **EA** in one place, with emulators planned after v1. It runs quietly in the system tray and pops up a notification the moment you unlock something, whichever platform it came from.
 
 > **Status:** Pre-alpha. The project scaffold, docs and UI mockups are in place, and the tray icon and animated, click-through unlock toast work; features start at [roadmap](docs/ROADMAP.md) milestone M1.
 
@@ -19,12 +19,11 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 | Steam | Web API + local stats files | Yes | High |
 | Xbox | Xbox Live API | Polling | Medium |
 | PlayStation | PSN trophy API (unofficial) | Polling | Medium |
-| RetroAchievements (RetroArch, PPSSPP, DuckStation, Dolphin, PCSX2) | RA Web API | Polling | High |
-| RPCS3 (PS3) | Local trophy files | Yes | Medium |
-| Xenia (Xbox 360) | Local files | Yes | Low, needs spike |
 | Epic Games | Research needed | n/a | Low |
 | Ubisoft Connect | Research needed | n/a | Low |
 | EA app | Research needed | n/a | Very low |
+
+After v1: RetroAchievements (RetroArch, PPSSPP, DuckStation, Dolphin, PCSX2), RPCS3 (PS3) and Xenia (Xbox 360).
 
 Details and risks for each: [docs/PROVIDERS.md](docs/PROVIDERS.md).
 

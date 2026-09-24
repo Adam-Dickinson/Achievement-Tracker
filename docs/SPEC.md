@@ -12,9 +12,9 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | F-01 | Connect/disconnect an account per platform; multiple accounts per platform allowed later | P0 |
 | F-02 | Store credentials in OS keychain; never log them | P0 |
 | F-03 | Detect expired/invalid auth and prompt re-auth without losing data | P0 |
-| F-04 | Providers: Steam, Xbox, PlayStation, RetroAchievements, RPCS3 | P0/P1 |
-| F-05 | Providers: Xenia, Epic, Ubisoft, EA (subject to research spikes) | P2 |
-| F-06 | Generic "local file watcher" adapter for user-defined emulator paths | P2 |
+| F-04 | Providers: Steam, Xbox, PlayStation | P0 |
+| F-05 | Providers: Epic, Ubisoft, EA (subject to research spikes) | P1 |
+| F-06 | Emulators: RetroAchievements, RPCS3, Xenia, and a generic "local file watcher" adapter for user-defined emulator paths (after v1, ADR-0006) | P2 |
 
 ### Sync
 | ID | Requirement | Pri |
@@ -284,7 +284,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 - **The overlay** only changes its own window; nothing is injected into other processes.
 - **Updates:** auto-update packages signed; signature verified before install (M6).
 - **Local files:** parse untrusted files (trophy/stats binaries) defensively, with size limits, throwing `ProviderError('parse', ...)` rather than crashing.
-- **Dependencies:** keep them patched (`npm audit` in CI is a candidate for M4).
+- **Dependencies:** keep them patched (`npm audit` in CI is a candidate for M5).
 
 ## 9. Testing strategy
 
