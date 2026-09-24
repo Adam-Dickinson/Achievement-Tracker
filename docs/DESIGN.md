@@ -26,7 +26,7 @@ One place to see every achievement and trophy you've ever earned, on any platfor
 |---|---|
 | **Completionist** | Cross-platform completion %, rarest achievements, what's left in each game |
 | **Multi-platform player** | Same game on PS5 + Steam: one merged entry |
-| **Emulation enthusiast** | Trophies/achievements from RPCS3, RetroArch, etc., which have no official home |
+| **Emulation enthusiast** (after v1) | Trophies/achievements from RPCS3, RetroArch, etc., which have no official home |
 | **Casual streamer** | Good-looking, configurable notification pop-up that shows in capture |
 
 ## 4. Core user flows

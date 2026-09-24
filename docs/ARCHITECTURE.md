@@ -81,7 +81,7 @@ The queue and timers live in the main process, not the overlay page, so they are
 - One `BrowserWindow`, **created hidden at startup** (so a toast appears instantly) and reused
 - Options: `transparent`, `frame: false`, `alwaysOnTop` at the `screen-saver` level, `skipTaskbar`, `focusable: false`, `hasShadow: false`, not resizable/movable
 - `setIgnoreMouseEvents(true)` makes it click-through. Verified on Windows: the window carries `WS_EX_TRANSPARENT` (click-through) and `WS_EX_NOACTIVATE` (never takes focus). Shown with `showInactive()` so it never activates.
-- `OverlayService` positions it in the bottom-right of the primary display's **work area** (DIP coordinates from `screen.getPrimaryDisplay()`), 16 px from the edges. Corner and monitor selection are settings (M4).
+- `OverlayService` positions it in the bottom-right of the primary display's **work area** (DIP coordinates from `screen.getPrimaryDisplay()`), 16 px from the edges. Corner and monitor selection are settings (M5).
 - Sized for three stacked toasts (480x396 DIPs, `OVERLAY_SIZE`); shown while any toast is on screen and hidden once the list is empty and the exit animation has played
 - Exclusive-fullscreen games render above normal windows, so a fallback native Windows notification is planned (DESIGN §6)
 - The toast (`overlay/Toast.tsx`) picks its colours from a per-rarity lookup table and animates with Motion (slide + fade; a one-off shimmer for Ultra Rare; only a fade if the OS requests reduced motion)

@@ -214,7 +214,7 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
   - [api.ts](../src/main/providers/steam/api.ts): `steamGet()`, the only code that calls Steam. Turns HTTP failures into `ProviderError` kinds (HTML 401/403 = `auth_expired`, 429 = `rate_limited`, 5xx and connection failures = `network`) and hands any JSON body, even on a 400/403, to the parsers. Never puts the URL (which holds the key) in an error.
   - [parse.ts](../src/main/providers/steam/parse.ts): zod schemas for each reply (ADR-0004) and the mapping to `Remote*` types.
   - Tests beside each, using the fixtures in `tests/fixtures/steam/` and a stubbed `fetch`.
-- `xbox/`, `playstation/`, `retroachievements/`, `rpcs3/`, `xenia/`, `epic/`, `ubisoft/`, `ea/`, `local-file/`: Stubs. Each contains an `index.ts` with a comment describing the plan and `export {}`. Next are RetroAchievements, RPCS3 and Xbox (M2). Providers are pure adapters: they return `Remote*` objects and never touch SQL, notifications or the UI. Notes on each platform are in [PROVIDERS.md](PROVIDERS.md); endpoints there are unverified until you capture a real response.
+- `xbox/`, `playstation/`, `retroachievements/`, `rpcs3/`, `xenia/`, `epic/`, `ubisoft/`, `ea/`, `local-file/`: Stubs. Each contains an `index.ts` with a comment describing the plan and `export {}`. Next is Xbox (M2), then PlayStation (M3) and Epic, Ubisoft and EA (M4); the emulator stubs (`retroachievements/`, `rpcs3/`, `xenia/`, `local-file/`) wait until after v1 (ADR-0006). Providers are pure adapters: they return `Remote*` objects and never touch SQL, notifications or the UI. Notes on each platform are in [PROVIDERS.md](PROVIDERS.md); endpoints there are unverified until you capture a real response.
 
 ### 4.3 `src/preload/`: the bridge (Real)
 
@@ -355,9 +355,9 @@ Rules and traps:
 | [SPEC.md](SPEC.md) | Requirements (functional and non-functional), the full DB schema (§3), the provider interface (§4), the sync algorithm (§5), the IPC contract (§6), settings defaults, security and testing strategy. |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Code areas and the dependency rule (§2), key data flows (§3), concurrency, overlay window details (§5), the planned folder structure (§6), technology summary (§7), extension points (§8). |
 | [PROVIDERS.md](PROVIDERS.md) | Per-platform notes and risks. **Endpoints are unverified**: confirm against a real response before coding. |
-| [ROADMAP.md](ROADMAP.md) | Milestones M0 to M6 and what is ticked off. |
+| [ROADMAP.md](ROADMAP.md) | Milestones M0 to M6, what is ticked off, and the emulators planned for after v1. |
 | [SCAFFOLD-GUIDE.md](SCAFFOLD-GUIDE.md) | A React and Electron primer using this code, a command cheat sheet, and known gaps. |
-| [adr/](adr/) | Architecture decision records. ADR-0003 (Electron, TypeScript, React) is the current stack; ADR-0004 (zod for provider replies) and ADR-0005 (library scope, baseline cutoff, tiered polling) add to it; 0001 and 0002 are superseded. |
+| [adr/](adr/) | Architecture decision records. ADR-0003 (Electron, TypeScript, React) is the current stack; ADR-0004 (zod for provider replies) and ADR-0005 (library scope, baseline cutoff, tiered polling) add to it; ADR-0006 sets the v1 providers (launchers and consoles; emulators after v1); 0001 and 0002 are superseded. |
 | [design/README.md](design/README.md) | The canvas link, the draft ids for each screen, and which file each screen becomes. |
 | `design/mockups/*.html` | Seven static snapshots (dashboard, library, game detail, toast, accounts, notification settings, onboarding). **Out of date:** they show the earlier gold-on-navy look. The canvas is the source of truth until they are re-exported. |
 | PROJECT-MAP.md | This file. |
