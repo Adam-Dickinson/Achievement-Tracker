@@ -18,9 +18,6 @@ import {
   upsertSyncState,
 } from './sync-store'
 
-// Seeds a database with the rows every test below builds on: one account, one canonical game,
-// one platform_game (baseline not yet done). Real schema, via the real migrations -- not a
-// hand-rolled table -- so these tests fail if a migration and this file ever drift apart.
 function seedDb(): DatabaseSync {
   const db = new DatabaseSync(':memory:')
   applyMigrations(db)
@@ -138,11 +135,11 @@ describe('insertNewUnlocks', () => {
     const unlock = { achievementExternalId: 'ach1', unlockedAt: new Date(), progress: null }
 
     const firstPass = insertNewUnlocks(db, 1, [unlock])
-    const secondPass = insertNewUnlocks(db, 1, [unlock]) // same provider data next time
+    const secondPass = insertNewUnlocks(db, 1, [unlock])
 
     expect(firstPass).toHaveLength(1)
     expect(secondPass).toHaveLength(0)
-    expect(db.prepare('SELECT * FROM unlock').all()).toHaveLength(1) // still one row
+    expect(db.prepare('SELECT * FROM unlock').all()).toHaveLength(1)
   })
 
   it('throws rather than silently dropping an unlock for an unknown achievement', () => {
@@ -289,7 +286,6 @@ describe('sync-store pipeline (the baseline rule end to end)', () => {
   it('a first sync records history silently; a later sync reports only the genuinely new unlock', () => {
     const db = seedDb()
 
-    // First sync: an already-unlocked achievement must not read as "new" once baseline is set.
     upsertAchievements(db, 1, [
       {
         externalId: 'ach1',
@@ -308,10 +304,9 @@ describe('sync-store pipeline (the baseline rule end to end)', () => {
     ])
     setBaselineDone(db, 1)
 
-    expect(db.prepare('SELECT * FROM unlock').all()).toHaveLength(1) // history preserved
+    expect(db.prepare('SELECT * FROM unlock').all()).toHaveLength(1)
     expect(getPlatformGameByExternalId(db, 1, 'g1').baselineDone).toBe(true)
 
-    // Second sync: a genuinely new achievement unlocks alongside the already-known one.
     upsertAchievements(db, 1, [
       {
         externalId: 'ach2',
@@ -365,6 +360,7 @@ describe('listAccountSummaries', () => {
         ref: { externalId: '1' },
         title: 'A',
         iconUrl: null,
+        coverUrl: null,
         lastPlayed: null,
         recentlyPlayed: false,
       },
@@ -372,6 +368,7 @@ describe('listAccountSummaries', () => {
         ref: { externalId: '2' },
         title: 'B',
         iconUrl: null,
+        coverUrl: null,
         lastPlayed: null,
         recentlyPlayed: false,
       },
@@ -463,6 +460,7 @@ describe('addPlatformGames', () => {
       ref: { externalId },
       title: `Game ${externalId}`,
       iconUrl: `https://img/${externalId}.jpg`,
+      coverUrl: `https://img/${externalId}-cover.jpg`,
       lastPlayed: new Date('2026-09-01T12:00:00Z'),
       recentlyPlayed: false,
       ...overrides,
@@ -525,6 +523,21 @@ describe('addPlatformGames', () => {
     addPlatformGames(db, account, [remoteGame('1'), remoteGame('2')])
 
     expect(platformGames(db).map((game) => game.game_id)).toEqual([1, 2])
+  })
+
+  it('stores the cover on the game, and updates it when a later list has one', () => {
+    const { db, account } = setup()
+    const cover = (): unknown =>
+      (db.prepare('SELECT cover_url FROM game').get() as { cover_url: string | null }).cover_url
+
+    addPlatformGames(db, account, [remoteGame('1', { coverUrl: null })])
+    expect(cover()).toBeNull()
+
+    addPlatformGames(db, account, [remoteGame('1')])
+    expect(cover()).toBe('https://img/1-cover.jpg')
+
+    addPlatformGames(db, account, [remoteGame('1', { coverUrl: null })])
+    expect(cover()).toBe('https://img/1-cover.jpg')
   })
 
   it('stores a never-played game, or one without an icon, with nulls', () => {

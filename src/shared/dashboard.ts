@@ -1,9 +1,13 @@
+import type { LibraryGame, RecentUnlock } from './library'
+
 export interface DashboardStats {
   readonly unlockedAchievements: number
   readonly totalAchievements: number
   readonly gamesTracked: number
   readonly completedGames: number
   readonly unlockedThisWeek: number
+  readonly nearlyThere: readonly LibraryGame[]
+  readonly recentUnlocks: readonly RecentUnlock[]
 }
 
 export function completionPercent(unlocked: number, total: number): number {

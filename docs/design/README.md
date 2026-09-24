@@ -10,10 +10,10 @@ Static HTML snapshots live in [`mockups/`](mockups/); open them directly in a br
 
 | Screen | Snapshot | Superdesign draft id | Build under `src/renderer/src/` |
 |---|---|---|---|
-| Dashboard | [dashboard.html](mockups/dashboard.html) | `8204918a-4869-4cec-ba73-bfe098a3887f` | `features/dashboard` (stats header — hero + tiles — built with sample data; Recent unlocks, Closest to 100%, Rarest and the platform breakdown still to build) |
-| Library | [library.html](mockups/library.html) | `aacf7ec7-8501-4806-9cc6-f648f81879ca` | `features/library` |
-| Game detail | [game-detail.html](mockups/game-detail.html) | `5b6a84ea-0715-41dd-a09c-2db27bc83791` | `features/game-detail` |
-| Unlock toast (overlay) | [unlock-toast.html](mockups/unlock-toast.html) | `4d4e0785-71b2-4354-9da8-d98c9f6f2ecd` | `overlay/Toast.tsx` (built in the Afterglow look; platform badge, stacking and queue still to do) |
+| Dashboard | [dashboard.html](mockups/dashboard.html) | `8204918a-4869-4cec-ba73-bfe098a3887f` | `features/dashboard` (built on real data: hero, tiles, "Nearly there", Recent unlocks; the rarest-unlock card, platform breakdown and weekly chart still to build) |
+| Library | [library.html](mockups/library.html) | `aacf7ec7-8501-4806-9cc6-f648f81879ca` | `features/library` (built: grid with colour-in covers and sort; platform filters, search and the portrait/list views still to do) |
+| Game detail | [game-detail.html](mockups/game-detail.html) | `5b6a84ea-0715-41dd-a09c-2db27bc83791` | `features/game-detail` (built: header, four tiles, filters, achievements rarest first; per-platform tabs, sort choice and "Open in Steam" still to do) |
+| Unlock toast (overlay) | [unlock-toast.html](mockups/unlock-toast.html) | `4d4e0785-71b2-4354-9da8-d98c9f6f2ecd` | `overlay/Toast.tsx` (built in the Afterglow look, stacking up to 3; platform badge still to do) |
 | Accounts | [accounts.html](mockups/accounts.html) | `f60bd2ff-5180-436e-97a4-61e92c890a8e` | `features/accounts` |
 | Notification settings | [notification-settings.html](mockups/notification-settings.html) | `c9f50582-a106-431f-8aba-e265a2b2985a` | `features/settings` |
 | Onboarding | [onboarding.html](mockups/onboarding.html) | `3b7abd38-f288-40e1-8a11-0b651ab8e5ba` | `features/onboarding` |

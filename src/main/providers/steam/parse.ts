@@ -9,6 +9,7 @@ import type {
 } from '@shared/models'
 
 const STEAM_APP_IMAGES = 'https://media.steampowered.com/steamcommunity/public/images/apps'
+const STEAM_STORE_ART = 'https://cdn.akamai.steamstatic.com/steam/apps'
 
 const percentSchema = z
   .union([z.number(), z.string().trim().min(1).pipe(z.coerce.number())])
@@ -46,7 +47,6 @@ const schemaResponseSchema = z.object({
 const playerAchievementSchema = z.object({
   apiname: achievementIdSchema,
   achieved: flagSchema,
-  // Unix seconds; 0 while locked.
   unlocktime: z.number().int().min(0),
 })
 
@@ -66,7 +66,6 @@ const ownedGameSchema = z.object({
   appid: z.number().int().positive(),
   name: z.string(),
   img_icon_url: z.string(),
-  // Steam leaves this out rather than sending false.
   has_community_visible_stats: z.boolean().optional(),
   rtime_last_played: z.number().int().min(0),
 })
@@ -133,7 +132,6 @@ export function parseLibrary(ownedJson: unknown, recentJson: unknown): RemoteGam
   const ownedIds = new Set(owned.map((game) => game.appid))
   const recentIds = new Set(recent.map((game) => game.appid))
   const withStats = owned.filter((game) => game.has_community_visible_stats === true)
-  // Games borrowed through Steam Families only show up here (docs/PROVIDERS.md).
   const notOwned = recent.filter((game) => !ownedIds.has(game.appid))
   return [...withStats, ...notOwned].map((game) => toRemoteGame(game, recentIds.has(game.appid)))
 }
@@ -177,6 +175,7 @@ function toRemoteGame(game: SteamLibraryGame, recentlyPlayed: boolean): RemoteGa
     ref: { externalId: String(game.appid) },
     title: game.name,
     iconUrl: iconHash === null ? null : `${STEAM_APP_IMAGES}/${game.appid}/${iconHash}.jpg`,
+    coverUrl: `${STEAM_STORE_ART}/${game.appid}/header.jpg`,
     lastPlayed: fromUnixSeconds(game.rtime_last_played ?? 0),
     recentlyPlayed,
   }
@@ -193,7 +192,6 @@ function toRemoteAchievement(
     iconUrl: textOrNull(achievement.icon),
     iconLockedUrl: textOrNull(achievement.icongray),
     hidden: achievement.hidden === 1,
-    // Steam has no points or trophy grades.
     points: null,
     tier: null,
     globalPercent: percents.get(achievement.name) ?? null,

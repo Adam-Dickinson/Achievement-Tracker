@@ -11,6 +11,7 @@ describe('Toast', () => {
   it('shows the achievement, its game and platform, and a rarity label', () => {
     render(
       <Toast
+        heading="Achievement unlocked"
         rarity="ultra_rare"
         title="Lord of Frenzied Flame"
         description="Achieve the Lord of Frenzied Flame ending"
@@ -23,7 +24,6 @@ describe('Toast', () => {
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.getByText('Lord of Frenzied Flame')).toBeInTheDocument()
     expect(screen.getByText('Elden Ring · Steam')).toBeInTheDocument()
-    // Rarity is always shown as text, never by colour alone.
     expect(screen.getByText('Ultra Rare')).toBeInTheDocument()
     expect(screen.getByText('1.4%')).toBeInTheDocument()
   })
@@ -32,6 +32,7 @@ describe('Toast', () => {
     for (const rarity of Object.keys(RARITY_LABEL) as Rarity[]) {
       const { unmount } = render(
         <Toast
+          heading="Achievement unlocked"
           rarity={rarity}
           title="Fleet Footed"
           description="Win a race using only the starter car"
@@ -48,6 +49,7 @@ describe('Toast', () => {
   it('opens with "Achievement unlocked" and a rarity gem beside it', () => {
     render(
       <Toast
+        heading="Achievement unlocked"
         rarity="rare"
         title="Platinum Trophy"
         description="Earn all other trophies"
@@ -64,6 +66,7 @@ describe('Toast', () => {
   it('puts the whole card in its rarity colour scope', () => {
     render(
       <Toast
+        heading="Achievement unlocked"
         rarity="uncommon"
         title="Fleet Footed"
         description="Win a race using only the starter car"
@@ -74,5 +77,42 @@ describe('Toast', () => {
     )
 
     expect(screen.getByRole('status')).toHaveAttribute('data-rarity', 'uncommon')
+  })
+
+  it('shows the heading it is given, such as a burst count', () => {
+    render(
+      <Toast
+        heading="7 achievements unlocked"
+        rarity="rare"
+        title="Platinum Trophy"
+        description="and 6 more"
+        game="God of War"
+        platform="PlayStation"
+        percent={2.8}
+      />,
+    )
+
+    expect(screen.getByText('7 achievements unlocked')).toBeInTheDocument()
+    expect(screen.getByText('and 6 more')).toBeInTheDocument()
+  })
+
+  it('leaves out the description line and the percentage when there are none', () => {
+    render(
+      <Toast
+        heading="Achievement unlocked"
+        rarity="common"
+        title="Secret Ending"
+        description={null}
+        game="Hades"
+        platform="Steam"
+        percent={null}
+      />,
+    )
+
+    const card = screen.getByRole('status')
+    expect(card).toHaveTextContent('Secret Ending')
+    expect(card).not.toHaveTextContent('%')
+    expect(card).not.toHaveTextContent('null')
+    expect(screen.getByText('Common')).toBeInTheDocument()
   })
 })

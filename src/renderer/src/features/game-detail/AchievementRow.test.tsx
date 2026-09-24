@@ -1,0 +1,104 @@
+// @vitest-environment jsdom
+import '@testing-library/jest-dom/vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import type { GameAchievement } from '@shared/library'
+import { AchievementRow } from './AchievementRow'
+
+afterEach(cleanup)
+
+function achievement(overrides: Partial<GameAchievement> = {}): GameAchievement {
+  return {
+    id: 1,
+    name: 'Age of the Stars',
+    description: 'Reach the ending in which Ranni becomes your consort.',
+    hidden: false,
+    iconUrl: 'https://icon/colour.jpg',
+    iconLockedUrl: 'https://icon/grey.jpg',
+    globalPercent: 1.2,
+    unlocked: true,
+    unlockedAt: new Date(2026, 2, 9, 12, 0),
+    ...overrides,
+  }
+}
+
+function renderRow(overrides: Partial<GameAchievement> = {}) {
+  return render(
+    <ul>
+      <AchievementRow achievement={achievement(overrides)} />
+    </ul>,
+  )
+}
+
+describe('AchievementRow', () => {
+  it('shows an unlocked achievement with its colour icon, date, percentage and rarity', () => {
+    const { container } = renderRow()
+
+    const row = screen.getByRole('listitem')
+    expect(row).toHaveTextContent('Age of the Stars')
+    expect(row).toHaveTextContent('Reach the ending')
+    expect(row).toHaveTextContent('1.2%')
+    expect(row).toHaveTextContent('Ultra Rare')
+    expect(row).toHaveTextContent(
+      new Date(2026, 2, 9).toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }),
+    )
+    expect(container.querySelector('img')).toHaveAttribute('src', 'https://icon/colour.jpg')
+    expect(row).toHaveAttribute('data-rarity', 'ultra_rare')
+  })
+
+  it('shows a locked achievement with its grey icon', () => {
+    const { container } = renderRow({ unlocked: false, unlockedAt: null })
+
+    expect(screen.getByRole('listitem')).toHaveTextContent('Locked')
+    expect(container.querySelector('img')).toHaveAttribute('src', 'https://icon/grey.jpg')
+  })
+
+  it('says Unlocked when the platform gave no date', () => {
+    renderRow({ unlockedAt: null })
+
+    expect(screen.getByRole('listitem')).toHaveTextContent('Unlocked')
+  })
+
+  it('keeps a hidden achievement secret until it is unlocked', () => {
+    const { container, rerender } = renderRow({
+      hidden: true,
+      unlocked: false,
+      unlockedAt: null,
+      description: null,
+    })
+    const row = screen.getByRole('listitem')
+    expect(row).toHaveTextContent('Hidden achievement')
+    expect(row).toHaveTextContent('revealed once you unlock it')
+    expect(row).not.toHaveTextContent('Age of the Stars')
+    expect(container.querySelector('img')).toBeNull()
+
+    rerender(
+      <ul>
+        <AchievementRow achievement={achievement({ hidden: true, description: null })} />
+      </ul>,
+    )
+    expect(screen.getByRole('listitem')).toHaveTextContent('Age of the Stars')
+  })
+
+  it('leaves out the percentage and rarity when the platform has none', () => {
+    renderRow({ globalPercent: null })
+
+    const row = screen.getByRole('listitem')
+    expect(row).not.toHaveTextContent('%')
+    expect(row).not.toHaveTextContent('Common')
+  })
+
+  it('falls back to a plain icon when the image fails to load', () => {
+    const { container } = renderRow()
+    const img = container.querySelector('img')
+    if (!img) throw new Error('expected the icon')
+
+    fireEvent.error(img)
+
+    expect(container.querySelector('img')).toBeNull()
+  })
+})

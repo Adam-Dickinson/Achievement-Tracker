@@ -7,7 +7,6 @@ import { SafeStorageSecretStore } from './safe-storage-secret-store'
 
 const KEY = '0123456789ABCDEF0123456789ABCDEF'
 
-// Stands in for Electron's safeStorage (DPAPI), which only works inside a running app.
 function fakeEncryptor(available = true) {
   return {
     isEncryptionAvailable: () => available,

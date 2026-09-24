@@ -214,14 +214,14 @@ Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watch
 | Outcome of a pass | `sync_state` | Next attempt |
 |---|---|---|
 | Success | `last_ok_at` = now, `last_error` cleared | normal interval (5 min, §7 `sync.intervalSec`), or the idle interval (6 h) for a game not played lately; backoff reset |
-| `ProviderError` that is retryable (`network`, `rate_limited`) | `last_error` set | exponential backoff, 30 s doubling to 30 min, or the platform's `retryAfterMs` if longer |
+| `ProviderError` that is retryable (`network`, `rate_limited`) | `last_error` set | exponential backoff, 30 s doubling to 30 min, or the platform's `retryAfterMs` if longer, plus up to 20% random jitter so failed games don't all retry at once |
 | `ProviderError('auth_expired')` | `last_error` set; `account.status` = `needs_reauth` | none: the account's loop stops until it is reconnected |
 | Any other error (`parse`, `unsupported`, a bug) | `last_error` set | normal interval |
 | Cancelled by `stop()` | unchanged | none |
 
 On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attempt counts live in memory only, so a restart starts them again.
 
-**Not built yet:** jitter on the backoff delay (F-15), fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14), and delivering `UnlockEvent`s to the notification service (`onUnlocks` is a no-op in `main/index.ts` until that exists).
+**Not built yet:** fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
 
 ## 6. IPC contract (main process ⇄ UI)
 
@@ -231,8 +231,12 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | API (`window.api`) | Channel | Description |
 |---|---|---|
 | `getAppInfo()` | `app:get-info` | App version and database schema version |
-| `sendTestNotification()` | `notifications:send-test` | Show the next sample toast (cycles rarity tiers) |
-| `onToast(listener)` | `overlay:show-toast` (main → overlay) | Subscribe to toasts; returns an unsubscribe function |
+| `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers) |
+| `listLibrary()` | `library:list` | Every game on every platform as a `LibraryGame` (cover, unlocked/total, last unlock), most recently unlocked first |
+| `getGame(id)` | `library:get-game` | One game and all its achievements (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
+| `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, "Nearly there" and recent unlocks |
+| `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
+| `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
 | `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
 | `connectSteam({ steamId, apiKey })` | `accounts:connect-steam` | Checks the key with Steam, saves the account (reconnecting keeps its id) and the key (`SecretStore`), and starts syncing it. Returns a `ConnectResult`: `{ ok: true, account }` or `{ ok: false, reason, message }` with `reason` `invalid_input`, `key_rejected`, `network` or `other`. A result rather than a thrown error, because across IPC an error keeps only its message |
 

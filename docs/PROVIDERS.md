@@ -41,6 +41,7 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 - **The ids line up:** schema `name` = player `apiname` = rarity `name`, with no extras on any side (checked on Resident Evil 2, 44 achievements).
 - **Titles:** use the `GetOwnedGames` name. The schema's `gameName` can differ ("RESIDENT EVIL 2 / BIOHAZARD RE:2" vs "Resident Evil 2").
 - **Game icon URL:** `https://media.steampowered.com/steamcommunity/public/images/apps/<appid>/<img_icon_url>.jpg` (HTTP 200, `image/jpeg`; the `cdn.cloudflare.steamstatic.com` host serves the same path).
+- **Game cover (store header, 460x215):** `https://cdn.akamai.steamstatic.com/steam/apps/<appid>/header.jpg`, built from the appid alone. Verified 2026-09-23: HTTP 200 `image/jpeg` for appids 400, 6060, 883710, 1245620, 1817070 and 2358720, old and new; `shared.akamai.steamstatic.com/store_item_assets/steam/apps/<appid>/header.jpg` and the `cdn.cloudflare` host serve the same file, and `library_hero.jpg` (a wide banner) exists for all six. A game with no store page may have none, and on 2026-09-23 four of 171 games in a real library (recent releases) returned 404 at this address: newer store art lives at a hashed path (`store_item_assets/steam/apps/<appid>/<hash>/header.jpg`) that only the store API (`appdetails` → `header_image`) gives. The UI falls back to the title; fetching `header_image` is a later improvement.
 - **`has_community_visible_stats` is a good filter:** every flagged game had a non-empty schema (168 of 168 in the live run below).
 - **Unlock times:** no unlocked achievement had `unlocktime` 0, including Portal (2007), but map 0 to `null` anyway.
 - **Errors** (these decide the `ProviderError` kind):
@@ -71,8 +72,10 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 
 ### Local files and plan
 
-- **Local (real-time):** Steam's `appcache/stats/` folder holds binary-VDF stats files per user/app (`UserGameStats_<accountid>_<appid>.bin` and schema files). Watching them gives instant unlock detection, but they don't reveal *what* changed without diffing against the schema. *(Verify format.)*
-- **Plan:** poll Web API (fast when a game is running) plus optional local-file watcher to trigger an immediate poll.
+- **Local (real-time):** Steam's `appcache/stats/` folder holds binary-VDF stats files per user/app (`UserGameStats_<accountid>_<appid>.bin` and `UserGameStatsSchema_<appid>.bin`). Watching them gives instant unlock detection, but they don't reveal *what* changed without diffing against the schema. *(Verify format.)*
+  - **Seen 2026-09-23 on a real Windows install:** the Steam folder comes from `HKCU\Software\Valve\Steam\SteamPath` (`c:/program files (x86)/steam`); `appcache/stats` held 366 files, and the file for a game played that evening (Rainbow Six Siege, 359550) had been rewritten during the session. **Not yet verified:** whether Steam rewrites it at the moment of an unlock or only when the game saves its stats.
+- **Running game:** `HKCU\Software\Valve\Steam\RunningAppID` holds the appid of the game Steam is running, `0` when none (seen as `0` with no game running, 2026-09-23; the value while a game runs is still to check). Reading Steam's registry key is not reading the game, so it stays within rule 4.
+- **Plan:** watch `appcache/stats` and sync a game as soon as its file changes; while `RunningAppID` is not 0, poll that game about every 30 s as a safety net (about 3,000 requests a day, well within the limit). Still to verify: how soon `GetPlayerAchievements` shows a new unlock (ROADMAP M2).
 - **Risks:** API rate limits (~100k calls/day, be conservative), and possibly private profiles if the own-key result above turns out to be caching.
 
 ## RetroAchievements (P0)

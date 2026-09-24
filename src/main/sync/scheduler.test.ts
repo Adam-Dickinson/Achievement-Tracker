@@ -79,7 +79,6 @@ interface AccountSeed {
   readonly games?: readonly string[]
 }
 
-// Accounts and their known games, on a database built by the real migrations.
 function seedDb(accounts: readonly AccountSeed[] = [{ id: 1, games: ['g1'] }]): DatabaseSync {
   const db = new DatabaseSync(':memory:')
   applyMigrations(db)
@@ -118,7 +117,7 @@ function accountStatus(db: DatabaseSync, id: number): string {
 interface Harness {
   readonly scheduler: Scheduler
   readonly onUnlocks: ReturnType<typeof vi.fn<(events: UnlockEvent[]) => void>>
-  /** Moves the scheduler's clock forward. */
+  readonly onDataChanged: ReturnType<typeof vi.fn<() => void>>
   advance(ms: number): void
   now(): Date
 }
@@ -130,10 +129,20 @@ function harness(
 ): Harness {
   let now = START
   const onUnlocks = vi.fn<(events: UnlockEvent[]) => void>()
-  const scheduler = new Scheduler({ db, providers, secrets, onUnlocks, now: () => now })
+  const onDataChanged = vi.fn<() => void>()
+  const scheduler = new Scheduler({
+    db,
+    providers,
+    secrets,
+    onUnlocks,
+    onDataChanged,
+    now: () => now,
+    random: () => 0,
+  })
   return {
     scheduler,
     onUnlocks,
+    onDataChanged,
     advance: (ms) => {
       now = new Date(now.getTime() + ms)
     },
@@ -263,7 +272,6 @@ describe('Scheduler.syncDueGames', () => {
 
     expect(await scheduler.syncDueGames(1)).toBeNull()
     expect(accountStatus(db, 1)).toBe('needs_reauth')
-    // No due time, so the game syncs straight away once the account is reconnected.
     expect(getSyncState(db, 1, 'game:g1')).toMatchObject({
       lastError: 'token expired',
       nextDueAt: null,
@@ -326,8 +334,6 @@ describe('Scheduler.start / stop', () => {
     vi.useRealTimers()
   })
 
-  // These use the real clock inside the Scheduler (no `now` passed), which vi's fake timers
-  // control, so moving time forward both fires the timers and makes games due.
   function realClockScheduler(
     db: DatabaseSync,
     providers: Partial<Record<Platform, AchievementProvider>>,
@@ -387,8 +393,8 @@ describe('Scheduler.start / stop', () => {
     scheduler.start()
     await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS)
 
-    expect(failing.mock.calls.length).toBeGreaterThan(1) // retried on its own backoff
-    expect(healthy).toHaveBeenCalledTimes(2) // on its normal schedule regardless
+    expect(failing.mock.calls.length).toBeGreaterThan(1)
+    expect(healthy).toHaveBeenCalledTimes(2)
     scheduler.stop()
   })
 
@@ -398,7 +404,7 @@ describe('Scheduler.start / stop', () => {
     let signal: AbortSignal | undefined
     const fetchGame = vi.fn<AchievementProvider['fetchGame']>((_credentials, _game, s) => {
       signal = s
-      return new Promise(() => undefined) // never settles on its own
+      return new Promise(() => undefined)
     })
     const scheduler = realClockScheduler(db, { steam: fakeProvider(fetchGame) })
 
@@ -417,6 +423,7 @@ function libraryGame(externalId: string, recentlyPlayed = true): RemoteGame {
     ref: { externalId },
     title: `Game ${externalId}`,
     iconUrl: null,
+    coverUrl: null,
     lastPlayed: null,
     recentlyPlayed,
   }
@@ -590,6 +597,54 @@ describe('Scheduler.syncLibrary', () => {
 
     expect(await scheduler.syncLibrary(1)).toBeNull()
   })
+
+  it('reports a change when a look finds new games, and only then', async () => {
+    const db = seedDb([{ id: 1, games: [] }])
+    const provider = fakeProvider(vi.fn(), 'steam', () => Promise.resolve([libraryGame('g1')]))
+    const { scheduler, advance, onDataChanged } = harness(db, { steam: provider })
+
+    await scheduler.syncLibrary(1)
+    expect(onDataChanged).toHaveBeenCalledOnce()
+
+    advance(SYNC_INTERVAL_MS)
+    await scheduler.syncLibrary(1)
+    expect(onDataChanged).toHaveBeenCalledOnce()
+  })
+
+  it('reports a change when a login expires', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(vi.fn(), 'steam', () =>
+      Promise.reject(new ProviderError('auth_expired', 'key revoked')),
+    )
+    const { scheduler, onDataChanged } = harness(db, { steam: provider })
+
+    await scheduler.syncLibrary(1)
+
+    expect(onDataChanged).toHaveBeenCalledOnce()
+  })
+
+  it('reports a change after each game it syncs', async () => {
+    const db = seedDb([{ id: 1, games: ['g1', 'g2'] }])
+    const { scheduler, onDataChanged } = harness(db, {
+      steam: fakeProvider(() => Promise.resolve(gameData([]))),
+    })
+
+    await scheduler.syncDueGames(1)
+
+    expect(onDataChanged).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not report a change for a failure that leaves the data as it was', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(vi.fn(), 'steam', () =>
+      Promise.reject(new ProviderError('network', 'offline')),
+    )
+    const { scheduler, onDataChanged } = harness(db, { steam: provider })
+
+    await scheduler.syncLibrary(1)
+
+    expect(onDataChanged).not.toHaveBeenCalled()
+  })
 })
 
 describe('Scheduler tiered polling', () => {
@@ -606,7 +661,6 @@ describe('Scheduler tiered polling', () => {
     })
     await scheduler.syncLibrary(1)
 
-    // Both are synced once straight away (their first sync), then tiered.
     expect(await scheduler.syncDueGames(1)).toEqual(after(START, SYNC_INTERVAL_MS))
     expect(fetchGame).toHaveBeenCalledTimes(2)
 
@@ -679,7 +733,6 @@ describe('Scheduler tiered polling', () => {
     scheduler.stop()
     vi.useRealTimers()
 
-    // Steam's fetchGame is 3 requests and listGames 2; the key's limit is 100,000 a day.
     const requests = fetchGame.mock.calls.length * 3 + listGames.mock.calls.length * 2
     expect(requests).toBeLessThan(15_000)
     expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g0').length).toBe(289)
@@ -747,5 +800,22 @@ describe('Scheduler rounds: finding games and the baseline', () => {
     const events = onUnlocks.mock.calls[0]?.[0]
     expect(events?.map((event) => event.gameTitle)).toEqual(['Game borrowed'])
     expect(events?.map((event) => event.achievement.externalId)).toEqual(['a2'])
+  })
+})
+
+describe('Scheduler retry jitter', () => {
+  it('adds random jitter on top of the backoff delay', async () => {
+    const db = seedDb()
+    const provider = fakeProvider(() => Promise.reject(new ProviderError('network', 'offline')))
+    const scheduler = new Scheduler({
+      db,
+      providers: { steam: provider },
+      secrets: new InMemorySecretStore(),
+      onUnlocks: vi.fn(),
+      now: () => START,
+      random: () => 0.5,
+    })
+
+    expect(await scheduler.syncDueGames(1)).toEqual(after(START, 33 * SECONDS))
   })
 })

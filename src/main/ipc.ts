@@ -1,5 +1,6 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { z } from 'zod'
+import type { DashboardStats } from '@shared/dashboard'
 import {
   IPC,
   type AccountSummary,
@@ -7,21 +8,25 @@ import {
   type ConnectResult,
   type SteamConnectInput,
 } from '@shared/ipc'
+import type { GameDetail, LibraryGame } from '@shared/library'
 
 export interface IpcHandlers {
   getAppInfo(): AppInfo
   sendTestNotification(): Promise<void>
   listAccounts(): AccountSummary[]
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
+  listLibrary(): LibraryGame[]
+  getGame(id: number): GameDetail | null
+  getDashboard(): DashboardStats
 }
 
-// The UI is untrusted: its payloads are checked here before anything else sees them.
 const steamConnectInputSchema = z.object({
   steamId: z.string().trim().min(1).max(100),
   apiKey: z.string().trim().min(1).max(100),
 })
 
-/** Only pages we ship may call the main process (never remote content). */
+const gameIdSchema = z.number().int().positive()
+
 function isTrustedSender(event: IpcMainInvokeEvent): boolean {
   const url = event.senderFrame?.url ?? ''
   const devUrl = process.env['ELECTRON_RENDERER_URL']
@@ -48,7 +53,6 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     const parsed = steamConnectInputSchema.safeParse(input)
     if (!parsed.success) {
-      // Paths and codes only: never log what was typed.
       console.warn(
         'connectSteam: invalid input',
         parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.code}`),
@@ -60,6 +64,22 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
       })
     }
     return handlers.connectSteam(parsed.data)
+  })
+
+  ipcMain.handle(IPC.listLibrary, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.listLibrary()
+  })
+
+  ipcMain.handle(IPC.getGame, (event, id: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = gameIdSchema.safeParse(id)
+    return parsed.success ? handlers.getGame(parsed.data) : null
+  })
+
+  ipcMain.handle(IPC.getDashboard, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getDashboard()
   })
 }
 

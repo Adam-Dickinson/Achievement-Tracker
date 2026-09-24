@@ -15,11 +15,10 @@ import {
   type SyncStateRow,
   upsertSyncState,
 } from '../store/sync-store'
-import { backoffDelayMs } from './backoff'
+import { backoffDelayMs, withJitter } from './backoff'
 import { runSyncPass } from './sync-pass'
 
 export const SYNC_INTERVAL_MS = 5 * 60_000
-// Games not played lately can't unlock anything, so they are only checked now and then.
 export const IDLE_INTERVAL_MS = 6 * 60 * 60_000
 export const LIBRARY_SCOPE = 'library'
 
@@ -31,8 +30,10 @@ export interface SchedulerDeps {
   readonly providers: Partial<Record<Platform, AchievementProvider>>
   readonly secrets: SecretStore
   readonly onUnlocks: (events: UnlockEvent[]) => void
+  readonly onDataChanged?: () => void
   readonly intervalMs?: number
   readonly now?: () => Date
+  readonly random?: () => number
 }
 
 export class Scheduler {
@@ -40,8 +41,10 @@ export class Scheduler {
   readonly #providers: Partial<Record<Platform, AchievementProvider>>
   readonly #secrets: SecretStore
   readonly #onUnlocks: (events: UnlockEvent[]) => void
+  readonly #onDataChanged: () => void
   readonly #intervalMs: number
   readonly #now: () => Date
+  readonly #random: () => number
 
   readonly #timers = new Map<number, ReturnType<typeof setTimeout>>()
   readonly #attempts = new Map<string, number>()
@@ -55,8 +58,10 @@ export class Scheduler {
     this.#providers = deps.providers
     this.#secrets = deps.secrets
     this.#onUnlocks = deps.onUnlocks
+    this.#onDataChanged = deps.onDataChanged ?? (() => undefined)
     this.#intervalMs = deps.intervalMs ?? SYNC_INTERVAL_MS
     this.#now = deps.now ?? (() => new Date())
+    this.#random = deps.random ?? Math.random
   }
 
   start(): void {
@@ -76,7 +81,6 @@ export class Scheduler {
     this.#timers.clear()
   }
 
-  /** Syncs an account now (just connected, or reconnected), then keeps its loop going. */
   startAccount(accountId: number): void {
     if (!this.#running || this.#inRound.has(accountId)) return
     clearTimeout(this.#timers.get(accountId))
@@ -103,10 +107,10 @@ export class Scheduler {
       return outcome === 'stop' ? null : outcome
     }
 
-    // New games announce unlocks made since the last look; on the very first look, none (F-16).
+    let added: number
     this.#db.exec('BEGIN')
     try {
-      addPlatformGames(this.#db, account, games, state?.lastOkAt ?? null)
+      added = addPlatformGames(this.#db, account, games, state?.lastOkAt ?? null)
       this.#db.exec('COMMIT')
     } catch (err) {
       this.#db.exec('ROLLBACK')
@@ -125,6 +129,7 @@ export class Scheduler {
       lastError: null,
       nextDueAt,
     })
+    if (added > 0) this.#onDataChanged()
     return nextDueAt
   }
 
@@ -142,7 +147,6 @@ export class Scheduler {
       if (signal.aborted) return null
 
       const scope = `game:${gameId}`
-      // Until the library has been read, treat every game as recent rather than miss an unlock.
       const isRecent = recent === undefined || recent.has(gameId)
       const state = getSyncState(this.#db, account.id, scope)
       let dueAt = this.#dueAt(state, isRecent)
@@ -189,7 +193,7 @@ export class Scheduler {
     try {
       events = await runSyncPass(this.#db, account, gameId, provider, credentials, signal)
     } catch (err) {
-      if (signal.aborted) return 'stop' // cancelled by stop(): not a failure worth recording
+      if (signal.aborted) return 'stop'
       return this.#recordFailure(account, scope, attemptKey, previous, err)
     }
 
@@ -201,6 +205,7 @@ export class Scheduler {
       lastError: null,
       nextDueAt,
     })
+    this.#onDataChanged()
     if (events.length > 0) this.#onUnlocks(events)
     return nextDueAt
   }
@@ -223,15 +228,16 @@ export class Scheduler {
     if (err instanceof ProviderError && err.kind === 'auth_expired') {
       setAccountStatus(this.#db, account.id, 'needs_reauth')
       record(null)
+      this.#onDataChanged()
       return 'stop'
     }
 
     if (err instanceof ProviderError && err.isRetryable) {
       const attempt = this.#attempts.get(attemptKey) ?? 0
       this.#attempts.set(attemptKey, attempt + 1)
-      const delay = Math.max(
-        err.retryAfterMs ?? 0,
-        backoffDelayMs(attempt, BACKOFF_BASE_MS, BACKOFF_MAX_MS),
+      const delay = withJitter(
+        Math.max(err.retryAfterMs ?? 0, backoffDelayMs(attempt, BACKOFF_BASE_MS, BACKOFF_MAX_MS)),
+        this.#random,
       )
       const nextDueAt = this.#after(delay)
       record(nextDueAt)

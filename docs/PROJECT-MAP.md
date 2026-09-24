@@ -8,6 +8,8 @@ A guide to finding your way around the repo: what each folder and file is for, h
 
 **Status labels used below.** **Real**: implemented and tested. **Placeholder**: works but is temporary. **Stub**: an empty file that marks where code will go. **Planned**: does not exist yet.
 
+**The code has no comments.** Explanations live here and in the other docs; the only comments left are instructions to tools (`/// <reference types=...>` in `env.d.ts` and `// @vitest-environment jsdom` in UI tests). When you need to know why a file does something, look it up here first.
+
 **Keep this document current.** It is listed in the "when the owner says they've committed" rule in [CLAUDE.md](../CLAUDE.md), so it gets synced after commits. Paths change more often than concepts, so it names files and folders, not line numbers.
 
 ---
@@ -57,13 +59,14 @@ The renderer imports only `shared`, never `main`. Providers never touch the data
 | I want to... | Go to | Also touch / read |
 |---|---|---|
 | Change how the toast looks | [overlay/Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | Colours, shadows and radii come from [styles/index.css](../src/renderer/src/styles/index.css). The test is `Toast.test.tsx` next to it. |
-| Change the toast's corner, margin, or how long it stays | [main/overlay-service.ts](../src/main/overlay-service.ts) | `SCREEN_MARGIN` and `EXIT_ANIMATION_MS` are constants there; the 5000 ms default duration is a parameter of `show()`. |
+| Change the toast's corner or margin | [main/overlay-service.ts](../src/main/overlay-service.ts) | `SCREEN_MARGIN` and `EXIT_ANIMATION_MS` are constants there. |
+| Change how long toasts stay, how many stack, or when a burst collapses | [main/notifications.ts](../src/main/notifications.ts) | `TOAST_DURATION_MS`, `MAX_VISIBLE` (also change `OVERLAY_SIZE`) and `BURST_SIZE`. |
 | Change the overlay window's size | [main/windows.ts](../src/main/windows.ts) (`OVERLAY_SIZE`) | **Must match** the padding in `overlay/OverlayApp.tsx` and the toast's size, or shadows get clipped. |
 | Change the sample toasts behind "Send test notification" | [main/sample-toasts.ts](../src/main/sample-toasts.ts) | They cycle ultra-rare, rare, uncommon, common. |
 | Change what counts as Rare, Ultra Rare and so on | [shared/rarity.ts](../src/shared/rarity.ts) | The `[data-rarity]` rules in `styles/index.css` (every rarity needs one; a test checks) and the `--color-rarity-*` tokens; DESIGN.md §6. Recipe G. |
 | Add or change a colour, font, radius or shadow | [styles/index.css](../src/renderer/src/styles/index.css) (`@theme`) | [DESIGN.md](DESIGN.md) §7. See section 8 for the gotchas. |
 | Change the main window (size, background, security) | [main/windows.ts](../src/main/windows.ts) (`createMainWindow`, `webPreferences`) | Keep `contextIsolation` and `sandbox` on. |
-| Change the tray menu | [main/tray.ts](../src/main/tray.ts) | The actions it calls are wired in `main/index.ts`. |
+| Change the tray menu | [main/tray-menu.ts](../src/main/tray-menu.ts) | The actions it calls are wired in `main/index.ts`; the icon is created in `tray.ts`. |
 | Change startup, single-instance or close-to-tray behaviour | [main/index.ts](../src/main/index.ts) | |
 | Add a screen | A folder under [renderer/src/features/](../src/renderer/src/features/) | Wire it into `app/App.tsx`; add a nav entry in `app/navigation.ts`. |
 | Change the navigation (the island bar) | [app/IslandNav.tsx](../src/renderer/src/app/IslandNav.tsx), [app/navigation.ts](../src/renderer/src/app/navigation.ts) | |
@@ -148,10 +151,11 @@ Runs in both worlds, so it may not import from `main` or `renderer`, and may not
 | [models.ts](../src/shared/models.ts) | The normalized shapes providers return: `RemoteGame`, `RemoteAchievement`, `RemoteUnlock`, `RemoteGameAchievements`, plus `AccountCredentials`, `AccountInfo` and `UnlockEvent`. Note `RemoteGame` has `iconUrl` only; the Library screens will need a cover URL added. |
 | [provider.ts](../src/shared/provider.ts) | The `AchievementProvider` interface every platform adapter implements (`authenticate`, `validate`, `listGames`, `fetchGame`, optional `watch`), `ProviderCapabilities` and `AuthInput`. |
 | [errors.ts](../src/shared/errors.ts) | `ProviderError` with a `kind` (`auth_expired`, `rate_limited`, `network`, `parse`, `unsupported`, `other`), an optional retry delay, and `isRetryable`. |
-| [secret.ts](../src/shared/secret.ts) | `Secret`: wraps a token so printing or serializing it shows `Secret(<redacted>)`. The only way to read it is `expose()`. |
+| [secret.ts](../src/shared/secret.ts) | `Secret`: wraps a token so printing or serializing it shows `Secret(<redacted>)` (it overrides `toString`, `toJSON` and Node's `util.inspect.custom`, which `console.log` uses). The only way to read it is `expose()`. |
 | [secret-store.ts](../src/shared/secret-store.ts) | The `SecretStore` interface and an in-memory implementation used by tests. The production version is `main/safe-storage-secret-store.ts`. |
 | [ipc.ts](../src/shared/ipc.ts) | **The IPC contract.** Channel names (`IPC`), payload types (`AppInfo`, `ToastPayload`, `AccountSummary`, `SteamConnectInput`, `ConnectResult`), and `AchievementTrackerApi`, the exact shape of `window.api`. This is the first place to look when the UI and main process need to talk. |
-| [dashboard.ts](../src/shared/dashboard.ts) | `DashboardStats` (the Dashboard header's numbers) and `completionPercent()`, a floor-not-round percentage shared by the UI and, later, the main process. |
+| [dashboard.ts](../src/shared/dashboard.ts) | `DashboardStats` (the Dashboard's numbers, "Nearly there" and recent unlocks) and `completionPercent()`, a floor-not-round percentage. |
+| [library.ts](../src/shared/library.ts) | What the Library, Game detail and Dashboard screens receive: `LibraryGame`, `GameAchievement`, `GameDetail`, `RecentUnlock`. |
 
 Tests sit beside the code: `errors.test.ts`, `platform.test.ts`, `rarity.test.ts`, `secret.test.ts`, `dashboard.test.ts`.
 
@@ -164,11 +168,15 @@ Top-level files (Real unless noted):
 | [index.ts](../src/main/index.ts) | **The entry point and wiring.** Takes the single-instance lock (a second launch just shows the first window); creates the main window on demand; keeps the app alive with no windows open (the tray keeps it reachable); hardens every window (no popups, no navigation away); opens the database; starts the sync `Scheduler` with the Steam provider and the `SafeStorageSecretStore` (it idles until an account is connected) and stops it on quit; creates the overlay and the tray; registers IPC handlers. Services are plain modules wired together here by hand. There is no DI container ([ARCHITECTURE.md](ARCHITECTURE.md) §2). |
 | [windows.ts](../src/main/windows.ts) | Creates both windows. Holds the shared security settings (`contextIsolation` on, `nodeIntegration` off, `sandbox` on, preload script). `createMainWindow()`: 1440x900, minimum 1024x680, shown once ready to avoid a white flash. `createOverlayWindow()`: transparent, frameless, always on top, click-through, unable to take focus. Also exports `OVERLAY_SIZE`. Loads the dev server URL in development and the built file in production. |
 | [safe-storage-secret-store.ts](../src/main/safe-storage-secret-store.ts) | `SafeStorageSecretStore`, the production `SecretStore`. Encrypts each secret with Electron `safeStorage` (Windows DPAPI) and keeps it as base64 in `secrets.json` in the app's data folder, keyed by account id. Refuses to save without OS encryption; a secret it can't decrypt reads as missing; a damaged file throws rather than being overwritten; writes go to a temporary file first, then a rename. `safeStorage` is passed in, so `safe-storage-secret-store.test.ts` uses a fake. |
-| [overlay-service.ts](../src/main/overlay-service.ts) | `OverlayService.show(toast)`: waits for the overlay page to load, positions the window in the bottom-right of the primary display's work area, shows it without stealing focus, sends the toast over IPC, and hides the window after the toast's duration plus time for the exit animation. **Placeholder for now:** a new toast replaces the current one. The queue and stacking arrive in M1. |
-| [tray.ts](../src/main/tray.ts) | The tray icon and its menu: Open Achievement Tracker, Send test notification, Quit. Clicking the icon opens the window. It is a native Electron menu, so it has no React and no visual design. |
+| [coalesce.ts](../src/main/coalesce.ts) | `coalesce(fn, ms)`: a burst of calls runs `fn` once. Used so a first sync of every game refreshes the UI at most once a second. |
+| [notifications.ts](../src/main/notifications.ts) | `NotificationService`: turns `UnlockEvent`s into toasts (`unlockToast`, `burstToast`), keeps at most 3 on screen for 5 s each and queues the rest, drops duplicates, and collapses more than 5 at once into one toast. While `paused` (the tray's "Pause notifications"), unlocks are not shown; the test notification still is. Hands the on-screen list to a `display` callback. Tested with fake timers in `notifications.test.ts`. |
+| [overlay-service.ts](../src/main/overlay-service.ts) | `OverlayService.display(toasts)`: waits for the overlay page to load, then either positions and shows the window without stealing focus, or (for an empty list) hides it after the exit animation, and sends the list over IPC. |
+| [tray.ts](../src/main/tray.ts) | Creates the tray icon with the menu from `tray-menu.ts`. Clicking the icon opens the window. It is a native Electron menu, so it has no React and no visual design. |
+| [tray-menu.ts](../src/main/tray-menu.ts) | `trayMenuTemplate(actions)`: Open Achievement Tracker, Send test notification, Pause notifications (checkbox), Start with Windows (checkbox, greyed out in development), Quit. Kept apart from `tray.ts` so it can be tested without Electron. |
+| [startup.ts](../src/main/startup.ts) | "Start with Windows": `startWithWindows(app)` registers the installed app to start at login with `--hidden` (null in development), and `launchedHidden(argv)` makes such a start stay in the tray. |
 | [ipc.ts](../src/main/ipc.ts) | `registerIpcHandlers()`: one `ipcMain.handle` per channel. Each first checks the sender is one of our own pages (`isTrustedSender`); `connectSteam` then checks its payload with a zod schema (answering `invalid_input` if it fails) before calling the handler passed in from `index.ts`. `ipc.test.ts` replaces `electron` with a stand-in to test both checks. |
 | [accounts.ts](../src/main/accounts.ts) | `connectSteam()`: `authenticate` and `validate` with Steam, `upsertAccount`, save the key in the `SecretStore` under the account's id, `Scheduler.startAccount`. Turns failures into a `ConnectResult` (a rejected key, a connection problem, or the provider's own message) and never throws. Tested in `accounts.test.ts` with a fake provider. |
-| [sample-toasts.ts](../src/main/sample-toasts.ts) | Four sample unlocks, one per rarity, cycled by `nextSampleToast()`. Only used by "Send test notification". |
+| [sample-toasts.ts](../src/main/sample-toasts.ts) | Four sample unlocks, one per rarity, cycled by `nextSampleToast()`. Only used by "Send test notification", which queues them like real unlocks. |
 | [env.d.ts](../src/main/env.d.ts) | Type declarations for Vite and electron-vite features such as `import.meta.glob` and the `?asset` import suffix. |
 
 `?asset`: `windows.ts` and `tray.ts` import the icon as `icon.png?asset`. That is an electron-vite feature that gives you a file path which still works after the app is built.
@@ -184,6 +192,7 @@ Top-level files (Real unless noted):
 | [migrations/0002_baseline_cutoff.sql](../src/main/store/migrations/0002_baseline_cutoff.sql) | Adds `platform_game.baseline_cutoff`: a game's first sync announces only unlocks dated after it (`NULL` = fully silent). See ADR-0005. |
 | [migrate.test.ts](../src/main/store/migrate.test.ts) | Tests numbering, creating the schema, running twice, and rollback. New migrations need an upgrade test here (rule 8). |
 | [sync-store.ts](../src/main/store/sync-store.ts) | The sync engine's SQL, one small function per query: read an account or a platform game, list connected accounts and an account's games, upsert achievements, insert unlocks and report which were genuinely new (`INSERT OR IGNORE`), set `baseline_done`, read and write `sync_state`, set an account's status, create or reconnect an account (`upsertAccount`: same platform and id keeps the same row, so its key and games stay attached), and add games found by `listGames` (`addPlatformGames`: new games get a `game` + `platform_game` row awaiting their silent first sync; known ones are updated without resetting the baseline or blanking the last-played time; nothing is ever deleted). Row types `AccountRow`, `PlatformGameRow`, `SyncStateRow`. |
+| [library-store.ts](../src/main/store/library-store.ts) | Read-only SQL for the screens: `listLibraryGames` (each game with its cover and unlocked/total; most recent unlock first, relying on SQLite sorting NULL last in `DESC`), `getGameDetail`, `listRecentUnlocks` and `getDashboardStats`. Tested in `library-store.test.ts` on a real schema, with data added through `sync-store`. |
 | [sync-store.test.ts](../src/main/store/sync-store.test.ts) | Each query against a real migrated in-memory database, plus the baseline rule end to end. |
 
 The database file is `achievement-tracker.db` inside Electron's per-user data folder (`app.getPath('userData')`, normally under `%APPDATA%` on Windows).
@@ -193,8 +202,8 @@ The database file is `achievement-tracker.db` inside Electron's per-user data fo
 The design and the as-built behaviour (outcomes table, what is not built yet) are in [SPEC.md](SPEC.md) §5.
 
 - [sync-pass.ts](../src/main/sync/sync-pass.ts): `runSyncPass()`, **what** one sync of one game does. Fetches from the provider, then in one transaction upserts achievements, inserts unlocks and applies the baseline rule (the first sync of a game records everything but returns no events). Returns the `UnlockEvent`s only after the commit.
-- [scheduler.ts](../src/main/sync/scheduler.ts): the `Scheduler`, **when** syncs happen. One loop per connected account; each round first reads the library (`syncLibrary`: `listGames`, then `addPlatformGames` with the baseline cutoff), then syncs the games that are due (`syncDueGames`), with recently played games every 5 minutes and the rest every 6 hours. `startAccount(id)` syncs a newly connected account straight away, never running two rounds of one account at once. Outcomes go in `sync_state` (backoff on network trouble, `needs_reauth` on an expired login). `stop()` cancels timers and in-flight calls. New unlocks go to its `onUnlocks` callback.
-- [backoff.ts](../src/main/sync/backoff.ts): `backoffDelayMs()` gives exponential retry delays.
+- [scheduler.ts](../src/main/sync/scheduler.ts): the `Scheduler`, **when** syncs happen. One loop per connected account; each round first reads the library (`syncLibrary`: `listGames`, then `addPlatformGames` with the baseline cutoff), then syncs the games that are due (`syncDueGames`), with recently played games every 5 minutes and the rest every 6 hours. `startAccount(id)` syncs a newly connected account straight away, never running two rounds of one account at once. `onDataChanged` fires when a library look adds games, a game syncs or a login expires; `main/index.ts` forwards it to the main window as `data:changed`, at most once a second (`coalesce.ts`). Outcomes go in `sync_state` (backoff on network trouble, `needs_reauth` on an expired login). `stop()` cancels timers and in-flight calls. New unlocks go to its `onUnlocks` callback.
+- [backoff.ts](../src/main/sync/backoff.ts): `backoffDelayMs()` gives exponential retry delays, and `withJitter()` adds up to 20% at random.
 - Tests beside each: `sync-pass.test.ts` and `scheduler.test.ts` use a fake provider and a fake clock; `backoff.test.ts`.
 - Planned: finding new games (library scope, with the Accounts flow) and a running-game detector (M2).
 
@@ -209,7 +218,7 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 
 ### 4.3 `src/preload/`: the bridge (Real)
 
-[index.ts](../src/preload/index.ts) builds the `window.api` object and exposes it with `contextBridge.exposeInMainWorld`. Its entries today: `getAppInfo`, `sendTestNotification`, `listAccounts` and `connectSteam` (all `ipcRenderer.invoke`), and `onToast`, which subscribes to toast messages and returns an "unsubscribe" function. The UI never receives `ipcRenderer` itself. Its type is `AchievementTrackerApi` from `shared/ipc.ts`, so the compiler tells you if the two drift apart.
+[index.ts](../src/preload/index.ts) builds the `window.api` object and exposes it with `contextBridge.exposeInMainWorld`. Its entries today: `getAppInfo`, `sendTestNotification`, `listAccounts` and `connectSteam` (all `ipcRenderer.invoke`), and two subscriptions that each return an "unsubscribe" function: `onToasts` (the list of toasts on screen) and `onDataChanged`. Also `listLibrary`, `getGame` and `getDashboard`. The UI never receives `ipcRenderer` itself. Its type is `AchievementTrackerApi` from `shared/ipc.ts`, so the compiler tells you if the two drift apart.
 
 ### 4.4 `src/renderer/`: the UI
 
@@ -221,14 +230,14 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 |---|---|
 | [main.tsx](../src/renderer/src/main.tsx) | Entry for the main window: mounts `<App />` into `#root` and imports the global CSS. |
 | [env.d.ts](../src/renderer/src/env.d.ts) | Tells TypeScript that `window.api` exists and what type it has. |
-| `app/` (main window shell, Placeholder) | |
-| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected (`useState`) and the app info fetched from the main process (`useEffect`). Shows the island nav, then the selected page: `PageContent` is a `switch` on the page id (Dashboard and Accounts are real; the rest show placeholder text), then the "Send test notification" button. **There is no router**: pages are just a value in state. |
+| `app/` (main window shell, Real) | |
+| &nbsp;&nbsp;[App.tsx](../src/renderer/src/app/App.tsx) | The shell. Holds which page is selected and which game is open (`useState`), and the app info fetched from the main process (`useEffect`). Shows the island nav, then either the page (`PageContent`, a `switch` on the page id: Dashboard, Library and Accounts are real; the rest show placeholder text) or, when a game is open, `GameDetail` (keyed by the game id). Picking a page in the nav closes the game. **There is no router**: pages are just values in state. |
 | &nbsp;&nbsp;[IslandNav.tsx](../src/renderer/src/app/IslandNav.tsx) | The floating "island" bar at the top of the window: brand, one button per page (the current page is a lime pill) and the app version. It only shows what it is given (`selected`, `onSelect`, `info`); `App` owns the state. |
 | &nbsp;&nbsp;[navigation.ts](../src/renderer/src/app/navigation.ts) | `PageId` and `NAV_ITEMS`: Dashboard, Library, Activity, Accounts, Settings, each with a label, description and icon. |
-| &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching and the test-notification button, with a fake `window.api`. |
+| &nbsp;&nbsp;[App.test.tsx](../src/renderer/src/app/App.test.tsx) | Tests page switching, opening a game from the Library and leaving it, and the test-notification button, with `fakeApi()`. |
 | &nbsp;&nbsp;[IslandNav.test.tsx](../src/renderer/src/app/IslandNav.test.tsx) | Tests the "Main" navigation landmark, the current page, click reporting and the version text. |
 | `overlay/` (the toast window, Real) | |
-| &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes to toasts via `window.api.onToast`, shows the newest for its duration, then removes it. Its padding decides how much room the toast's shadow has. |
+| &nbsp;&nbsp;[OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) | Root of the overlay page. Subscribes via `window.api.onToasts` and draws the list it is given, stacked with the newest at the bottom; it has no timers of its own. Its padding and gap decide how much room the toasts' shadows have. |
 | &nbsp;&nbsp;[Toast.tsx](../src/renderer/src/overlay/Toast.tsx) | The unlock toast component: gradient icon tile, a `RarityGem` heading, display-font title and percentage, a `RarityChip`, a spring-in and slide-out with Motion, a gold glint on ultra rare, and reduced-motion support. The card sits in its rarity colour scope (`data-rarity`), so it has no per-rarity class table. |
 | &nbsp;&nbsp;[main.tsx](../src/renderer/src/overlay/main.tsx) | Entry for the overlay window. |
 | &nbsp;&nbsp;`OverlayApp.test.tsx`, `Toast.test.tsx` | Component tests. |
@@ -236,20 +245,31 @@ The design and the as-built behaviour (outcomes table, what is not built yet) ar
 | &nbsp;&nbsp;[Button.tsx](../src/renderer/src/components/Button.tsx) | Primary and secondary button; extra props pass through. |
 | &nbsp;&nbsp;[RarityChip.tsx](../src/renderer/src/components/RarityChip.tsx) | A small pill with the rarity's gem and name. Ultra rare gets a gradient fill and a glow. Uses the rarity scope, so it can go anywhere: the toast, Library cards, Game detail. |
 | &nbsp;&nbsp;[RarityGem.tsx](../src/renderer/src/components/RarityGem.tsx) | The rarity's gem shape (circle, diamond, hexagon, sparkle), picked from a `Record<Rarity, LucideIcon>` table and coloured with a `text-*` class. Decorative (`aria-hidden`): the rarity is always written out as text too. Used in the toast; the Library and Game detail screens will reuse it. |
+| &nbsp;&nbsp;[GameCard.tsx](../src/renderer/src/components/GameCard.tsx) | One game: cover, completion % (a gold crown badge at 100%), title, platform, "34 / 42 achievements" and "8 left" or "Completed". "Syncing…" until the game's first sync has read its achievements. Clicking it opens Game detail. Used by the Library grid and the Dashboard's "Nearly there". |
+| &nbsp;&nbsp;[CoverArt.tsx](../src/renderer/src/components/CoverArt.tsx) | The Afterglow "colour-in" art: the cover in grey, then in colour up to the completion % (`clip-path`), with a lime line at the edge. Shows the title if there is no image or it fails to load. |
 | &nbsp;&nbsp;[TrophyIcon.tsx](../src/renderer/src/components/TrophyIcon.tsx) | The app's trophy mark as an SVG you can colour with a `text-*` class. |
 | `features/accounts/` (Real: Steam only) | |
 | &nbsp;&nbsp;[Accounts.tsx](../src/renderer/src/features/accounts/Accounts.tsx) | The Accounts page: the Steam connect form, then the account list: a `role="status"` "Loading…" message, then either "No accounts connected yet." or a list (`<ul>`) with one card per account, keyed by id. Passes the hook's `reload` to the form, so a new account appears straight away. |
 | &nbsp;&nbsp;[SteamConnectForm.tsx](../src/renderer/src/features/accounts/SteamConnectForm.tsx) | SteamID64 and Steam API key inputs (controlled; the key field is `type="password"`). Submitting calls `window.api.connectSteam`: on success it clears both fields and calls `onConnected`; on failure it shows `ConnectResult.message` in a `role="alert"`. The button is disabled while waiting. The key crosses to the main process once and is never sent back. |
 | &nbsp;&nbsp;[AccountCard.tsx](../src/renderer/src/features/accounts/AccountCard.tsx) | One account: platform name (`platformName`), display name, status (a `Record<AccountStatus, ...>` of labels and colours) and "1 game" / "N games". |
-| &nbsp;&nbsp;[useAccounts.ts](../src/renderer/src/features/accounts/useAccounts.ts) | Calls `window.api.listAccounts()` and returns `{ accounts, reload }`. `null` means not loaded yet, `[]` means none connected. `reload()` bumps a `version` state that the effect depends on, so the effect runs again. Same `cancelled` guard as `useDashboardStats`. |
-| `features/dashboard/` (Real, sample data) | |
-| &nbsp;&nbsp;[Dashboard.tsx](../src/renderer/src/features/dashboard/Dashboard.tsx) | The Dashboard page: the completion hero, then a row of stat tiles. Shows a `role="status"` "Loading…" message until `useDashboardStats()` resolves. |
+| &nbsp;&nbsp;[useAccounts.ts](../src/renderer/src/features/accounts/useAccounts.ts) | Calls `window.api.listAccounts()` and returns `{ accounts, reload }`. `null` means not loaded yet, `[]` means none connected. `reload()` bumps a `version` state that the effect depends on, so the effect runs again; a second effect subscribes to `window.api.onDataChanged` and does the same when a sync changes the data. Same `cancelled` guard as `useDashboardStats`. |
+| `features/dashboard/` (Real) | |
+| &nbsp;&nbsp;[Dashboard.tsx](../src/renderer/src/features/dashboard/Dashboard.tsx) | The Dashboard page: the completion hero, a row of stat tiles (games tracked, completed, unlocked this week), "Nearly there" (the four unfinished games closest to 100%, as `GameCard`s, left out when there are none) and "Recent unlocks". Clicking a game or an unlock opens Game detail. Shows a `role="status"` "Loading…" message until `useDashboardStats()` resolves. |
+| &nbsp;&nbsp;[RecentUnlocks.tsx](../src/renderer/src/features/dashboard/RecentUnlocks.tsx) | The newest dated unlocks: icon, name, game and platform, `RarityChip`, percentage and "Today, 13:42"-style date. Each row opens its game. |
 | &nbsp;&nbsp;[CompletionHero.tsx](../src/renderer/src/features/dashboard/CompletionHero.tsx) | The big completion % and an accessible progress bar (`role="progressbar"`, `aria-value*`), not colour alone. |
 | &nbsp;&nbsp;[StatTile.tsx](../src/renderer/src/features/dashboard/StatTile.tsx) | One floating-card stat: a label, a `toLocaleString()`-formatted value, and an optional hint line. |
-| &nbsp;&nbsp;[useDashboardStats.ts](../src/renderer/src/features/dashboard/useDashboardStats.ts) | The one place that knows where the Dashboard's numbers come from. Resolves `sample-stats.ts` today; swapping in a real `getDashboardStats()` IPC call is a one-line change inside it. Guards against React StrictMode's double-invoked effect with a `cancelled` flag. |
-| &nbsp;&nbsp;[sample-stats.ts](../src/renderer/src/features/dashboard/sample-stats.ts) | Stand-in `DashboardStats`, deleted once real IPC exists. |
-| &nbsp;&nbsp;`*.test.tsx` | Component tests for the four files above. |
-| `features/{library,game-detail,activity,accounts,settings,onboarding}/` (Planned) | Six empty folders with a `.gitkeep`. **This is where each real screen will live.** |
+| &nbsp;&nbsp;[useDashboardStats.ts](../src/renderer/src/features/dashboard/useDashboardStats.ts) | Calls `window.api.getDashboard()`, and again on `onDataChanged`. Guards against a late reply (and React StrictMode's double-invoked effect) with a `cancelled` flag. |
+| &nbsp;&nbsp;`*.test.tsx` | Component tests for the page, the hero and the stat tile. |
+| `features/library/` (Real) | |
+| &nbsp;&nbsp;[Library.tsx](../src/renderer/src/features/library/Library.tsx) | The Library page: the game count, a Last unlock / Completion / Name sort (buttons with `aria-pressed`), and a grid of cards. Loading and empty states. |
+| &nbsp;&nbsp;[useLibrary.ts](../src/renderer/src/features/library/useLibrary.ts) | Calls `window.api.listLibrary()`, and again whenever `onDataChanged` fires, so the grid fills in while the first sync runs. |
+| `features/game-detail/` (Real) | |
+| &nbsp;&nbsp;[GameDetail.tsx](../src/renderer/src/features/game-detail/GameDetail.tsx) | One game: a header with a blurred cover behind the title and a back button, four tiles (unlocked with a progress bar, completion, rarest achievement held, last unlock), All / Unlocked / Locked filters with counts, and the achievements rarest first in two columns. |
+| &nbsp;&nbsp;[AchievementRow.tsx](../src/renderer/src/features/game-detail/AchievementRow.tsx) | One achievement: its icon (colour when unlocked, Steam's grey one when locked), name, description, unlock date or "Locked", percentage and `RarityChip`. A hidden achievement shows as "Hidden achievement" until unlocked. |
+| &nbsp;&nbsp;[useGame.ts](../src/renderer/src/features/game-detail/useGame.ts) | Calls `window.api.getGame(id)`, and again on `onDataChanged`. `undefined` while loading, `null` if the game is gone. |
+| [lib/format.ts](../src/renderer/src/lib/format.ts) | Shared text formatting: `formatPercent` (two decimals below 1%), `formatUnlockDate` ("Today, 13:42", "Yesterday, ...", or a date in the user's locale) and `plural`. |
+| [test/fake-api.ts](../src/renderer/src/test/fake-api.ts) | `fakeApi()`: the fake `window.api` for component tests. |
+| `features/{activity,settings,onboarding}/` (Planned) | Empty folders with a `.gitkeep`. **This is where the remaining screens will live.** |
 | [styles/index.css](../src/renderer/src/styles/index.css) | Global CSS and the design tokens: fonts, colours, radii, shadows, the rarity scope (`[data-rarity]` rules that set `--rarity` and friends), plus a `.bg-aurora` background class (defined, not applied yet) and base styles. See section 8. |
 
 ---
@@ -261,15 +281,16 @@ Following one real feature through every layer is the fastest way to see how the
 1. **Click.** The button in [App.tsx](../src/renderer/src/app/App.tsx) calls `window.api.sendTestNotification()`.
 2. **Preload.** [preload/index.ts](../src/preload/index.ts) turns that into `ipcRenderer.invoke(IPC.sendTestNotification)`. The channel name comes from [shared/ipc.ts](../src/shared/ipc.ts).
 3. **Main process receives it.** [main/ipc.ts](../src/main/ipc.ts) has an `ipcMain.handle` for that channel. It checks the sender is one of our own pages, then calls the handler.
-4. **The handler.** In [main/index.ts](../src/main/index.ts), `sendTestNotification` is `overlay.show(nextSampleToast())`. `nextSampleToast()` (in `sample-toasts.ts`) returns the next sample, cycling the four rarities.
-5. **Overlay service.** [overlay-service.ts](../src/main/overlay-service.ts) positions the overlay window in the bottom-right of the screen, shows it without taking focus, and sends the toast to it with `webContents.send(IPC.showToast, ...)`. It also starts a timer to hide the window later.
-6. **The overlay page receives it.** [OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) subscribed earlier with `window.api.onToast(...)` (preload wires that to `ipcRenderer.on`). The callback stores the toast in state.
-7. **React draws it.** State changed, so React re-renders and mounts [Toast.tsx](../src/renderer/src/overlay/Toast.tsx). Motion animates it in. A timer in `OverlayApp` clears the state after the toast's duration, which plays the exit animation.
-8. **Hide.** After the exit animation, the main process hides the overlay window.
+4. **The handler.** In [main/index.ts](../src/main/index.ts), `sendTestNotification` calls `notifications.show(nextSampleToast())`. `nextSampleToast()` (in `sample-toasts.ts`) returns the next sample, cycling the four rarities.
+5. **Notification service.** [notifications.ts](../src/main/notifications.ts) queues it. If fewer than 3 toasts are on screen, it goes on screen now with a new id and a 5-second timer, and the service hands the whole on-screen list to its `display` callback.
+6. **Overlay service.** [overlay-service.ts](../src/main/overlay-service.ts) positions the overlay window in the bottom-right of the screen, shows it without taking focus, and sends the list with `webContents.send(IPC.setToasts, ...)`.
+7. **The overlay page receives it.** [OverlayApp.tsx](../src/renderer/src/overlay/OverlayApp.tsx) subscribed earlier with `window.api.onToasts(...)` (preload wires that to `ipcRenderer.on`). The callback stores the list in state.
+8. **React draws it.** State changed, so React re-renders and mounts a [Toast.tsx](../src/renderer/src/overlay/Toast.tsx) for the new id. Motion animates it in.
+9. **Leave and hide.** When its timer fires, the service sends the list without it (Motion plays its exit) and brings in the next queued toast, if any. Once the list is empty, the main process hides the window after the exit animation.
 
 The tray's "Send test notification" item follows the same path from step 4 onward.
 
-The real feature will work the same way. The sync engine already detects unlocks and hands them to the `Scheduler`'s `onUnlocks` callback; once the notification service exists, that callback will call `overlay.show(...)` with real data instead of a sample.
+A real unlock joins at step 5: the `Scheduler`'s `onUnlocks` callback calls `notifications.notify(events)`, which builds the toasts from the unlock data.
 
 ---
 
@@ -277,7 +298,7 @@ The real feature will work the same way. The sync engine already detects unlocks
 
 **The renderer hot-reloads; the main process does not.** With `npm run dev`, edits to renderer code appear straight away. Edits to `src/main`, `src/preload`, and any `src/shared` code the main process imports need a full restart (tray **Quit**, then `npm run dev` again). Symptom: the UI shows your new code, but window sizes, tray items and IPC handlers behave as before.
 
-**The overlay's numbers are linked.** The toast is 400x92 (`Toast.tsx`). The overlay window is 480x188 (`OVERLAY_SIZE` in `windows.ts`). `OverlayApp.tsx` pads the toast by 40px at the sides, 32px above and 64px below, and the window is the toast plus that padding. Shadows and glows are drawn outside the toast's box, so this padding is the room they have. If you change one of these, change the others, or shadows are cut off at the window edge.
+**The overlay's numbers are linked.** The toast is 400x92 (`Toast.tsx`), and up to 3 stack 12px apart (`MAX_VISIBLE` in `notifications.ts`, `gap-3` in `OverlayApp.tsx`). The overlay window is 480x396 (`OVERLAY_SIZE` in `windows.ts`). `OverlayApp.tsx` pads the stack by 40px at the sides, 32px above and 64px below, and the window is the stack plus that padding. Shadows and glows are drawn outside the toast's box, so this padding is the room they have. If you change one of these, change the others, or shadows are cut off at the window edge.
 
 Other things worth knowing:
 
@@ -317,6 +338,10 @@ Rules and traps:
 6. **Opacity on a token colour:** `bg-surface-1/60` or `border-rarity-rare/45` (any whole number).
 7. **A token that reads a per-element variable needs `@theme inline`.** A normal `@theme` token is resolved once, at the page root, where `--rarity` is not set. `--shadow-toast` and `--shadow-tile` live in an `@theme inline` block, which copies the value into the class so the variable is read on the element.
 8. **Rarity colours come from the rarity scope.** Put `data-rarity={rarity}` on an element, then use `text-(--rarity)`, `border-(--rarity)/45`, `bg-(--rarity)/14`, `from-(--rarity-light)`, `to-(--rarity-dark)` and `text-(--rarity-on)`. Adding a rarity means adding a `[data-rarity='...']` rule in `styles/index.css`; the `rarity-scope` test fails if one is missing. Two traps: Tailwind turns an underscore inside `data-[rarity=ultra_rare]:` into a space, so do not use data-attribute variants for rarity; and Motion writes the whole `transform`, so pass skew and similar through Motion (`skewX`), not a Tailwind class.
+9. **Font names end in "Variable".** `@fontsource-variable` registers `'Figtree Variable'` and `'Bricolage Grotesque Variable'`, so `--font-sans` and `--font-display` must use those names.
+10. **`--color-line` is translucent white**, so a border takes on the colour of the card it sits on.
+11. **`.bg-aurora` is for the main window only.** The overlay window must stay transparent.
+12. **In `Toast.tsx`, opacity is animated with a short tween, not the spring,** so it can't overshoot past fully visible.
 
 ---
 
@@ -349,10 +374,12 @@ Other docs-like things:
 
 - **Where:** next to the code, as `*.test.ts` or `*.test.tsx`. Vitest only picks up `src/**/*.test.{ts,tsx}` (see `vitest.config.ts`).
 - **Node by default.** A test of a React component opts into a fake browser by putting `// @vitest-environment jsdom` on its first line.
-- **Faking the bridge.** Components call `window.api`, which does not exist in a test. The tests (`App.test.tsx`, `OverlayApp.test.tsx`) assign a fake object with `vi.fn()` methods.
-- **Coverage today** (334 tests in 29 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the Dashboard (`completionPercent`, the hero, the stat tile, and the page's loading/loaded states, including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
+- **Faking the bridge.** Components call `window.api`, which does not exist in a test. Tests assign `fakeApi({...})` from `renderer/src/test/fake-api.ts`: every call is a `vi.fn()`, and a test passes only the ones it cares about.
+- **Coverage today** (431 tests in 39 files): migrations, the secret store (encrypted on disk, restarts, refusing to save without encryption, damaged files), the Steam provider (its parsers against real captured replies, its HTTP error mapping with a stubbed `fetch`, and the baseline rule through a real sync pass), the sync engine (its SQL, one sync pass including the baseline rule and rollback, and the Scheduler's timing, backoff, re-login and stop), backoff, provider errors, platform table, rarity thresholds, secret redaction, the App shell, the island nav, the notification service (unlock and burst toasts, at most 3 on screen, queueing, duplicates, pausing, stop), the tray menu and "Start with Windows", the Library (loading, sort, opening a game, live reload), the game card (colour-in, completed, syncing, missing art), Game detail (tiles, filters, rarest first, hidden achievements), text formatting, the Dashboard (`completionPercent`, the hero, the stat tile, "Nearly there", recent unlocks, live reload, and loading/loaded states including under StrictMode), the Accounts page (loading, empty and listed states, reloading after a connect, the card's status labels and game counts, and the Steam connect form's success, failure, waiting and empty-field paths), the overlay, the toast, the rarity gem and chip, and the rarity scope in `index.css`.
 - **Who writes them:** Claude does, before every commit and PR (the "Tests are written by Claude" rule in [CLAUDE.md](../CLAUDE.md)).
 - **Fixtures:** `tests/fixtures/steam/` holds sanitized Steam Web API replies (see PROVIDERS.md). Fixtures are in `.prettierignore` so they stay byte-for-byte as captured. Sanitized provider responses and sample trophy files go there, **with no real account ids, tokens or emails**. Raw recordings go in `tests/fixtures/_raw/`, which is git-ignored.
+- **Numbers in tests follow the machine's locale.** `toLocaleString()` gives "3,482" or "3 482" (with a non-breaking space), so tests build the expected text with `toLocaleString()` too, and replace `\s` with a plain space, because Testing Library normalizes whitespace in the rendered text.
+- **Electron menu clicks:** Electron flips a checkbox item's `checked` before calling its `click`, so `tray-menu.test.ts` passes the new state in the fake item.
 - **CSS in tests.** Vitest normally replaces CSS imports with an empty string. `vitest.config.ts` lets `index.css` through so the `rarity-scope` test can read it as text.
 - **Not tested by automation:** the real windows, tray, and overlay behaviour. Those are checked by running the app.
 
@@ -369,13 +396,13 @@ Four files, in this order. TypeScript flags any you forget.
 3. [main/index.ts](../src/main/index.ts): implement the handler in the object passed to `registerIpcHandlers`.
 4. [preload/index.ts](../src/preload/index.ts): add the method to the `api` object.
 
-Then update any test that fakes `window.api` (`App.test.tsx`, `OverlayApp.test.tsx`), and mention it in SPEC.md §6.
+Then add a default for it in `renderer/src/test/fake-api.ts`, and mention it in SPEC.md §6.
 
-### B. Build a real screen (for example Library)
+### B. Build a real screen (for example Activity)
 
-1. Create components in `src/renderer/src/features/library/` (the folder already exists).
-2. If it needs data, add an IPC call (recipe A), backed by a query in `src/main/store`.
-3. In [App.tsx](../src/renderer/src/app/App.tsx), add a `case 'library'` to `PageContent` that returns your component. There is no router.
+1. Create components in `src/renderer/src/features/<area>/` (Activity's folder already exists). `features/library/` is a complete example.
+2. If it needs data, add an IPC call (recipe A), backed by a query in `src/main/store` (`library-store.ts` for read-only screen queries). Have its hook refetch on `window.api.onDataChanged`.
+3. In [App.tsx](../src/renderer/src/app/App.tsx), add a `case` to `PageContent` that returns your component. There is no router.
 4. Reuse `components/` and the tokens. Add a test file beside your component.
 5. Check the design on the canvas first.
 
@@ -428,20 +455,19 @@ Add it to the `Rarity` type, `rarityFromPercent` and `RARITY_LABEL` in `shared/r
 | Database, migrations, schema | Real |
 | Backoff helper | Real |
 | App lifecycle, windows, tray, overlay window, IPC, test notification | Real |
-| Toast component | Real, in the Afterglow look (platform badge, stacking and queue still to do) |
+| Toast component | Real, in the Afterglow look, stacking up to 3 (platform badge still to do) |
 | Floating "island" nav | Real |
-| Main window shell (island nav real; Dashboard's stats header real with sample data; other pages placeholder) | Mixed |
-| Steam provider | Real, verified live; registered, waiting on the Accounts screen to connect an account |
+| Main window shell (island nav, Dashboard, Library, Game detail and Accounts real; Activity and Settings placeholder) | Mixed |
+| Steam provider | Real, verified live, connected from the Accounts screen |
 | Other providers | Stubs |
-| Accounts screen (connect Steam, store the key) | Planned (M1) |
-| Sync scheduler (library + game scopes, tiered polling), sync pass, baseline cutoff, `UnlockEvent` | Real, started with the app with Steam registered; idle until an account is connected |
-| Backoff jitter | Planned (M1) |
-| Delivering unlocks to toasts (notification service) | Planned (M1) |
+| Accounts screen (connect Steam, list accounts, updates itself) | Real |
+| Sync scheduler (library + game scopes, tiered polling, backoff with jitter), sync pass, baseline cutoff, `UnlockEvent` | Real, started with the app with Steam registered |
+| Notification service (unlocks to toasts, queue, stacking, bursts, pause) | Real |
 | Production `SecretStore` (`safeStorage`, `secrets.json`) | Real |
-| Toast queue and stacking | Planned (M1) |
-| Autostart, extra tray items (Sync now, Do Not Disturb, Recent unlocks) | Planned (M1 and later) |
-| Dashboard: Recent unlocks, Closest to 100%, Rarest, per-platform breakdown | Planned |
-| Real screens under `features/*` other than Dashboard | Planned (M1 onward) |
+| Tray: Pause notifications, Start with Windows | Real (Start with Windows only in the installed app) |
+| Toast sound, tray "Sync now" and "Recent unlocks" | Planned |
+| Dashboard: rarest-unlock card, per-platform breakdown, weekly chart | Planned |
+| Activity, Settings and Onboarding screens | Planned |
 | Activity screen design | Not designed yet |
 | Installer, signing, auto-update | Planned (M6) |
 

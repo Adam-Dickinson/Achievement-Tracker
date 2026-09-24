@@ -17,20 +17,22 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M1: Vertical slice, Steam and toasts (MVP core)
 
 - [x] Domain types + provider interface (`src/shared`); database + migration runner (`src/main/store`); `SecretStore` (`SafeStorageSecretStore`: encrypted with `safeStorage`, kept in `secrets.json`)
-- [~] Sync engine: scheduler, diff, baseline rule, backoff, `UnlockEvent`. Built and tested: library scope (finds games, never forgets one), game scopes with tiered polling, and the baseline cutoff for games found later (ADR-0005). Still to do: jitter on the backoff
-- [~] Steam provider (Web API): library, schema, unlocks, rarity. Built, tested against captured replies, verified live against a real account, and registered with the Scheduler. The library includes games borrowed through Steam Families while they are in the two-week recently-played window. The Accounts screen connects an account: it checks the key with Steam, stores it in the `SecretStore` and starts syncing straight away
-- [ ] Notification service + overlay toast (queue, sound, preview)
-- [ ] Tray, close-to-tray, single instance, autostart
-- [~] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard's stats header (completion hero + tiles) is built, on sample data. Accounts is built for Steam (connect form and account list; the list doesn't yet update by itself as a sync finds games). Library and Game detail still to do
+- [x] Sync engine: scheduler, diff, baseline rule, backoff with jitter, `UnlockEvent`. Built and tested: library scope (finds games, never forgets one), game scopes with tiered polling, and the baseline cutoff for games found later (ADR-0005)
+- [x] Steam provider (Web API): library, schema, unlocks, rarity. Built, tested against captured replies, verified live against a real account, and registered with the Scheduler. The library includes games borrowed through Steam Families while they are in the two-week recently-played window. The Accounts screen connects an account: it checks the key with Steam, stores it in the `SecretStore` and starts syncing straight away
+- [x] Notification service + overlay toast (queue, preview). Unlocks from the sync engine become toasts, up to 3 stacked on screen with the rest queued, duplicates dropped, more than 5 at once collapsed into one; the test notification goes through the same queue; Pause notifications in the tray. Sound moved to M4 (F-22 is P1)
+- [x] Tray, close-to-tray, single instance, autostart. The tray menu has Pause notifications and Start with Windows; a login start stays in the tray. Start with Windows only works in the installed app, so it is checked for real once the installer exists (M6)
+- [x] UI: Accounts (connect Steam), Library, Game detail, basic Dashboard. The Dashboard shows real totals, "Nearly there" and recent unlocks. Accounts is built for Steam (connect form, and an account list that updates itself as a sync finds games). Library (grid with colour-in covers, sort) and Game detail (tiles, filters, achievements rarest first) are built on real data and refresh as syncs land
 - **Exit:** unlock a Steam achievement in a real game and a toast appears within the poll interval
 
 ## M2: Emulators and Xbox (P0 complete)
 
 - [ ] RetroAchievements provider
 - [ ] RPCS3 provider with file watcher (< 2 s latency)
-- [ ] Steam local stats files (`appcache/stats/`): find borrowed Steam Families games last played more than two weeks ago, which the Web API can't list, and trigger an immediate poll on change. Format to verify
+- [ ] Near real-time Steam toasts (a toast seconds after an unlock, not up to 5 minutes). Two signals, both from Steam itself, never from the game (rule 4); see PROVIDERS.md, Steam, "Local files and plan":
+  - [ ] Steam local stats files (`appcache/stats/UserGameStats_<accountid>_<appid>.bin`): watch the folder and sync that one game straight away when its file changes. Also finds borrowed Steam Families games last played more than two weeks ago, which the Web API can't list
+  - [ ] Running-game detection (Steam's `RunningAppID` registry value) → fast polling (about every 30 s) of the game being played, as a safety net for a missed file write; a game not played lately is checked the moment it launches instead of up to 6 hours later
+  - [ ] First, a timing check during a play session: when Steam rewrites the stats file relative to the unlock, and how soon `GetPlayerAchievements` shows it
 - [ ] Xbox provider (OAuth via browser/loopback redirect, token refresh)
-- [ ] Running-game detection → fast polling
 - [ ] Activity feed screen
 - **Exit:** unlocks from Steam, Xbox, RA and RPCS3 all appear in one library and fire toasts
 
@@ -45,7 +47,8 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 ## M4: Polish and notification depth
 
 - [ ] Notification settings (corner, monitor, scale, rarity styling, per-platform toggles)
-- [ ] Native toast fallback, Do Not Disturb (incl. schedule)
+- [ ] Toast sound per rarity tier, with volume and a mute (F-22)
+- [ ] Native toast fallback, Do Not Disturb schedule (manual pause is in the tray already)
 - [ ] Onboarding flow, empty/error states, provider health UI
 - [ ] Accessibility pass, reduced motion, high contrast
 - [ ] Data export, log viewer

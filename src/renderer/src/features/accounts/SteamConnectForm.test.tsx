@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ConnectResult, SteamConnectInput } from '@shared/ipc'
 import { SteamConnectForm } from './SteamConnectForm'
+import { fakeApi } from '@/test/fake-api'
 
 const STEAM_ID = '76561190000000001'
 const KEY = '0123456789ABCDEF0123456789ABCDEF'
@@ -16,13 +17,9 @@ const connectSteam = vi.fn<(input: SteamConnectInput) => Promise<ConnectResult>>
 const onConnected = vi.fn()
 
 beforeEach(() => {
-  window.api = {
-    getAppInfo: vi.fn(),
-    sendTestNotification: vi.fn(),
-    onToast: vi.fn(() => () => {}),
-    listAccounts: vi.fn(),
+  window.api = fakeApi({
     connectSteam,
-  }
+  })
 })
 
 afterEach(() => {

@@ -11,10 +11,6 @@ describe('StatTile', () => {
     render(<StatTile label="Games tracked" value={3482} />)
 
     expect(screen.getByText('Games tracked')).toBeInTheDocument()
-    // Grouping follows the machine's locale (e.g. "3,482" or "3 482" with a non-breaking space),
-    // so build the expectation the same way rather than hard-coding one format. Testing Library
-    // normalizes the *rendered* text's whitespace to plain spaces before matching, so the query
-    // string needs the same normalization or a non-breaking space won't match its plain-space form.
     expect(screen.getByText((3482).toLocaleString().replace(/\s/g, ' '))).toBeInTheDocument()
   })
 
@@ -27,7 +23,6 @@ describe('StatTile', () => {
   it('renders no hint text when none is given', () => {
     const { container } = render(<StatTile label="Games tracked" value={214} />)
 
-    // Only the label and the value should be present; nothing else in the card.
     expect(container.querySelectorAll('span')).toHaveLength(2)
   })
 })

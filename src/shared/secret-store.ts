@@ -1,10 +1,5 @@
 import type { Secret } from './secret'
 
-/**
- * Where tokens and API keys live. Production will encrypt them with Electron's `safeStorage`
- * (Windows DPAPI) in M1; tests use {@link InMemorySecretStore}. Secrets must never be written
- * to SQLite, config files or logs.
- */
 export interface SecretStore {
   find(key: string): Secret | undefined
   save(key: string, value: Secret): void

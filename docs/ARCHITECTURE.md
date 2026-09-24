@@ -29,7 +29,7 @@ Steam / Xbox / PSN / RA APIs   RPCS3 / Xenia / Steam files   Tokens & API keys
 
 The **main process** owns everything with side effects: windows, tray, database, network, files. The **renderer** processes only draw UI. They talk over IPC through the **preload** script, which exposes a tiny typed API as `window.api`; the UI has no Node.js access.
 
-Closing the main window destroys it (freeing its renderer, ~90 MB). The tray icon, the hidden overlay window and (from M1) the watchers and sync tasks keep running. "Quit" in the tray menu is the only way to exit.
+Closing the main window destroys it (freeing its renderer, ~90 MB). The tray icon, the hidden overlay window and (from M1) the watchers and sync tasks keep running. "Quit" in the tray menu is the only way to exit. With "Start with Windows" on (installed app only), Windows starts the app at login with `--hidden`, and it stays in the tray until opened.
 
 ## 2. Code areas
 
@@ -64,8 +64,10 @@ The main process is wired by hand, with no dependency-injection library. Each se
 ### Auth (OAuth-style, e.g. Xbox)
 The UI asks the main process to begin the flow; the main process opens the system browser (loopback redirect) or a short-lived auth window, exchanges tokens itself, stores secrets via `SecretStore`, creates the account row and closes the flow. Tokens never reach the renderer.
 
-### A test notification today (implemented)
-Button click in React → `window.api.sendTestNotification()` → preload `ipcRenderer.invoke('notifications:send-test')` → main `ipc.ts` handler (validates the sender) → `OverlayService.show()` positions the overlay bottom-right, shows it without focus, and sends `overlay:show-toast` → the overlay's React `OverlayApp` receives it via `window.api.onToast` and animates a `<Toast>` in, then out after its duration → the main process hides the window.
+### An unlock toast (implemented)
+The `Scheduler` hands a sync pass's `UnlockEvent`s to `NotificationService.notify()` (`main/notifications.ts`), after the pass has committed. The service turns each into a `ToastPayload` (platform name, rarity from the global %, `null` description for hidden achievements), drops duplicates of toasts already on screen or waiting, and collapses more than 5 at once into one "N achievements unlocked" toast led by the rarest. It keeps **at most 3 on screen**, each for 5 s, the rest queued in order. Every change sends the whole on-screen list (`VisibleToast[]`, oldest first, each with a stable id) through `OverlayService.display()` → `overlay:set-toasts` → the overlay's `OverlayApp` (via `window.api.onToasts`) draws them stacked, newest at the bottom, and Motion animates arrivals, departures and the stack shifting. When the list empties, the main process hides the window after the exit animation.
+
+The queue and timers live in the main process, not the overlay page, so they are plain Node code tested with fake timers, and the overlay stays a dumb view. The test notification (button or tray) goes through the same queue with `NotificationService.show()`.
 
 ## 4. Concurrency model
 
@@ -80,7 +82,7 @@ Button click in React → `window.api.sendTestNotification()` → preload `ipcRe
 - Options: `transparent`, `frame: false`, `alwaysOnTop` at the `screen-saver` level, `skipTaskbar`, `focusable: false`, `hasShadow: false`, not resizable/movable
 - `setIgnoreMouseEvents(true)` makes it click-through. Verified on Windows: the window carries `WS_EX_TRANSPARENT` (click-through) and `WS_EX_NOACTIVATE` (never takes focus). Shown with `showInactive()` so it never activates.
 - `OverlayService` positions it in the bottom-right of the primary display's **work area** (DIP coordinates from `screen.getPrimaryDisplay()`), 16 px from the edges. Corner and monitor selection are settings (M4).
-- A timer hides the window after `durationMs` plus the exit animation
+- Sized for three stacked toasts (480x396 DIPs, `OVERLAY_SIZE`); shown while any toast is on screen and hidden once the list is empty and the exit animation has played
 - Exclusive-fullscreen games render above normal windows, so a fallback native Windows notification is planned (DESIGN §6)
 - The toast (`overlay/Toast.tsx`) picks its colours from a per-rarity lookup table and animates with Motion (slide + fade; a one-off shimmer for Ultra Rare; only a fade if the OS requests reduced motion)
 - Nothing is injected into any other process: the overlay only changes its own window
@@ -107,7 +109,7 @@ achievement-tracker/
 │   │   └── ipc.ts                   # channel names, payload types, the window.api interface
 │   ├── main/
 │   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC, sync wiring
-│   │   ├── windows.ts  tray.ts  overlay-service.ts  ipc.ts  sample-toasts.ts
+│   │   ├── windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  ipc.ts  accounts.ts  sample-toasts.ts
 │   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts,
 │   │   │                            #   sync-store.ts (the sync engine's SQL)
 │   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts (+ detector in M2)
@@ -120,9 +122,11 @@ achievement-tracker/
 │           ├── main.tsx  env.d.ts   # window entry; types for window.api
 │           ├── app/                 # App.tsx, IslandNav.tsx, navigation.ts
 │           ├── overlay/             # main.tsx, OverlayApp.tsx, Toast.tsx
-│           ├── components/          # Button.tsx, TrophyIcon.tsx (shared UI)
+│           ├── components/          # Button.tsx, TrophyIcon.tsx, RarityChip.tsx... (shared UI)
+│           ├── lib/                 # format.ts: shared text formatting
+│           ├── test/                # fake-api.ts: the fake window.api for component tests
 │           ├── features/            # dashboard/ library/ game-detail/ activity/
-│           │                        #   accounts/ settings/ onboarding/   (dashboard and accounts started)
+│           │                        #   accounts/ settings/ onboarding/   (dashboard, library, game-detail and accounts started)
 │           └── styles/index.css     # design tokens (Tailwind @theme) + base styles
 └── tests/fixtures/                  # sanitized provider responses / sample trophy files
 ```

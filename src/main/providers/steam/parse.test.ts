@@ -13,7 +13,6 @@ import {
   toGameAchievements,
 } from './parse'
 
-// Sanitized real responses; see docs/PROVIDERS.md (Steam) for how they were captured.
 function fixture(name: string): unknown {
   return JSON.parse(readFileSync(resolve('tests/fixtures/steam', name), 'utf8'))
 }
@@ -332,6 +331,7 @@ const PORTAL = {
   ref: { externalId: '400' },
   title: 'Portal',
   iconUrl: `${APP_IMAGES}/400/cfa928ab4119dd137e50d728e8fe703e4e970aff.jpg`,
+  coverUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/400/header.jpg',
   lastPlayed: new Date(1621685363 * 1000),
   recentlyPlayed: false,
 }
@@ -340,6 +340,7 @@ const RESIDENT_EVIL_2 = {
   ref: { externalId: '883710' },
   title: 'Resident Evil 2',
   iconUrl: `${APP_IMAGES}/883710/86ef2fdebeced746313994ccf2d7afb1f2887bf0.jpg`,
+  coverUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/883710/header.jpg',
   lastPlayed: new Date(1790160642 * 1000),
   recentlyPlayed: false,
 }
@@ -348,6 +349,7 @@ const SPIDER_MAN = {
   ref: { externalId: '1817070' },
   title: 'Marvel’s Spider-Man Remastered',
   iconUrl: `${APP_IMAGES}/1817070/346333cb340139ad8b697005e5c79a3162c387b0.jpg`,
+  coverUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/1817070/header.jpg',
   lastPlayed: null,
   recentlyPlayed: true,
 }
@@ -381,6 +383,7 @@ describe('parseLibrary', () => {
       ref: { externalId: '20' },
       title: 'Borrowed',
       iconUrl: null,
+      coverUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/20/header.jpg',
       lastPlayed: null,
       recentlyPlayed: true,
     })

@@ -3,18 +3,14 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
+import { fakeApi } from '@/test/fake-api'
 
 const sendTestNotification = vi.fn()
 
 beforeEach(() => {
-  // In the real app the preload script provides window.api; in tests we provide a fake.
-  window.api = {
-    getAppInfo: vi.fn().mockResolvedValue({ version: '0.1.0', schemaVersion: 1 }),
+  window.api = fakeApi({
     sendTestNotification,
-    onToast: vi.fn(() => () => {}),
-    listAccounts: vi.fn().mockResolvedValue([]),
-    connectSteam: vi.fn(),
-  }
+  })
 })
 
 afterEach(() => {
@@ -31,7 +27,6 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Library' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current', 'page')
-    // The footer fills in once the main process replies.
     expect(await screen.findByText('v0.1.0 · schema 1')).toBeInTheDocument()
   })
 
@@ -50,6 +45,49 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send test notification' }))
 
     expect(sendTestNotification).toHaveBeenCalledOnce()
-    await screen.findByText('v0.1.0 · schema 1') // let the pending state update settle
+    await screen.findByText('v0.1.0 · schema 1')
+  })
+})
+
+describe('App: opening a game', () => {
+  const PORTAL = {
+    id: 7,
+    title: 'Portal',
+    platform: 'steam' as const,
+    coverUrl: null,
+    unlocked: 1,
+    total: 2,
+    lastUnlockAt: null,
+  }
+
+  beforeEach(() => {
+    window.api = fakeApi({
+      listLibrary: vi.fn().mockResolvedValue([PORTAL]),
+      getGame: vi.fn().mockResolvedValue({ game: PORTAL, achievements: [] }),
+    })
+  })
+
+  it('opens a game from the Library, and goes back to it', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+
+    fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
+    expect(await screen.findByRole('heading', { name: 'Portal' })).toBeInTheDocument()
+    expect(window.api.getGame).toHaveBeenCalledWith(7)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
+    expect(await screen.findByRole('heading', { name: 'Library' })).toBeInTheDocument()
+  })
+
+  it('leaves a game when another page is picked in the nav', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
+    await screen.findByRole('heading', { name: 'Portal' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accounts' }))
+
+    expect(screen.getByRole('heading', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Portal' })).not.toBeInTheDocument()
   })
 })

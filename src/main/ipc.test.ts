@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { DashboardStats } from '@shared/dashboard'
 import { IPC, type AccountSummary, type ConnectResult } from '@shared/ipc'
 
 type Handler = (event: unknown, ...args: unknown[]) => unknown
 const handlers = new Map<string, Handler>()
 
-// ipcMain only exists inside a running Electron app: record what gets registered instead.
 vi.mock('electron', () => ({
   ipcMain: { handle: (channel: string, handler: Handler) => handlers.set(channel, handler) },
 }))
@@ -21,12 +21,24 @@ const ACCOUNT: AccountSummary = {
   gameCount: 0,
 }
 const CONNECTED: ConnectResult = { ok: true, account: ACCOUNT }
+const DASHBOARD: DashboardStats = {
+  unlockedAchievements: 0,
+  totalAchievements: 0,
+  gamesTracked: 0,
+  completedGames: 0,
+  unlockedThisWeek: 0,
+  nearlyThere: [],
+  recentUnlocks: [],
+}
 
 const fakes = {
   getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
   listAccounts: vi.fn(() => [ACCOUNT]),
   connectSteam: vi.fn(() => Promise.resolve(CONNECTED)),
+  listLibrary: vi.fn(() => []),
+  getGame: vi.fn(() => null),
+  getDashboard: vi.fn(() => DASHBOARD),
 }
 
 function call(channel: string, event: unknown, ...args: unknown[]): unknown {
@@ -48,14 +60,19 @@ describe('registerIpcHandlers', () => {
     expect(call(IPC.listAccounts, TRUSTED)).toEqual([ACCOUNT])
   })
 
-  it.each([IPC.getAppInfo, IPC.sendTestNotification, IPC.listAccounts, IPC.connectSteam])(
-    'refuses %s from a page we did not ship',
-    (channel) => {
-      expect(() => call(channel, UNTRUSTED, { steamId: 'x', apiKey: 'y' })).toThrow(
-        'Untrusted sender',
-      )
-    },
-  )
+  it.each([
+    IPC.getAppInfo,
+    IPC.sendTestNotification,
+    IPC.listAccounts,
+    IPC.connectSteam,
+    IPC.listLibrary,
+    IPC.getGame,
+    IPC.getDashboard,
+  ])('refuses %s from a page we did not ship', (channel) => {
+    expect(() => call(channel, UNTRUSTED, { steamId: 'x', apiKey: 'y' })).toThrow(
+      'Untrusted sender',
+    )
+  })
 
   it('passes a valid Steam connect request on, trimmed', async () => {
     const result = await call(IPC.connectSteam, TRUSTED, {
@@ -108,5 +125,29 @@ describe('registerIpcHandlers', () => {
     expect(logged).toContain('apiKey: too_big')
     expect(logged).not.toContain('SECRET-ID')
     expect(logged).not.toContain('KKKK')
+  })
+})
+
+describe('library and dashboard handlers', () => {
+  it('lists the library and returns the dashboard for our own pages', () => {
+    expect(call(IPC.listLibrary, TRUSTED)).toEqual([])
+    expect(call(IPC.getDashboard, TRUSTED)).toEqual(DASHBOARD)
+  })
+
+  it('passes a valid game id on', () => {
+    call(IPC.getGame, TRUSTED, 42)
+
+    expect(fakes.getGame).toHaveBeenCalledWith(42)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a string', '42'],
+    ['zero', 0],
+    ['a negative id', -1],
+    ['a fraction', 1.5],
+  ])('answers %s as a game id with null, without looking it up', (_label, id) => {
+    expect(call(IPC.getGame, TRUSTED, id)).toBeNull()
+    expect(fakes.getGame).not.toHaveBeenCalled()
   })
 })

@@ -2,28 +2,19 @@
 @import '@fontsource-variable/figtree';
 @import 'tailwindcss';
 
-/* Design tokens ("Afterglow" direction). Each --color-* becomes utility classes: --color-surface-1
-   -> bg-surface-1, text-surface-1, border-surface-1... Keep in sync with docs/DESIGN.md §7 and
-   the Superdesign canvas. */
 @theme {
-  /* The names inside quotes are what @fontsource registers (note the "Variable" suffix). */
   --font-sans: 'Figtree Variable', system-ui, sans-serif;
   --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', sans-serif;
 
-  /* Named "canvas", not "base": Tailwind's text-base is a font size, so a colour called
-     "base" would silently override it and turn text near-black. */
   --color-canvas: #080a10;
   --color-surface-1: #121620;
   --color-surface-2: #191e2b;
   --color-surface-3: #222839;
-  /* Translucent white, so a border takes on the colour of whatever card it sits on. */
   --color-line: rgb(255 255 255 / 0.07);
   --color-fg: #f3f5fa;
   --color-fg-muted: #9aa3b8;
   --color-fg-subtle: #626b82;
 
-  /* Lime is the one accent: active nav, primary buttons, progress, toggles, focus rings.
-     Gold is kept for Ultra Rare and completed games (see rarity-ultra). */
   --color-primary: #c4f542;
   --color-primary-hover: #d6ff5c;
   --color-on-primary: #0b1000;
@@ -38,8 +29,6 @@
   --color-rarity-rare: #5ab0ff;
   --color-rarity-ultra: #ffc94a;
 
-  /* The light and dark ends of each rarity's gradient (icon tile, ultra-rare chip), and the colour
-     of a glyph drawn on that gradient. */
   --color-rarity-common-light: #66708a;
   --color-rarity-common-dark: #3a4256;
   --color-rarity-uncommon-light: #37d493;
@@ -53,13 +42,10 @@
   --color-on-rarity-rare: #ffffff;
   --color-on-rarity-ultra: #3a1c00;
 
-  /* Generous radii: control = buttons and inputs, card = art and small tiles, panel = floating cards. */
   --radius-control: 14px;
   --radius-card: 18px;
   --radius-panel: 26px;
 
-  /* Tailwind turns --shadow-* into shadow-* classes. "float" is what makes a card look lifted:
-     a faint top highlight, then a large soft drop shadow. */
   --shadow-float:
     inset 0 1px 0 rgb(255 255 255 / 0.07), 0 28px 56px -22px rgb(0 0 0 / 0.8),
     0 10px 22px -10px rgb(0 0 0 / 0.55);
@@ -67,25 +53,16 @@
   --shadow-chip-ultra: 0 0 18px -4px color-mix(in srgb, var(--color-rarity-ultra) 55%, transparent);
 }
 
-/* "inline" copies each value into the shadow class itself instead of pointing at a variable. That is
-   what lets these read --rarity: it is only set on an element inside a rarity scope (see
-   [data-rarity] below), so a normal token, resolved once at :root, would see nothing. */
 @theme inline {
-  /* The unlock toast: an inset top highlight, a faint 4px ring, a big dark drop shadow and a glow
-     in the rarity's colour. */
   --shadow-toast:
     inset 0 1px 0 rgb(255 255 255 / 0.1),
     0 0 0 4px color-mix(in srgb, var(--rarity) 10%, transparent),
     0 26px 50px -16px rgb(0 0 0 / 0.9),
     0 12px 44px -6px color-mix(in srgb, var(--rarity) 45%, transparent);
-  /* A rarity-coloured icon tile: a glow underneath and a bright top edge. */
   --shadow-tile: 0 10px 22px -10px var(--rarity), inset 0 1px 0 rgb(255 255 255 / 0.35);
 }
 
 @layer components {
-  /* Use as className="bg-aurora": the soft teal / indigo / lime glow behind every screen. Put it
-     on the main window's outermost element. Not for the overlay: that window must stay
-     transparent. */
   .bg-aurora {
     background:
       radial-gradient(1100px 540px at 4% -10%, rgb(22 150 132 / 0.36), transparent 62%),
@@ -96,11 +73,6 @@
 }
 
 @layer base {
-  /* Rarity scope. Put data-rarity="ultra_rare" (or common, uncommon, rare) on an element and it,
-     and everything inside it, can use: --rarity (the colour), --rarity-light and --rarity-dark
-     (the ends of its gradient) and --rarity-on (a glyph colour that reads on that gradient).
-     Components then style with text-(--rarity), border-(--rarity)/45 and so on, with no
-     per-rarity class tables. Adding a rarity means adding a rule here (a test checks). */
   [data-rarity='common'] {
     --rarity: var(--color-rarity-common);
     --rarity-light: var(--color-rarity-common-light);
@@ -134,6 +106,6 @@
   body {
     @apply bg-canvas text-fg font-sans antialiased;
     font-variant-numeric: tabular-nums;
-    user-select: none; /* it's an app, not a web page */
+    user-select: none;
   }
 }

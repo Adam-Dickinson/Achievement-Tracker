@@ -1,36 +1,36 @@
 import { screen, type BrowserWindow } from 'electron'
-import { IPC, type ToastPayload } from '@shared/ipc'
+import { IPC, type VisibleToast } from '@shared/ipc'
 import { OVERLAY_SIZE } from './windows'
 
 const SCREEN_MARGIN = 16
-/** Time for the toast's exit animation to finish before the window is hidden. */
 const EXIT_ANIMATION_MS = 400
 
-/**
- * Shows unlock toasts in the overlay window (docs/DESIGN.md §6). M1 adds the queue, stacking
- * and burst collapsing; for now a new toast simply replaces the current one.
- */
 export class OverlayService {
   #hideTimer: NodeJS.Timeout | null = null
+  #loaded: Promise<void>
 
-  constructor(private readonly window: BrowserWindow) {}
+  constructor(private readonly window: BrowserWindow) {
+    this.#loaded = window.webContents.isLoading()
+      ? new Promise((resolve) => window.webContents.once('did-finish-load', () => resolve()))
+      : Promise.resolve()
+  }
 
-  async show(toast: Omit<ToastPayload, 'durationMs'>, durationMs = 5000): Promise<void> {
+  async display(toasts: readonly VisibleToast[]): Promise<void> {
+    await this.#loaded
     if (this.window.isDestroyed()) return
 
-    if (this.window.webContents.isLoading()) {
-      await new Promise<void>((resolve) => this.window.webContents.once('did-finish-load', resolve))
-    }
-
-    this.#positionBottomRight()
-    // showInactive: display the window without activating it (i.e. without taking focus).
-    if (!this.window.isVisible()) this.window.showInactive()
-    this.window.webContents.send(IPC.showToast, { ...toast, durationMs } satisfies ToastPayload)
-
     if (this.#hideTimer) clearTimeout(this.#hideTimer)
-    this.#hideTimer = setTimeout(() => {
-      if (!this.window.isDestroyed()) this.window.hide()
-    }, durationMs + EXIT_ANIMATION_MS)
+    this.#hideTimer = null
+
+    if (toasts.length > 0) {
+      this.#positionBottomRight()
+      if (!this.window.isVisible()) this.window.showInactive()
+    } else {
+      this.#hideTimer = setTimeout(() => {
+        if (!this.window.isDestroyed()) this.window.hide()
+      }, EXIT_ANIMATION_MS)
+    }
+    this.window.webContents.send(IPC.setToasts, toasts)
   }
 
   #positionBottomRight(): void {

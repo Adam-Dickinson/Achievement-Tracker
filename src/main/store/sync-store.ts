@@ -235,7 +235,6 @@ export function listAccountSummaries(db: DatabaseSync): AccountSummary[] {
   }))
 }
 
-/** Accounts the scheduler should poll. One needing re-login or disabled is left alone. */
 export function listConnectedAccounts(db: DatabaseSync): AccountRow[] {
   const rows = db
     .prepare("SELECT id, platform, external_id FROM account WHERE status = 'connected' ORDER BY id")
@@ -267,7 +266,6 @@ export function upsertAccount(
   return { id: row.id, platform: account.platform, externalId: account.externalId }
 }
 
-// Only adds or updates: a game missing from `games` keeps its row (SPEC §5).
 export function addPlatformGames(
   db: DatabaseSync,
   account: AccountRow,
@@ -275,14 +273,15 @@ export function addPlatformGames(
   baselineCutoff: Date | null = null,
 ): number {
   const findGame = db.prepare(
-    'SELECT id FROM platform_game WHERE account_id = ? AND external_id = ?',
+    'SELECT id, game_id FROM platform_game WHERE account_id = ? AND external_id = ?',
   )
   const updateGame = db.prepare(`
     UPDATE platform_game
     SET title = ?, icon_url = ?, last_played = COALESCE(?, last_played)
     WHERE id = ?
   `)
-  const insertGame = db.prepare('INSERT INTO game (title, sort_title) VALUES (?, ?)')
+  const updateCover = db.prepare('UPDATE game SET cover_url = COALESCE(?, cover_url) WHERE id = ?')
+  const insertGame = db.prepare('INSERT INTO game (title, sort_title, cover_url) VALUES (?, ?, ?)')
   const insertPlatformGame = db.prepare(`
     INSERT INTO platform_game
       (game_id, account_id, platform, external_id, title, icon_url, last_played, baseline_done,
@@ -293,14 +292,18 @@ export function addPlatformGames(
   let added = 0
   for (const game of games) {
     const lastPlayed = game.lastPlayed?.toISOString() ?? null
-    const existing = findGame.get(account.id, game.ref.externalId) as { id: number } | undefined
+    const existing = findGame.get(account.id, game.ref.externalId) as
+      { id: number; game_id: number } | undefined
 
     if (existing) {
       updateGame.run(game.title, game.iconUrl, lastPlayed, existing.id)
+      updateCover.run(game.coverUrl, existing.game_id)
       continue
     }
 
-    const gameId = Number(insertGame.run(game.title, game.title.toLowerCase()).lastInsertRowid)
+    const gameId = Number(
+      insertGame.run(game.title, game.title.toLowerCase(), game.coverUrl).lastInsertRowid,
+    )
     insertPlatformGame.run(
       gameId,
       account.id,
@@ -316,7 +319,6 @@ export function addPlatformGames(
   return added
 }
 
-/** The external ids of every game known for an account: each is one `game:<id>` sync scope. */
 export function listPlatformGameExternalIds(db: DatabaseSync, accountId: number): string[] {
   const rows = db
     .prepare('SELECT external_id FROM platform_game WHERE account_id = ? ORDER BY id')

@@ -4,8 +4,6 @@ export interface Migration {
   readonly sql: string
 }
 
-// Every `migrations/NNNN_name.sql` file, loaded as text at build time. Files are forward-only:
-// never edit one that has shipped (see docs/SPEC.md §3).
 const files = import.meta.glob<string>('./migrations/*.sql', {
   query: '?raw',
   import: 'default',

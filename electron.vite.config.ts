@@ -6,8 +6,6 @@ import type { Plugin } from 'vite'
 
 const shared = resolve('src/shared')
 
-// A strict Content-Security-Policy for the built app. It is only injected in production builds:
-// the dev server needs inline scripts for hot reload.
 const CSP = [
   "default-src 'self'",
   "script-src 'self'",
@@ -35,18 +33,13 @@ function productionCsp(): Plugin {
 }
 
 export default defineConfig({
-  // Main process: Node.js. Owns windows, tray, database and (later) providers and sync.
   main: {
     resolve: { alias: { '@shared': shared } },
     build: { rollupOptions: { external: ['node:sqlite'] } },
   },
-  // Preload: the small, sandboxed bridge between the main process and the UI.
-  // (package.json must NOT set "type": "module": the main and preload bundles have to be
-  // CommonJS, because sandboxed preload scripts and Electron's main process load them that way.)
   preload: {
     resolve: { alias: { '@shared': shared } },
   },
-  // Renderer: the React UI. Two windows, so two HTML entry points.
   renderer: {
     resolve: { alias: { '@': resolve('src/renderer/src'), '@shared': shared } },
     plugins: [react(), tailwindcss(), productionCsp()],

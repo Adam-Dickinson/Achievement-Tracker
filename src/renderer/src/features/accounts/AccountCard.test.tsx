@@ -48,7 +48,6 @@ describe('AccountCard', () => {
   it('groups a large game count', () => {
     render(<AccountCard account={account({ gameCount: 1204 })} />)
 
-    // Grouping follows the machine's locale; see StatTile.test.tsx for the whitespace detail.
     const expected = `${(1204).toLocaleString()} games`.replace(/\s/g, ' ')
     expect(screen.getByText(expected)).toBeInTheDocument()
   })

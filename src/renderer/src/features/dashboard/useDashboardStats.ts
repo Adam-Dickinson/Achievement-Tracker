@@ -1,26 +1,21 @@
-import { useState, useEffect } from 'react'
-import { SAMPLE_STATS } from './sample-stats'
-
-function fetchStats() {
-  return Promise.resolve(SAMPLE_STATS)
-}
+import { useEffect, useState } from 'react'
+import type { DashboardStats } from '@shared/dashboard'
 
 export function useDashboardStats() {
-  const [stats, setStats] = useState<typeof SAMPLE_STATS | null>(null)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [version, setVersion] = useState(0)
 
   useEffect(() => {
     let cancelled = false
-
-    fetchStats().then((data) => {
-      if (!cancelled) {
-        setStats(data)
-      }
+    void window.api.getDashboard().then((data) => {
+      if (!cancelled) setStats(data)
     })
-
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [version])
+
+  useEffect(() => window.api.onDataChanged(() => setVersion((v) => v + 1)), [])
 
   return stats
 }

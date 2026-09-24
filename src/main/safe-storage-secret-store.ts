@@ -23,7 +23,6 @@ export class SafeStorageSecretStore implements SecretStore {
     try {
       return new Secret(this.#encryptor.decryptString(Buffer.from(encrypted, 'base64')))
     } catch {
-      // Encrypted by another Windows user or PC: the user has to enter it again.
       return undefined
     }
   }
