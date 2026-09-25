@@ -15,7 +15,7 @@ export interface TrayActions {
 
 export function trayMenuTemplate(actions: TrayActions): MenuItemConstructorOptions[] {
   return [
-    { label: 'Open Achievement Tracker', click: () => actions.open() },
+    { label: 'Open Trophy Locker', click: () => actions.open() },
     { label: 'Send test notification', click: () => actions.sendTestNotification() },
     { type: 'separator' },
     {

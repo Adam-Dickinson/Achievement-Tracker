@@ -38,6 +38,13 @@ describe('IslandNav', () => {
     expect(onSelect).toHaveBeenCalledExactlyOnceWith(item.id)
   })
 
+  it('shows the Trophy Locker wordmark beside a decorative logo', () => {
+    const { container } = render(<IslandNav selected="dashboard" onSelect={() => {}} info={INFO} />)
+
+    expect(screen.getByText('Trophy Locker')).toBeInTheDocument()
+    expect(container.querySelector('img')).toHaveAttribute('alt', '')
+  })
+
   it('shows the app and schema version once known', () => {
     render(<IslandNav selected="dashboard" onSelect={() => {}} info={INFO} />)
 

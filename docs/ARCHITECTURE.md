@@ -96,13 +96,13 @@ The queue and timers live in the main process, not the overlay page, so they are
 ## 6. Folder structure
 
 ```
-achievement-tracker/
+trophy-locker/
 ├── package.json  package-lock.json
 ├── electron.vite.config.ts          # build config for main, preload and renderer (2 HTML entries)
 ├── vitest.config.ts                 # test config (Node by default; UI tests opt in to jsdom)
 ├── tsconfig.json  tsconfig.node.json  tsconfig.web.json
 ├── eslint.config.mjs  .prettierrc.json  .editorconfig
-├── resources/                       # app icon (png, ico, svg)
+├── resources/                       # app and tray icons (svg sources, png, ico)
 ├── .github/workflows/ci.yml         # format check, lint, typecheck, test, build
 ├── docs/
 │   ├── DESIGN.md  SPEC.md  ARCHITECTURE.md  PROVIDERS.md  ROADMAP.md  SCAFFOLD-GUIDE.md

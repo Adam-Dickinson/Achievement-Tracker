@@ -81,7 +81,7 @@ describe('XboxSignIn', () => {
     expect(pages).toEqual([
       {
         status: 200,
-        text: 'Signed in. You can close this tab and go back to Achievement Tracker.',
+        text: 'Signed in. You can close this tab and go back to Trophy Locker.',
       },
     ])
   })

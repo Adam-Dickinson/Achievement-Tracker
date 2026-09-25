@@ -1,5 +1,5 @@
 {
-  "name": "achievement-tracker",
+  "name": "trophy-locker",
   "private": true,
   "version": "0.1.0",
   "description": "Tracks achievements and trophies across platforms and emulators, with unlock pop-ups",

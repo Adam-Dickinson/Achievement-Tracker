@@ -75,7 +75,7 @@ export type ConnectResult =
   | { readonly ok: true; readonly account: AccountSummary }
   | { readonly ok: false; readonly reason: ConnectFailure; readonly message: string }
 
-export interface AchievementTrackerApi {
+export interface TrophyLockerApi {
   getAppInfo(): Promise<AppInfo>
   sendTestNotification(): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
