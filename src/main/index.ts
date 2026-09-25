@@ -1,19 +1,28 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, Menu, safeStorage, shell } from 'electron'
 import { IPC } from '@shared/ipc'
-import { connectEa, connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
+import {
+  connectEa,
+  connectEpic,
+  connectSteam,
+  connectUbisoft,
+  connectXbox,
+  signInToSteam,
+} from './accounts'
 import { coalesce } from './coalesce'
-import { EaSignIn } from './ea-sign-in'
-import { openEaSignInWindow } from './ea-sign-in-window'
+import { CookieSignIn } from './cookie-sign-in'
+import { type CookieSignInPage, openCookieSignInWindow } from './cookie-sign-in-window'
 import { registerIpcHandlers } from './ipc'
 import { DATABASE_FILE, moveLegacyData } from './legacy-data'
-import { mayNavigate } from './navigation'
+import { isEaAddress, isSteamAddress, mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
 import { EaProvider } from './providers/ea'
+import { readSignInCookies } from './providers/ea/auth'
 import { EpicProvider } from './providers/epic'
 import { EPIC_SIGN_IN_URL } from './providers/epic/auth'
 import { SteamProvider } from './providers/steam'
+import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
 import { XboxProvider } from './providers/xbox'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
@@ -34,6 +43,21 @@ import { openUbisoftSignInWindow } from './ubisoft-sign-in-window'
 import { describeUnlockTiming } from './unlock-timing'
 import { createMainWindow, createOverlayWindow } from './windows'
 import { XboxSignIn } from './xbox-sign-in'
+
+const EA_SIGN_IN_URL = 'https://www.ea.com/login'
+const EA_SIGN_IN_PAGE: CookieSignInPage = {
+  title: 'Sign in to EA',
+  home: 'https://www.ea.com',
+  cookieDomain: 'ea.com',
+  mayNavigate: isEaAddress,
+}
+const STEAM_SIGN_IN_URL = 'https://store.steampowered.com/login/'
+const STEAM_SIGN_IN_PAGE: CookieSignInPage = {
+  title: 'Sign in to Steam',
+  home: 'https://store.steampowered.com',
+  cookieDomain: 'steampowered.com',
+  mayNavigate: isSteamAddress,
+}
 
 if (!dataFolderReady() || !app.requestSingleInstanceLock()) {
   app.quit()
@@ -105,9 +129,23 @@ async function start(): Promise<void> {
         mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
       ),
   })
-  const eaSignIn = new EaSignIn({
-    openWindow: (url) =>
-      openEaSignInWindow(url, mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined),
+  const cookieWindow = (page: CookieSignInPage) => (url: string) =>
+    openCookieSignInWindow(
+      page,
+      url,
+      mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
+    )
+  const eaSignIn = new CookieSignIn({
+    service: 'EA',
+    url: EA_SIGN_IN_URL,
+    read: readSignInCookies,
+    openWindow: cookieWindow(EA_SIGN_IN_PAGE),
+  })
+  const steamSignIn = new CookieSignIn({
+    service: 'Steam',
+    url: STEAM_SIGN_IN_URL,
+    read: readSteamSignIn,
+    openWindow: cookieWindow(STEAM_SIGN_IN_PAGE),
   })
   const secrets = new SafeStorageSecretStore(
     join(app.getPath('userData'), 'secrets.json'),
@@ -133,6 +171,7 @@ async function start(): Promise<void> {
     xboxSignIn.cancel()
     ubisoftSignIn.cancel()
     eaSignIn.cancel()
+    steamSignIn.cancel()
   })
 
   registerIpcHandlers({
@@ -159,6 +198,19 @@ async function start(): Promise<void> {
     cancelUbisoftSignIn: () => ubisoftSignIn.cancel(),
     connectEa: () => connectEa({ db, ea, signIn: () => eaSignIn.run(), secrets, scheduler }),
     cancelEaSignIn: () => eaSignIn.cancel(),
+    signInToSteam: (input) =>
+      signInToSteam(
+        {
+          db,
+          steam,
+          signIn: () => steamSignIn.run(),
+          readApiKey: (signIn) => readApiKey(signIn),
+          secrets,
+          scheduler,
+        },
+        input,
+      ),
+    cancelSteamSignIn: () => steamSignIn.cancel(),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     getDashboard: () => getDashboardStats(db),

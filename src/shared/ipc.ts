@@ -18,6 +18,8 @@ export const IPC = {
   cancelUbisoftSignIn: 'accounts:cancel-ubisoft-sign-in',
   connectEa: 'accounts:connect-ea',
   cancelEaSignIn: 'accounts:cancel-ea-sign-in',
+  signInToSteam: 'accounts:sign-in-to-steam',
+  cancelSteamSignIn: 'accounts:cancel-steam-sign-in',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   getDashboard: 'dashboard:get',
@@ -65,6 +67,11 @@ export interface UbisoftConnectInput {
   readonly acceptedUnofficial: true
 }
 
+export interface SteamSignInInput {
+  readonly includeFamily: boolean
+  readonly acceptedUnofficial: true
+}
+
 export interface EaConnectInput {
   readonly acceptedUnofficial: true
 }
@@ -94,6 +101,8 @@ export interface TrophyLockerApi {
   cancelUbisoftSignIn(): Promise<void>
   connectEa(input: EaConnectInput): Promise<ConnectResult>
   cancelEaSignIn(): Promise<void>
+  signInToSteam(input: SteamSignInInput): Promise<ConnectResult>
+  cancelSteamSignIn(): Promise<void>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   getDashboard(): Promise<DashboardStats>

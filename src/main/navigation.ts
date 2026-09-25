@@ -11,9 +11,20 @@ export function mayNavigate(contents: object, url: string): boolean {
 }
 
 export function isEaAddress(url: string): boolean {
+  return isHttpsOn(url, ['ea.com'])
+}
+
+export function isSteamAddress(url: string): boolean {
+  return isHttpsOn(url, ['steampowered.com', 'steamcommunity.com'])
+}
+
+function isHttpsOn(url: string, domains: readonly string[]): boolean {
   try {
     const { protocol, hostname } = new URL(url)
-    return protocol === 'https:' && (hostname === 'ea.com' || hostname.endsWith('.ea.com'))
+    return (
+      protocol === 'https:' &&
+      domains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`))
+    )
   } catch {
     return false
   }

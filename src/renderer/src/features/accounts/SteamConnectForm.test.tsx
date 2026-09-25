@@ -40,7 +40,7 @@ describe('SteamConnectForm', () => {
   it('is a labelled form with a hidden key field', () => {
     render(<SteamConnectForm onConnected={onConnected} />)
 
-    expect(screen.getByRole('form', { name: 'Connect Steam' })).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: 'Connect with an API key' })).toBeInTheDocument()
     expect(screen.getByLabelText('Steam API key')).toHaveAttribute('type', 'password')
   })
 

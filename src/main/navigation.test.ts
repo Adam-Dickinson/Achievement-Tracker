@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { allowNavigation, isEaAddress, mayNavigate } from './navigation'
+import { allowNavigation, isEaAddress, isSteamAddress, mayNavigate } from './navigation'
 
 describe('mayNavigate', () => {
   it('blocks navigation for a window without a rule', () => {
@@ -36,5 +36,25 @@ describe('isEaAddress', () => {
     'not a url',
   ])('blocks %s', (url) => {
     expect(isEaAddress(url)).toBe(false)
+  })
+})
+
+describe('isSteamAddress', () => {
+  it.each([
+    'https://store.steampowered.com/login/',
+    'https://login.steampowered.com/jwt/refresh',
+    'https://steamcommunity.com/login/home/',
+    'https://help.steampowered.com/en/',
+  ])('allows %s', (url) => {
+    expect(isSteamAddress(url)).toBe(true)
+  })
+
+  it.each([
+    'http://store.steampowered.com/login/',
+    'https://steampowered.com.example.org/',
+    'https://notsteamcommunity.com/',
+    'https://www.ea.com/',
+  ])('blocks %s', (url) => {
+    expect(isSteamAddress(url)).toBe(false)
   })
 })

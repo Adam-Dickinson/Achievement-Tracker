@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { ProviderError } from '@shared/errors'
 import { Secret } from '@shared/secret'
+import type { BrowserCookie } from '../browser-cookie'
 import { eaFetch } from './api'
 import { check } from './parse'
 
@@ -12,11 +13,6 @@ const COOKIE_NAMES = ['sid', 'remid', '_nx_mpcid'] as const
 
 type CookieName = (typeof COOKIE_NAMES)[number]
 type EaCookies = Partial<Record<CookieName, string>>
-
-export interface BrowserCookie {
-  readonly name: string
-  readonly value: string
-}
 
 export interface EaToken {
   readonly token: Secret

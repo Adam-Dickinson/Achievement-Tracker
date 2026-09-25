@@ -5,6 +5,7 @@ import type {
   ConnectFailure,
   ConnectResult,
   EpicConnectInput,
+  SteamSignInInput,
   SteamConnectInput,
 } from '@shared/ipc'
 import type { AccountCredentials } from '@shared/models'
@@ -12,6 +13,7 @@ import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import type { SecretStore } from '@shared/secret-store'
 import { readAuthorizationCode } from './providers/epic/auth'
+import { signInSteamId, withFamily } from './providers/steam/session'
 import { listAccountSummaries, upsertAccount } from './store/sync-store'
 import type { Scheduler } from './sync/scheduler'
 import { SignInError, type SignInFailure } from './sign-in-error'
@@ -125,6 +127,42 @@ export async function connectEa(deps: EaAccountsDeps): Promise<ConnectResult> {
   }
 }
 
+export const NO_API_KEY_MESSAGE =
+  'Your Steam account has no Web API key yet. Create one at steamcommunity.com/dev/apikey (any domain name will do), then sign in again, or connect with an API key below.'
+
+export interface SteamSignInDeps {
+  readonly db: DatabaseSync
+  readonly steam: AchievementProvider
+  readonly signIn: () => Promise<Secret>
+  readonly readApiKey: (signIn: Secret) => Promise<Secret | null>
+  readonly secrets: SecretStore
+  readonly scheduler: Pick<Scheduler, 'startAccount' | 'lookForGamesNow'>
+}
+
+export async function signInToSteam(
+  deps: SteamSignInDeps,
+  input: SteamSignInInput,
+): Promise<ConnectResult> {
+  try {
+    const signIn = await deps.signIn()
+    const steamId = signInSteamId(signIn)
+    if (steamId === null) throw new ProviderError('parse', 'Steam: the sign-in has no SteamID')
+    const key = await deps.readApiKey(signIn)
+    if (key === null) return failure('other', NO_API_KEY_MESSAGE)
+    const credentials = await deps.steam.authenticate({ kind: 'api_key', key, accountId: steamId })
+    const profile = await deps.steam.validate(credentials)
+    const secret =
+      input.includeFamily && credentials.secret
+        ? withFamily(credentials.secret, signIn)
+        : credentials.secret
+    const account = saveAccount(deps, { ...credentials, secret }, profile.displayName)
+    deps.scheduler.lookForGamesNow(account.id)
+    return { ok: true, account }
+  } catch (err) {
+    return toSteamSignInFailure(err)
+  }
+}
+
 function saveAccount(
   deps: Pick<AccountsDeps, 'db' | 'secrets' | 'scheduler'>,
   credentials: AccountCredentials,
@@ -196,6 +234,23 @@ function toUbisoftFailure(err: unknown): ConnectResult {
   console.error('Connecting a Ubisoft account failed', err)
   return failure('other', 'Something went wrong while connecting. Please try again.')
 }
+function toSteamSignInFailure(err: unknown): ConnectResult {
+  if (err instanceof SignInError) {
+    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('Steam'))
+  }
+  if (err instanceof ProviderError) {
+    if (err.kind === 'auth_expired') {
+      return failure('other', 'Steam did not accept the sign-in. Please sign in again.')
+    }
+    if (err.isRetryable) {
+      return failure('network', "Couldn't reach Steam. Check your connection and try again.")
+    }
+    return failure('other', err.message)
+  }
+  console.error('Signing in to Steam failed', err)
+  return failure('other', 'Something went wrong while connecting. Please try again.')
+}
+
 function toEaFailure(err: unknown): ConnectResult {
   if (err instanceof SignInError) {
     return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('EA'))

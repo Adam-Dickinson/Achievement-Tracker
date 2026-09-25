@@ -9,6 +9,7 @@ import type {
 import type { AchievementProvider, AuthInput, ProviderCapabilities } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { steamGet } from './api'
+import { fetchFamilyApps, fetchStoreAchievementFlags, toFamilyGame } from './family'
 import { accountIdOf, STEAM_LOCAL, type SteamLocalDeps, watchSteamLocal } from './local'
 import {
   parseGameSchema,
@@ -18,6 +19,7 @@ import {
   parsePlayerSummary,
   toGameAchievements,
 } from './parse'
+import { readSteamSecret, requestSteamSession, type SteamSession } from './session'
 
 const PLAYER_SUMMARIES = '/ISteamUser/GetPlayerSummaries/v2/'
 const OWNED_GAMES = '/IPlayerService/GetOwnedGames/v1/'
@@ -29,6 +31,11 @@ const GLOBAL_PERCENTAGES = '/ISteamUserStats/GetGlobalAchievementPercentagesForA
 const STEAM_ID64 = /^7656119\d{10}$/
 const API_KEY = /^[0-9A-F]{32}$/i
 const LANGUAGE = 'english'
+const TOKEN_MARGIN_MS = 60 * 60_000
+
+export interface SteamProviderOptions {
+  readonly now?: () => Date
+}
 
 export class SteamProvider implements AchievementProvider {
   readonly platform = 'steam'
@@ -41,9 +48,16 @@ export class SteamProvider implements AchievementProvider {
   }
 
   readonly #local: SteamLocalDeps
+  readonly #now: () => Date
+  readonly #familyTokens = new Map<string, Promise<SteamSession>>()
+  readonly #hasAchievements = new Map<string, boolean>()
 
-  constructor(local: SteamLocalDeps = STEAM_LOCAL) {
+  constructor(
+    local: SteamLocalDeps = STEAM_LOCAL,
+    { now = () => new Date() }: SteamProviderOptions = {},
+  ) {
     this.#local = local
+    this.#now = now
   }
 
   async authenticate(input: AuthInput, signal?: AbortSignal): Promise<AccountCredentials> {
@@ -77,7 +91,7 @@ export class SteamProvider implements AchievementProvider {
     credentials: AccountCredentials,
     signal?: AbortSignal,
   ): Promise<readonly RemoteGame[]> {
-    const key = requireKey(credentials)
+    const { key, family } = readSecret(credentials)
     const steamid = credentials.externalId
     const [owned, recent] = await Promise.all([
       steamGet(
@@ -87,7 +101,11 @@ export class SteamProvider implements AchievementProvider {
       ),
       steamGet(RECENTLY_PLAYED, { steamid }, { key, signal }),
     ])
-    return parseLibrary(owned, recent)
+    const games = parseLibrary(owned, recent)
+    if (family === null) return games
+    const known = new Set(games.map((game) => game.ref.externalId))
+    const shared = await this.#familyGames(steamid, key, family, known, signal)
+    return [...games, ...shared]
   }
 
   async fetchGame(
@@ -113,6 +131,73 @@ export class SteamProvider implements AchievementProvider {
     )
   }
 
+  async #familyGames(
+    steamId: string,
+    key: Secret,
+    family: Secret,
+    known: ReadonlySet<string>,
+    signal?: AbortSignal,
+  ): Promise<RemoteGame[]> {
+    try {
+      const { token } = await this.#familySession(steamId, family)
+      const apps = (await fetchFamilyApps(token, steamId, signal)).filter(
+        (app) => !known.has(app.appid),
+      )
+      await this.#learnAchievements(
+        apps.map((app) => app.appid),
+        key,
+        signal,
+      )
+      const now = this.#now()
+      return apps
+        .filter((app) => this.#hasAchievements.get(app.appid) === true)
+        .map((app) => toFamilyGame(app, now))
+    } catch (error) {
+      if (!(error instanceof ProviderError) || signal?.aborted) throw error
+      if (error.kind === 'auth_expired') this.#familyTokens.delete(steamId)
+      console.warn(`Steam: left out the family library this time (${error.message})`)
+      return []
+    }
+  }
+
+  #familySession(steamId: string, family: Secret): Promise<SteamSession> {
+    const cached = this.#familyTokens.get(steamId)
+    if (cached) {
+      return cached.then((token) =>
+        token.expiresAt.getTime() - this.#now().getTime() > TOKEN_MARGIN_MS
+          ? token
+          : this.#newFamilySession(steamId, family),
+      )
+    }
+    return this.#newFamilySession(steamId, family)
+  }
+
+  #newFamilySession(steamId: string, family: Secret): Promise<SteamSession> {
+    const token = requestSteamSession(family, 'store')
+    this.#familyTokens.set(steamId, token)
+    token.catch(() => {
+      if (this.#familyTokens.get(steamId) === token) this.#familyTokens.delete(steamId)
+    })
+    return token
+  }
+
+  async #learnAchievements(
+    appids: readonly string[],
+    key: Secret,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const unknown = appids.filter((appid) => !this.#hasAchievements.has(appid))
+    if (unknown.length === 0) return
+    const flags = await fetchStoreAchievementFlags(unknown, signal)
+    for (const [appid, flag] of flags) {
+      const has =
+        flag ??
+        parseGameSchema(await steamGet(GAME_SCHEMA, { appid, l: LANGUAGE }, { key, signal }))
+          .length > 0
+      this.#hasAchievements.set(appid, has)
+    }
+  }
+
   watch(credentials: AccountCredentials, onChange: (game: RemoteGameRef) => void): () => void {
     const accountId = accountIdOf(credentials.externalId)
     if (accountId === null) return () => undefined
@@ -121,8 +206,12 @@ export class SteamProvider implements AchievementProvider {
 }
 
 function requireKey(credentials: AccountCredentials): Secret {
+  return readSecret(credentials).key
+}
+
+function readSecret(credentials: AccountCredentials): { key: Secret; family: Secret | null } {
   if (credentials.secret === null) {
     throw new ProviderError('auth_expired', 'Steam: no API key is stored for this account')
   }
-  return credentials.secret
+  return readSteamSecret(credentials.secret)
 }

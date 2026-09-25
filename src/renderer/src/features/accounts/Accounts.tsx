@@ -2,7 +2,7 @@ import type { AccountSummary } from '@shared/ipc'
 import { AccountCard } from './AccountCard'
 import { EaConnectCard } from './EaConnectCard'
 import { EpicConnectCard } from './EpicConnectCard'
-import { SteamConnectForm } from './SteamConnectForm'
+import { SteamConnectCard } from './SteamConnectCard'
 import { UbisoftConnectCard } from './UbisoftConnectCard'
 import { useAccounts } from './useAccounts'
 import { XboxConnectCard } from './XboxConnectCard'
@@ -13,7 +13,7 @@ export function Accounts() {
   return (
     <div className="mt-8 flex flex-col gap-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        <SteamConnectForm onConnected={reload} />
+        <SteamConnectCard onConnected={reload} />
         <XboxConnectCard onConnected={reload} />
         <EpicConnectCard onConnected={reload} />
         <UbisoftConnectCard onConnected={reload} />

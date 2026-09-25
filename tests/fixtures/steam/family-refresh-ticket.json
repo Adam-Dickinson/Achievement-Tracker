@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "login_url": "https://store.steampowered.com/login/settoken",
+  "steamID": "76561198000000001",
+  "nonce": "fake-nonce",
+  "redir": "/",
+  "auth": "fake-auth"
+}

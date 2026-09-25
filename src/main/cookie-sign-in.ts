@@ -1,35 +1,41 @@
 import type { Secret } from '@shared/secret'
-import { type BrowserCookie, readSignInCookies } from './providers/ea/auth'
+import type { BrowserCookie } from './providers/browser-cookie'
 import { SignInError } from './sign-in-error'
 
-export const EA_SIGN_IN_URL = 'https://www.ea.com/login'
 export const SIGN_IN_TIMEOUT_MS = 10 * 60_000
 
-export interface EaSignInWindow {
+export interface CookieSignInWindow {
   onSignedIn(listener: (cookies: readonly BrowserCookie[]) => void): void
   onClosed(listener: () => void): void
   close(): void
 }
 
-export interface EaSignInDeps {
-  readonly openWindow: (url: string) => EaSignInWindow
+export interface CookieSignInDeps {
+  readonly service: string
+  readonly url: string
+  readonly read: (cookies: readonly BrowserCookie[]) => Secret | null
+  readonly openWindow: (url: string) => CookieSignInWindow
   readonly timeoutMs?: number
 }
 
-export class EaSignIn {
-  readonly #openWindow: (url: string) => EaSignInWindow
-  readonly #timeoutMs: number
+export function isOnDomain(cookieDomain: string, domain: string): boolean {
+  const host = cookieDomain.replace(/^\./, '').toLowerCase()
+  return host === domain || host.endsWith(`.${domain}`)
+}
+
+export class CookieSignIn {
+  readonly #deps: CookieSignInDeps
   #cancelCurrent: (() => void) | null = null
 
-  constructor(deps: EaSignInDeps) {
-    this.#openWindow = deps.openWindow
-    this.#timeoutMs = deps.timeoutMs ?? SIGN_IN_TIMEOUT_MS
+  constructor(deps: CookieSignInDeps) {
+    this.#deps = deps
   }
 
   run(): Promise<Secret> {
     this.cancel()
+    const { service, url, read, openWindow, timeoutMs = SIGN_IN_TIMEOUT_MS } = this.#deps
     return new Promise<Secret>((resolve, reject) => {
-      const window = this.#openWindow(EA_SIGN_IN_URL)
+      const window = openWindow(url)
       let settled = false
       const finish = (outcome: Secret | SignInError): void => {
         if (settled) return
@@ -41,15 +47,15 @@ export class EaSignIn {
         else resolve(outcome)
       }
       const cancel = (): void =>
-        finish(new SignInError('cancelled', 'The EA sign-in was cancelled'))
+        finish(new SignInError('cancelled', `The ${service} sign-in was cancelled`))
       const timer = setTimeout(
-        () => finish(new SignInError('timed_out', 'The EA sign-in timed out')),
-        this.#timeoutMs,
+        () => finish(new SignInError('timed_out', `The ${service} sign-in timed out`)),
+        timeoutMs,
       )
 
       this.#cancelCurrent = cancel
       window.onSignedIn((cookies) => {
-        const signIn = readSignInCookies(cookies)
+        const signIn = read(cookies)
         if (signIn) finish(signIn)
       })
       window.onClosed(cancel)

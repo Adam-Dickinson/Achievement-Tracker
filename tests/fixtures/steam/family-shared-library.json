@@ -1,0 +1,550 @@
+{
+  "response": {
+    "apps": [
+      {
+        "appid": 400,
+        "owner_steamids": [
+          "76561198000000001",
+          "76561198000000002"
+        ],
+        "name": "Portal",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "cfa928ab4119dd137e50d728e8fe703e4e970aff",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1732792003,
+        "rt_last_played": 1621685363,
+        "rt_playtime": 134,
+        "app_type": 1
+      },
+      {
+        "appid": 440,
+        "owner_steamids": [
+          "76561198000000001"
+        ],
+        "name": "Team Fortress 2",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "f568912870a4684f9ec76277a1a404dda6bab213",
+        "exclude_reason": 3,
+        "rt_time_acquired": 1444550626,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 480,
+        "owner_steamids": [
+          "76561198000000001"
+        ],
+        "name": "Spacewar",
+        "capsule_filename": "portrait.png",
+        "exclude_reason": 3,
+        "rt_time_acquired": 1444550626,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 570,
+        "owner_steamids": [
+          "76561198000000001"
+        ],
+        "name": "Dota 2",
+        "capsule_filename": "6843027380c3bfd0952449fd9174f492ef2e7b40/library_capsule.jpg",
+        "img_icon_hash": "48eb825bb93787945065b460bdc109e395384ebf",
+        "exclude_reason": 3,
+        "rt_time_acquired": 1444550626,
+        "rt_last_played": 1545762752,
+        "rt_playtime": 11,
+        "app_type": 1,
+        "content_descriptors": [
+          5
+        ]
+      },
+      {
+        "appid": 220,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Half-Life 2",
+        "capsule_filename": "ac2f074d790656a06ef8305bd54a6f64e9a70082/library_600x900.jpg",
+        "img_icon_hash": "fcfb366051782b8ebf2aa297f3b746395858cb62",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1530465767,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 240,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Counter-Strike: Source",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "9052fa60c496a1c03383b27687ec50f4bf0f0e10",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1542989336,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 500,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Left 4 Dead",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "428df26bc35b09319e31b1ffb712487b20b3245c",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1748327605,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 550,
+        "owner_steamids": [
+          "76561198000000003",
+          "76561198000000002"
+        ],
+        "name": "Left 4 Dead 2",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "7d5a243f9500d2f8467312822f8af2a2928777ed",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1609062988,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 21100,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "F.E.A.R. 3",
+        "capsule_filename": "portrait.png",
+        "img_icon_hash": "01b73115a3ff7315d14f0bcf7beff01ef76162b4",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1748327605,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 34830,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Sniper: Ghost Warrior",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "f2da049032b71ac6a359497fc8379bacbd7c6076",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1609227705,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 34870,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Sniper Ghost Warrior 2",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "da27c4234c040808171754145b8bb82e837b89ff",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1609227705,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 40800,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Super Meat Boy",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "64eec20c9375e7473b964f0d0bc41d19f03add3b",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1749499534,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          5
+        ]
+      },
+      {
+        "appid": 43110,
+        "owner_steamids": [
+          "76561198000000002",
+          "76561198000000003"
+        ],
+        "name": "Metro 2033",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "a70fe6dc214f24107d20596f3040dbfa220ed42d",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1615663121,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          5
+        ]
+      },
+      {
+        "appid": 45740,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Dead Rising 2",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "1a8ab50763c91798622cc43eaad21960bf4d4b1a",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1757869053,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 63380,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Sniper Elite V2",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "0092da2541424d4c1d10c1757dcb8104c37323ac",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1726033595,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 94300,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "The Dream Machine",
+        "sort_as": "Dream Machine",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "6c876b1ffd82d9aeb59cdde2520c6939610e0acc",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1620677061,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 289070,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Sid Meier's Civilization VI",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "9dc914132fec244adcede62fb8e7524a72a7398c",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1763566131,
+        "rt_last_played": 1788543945,
+        "rt_playtime": 6,
+        "app_type": 1
+      },
+      {
+        "appid": 524220,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "NieR:Automata™",
+        "sort_as": "NieR:Automata",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "ec431ecb2a5178c5a01bb15550f112f93af029bb",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1744460490,
+        "rt_last_played": 1782581167,
+        "rt_playtime": 29,
+        "app_type": 1
+      },
+      {
+        "appid": 1091500,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Cyberpunk 2077",
+        "capsule_filename": "6399de67cce3cecadce7900e03f6e09ff910a235/library_capsule.jpg",
+        "img_icon_hash": "6897c3848f3e0350d512f59d5bae174a1e3739f9",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1731016858,
+        "rt_last_played": 1768927137,
+        "rt_playtime": 46,
+        "app_type": 1,
+        "content_descriptors": [
+          1,
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 1817070,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Marvel’s Spider-Man Remastered",
+        "sort_as": "Marvels Spider-Man Remastered",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "346333cb340139ad8b697005e5c79a3162c387b0",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1774023649,
+        "rt_last_played": 1789583108,
+        "rt_playtime": 1560,
+        "app_type": 1
+      },
+      {
+        "appid": 10,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Counter-Strike",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "6b0312cda02f5f777efa2f3318c307ff9acafbb5",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1542989336,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 70,
+        "owner_steamids": [
+          "76561198000000002",
+          "76561198000000003"
+        ],
+        "name": "Half-Life",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "95be6d131fc61f145797317ca437c9765f24b41c",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1700433602,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 80,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Counter-Strike: Condition Zero",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "077b050ef3e89cd84e2c5a575d78d53b54058236",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1542989336,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 100,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Counter-Strike: Condition Zero Deleted Scenes",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "077b050ef3e89cd84e2c5a575d78d53b54058236",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1542989336,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 320,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Half-Life 2: Deathmatch",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "795e85364189511f4990861b578084deef086cb1",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1530465767,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 360,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Half-Life Deathmatch: Source",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "40b8a62efff5a9ab356e5c56f5c8b0532c8e1aa3",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1530465767,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 43160,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Metro: Last Light Complete Edition",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "7b84b80d2cebe41ba87c59b28e2473d3b33e797d",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1684435231,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 553850,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "HELLDIVERS™ 2",
+        "sort_as": "HELLDIVERS 2",
+        "capsule_filename": "a79b4d13ce2b1e1379116085b4f97b45c14548ab/library_capsule.jpg",
+        "img_icon_hash": "5236dcc5d02b1f7aa199eef56253d20be87baef3",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1764103864,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 596870,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "Drop Hunt",
+        "capsule_filename": "portrait.png",
+        "img_icon_hash": "cafa6bb463cf133b1e38e56de10d5a4c4b82fb41",
+        "exclude_reason": 0,
+        "rt_time_acquired": 1723383237,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 107410,
+        "owner_steamids": [
+          "76561198000000004"
+        ],
+        "name": "Arma 3",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "3212af52faf994c558bd622cb0f360c1ef295a6b",
+        "exclude_reason": 1,
+        "rt_time_acquired": 1720306910,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 221100,
+        "owner_steamids": [
+          "76561198000000002"
+        ],
+        "name": "DayZ",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "16a985dfee9b093d76a0ffc4cf4c77ba20c2eb0d",
+        "exclude_reason": 1,
+        "rt_time_acquired": 1745581440,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          2,
+          5
+        ]
+      },
+      {
+        "appid": 319630,
+        "owner_steamids": [
+          "76561198000000003"
+        ],
+        "name": "Life is Strange™",
+        "sort_as": "Life is Strange",
+        "capsule_filename": "library_600x900.jpg",
+        "img_icon_hash": "e54b13da0710a35e7088664a77632e79157d8332",
+        "exclude_reason": 3,
+        "rt_time_acquired": 1575319196,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1
+      },
+      {
+        "appid": 513710,
+        "owner_steamids": [
+          "76561198000000005",
+          "76561198000000002",
+          "76561198000000003"
+        ],
+        "name": "SCUM",
+        "capsule_filename": "6c05befcbea642dc18b7da7c5d6e91aad2b164c7/library_capsule.jpg",
+        "img_icon_hash": "c25483e3e989239b932901118e44cf71606b5973",
+        "exclude_reason": 1,
+        "rt_time_acquired": 1751805842,
+        "rt_last_played": 0,
+        "rt_playtime": 0,
+        "app_type": 1,
+        "content_descriptors": [
+          1,
+          2,
+          5
+        ]
+      }
+    ],
+    "owner_steamid": "76561198000000001"
+  }
+}

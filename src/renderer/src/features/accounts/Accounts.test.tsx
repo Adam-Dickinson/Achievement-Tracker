@@ -87,7 +87,7 @@ describe('Accounts', () => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)
 
-    expect(screen.getByRole('form', { name: 'Connect Steam' })).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: 'Connect with an API key' })).toBeInTheDocument()
     await screen.findByText('No accounts connected yet.')
   })
 
@@ -107,6 +107,14 @@ describe('Accounts', () => {
     await screen.findByText('No accounts connected yet.')
   })
 
+  it('shows the Steam card with its sign-in and the API key fallback', async () => {
+    listAccounts.mockResolvedValue([])
+    render(<Accounts />)
+
+    expect(screen.getByRole('region', { name: 'Connect Steam' })).toBeInTheDocument()
+    await screen.findByText('No accounts connected yet.')
+  })
+
   it('shows the EA connect card', async () => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)
@@ -123,7 +131,7 @@ describe('Accounts', () => {
 
     fireEvent.change(screen.getByLabelText('SteamID64'), { target: { value: '76561190000000001' } })
     fireEvent.change(screen.getByLabelText('Steam API key'), { target: { value: 'KEY' } })
-    const steamForm = screen.getByRole('form', { name: 'Connect Steam' })
+    const steamForm = screen.getByRole('form', { name: 'Connect with an API key' })
     fireEvent.click(within(steamForm).getByRole('button', { name: 'Connect' }))
 
     expect(await screen.findByText('Steam Player')).toBeInTheDocument()
