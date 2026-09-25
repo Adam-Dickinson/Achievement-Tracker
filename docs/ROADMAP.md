@@ -48,9 +48,10 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 
 - [ ] PSN provider (NPSSO flow, opt-in warning)
 - [ ] Cross-platform game linking (auto-match + manual merge/split)
+- [ ] Artwork for every game. Today 4 of 231 games have no cover, all Epic games whose catalog entry is empty. In order: borrow the cover of a linked copy on another platform; otherwise look the game up on the Steam store by title (a public search with no key; verify it first, rule 10); as a last resort, generate an Afterglow-style cover (the title on a gradient) so no card is blank. Also find the real title for Epic games whose catalog is empty and whose library name is a codename (for example "yorkie Production")
 - [ ] Dashboard stats (completion %, rarest, closest to 100%)
 - [ ] Search/filter/sort, virtualized lists
-- **Exit:** a game owned on two platforms shows as one entry with per-platform tabs
+- **Exit:** a game owned on two platforms shows as one entry with per-platform tabs, and every game in the Library has an image
 
 ## M5: Polish and notification depth
 
