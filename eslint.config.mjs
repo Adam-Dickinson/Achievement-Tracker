@@ -13,6 +13,7 @@ export default tseslint.config(
       'docs/design/mockups',
       'resources',
       '.superdesign',
+      'tests/fixtures/_raw',
     ],
   },
   js.configs.recommended,

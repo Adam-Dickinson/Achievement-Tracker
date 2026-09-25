@@ -1,12 +1,13 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, Menu, safeStorage } from 'electron'
+import { app, BrowserWindow, Menu, safeStorage, shell } from 'electron'
 import { IPC } from '@shared/ipc'
-import { connectSteam } from './accounts'
+import { connectSteam, connectXbox } from './accounts'
 import { coalesce } from './coalesce'
 import { registerIpcHandlers } from './ipc'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
 import { SteamProvider } from './providers/steam'
+import { XboxProvider } from './providers/xbox'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
@@ -16,6 +17,7 @@ import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { createTray } from './tray'
 import { createMainWindow, createOverlayWindow } from './windows'
+import { XboxSignIn } from './xbox-sign-in'
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -60,6 +62,8 @@ async function start(): Promise<void> {
   }
 
   const steam = new SteamProvider()
+  const xbox = new XboxProvider()
+  const xboxSignIn = new XboxSignIn({ openExternal: (url) => shell.openExternal(url) })
   const secrets = new SafeStorageSecretStore(
     join(app.getPath('userData'), 'secrets.json'),
     safeStorage,
@@ -69,7 +73,7 @@ async function start(): Promise<void> {
   }, 1000)
   const scheduler = new Scheduler({
     db,
-    providers: { steam },
+    providers: { steam, xbox },
     secrets,
     onUnlocks: (events) => notifications.notify(events),
     onDataChanged: dataChanged,
@@ -78,6 +82,7 @@ async function start(): Promise<void> {
   app.on('before-quit', () => {
     scheduler.stop()
     notifications.stop()
+    xboxSignIn.cancel()
   })
 
   registerIpcHandlers({
@@ -85,6 +90,18 @@ async function start(): Promise<void> {
     sendTestNotification,
     listAccounts: () => listAccountSummaries(db),
     connectSteam: (input) => connectSteam({ db, steam, secrets, scheduler }, input),
+    connectXbox: async () => {
+      const result = await connectXbox({
+        db,
+        xbox,
+        signIn: () => xboxSignIn.run(),
+        secrets,
+        scheduler,
+      })
+      showMainWindow()
+      return result
+    },
+    cancelXboxSignIn: () => xboxSignIn.cancel(),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     getDashboard: () => getDashboardStats(db),

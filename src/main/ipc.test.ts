@@ -36,6 +36,8 @@ const fakes = {
   sendTestNotification: vi.fn(() => Promise.resolve()),
   listAccounts: vi.fn(() => [ACCOUNT]),
   connectSteam: vi.fn(() => Promise.resolve(CONNECTED)),
+  connectXbox: vi.fn(() => Promise.resolve(CONNECTED)),
+  cancelXboxSignIn: vi.fn(),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   getDashboard: vi.fn(() => DASHBOARD),
@@ -65,6 +67,8 @@ describe('registerIpcHandlers', () => {
     IPC.sendTestNotification,
     IPC.listAccounts,
     IPC.connectSteam,
+    IPC.connectXbox,
+    IPC.cancelXboxSignIn,
     IPC.listLibrary,
     IPC.getGame,
     IPC.getDashboard,
@@ -125,6 +129,36 @@ describe('registerIpcHandlers', () => {
     expect(logged).toContain('apiKey: too_big')
     expect(logged).not.toContain('SECRET-ID')
     expect(logged).not.toContain('KKKK')
+  })
+})
+
+describe('Xbox handlers', () => {
+  it('connects once the unofficial connection has been accepted', async () => {
+    const result = await call(IPC.connectXbox, TRUSTED, { acceptedUnofficial: true })
+
+    expect(result).toEqual(CONNECTED)
+    expect(fakes.connectXbox).toHaveBeenCalledWith({ acceptedUnofficial: true })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a refusal', { acceptedUnofficial: false }],
+    ['a truthy string', { acceptedUnofficial: 'yes' }],
+  ])('answers %s with invalid_input, without starting a sign-in', async (_label, payload) => {
+    const result = await call(IPC.connectXbox, TRUSTED, payload)
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'invalid_input',
+      message: 'Confirm that you understand the Xbox connection is unofficial.',
+    })
+    expect(fakes.connectXbox).not.toHaveBeenCalled()
+  })
+
+  it('cancels a sign-in that is waiting', () => {
+    call(IPC.cancelXboxSignIn, TRUSTED)
+
+    expect(fakes.cancelXboxSignIn).toHaveBeenCalledOnce()
   })
 })
 

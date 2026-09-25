@@ -18,7 +18,7 @@ import {
   listPlatformGameExternalIds,
   upsertSyncState,
 } from '../store/sync-store'
-import { IDLE_INTERVAL_MS, LIBRARY_SCOPE, Scheduler, SYNC_INTERVAL_MS } from './scheduler'
+import { IDLE_INTERVAL_MS, LIBRARY_SCOPE, READY, Scheduler, SYNC_INTERVAL_MS } from './scheduler'
 
 const START = new Date('2026-03-01T12:00:00.000Z')
 const SECONDS = 1000
@@ -817,5 +817,126 @@ describe('Scheduler retry jitter', () => {
     })
 
     expect(await scheduler.syncDueGames(1)).toEqual(after(START, 33 * SECONDS))
+  })
+})
+
+describe('Scheduler.refreshCredentials', () => {
+  type Refresh = NonNullable<AchievementProvider['refresh']>
+
+  function refreshingProvider(refresh: Refresh, listGames?: AchievementProvider['listGames']) {
+    return { ...fakeProvider(vi.fn(), 'xbox', listGames), refresh: vi.fn(refresh) }
+  }
+
+  function xboxDb(): DatabaseSync {
+    return seedDb([{ id: 1, platform: 'xbox', games: [] }])
+  }
+
+  function storeWith(value: string): InMemorySecretStore {
+    const secrets = new InMemorySecretStore()
+    secrets.save('1', new Secret(value))
+    return secrets
+  }
+
+  it('is ready straight away for a provider without refresh', async () => {
+    const { scheduler } = harness(seedDb(), { steam: fakeProvider(vi.fn()) })
+
+    expect(await scheduler.refreshCredentials(1)).toBe(READY)
+  })
+
+  it('passes the stored credentials to the provider', async () => {
+    const provider = refreshingProvider((credentials) => Promise.resolve(credentials))
+    const { scheduler } = harness(xboxDb(), { xbox: provider }, storeWith('stored-token'))
+
+    await scheduler.refreshCredentials(1)
+
+    const credentials = provider.refresh.mock.calls[0]?.[0]
+    expect(credentials?.platform).toBe('xbox')
+    expect(credentials?.externalId).toBe('acc1')
+    expect(credentials?.secret?.expose()).toBe('stored-token')
+  })
+
+  it('saves a rotated secret so the rest of the round and later rounds use it', async () => {
+    const secrets = storeWith('old-token')
+    const provider = refreshingProvider((credentials) =>
+      Promise.resolve({ ...credentials, secret: new Secret('new-token') }),
+    )
+    const { scheduler } = harness(xboxDb(), { xbox: provider }, secrets)
+
+    expect(await scheduler.refreshCredentials(1)).toBe(READY)
+    expect(secrets.find('1')?.expose()).toBe('new-token')
+  })
+
+  it('does not rewrite the store when the secret is unchanged', async () => {
+    const secrets = storeWith('same-token')
+    const save = vi.spyOn(secrets, 'save')
+    const provider = refreshingProvider((credentials) =>
+      Promise.resolve({ ...credentials, secret: new Secret('same-token') }),
+    )
+    const { scheduler } = harness(xboxDb(), { xbox: provider }, secrets)
+
+    await scheduler.refreshCredentials(1)
+
+    expect(save).not.toHaveBeenCalled()
+  })
+
+  it('on an expired sign-in, marks the account needs_reauth and stops', async () => {
+    const db = xboxDb()
+    const provider = refreshingProvider(() =>
+      Promise.reject(new ProviderError('auth_expired', 'refresh token revoked')),
+    )
+    const { scheduler, onDataChanged } = harness(db, { xbox: provider }, storeWith('t'))
+
+    expect(await scheduler.refreshCredentials(1)).toBeNull()
+    expect(accountStatus(db, 1)).toBe('needs_reauth')
+    expect(onDataChanged).toHaveBeenCalled()
+  })
+
+  it('backs off on a network error and records it against the library', async () => {
+    const db = xboxDb()
+    const provider = refreshingProvider(() =>
+      Promise.reject(new ProviderError('network', 'offline')),
+    )
+    const { scheduler, now } = harness(db, { xbox: provider }, storeWith('t'))
+
+    expect(await scheduler.refreshCredentials(1)).toEqual(after(now(), 30 * SECONDS))
+    expect(await scheduler.refreshCredentials(1)).toEqual(after(now(), 60 * SECONDS))
+    expect(getSyncState(db, 1, LIBRARY_SCOPE)?.lastError).toBe('offline')
+    expect(accountStatus(db, 1)).toBe('connected')
+  })
+
+  it('refreshes before reading the library in a round, and skips the round when it fails', async () => {
+    vi.useFakeTimers({ now: START })
+    const calls: string[] = []
+    const provider = refreshingProvider(
+      () => {
+        calls.push('refresh')
+        return Promise.reject(new ProviderError('network', 'offline'))
+      },
+      () => {
+        calls.push('listGames')
+        return Promise.resolve([])
+      },
+    )
+    const scheduler = new Scheduler({
+      db: xboxDb(),
+      providers: { xbox: provider },
+      secrets: storeWith('t'),
+      onUnlocks: vi.fn(),
+      random: () => 0,
+    })
+
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(calls).toEqual(['refresh'])
+
+    provider.refresh.mockImplementation((credentials) => {
+      calls.push('refresh')
+      return Promise.resolve(credentials)
+    })
+    await vi.advanceTimersByTimeAsync(30 * SECONDS)
+    expect(calls).toEqual(['refresh', 'refresh', 'listGames'])
+
+    scheduler.stop()
+    vi.useRealTimers()
   })
 })

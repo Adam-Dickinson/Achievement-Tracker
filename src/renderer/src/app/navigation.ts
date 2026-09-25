@@ -31,7 +31,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: 'accounts',
     label: 'Accounts',
-    description: 'Connect Steam, Xbox, PlayStation and emulators.',
+    description: 'Connect the platforms you play on.',
     icon: Plug,
   },
   {

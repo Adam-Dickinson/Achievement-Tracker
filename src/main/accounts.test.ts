@@ -5,9 +5,10 @@ import type { AccountCredentials } from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { InMemorySecretStore, type SecretStore } from '@shared/secret-store'
-import { connectSteam } from './accounts'
+import { connectSteam, connectXbox } from './accounts'
 import { applyMigrations } from './store/migrate'
 import { listAccountSummaries, setAccountStatus } from './store/sync-store'
+import { SignInError } from './xbox-sign-in'
 
 const STEAM_ID = '76561190000000001'
 const KEY = '0123456789ABCDEF0123456789ABCDEF'
@@ -143,6 +144,121 @@ describe('connectSteam', () => {
     expect(result).toMatchObject({ ok: false, reason: 'other' })
     expect(result.ok || result.message).not.toContain('encryption')
     expect(scheduler.startAccount).not.toHaveBeenCalled()
+    vi.restoreAllMocks()
+  })
+})
+
+const XUID = '2535400000000001'
+const AUTHORIZATION = {
+  code: 'the-code',
+  redirectUri: 'http://localhost:1234',
+  codeVerifier: new Secret('the-verifier'),
+}
+
+function fakeXbox(overrides: Partial<AchievementProvider> = {}): AchievementProvider {
+  return fakeSteam({
+    platform: 'xbox',
+    authenticate: () =>
+      Promise.resolve({ platform: 'xbox', externalId: XUID, secret: new Secret('refresh-token') }),
+    validate: () => Promise.resolve({ externalId: XUID, displayName: 'SampleGamer' }),
+    ...overrides,
+  })
+}
+
+function setupXbox(
+  xbox = fakeXbox(),
+  signIn: () => Promise<typeof AUTHORIZATION> = () => Promise.resolve(AUTHORIZATION),
+) {
+  const { db, secrets, scheduler } = setup()
+  return { db, secrets, scheduler, deps: { db, xbox, signIn, secrets, scheduler } }
+}
+
+describe('connectXbox', () => {
+  it('signs in, saves the account and its refresh token, and starts syncing it', async () => {
+    const { db, secrets, scheduler, deps } = setupXbox()
+
+    const result = await connectXbox(deps)
+
+    expect(result).toEqual({
+      ok: true,
+      account: {
+        id: 1,
+        platform: 'xbox',
+        displayName: 'SampleGamer',
+        status: 'connected',
+        gameCount: 0,
+      },
+    })
+    expect(listAccountSummaries(db)).toHaveLength(1)
+    expect(secrets.find('1')?.expose()).toBe('refresh-token')
+    expect(scheduler.startAccount).toHaveBeenCalledWith(1)
+  })
+
+  it('hands the sign-in code, redirect address and verifier to the provider', async () => {
+    const authenticate = vi.fn<AchievementProvider['authenticate']>(() =>
+      Promise.resolve({ platform: 'xbox', externalId: XUID, secret: new Secret('t') }),
+    )
+    const { deps } = setupXbox(fakeXbox({ authenticate }))
+
+    await connectXbox(deps)
+
+    expect(authenticate).toHaveBeenCalledWith({ kind: 'oauth_code', ...AUTHORIZATION })
+  })
+
+  it('signing in again fixes an account that needed it, keeping the same account', async () => {
+    const { db, deps } = setupXbox()
+    await connectXbox(deps)
+    setAccountStatus(db, 1, 'needs_reauth')
+
+    const result = await connectXbox(deps)
+
+    expect(result.ok && result.account).toMatchObject({ id: 1, status: 'connected' })
+    expect(listAccountSummaries(db)).toHaveLength(1)
+  })
+
+  it.each([
+    ['cancelled', 'The Microsoft sign-in was cancelled.'],
+    ['timed_out', 'The Microsoft sign-in timed out. Please try again.'],
+    ['denied', 'The Microsoft sign-in was not completed. Please try again.'],
+  ] as const)('reports a %s sign-in as cancelled, and saves nothing', async (reason, message) => {
+    const { db, scheduler, deps } = setupXbox(fakeXbox(), () =>
+      Promise.reject(new SignInError(reason, 'x')),
+    )
+
+    expect(await connectXbox(deps)).toEqual({ ok: false, reason: 'cancelled', message })
+    expect(listAccountSummaries(db)).toEqual([])
+    expect(scheduler.startAccount).not.toHaveBeenCalled()
+  })
+
+  it('reports a network failure as a connection problem', async () => {
+    const { deps } = setupXbox(
+      fakeXbox({
+        authenticate: () => Promise.reject(new ProviderError('network', 'Xbox: could not reach')),
+      }),
+    )
+
+    expect(await connectXbox(deps)).toMatchObject({ ok: false, reason: 'network' })
+  })
+
+  it('passes on the provider’s own message, such as an account with no Xbox profile', async () => {
+    const message =
+      'Xbox: this Microsoft account has no Xbox profile yet. Sign in to Xbox once, then try again'
+    const { secrets, deps } = setupXbox(
+      fakeXbox({ authenticate: () => Promise.reject(new ProviderError('other', message)) }),
+    )
+
+    expect(await connectXbox(deps)).toEqual({ ok: false, reason: 'other', message })
+    expect(secrets.find('1')).toBeUndefined()
+  })
+
+  it('reports an unexpected failure with a general message', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const { deps } = setupXbox(fakeXbox(), () => Promise.reject(new Error('port in use')))
+
+    const result = await connectXbox(deps)
+
+    expect(result).toMatchObject({ ok: false, reason: 'other' })
+    expect(result.ok || result.message).not.toContain('port')
     vi.restoreAllMocks()
   })
 })

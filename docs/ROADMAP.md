@@ -29,7 +29,7 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
   - [ ] Steam local stats files (`appcache/stats/UserGameStats_<accountid>_<appid>.bin`): watch the folder and sync that one game straight away when its file changes. Also finds borrowed Steam Families games last played more than two weeks ago, which the Web API can't list
   - [ ] Running-game detection (Steam's `RunningAppID` registry value) → fast polling (about every 30 s) of the game being played, as a safety net for a missed file write; a game not played lately is checked the moment it launches instead of up to 6 hours later
   - [ ] First, a timing check during a play session: when Steam rewrites the stats file relative to the unlock, and how soon `GetPlayerAchievements` shows it
-- [ ] Xbox provider (OAuth via browser/loopback redirect, token refresh)
+- [x] Xbox provider (OAuth via browser/loopback redirect, token refresh). Verified against a real account and built: the provider, the scheduler's credential refresh (ADR-0007), the sign-in in the main process, and the Xbox card on the Accounts screen with the "unofficial" opt-in; a live run fetched all 13 games of a real library
 - [ ] Activity feed screen
 - **Exit:** unlocks from Steam and Xbox appear in one library and fire toasts; a Steam unlock toasts within seconds
 

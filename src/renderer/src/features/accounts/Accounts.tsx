@@ -2,13 +2,17 @@ import type { AccountSummary } from '@shared/ipc'
 import { AccountCard } from './AccountCard'
 import { SteamConnectForm } from './SteamConnectForm'
 import { useAccounts } from './useAccounts'
+import { XboxConnectCard } from './XboxConnectCard'
 
 export function Accounts() {
   const { accounts, reload } = useAccounts()
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      <SteamConnectForm onConnected={reload} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SteamConnectForm onConnected={reload} />
+        <XboxConnectCard onConnected={reload} />
+      </div>
       <AccountList accounts={accounts} />
     </div>
   )
