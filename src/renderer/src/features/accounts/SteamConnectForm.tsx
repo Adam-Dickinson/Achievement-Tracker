@@ -40,16 +40,17 @@ export function SteamConnectForm({ onConnected }: SteamConnectFormProps) {
     <form
       aria-labelledby={`${id}-title`}
       onSubmit={(event) => void handleSubmit(event)}
-      className="flex flex-col gap-4 rounded-panel border border-line bg-surface-1 p-5 shadow-float"
+      className="flex flex-col gap-4"
     >
       <div className="flex flex-col gap-1">
-        <h2 id={`${id}-title`} className="font-display text-xl font-semibold">
-          Connect Steam
-        </h2>
+        <h3 id={`${id}-title`} className="font-display text-base font-semibold">
+          Connect with an API key
+        </h3>
         <p className="text-sm text-fg-muted">
           Your SteamID64 is the 17-digit number starting 7656119, shown under Account details in
           Steam. Get a Steam API key at steamcommunity.com/dev/apikey. The key is encrypted on this
-          PC and never shown again.
+          PC and never shown again. This way nothing else is kept, but the family library isn’t
+          added.
         </p>
       </div>
 

@@ -9,13 +9,14 @@ import {
   connectEa,
   connectEpic,
   connectSteam,
-  connectSteamFamily,
   connectUbisoft,
   connectXbox,
+  NO_API_KEY_MESSAGE,
+  signInToSteam,
 } from './accounts'
-import { readSteamSecret } from './providers/steam/family'
+import { readSteamSecret } from './providers/steam/session'
 import { applyMigrations } from './store/migrate'
-import { listAccountSummaries, setAccountStatus, upsertAccount } from './store/sync-store'
+import { listAccountSummaries, setAccountStatus } from './store/sync-store'
 import { SignInError } from './sign-in-error'
 
 const STEAM_ID = '76561190000000001'
@@ -633,125 +634,126 @@ describe('connectEa', () => {
   })
 })
 
-const FAMILY_STEAM_ID = '76561198000000001'
-const FAMILY_KEY = '0123456789ABCDEF0123456789ABCDEF'
-const FAMILY_SIGN_IN = new Secret(`${FAMILY_STEAM_ID}%7C%7Cfake.refresh.token`)
+const SIGNED_IN_STEAM_ID = '76561190000000001'
+const SIGNED_IN_KEY = '0123456789ABCDEF0123456789ABCDEF'
+const STEAM_SIGN_IN = new Secret(`${SIGNED_IN_STEAM_ID}%7C%7Cfake.refresh.token`)
 
-function setupSteamFamily(
+function setupSteamSignIn(
   overrides: {
     signIn?: () => Promise<Secret>
-    checkSignIn?: (family: Secret) => Promise<unknown>
-    steamId?: string | null
-    storedKey?: boolean
+    readApiKey?: (signIn: Secret) => Promise<Secret | null>
+    steam?: AchievementProvider
   } = {},
 ) {
   const db = new DatabaseSync(':memory:')
   applyMigrations(db)
   const secrets = new InMemorySecretStore()
-  const scheduler = { lookForGamesNow: vi.fn<(accountId: number) => void>() }
-  const { steamId = FAMILY_STEAM_ID, storedKey = true } = overrides
-  if (steamId !== null) {
-    const account = upsertAccount(db, {
-      platform: 'steam',
-      externalId: steamId,
-      displayName: 'Tester',
-    })
-    if (storedKey) secrets.save(String(account.id), new Secret(FAMILY_KEY))
+  const scheduler = {
+    startAccount: vi.fn<(accountId: number) => void>(),
+    lookForGamesNow: vi.fn<(accountId: number) => void>(),
   }
-  const checkSignIn = vi.fn(overrides.checkSignIn ?? (() => Promise.resolve()))
+  const readApiKey = vi.fn(
+    overrides.readApiKey ?? (() => Promise.resolve<Secret | null>(new Secret(SIGNED_IN_KEY))),
+  )
+  const authenticate = vi.fn<AchievementProvider['authenticate']>((input) =>
+    Promise.resolve({
+      platform: 'steam',
+      externalId: input.kind === 'api_key' ? input.accountId : '',
+      secret: input.kind === 'api_key' ? input.key : null,
+    }),
+  )
+  const steam = overrides.steam ?? fakeSteam({ authenticate })
   const deps = {
     db,
-    signIn: overrides.signIn ?? (() => Promise.resolve(FAMILY_SIGN_IN)),
-    checkSignIn,
+    steam,
+    signIn: overrides.signIn ?? (() => Promise.resolve(STEAM_SIGN_IN)),
+    readApiKey,
     secrets,
     scheduler,
   }
-  return { db, secrets, scheduler, checkSignIn, deps }
+  return { db, secrets, scheduler, readApiKey, authenticate, deps }
 }
 
-describe('connectSteamFamily', () => {
-  it('checks the sign-in, keeps it next to the API key, and looks for games at once', async () => {
-    const { secrets, scheduler, checkSignIn, deps } = setupSteamFamily()
+describe('signInToSteam', () => {
+  it('connects the signed-in account with the API key read from Steam, keeping the family sign-in', async () => {
+    const { secrets, scheduler, readApiKey, authenticate, deps } = setupSteamSignIn()
 
-    const result = await connectSteamFamily(deps)
+    const result = await signInToSteam(deps, { includeFamily: true, acceptedUnofficial: true })
 
     expect(result).toMatchObject({ ok: true, account: { id: 1, platform: 'steam' } })
-    expect(checkSignIn).toHaveBeenCalledWith(FAMILY_SIGN_IN)
+    expect(readApiKey).toHaveBeenCalledWith(STEAM_SIGN_IN)
+    const [input] = authenticate.mock.calls[0] ?? []
+    expect(input).toMatchObject({ kind: 'api_key', accountId: SIGNED_IN_STEAM_ID })
     const stored = secrets.find('1')
-    expect(stored && readSteamSecret(stored).key.expose()).toBe(FAMILY_KEY)
-    expect(stored && readSteamSecret(stored).family?.expose()).toBe(FAMILY_SIGN_IN.expose())
+    expect(stored && readSteamSecret(stored).key.expose()).toBe(SIGNED_IN_KEY)
+    expect(stored && readSteamSecret(stored).family?.expose()).toBe(STEAM_SIGN_IN.expose())
     expect(scheduler.lookForGamesNow).toHaveBeenCalledWith(1)
   })
 
-  it('asks for the Steam account first, without opening the sign-in window', async () => {
-    const signIn = vi.fn(() => Promise.resolve(FAMILY_SIGN_IN))
-    const { deps } = setupSteamFamily({ steamId: null, signIn })
+  it('keeps only the API key when the family library is not wanted', async () => {
+    const { secrets, deps } = setupSteamSignIn()
 
-    expect(await connectSteamFamily(deps)).toEqual({
+    await signInToSteam(deps, { includeFamily: false, acceptedUnofficial: true })
+
+    expect(secrets.find('1')?.expose()).toBe(SIGNED_IN_KEY)
+  })
+
+  it('explains how to create a key when the account has none, and saves nothing', async () => {
+    const { db, deps } = setupSteamSignIn({ readApiKey: () => Promise.resolve(null) })
+
+    expect(await signInToSteam(deps, { includeFamily: true, acceptedUnofficial: true })).toEqual({
       ok: false,
       reason: 'other',
-      message: 'Connect your Steam account first, then add its family library.',
+      message: NO_API_KEY_MESSAGE,
     })
-    expect(signIn).not.toHaveBeenCalled()
-  })
-
-  it('refuses a sign-in for a different Steam account, and keeps nothing', async () => {
-    const { secrets, scheduler, deps } = setupSteamFamily({ steamId: '76561198000000009' })
-
-    const result = await connectSteamFamily(deps)
-
-    expect(result).toMatchObject({ ok: false, reason: 'other' })
-    expect(result.ok || result.message).toContain('different account')
-    expect(secrets.find('1')?.expose()).toBe(FAMILY_KEY)
-    expect(scheduler.lookForGamesNow).not.toHaveBeenCalled()
-  })
-
-  it('asks to reconnect Steam when its API key is missing', async () => {
-    const { deps } = setupSteamFamily({ storedKey: false })
-
-    expect(await connectSteamFamily(deps)).toMatchObject({
-      ok: false,
-      message: 'Connect your Steam account again first, then add its family library.',
-    })
+    expect(listAccountSummaries(db)).toEqual([])
   })
 
   it.each([
     ['cancelled', 'The Steam sign-in was cancelled.'],
     ['timed_out', 'The Steam sign-in timed out. Please try again.'],
   ] as const)('reports a %s sign-in as cancelled', async (reason, message) => {
-    const { deps } = setupSteamFamily({
+    const { deps } = setupSteamSignIn({
       signIn: () => Promise.reject(new SignInError(reason, 'x')),
     })
 
-    expect(await connectSteamFamily(deps)).toEqual({ ok: false, reason: 'cancelled', message })
+    expect(await signInToSteam(deps, { includeFamily: true, acceptedUnofficial: true })).toEqual({
+      ok: false,
+      reason: 'cancelled',
+      message,
+    })
   })
 
-  it('keeps nothing when Steam will not renew the sign-in', async () => {
-    const { secrets, deps } = setupSteamFamily({
-      checkSignIn: () => Promise.reject(new ProviderError('auth_expired', 'expired')),
+  it('asks to sign in again when Steam will not renew the sign-in', async () => {
+    const { deps } = setupSteamSignIn({
+      readApiKey: () => Promise.reject(new ProviderError('auth_expired', 'expired')),
     })
 
-    expect(await connectSteamFamily(deps)).toEqual({
+    expect(await signInToSteam(deps, { includeFamily: true, acceptedUnofficial: true })).toEqual({
       ok: false,
       reason: 'other',
       message: 'Steam did not accept the sign-in. Please sign in again.',
     })
-    expect(secrets.find('1')?.expose()).toBe(FAMILY_KEY)
   })
 
   it('reports a network failure as a connection problem', async () => {
-    const { deps } = setupSteamFamily({
-      checkSignIn: () => Promise.reject(new ProviderError('network', 'Steam: could not reach')),
+    const { deps } = setupSteamSignIn({
+      readApiKey: () => Promise.reject(new ProviderError('network', 'Steam: could not reach')),
     })
 
-    expect(await connectSteamFamily(deps)).toMatchObject({ ok: false, reason: 'network' })
+    expect(
+      await signInToSteam(deps, { includeFamily: false, acceptedUnofficial: true }),
+    ).toMatchObject({
+      ok: false,
+      reason: 'network',
+    })
   })
 
   it('reports an unexpected failure with a general message', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    const { deps } = setupSteamFamily({ signIn: () => Promise.reject(new Error('window crashed')) })
+    const { deps } = setupSteamSignIn({ signIn: () => Promise.reject(new Error('window crashed')) })
 
-    const result = await connectSteamFamily(deps)
+    const result = await signInToSteam(deps, { includeFamily: false, acceptedUnofficial: true })
 
     expect(result).toMatchObject({ ok: false, reason: 'other' })
     expect(result.ok || result.message).not.toContain('window crashed')

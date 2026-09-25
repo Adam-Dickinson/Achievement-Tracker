@@ -9,14 +9,7 @@ import type {
 import type { AchievementProvider, AuthInput, ProviderCapabilities } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { steamGet } from './api'
-import {
-  fetchFamilyApps,
-  fetchStoreAchievementFlags,
-  type FamilyToken,
-  readSteamSecret,
-  requestFamilyToken,
-  toFamilyGame,
-} from './family'
+import { fetchFamilyApps, fetchStoreAchievementFlags, toFamilyGame } from './family'
 import { accountIdOf, STEAM_LOCAL, type SteamLocalDeps, watchSteamLocal } from './local'
 import {
   parseGameSchema,
@@ -26,6 +19,7 @@ import {
   parsePlayerSummary,
   toGameAchievements,
 } from './parse'
+import { readSteamSecret, requestSteamSession, type SteamSession } from './session'
 
 const PLAYER_SUMMARIES = '/ISteamUser/GetPlayerSummaries/v2/'
 const OWNED_GAMES = '/IPlayerService/GetOwnedGames/v1/'
@@ -55,7 +49,7 @@ export class SteamProvider implements AchievementProvider {
 
   readonly #local: SteamLocalDeps
   readonly #now: () => Date
-  readonly #familyTokens = new Map<string, Promise<FamilyToken>>()
+  readonly #familyTokens = new Map<string, Promise<SteamSession>>()
   readonly #hasAchievements = new Map<string, boolean>()
 
   constructor(
@@ -145,7 +139,7 @@ export class SteamProvider implements AchievementProvider {
     signal?: AbortSignal,
   ): Promise<RemoteGame[]> {
     try {
-      const { token } = await this.#familyToken(steamId, family)
+      const { token } = await this.#familySession(steamId, family)
       const apps = (await fetchFamilyApps(token, steamId, signal)).filter(
         (app) => !known.has(app.appid),
       )
@@ -166,20 +160,20 @@ export class SteamProvider implements AchievementProvider {
     }
   }
 
-  #familyToken(steamId: string, family: Secret): Promise<FamilyToken> {
+  #familySession(steamId: string, family: Secret): Promise<SteamSession> {
     const cached = this.#familyTokens.get(steamId)
     if (cached) {
       return cached.then((token) =>
         token.expiresAt.getTime() - this.#now().getTime() > TOKEN_MARGIN_MS
           ? token
-          : this.#newFamilyToken(steamId, family),
+          : this.#newFamilySession(steamId, family),
       )
     }
-    return this.#newFamilyToken(steamId, family)
+    return this.#newFamilySession(steamId, family)
   }
 
-  #newFamilyToken(steamId: string, family: Secret): Promise<FamilyToken> {
-    const token = requestFamilyToken(family)
+  #newFamilySession(steamId: string, family: Secret): Promise<SteamSession> {
+    const token = requestSteamSession(family, 'store')
     this.#familyTokens.set(steamId, token)
     token.catch(() => {
       if (this.#familyTokens.get(steamId) === token) this.#familyTokens.delete(steamId)

@@ -9,7 +9,7 @@ import {
   type EaConnectInput,
   type EpicConnectInput,
   type SteamConnectInput,
-  type SteamFamilyConnectInput,
+  type SteamSignInInput,
   type UbisoftConnectInput,
   type XboxConnectInput,
 } from '@shared/ipc'
@@ -33,8 +33,8 @@ export interface IpcHandlers {
   cancelUbisoftSignIn(): void
   connectEa(input: EaConnectInput): Promise<ConnectResult>
   cancelEaSignIn(): void
-  connectSteamFamily(input: SteamFamilyConnectInput): Promise<ConnectResult>
-  cancelSteamFamilySignIn(): void
+  signInToSteam(input: SteamSignInInput): Promise<ConnectResult>
+  cancelSteamSignIn(): void
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   getDashboard(): DashboardStats
@@ -47,6 +47,11 @@ const steamConnectInputSchema = z.object({
 })
 
 const unofficialOptInSchema = z.object({ acceptedUnofficial: z.literal(true) })
+
+const steamSignInSchema = z.object({
+  includeFamily: z.boolean(),
+  acceptedUnofficial: z.literal(true),
+})
 
 const epicConnectInputSchema = z.object({
   code: z.string().trim().min(1).max(2000),
@@ -150,22 +155,22 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     handlers.cancelEaSignIn()
   })
 
-  ipcMain.handle(IPC.connectSteamFamily, (event, input: unknown): Promise<ConnectResult> => {
+  ipcMain.handle(IPC.signInToSteam, (event, input: unknown): Promise<ConnectResult> => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
-    const parsed = unofficialOptInSchema.safeParse(input)
+    const parsed = steamSignInSchema.safeParse(input)
     if (!parsed.success) {
       return Promise.resolve({
         ok: false,
         reason: 'invalid_input',
-        message: 'Confirm that you understand the Steam family connection is unofficial.',
+        message: 'Confirm that you understand signing in to Steam here is unofficial.',
       })
     }
-    return handlers.connectSteamFamily(parsed.data)
+    return handlers.signInToSteam(parsed.data)
   })
 
-  ipcMain.handle(IPC.cancelSteamFamilySignIn, (event) => {
+  ipcMain.handle(IPC.cancelSteamSignIn, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
-    handlers.cancelSteamFamilySignIn()
+    handlers.cancelSteamSignIn()
   })
 
   ipcMain.handle(IPC.openEpicSignIn, (event) => {

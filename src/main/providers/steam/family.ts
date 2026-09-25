@@ -1,17 +1,10 @@
 import { z } from 'zod'
 import { ProviderError } from '@shared/errors'
 import type { RemoteGame } from '@shared/models'
-import { Secret } from '@shared/secret'
-import type { BrowserCookie } from '../browser-cookie'
-import { retryAfterMs } from '../http'
+import type { Secret } from '@shared/secret'
 import { steamGet } from './api'
 import { check, STEAM_APP_IMAGES, STEAM_STORE_ART } from './parse'
 
-const REFRESH_URL = 'https://login.steampowered.com/jwt/ajaxrefresh'
-const SET_TOKEN_URL = 'https://store.steampowered.com/login/settoken'
-const STORE_ORIGIN = 'https://store.steampowered.com'
-const REFRESH_COOKIE = 'steamRefresh_steam'
-const SESSION_COOKIE = 'steamLoginSecure'
 const FAMILY_GROUP = '/IFamilyGroupsService/GetFamilyGroupForUser/v1/'
 const SHARED_LIBRARY = '/IFamilyGroupsService/GetSharedLibraryApps/v1/'
 const STORE_ITEMS = '/IStoreBrowseService/GetItems/v1/'
@@ -20,12 +13,6 @@ const STORE_BATCH = 50
 const STORE_FOUND = 1
 const SHAREABLE = 0
 const RECENT_MS = 14 * 24 * 60 * 60 * 1000
-const STEAM_ID64 = /^7656119\d{10}$/
-
-export interface FamilyToken {
-  readonly token: Secret
-  readonly expiresAt: Date
-}
 
 export interface FamilyApp {
   readonly appid: string
@@ -33,22 +20,6 @@ export interface FamilyApp {
   readonly iconHash: string | null
   readonly lastPlayed: Date | null
 }
-
-const storedSchema = z.object({ key: z.string().min(1), family: z.string().min(1).optional() })
-
-const ticketSchema = z.discriminatedUnion('success', [
-  z.object({
-    success: z.literal(true),
-    login_url: z.string(),
-    steamID: z.string(),
-    nonce: z.string(),
-    redir: z.string(),
-    auth: z.string(),
-  }),
-  z.object({ success: z.literal(false), error: z.number().optional() }),
-])
-
-const claimsSchema = z.object({ exp: z.number().int().positive() })
 
 const groupSchema = z.object({
   response: z.object({
@@ -89,71 +60,6 @@ const storeItemsSchema = z.object({
       .optional(),
   }),
 })
-
-export function readSteamSecret(secret: Secret): { key: Secret; family: Secret | null } {
-  const raw = secret.expose()
-  if (!raw.startsWith('{')) return { key: secret, family: null }
-  const stored = storedSchema.safeParse(parseJson(raw))
-  if (!stored.success) {
-    throw new ProviderError('auth_expired', 'Steam: the stored sign-in is not usable')
-  }
-  return {
-    key: new Secret(stored.data.key),
-    family: stored.data.family ? new Secret(stored.data.family) : null,
-  }
-}
-
-export function withFamily(secret: Secret, family: Secret): Secret {
-  const { key } = readSteamSecret(secret)
-  return new Secret(JSON.stringify({ key: key.expose(), family: family.expose() }))
-}
-
-export function readFamilySignIn(cookies: readonly BrowserCookie[]): Secret | null {
-  const refresh = cookies.find((cookie) => cookie.name === REFRESH_COOKIE && cookie.value !== '')
-  return refresh && familySteamId(new Secret(refresh.value)) ? new Secret(refresh.value) : null
-}
-
-export function familySteamId(refresh: Secret): string | null {
-  const [steamId = ''] = safeDecode(refresh.expose()).split('||')
-  return STEAM_ID64.test(steamId) ? steamId : null
-}
-
-export async function requestFamilyToken(
-  refresh: Secret,
-  signal?: AbortSignal,
-): Promise<FamilyToken> {
-  const ticketReply = await storePost(
-    REFRESH_URL,
-    { redir: `${STORE_ORIGIN}/` },
-    { Cookie: `${REFRESH_COOKIE}=${refresh.expose()}` },
-    signal,
-  )
-  const ticket = check(ticketSchema, parseJson(ticketReply.text), 'refresh')
-  if (!ticket.success) {
-    throw new ProviderError(
-      'auth_expired',
-      'Steam: the Steam sign-in for the family library has expired',
-    )
-  }
-  if (ticket.login_url !== SET_TOKEN_URL) {
-    throw new ProviderError('parse', 'Steam: the sign-in pointed somewhere unexpected')
-  }
-
-  const tokenReply = await storePost(
-    SET_TOKEN_URL,
-    { steamID: ticket.steamID, nonce: ticket.nonce, redir: ticket.redir, auth: ticket.auth },
-    {},
-    signal,
-  )
-  const token = sessionToken(tokenReply.setCookies)
-  if (token === null) {
-    throw new ProviderError(
-      'auth_expired',
-      'Steam: the Steam sign-in for the family library has expired',
-    )
-  }
-  return { token: new Secret(token), expiresAt: new Date(expiryOf(token) * 1000) }
-}
 
 export async function fetchFamilyApps(
   token: Secret,
@@ -249,89 +155,5 @@ async function familyGet(
       })
     }
     throw error
-  }
-}
-
-interface StoreReply {
-  readonly text: string
-  readonly setCookies: readonly string[]
-}
-
-async function storePost(
-  url: string,
-  form: Readonly<Record<string, string>>,
-  headers: Readonly<Record<string, string>>,
-  signal?: AbortSignal,
-): Promise<StoreReply> {
-  const host = new URL(url).host
-  let response: Response
-  let text: string
-  try {
-    response = await fetch(url, {
-      method: 'POST',
-      redirect: 'manual',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Origin: STORE_ORIGIN,
-        Referer: `${STORE_ORIGIN}/`,
-        ...headers,
-      },
-      body: new URLSearchParams(form).toString(),
-      signal,
-    })
-    text = await response.text()
-  } catch (error) {
-    if (signal?.aborted) throw error
-    throw new ProviderError('network', `Steam: could not reach ${host}`, { cause: error })
-  }
-  if (response.status === 429) {
-    throw new ProviderError('rate_limited', `Steam: too many requests to ${host}`, {
-      retryAfterMs: retryAfterMs(response.headers.get('retry-after')),
-    })
-  }
-  if (response.status >= 500) {
-    throw new ProviderError('network', `Steam: server error from ${host} (HTTP ${response.status})`)
-  }
-  if (!response.ok) {
-    throw new ProviderError('other', `Steam: ${host} refused the sign-in (HTTP ${response.status})`)
-  }
-  return { text, setCookies: response.headers.getSetCookie() }
-}
-
-function sessionToken(setCookies: readonly string[]): string | null {
-  for (const line of setCookies) {
-    const [pair = ''] = line.split(';')
-    const split = pair.indexOf('=')
-    if (pair.slice(0, split).trim() !== SESSION_COOKIE) continue
-    const [, token = ''] = safeDecode(pair.slice(split + 1).trim()).split('||')
-    if (token !== '') return token
-  }
-  return null
-}
-
-function expiryOf(token: string): number {
-  const [, payload = ''] = token.split('.')
-  let json: unknown
-  try {
-    json = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
-  } catch {
-    json = null
-  }
-  return check(claimsSchema, json, 'session token').exp
-}
-
-function parseJson(text: string): unknown {
-  try {
-    return JSON.parse(text)
-  } catch {
-    return null
-  }
-}
-
-function safeDecode(value: string): string {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
   }
 }

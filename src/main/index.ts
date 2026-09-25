@@ -5,9 +5,9 @@ import {
   connectEa,
   connectEpic,
   connectSteam,
-  connectSteamFamily,
   connectUbisoft,
   connectXbox,
+  signInToSteam,
 } from './accounts'
 import { coalesce } from './coalesce'
 import { CookieSignIn } from './cookie-sign-in'
@@ -22,7 +22,7 @@ import { readSignInCookies } from './providers/ea/auth'
 import { EpicProvider } from './providers/epic'
 import { EPIC_SIGN_IN_URL } from './providers/epic/auth'
 import { SteamProvider } from './providers/steam'
-import { readFamilySignIn, requestFamilyToken } from './providers/steam/family'
+import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
 import { XboxProvider } from './providers/xbox'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
@@ -141,10 +141,10 @@ async function start(): Promise<void> {
     read: readSignInCookies,
     openWindow: cookieWindow(EA_SIGN_IN_PAGE),
   })
-  const steamFamilySignIn = new CookieSignIn({
+  const steamSignIn = new CookieSignIn({
     service: 'Steam',
     url: STEAM_SIGN_IN_URL,
-    read: readFamilySignIn,
+    read: readSteamSignIn,
     openWindow: cookieWindow(STEAM_SIGN_IN_PAGE),
   })
   const secrets = new SafeStorageSecretStore(
@@ -171,7 +171,7 @@ async function start(): Promise<void> {
     xboxSignIn.cancel()
     ubisoftSignIn.cancel()
     eaSignIn.cancel()
-    steamFamilySignIn.cancel()
+    steamSignIn.cancel()
   })
 
   registerIpcHandlers({
@@ -198,15 +198,19 @@ async function start(): Promise<void> {
     cancelUbisoftSignIn: () => ubisoftSignIn.cancel(),
     connectEa: () => connectEa({ db, ea, signIn: () => eaSignIn.run(), secrets, scheduler }),
     cancelEaSignIn: () => eaSignIn.cancel(),
-    connectSteamFamily: () =>
-      connectSteamFamily({
-        db,
-        signIn: () => steamFamilySignIn.run(),
-        checkSignIn: (family) => requestFamilyToken(family),
-        secrets,
-        scheduler,
-      }),
-    cancelSteamFamilySignIn: () => steamFamilySignIn.cancel(),
+    signInToSteam: (input) =>
+      signInToSteam(
+        {
+          db,
+          steam,
+          signIn: () => steamSignIn.run(),
+          readApiKey: (signIn) => readApiKey(signIn),
+          secrets,
+          scheduler,
+        },
+        input,
+      ),
+    cancelSteamSignIn: () => steamSignIn.cancel(),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     getDashboard: () => getDashboardStats(db),

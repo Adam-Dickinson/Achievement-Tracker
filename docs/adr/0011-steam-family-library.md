@@ -1,4 +1,4 @@
-# ADR-0011: The Steam family library through Steam's own sign-in, keeping its refresh token
+# ADR-0011: Connect Steam with one sign-in, and keep its refresh token for the family library
 
 - **Status:** Accepted
 - **Date:** 2026-09-25
@@ -30,7 +30,7 @@ The refresh token is the most powerful credential the app would hold: it can der
 **Sign in on Steam's own page in a locked-down app window and keep only the refresh token, beside the Web API key.** The owner chose this option on 2026-09-25, knowing the token can act as the account.
 
 - **The window** is the same one EA uses, made generic: `main/cookie-sign-in.ts` (the flow) and `main/cookie-sign-in-window.ts` (sandboxed, no preload, a throwaway session, a plain Chrome user agent, and a per-window navigation rule, here `isSteamAddress`: `https://` on `steampowered.com` or `steamcommunity.com`). When the window is back on `store.steampowered.com` it reads the `steampowered.com` cookies and keeps only `steamRefresh_steam`.
-- **Connecting** (`connectSteamFamily`) needs a connected Steam account and refuses a sign-in for a different SteamID. It proves the token works (one renewal) before saving, stores it in the Steam account's existing secret as `{ "key": …, "family": … }` (a plain key, as saved before, still reads as key-only), and asks the Scheduler for a library look straight away (`lookForGamesNow`).
+- **One sign-in connects Steam** (`signInToSteam`, the owner's follow-up the same day: "can the Steam stuff not all be one sign-in?"). The Web API key is still needed, because `GetSchemaForGame`, `GetPlayerAchievements` and `GetPlayerSummaries` refuse the sign-in token ("Required parameter 'key' is missing") and no keyless endpoint gives per-achievement unlocks with times. So the sign-in fetches the key instead: the refresh token buys a `steamcommunity.com` session the same way (`ajaxrefresh` then `settoken`, with the community as origin), and that session reads the account's key from `steamcommunity.com/dev/apikey`. The SteamID comes from the refresh token. The account is then connected exactly as with a typed key (`authenticate` checks the key), and the refresh token is kept beside the key only when "Also add my Steam family library" is ticked (the default); unticked, it is thrown away after reading the key. An account without a key gets a message pointing to `steamcommunity.com/dev/apikey` (registering one needs a domain and may need Steam Guard; not automated). The key form stays as a fallback ("Use an API key instead") for anyone who would rather not sign in in the app. After connecting, the Scheduler looks for games at once (`lookForGamesNow`).
 - **The provider** mints a 24-hour session from the refresh token only in memory, one at a time, and replaces it an hour before it expires. It uses it for the two family endpoints and nothing else. On each library look it adds the family games that other members own, that are shareable (`exclude_reason` 0) and that have achievements; the rest of Steam still uses the Web API key.
 - **Failure is contained.** If the family sign-in expires or is refused, `listGames` logs a warning and returns the usual games: the Steam account keeps syncing, and family games already found stay (a found game is never forgotten, SPEC §5). Surfacing "the family sign-in needs renewing" in the UI belongs with provider health (M5).
 - **Found family games follow ADR-0005:** they arrive on a later library look, so their first sync announces only unlocks after that look's cutoff. Never-played games start at 0%.
@@ -39,12 +39,14 @@ The refresh token is the most powerful credential the app would hold: it can der
 
 **Positive:**
 
+- Connecting Steam is one sign-in: no SteamID or key to copy by hand.
 - The library includes every family game with achievements (215 more for the owner, most never played), and new family games appear on the next look.
 - The Web API key keeps doing all achievement reads; the powerful token is used for two read-only calls.
 
 **Negative / to accept:**
 
 - The app stores a credential that can act as the Steam account on Steam's websites. It is encrypted with `safeStorage` like every secret, never logged, never sent to the renderer, and only ever posted to `login.steampowered.com` and `store.steampowered.com`.
+- Reading the key parses Steam's developer page (`Key: <32 hex>`), which is more fragile than an API; if it changes, the key form still works.
 - The renewal imitates the website (its `Origin` and `Referer` are required, or Steam answers 403). Valve could change or block it; the family library would then stop updating until the code follows.
 - After about 7 months the refresh token expires and the owner has to sign in again; until the UI shows this, only the log says so.
 - The library grows a lot (171 to 386 games for the owner); never-played games sit in the slow polling tier, so the extra syncing stays small.
