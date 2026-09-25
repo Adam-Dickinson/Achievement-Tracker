@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { BrowserWindow, session } from 'electron'
+import { chromeUserAgent } from './chrome-user-agent'
 import { type SignInWindow, UBISOFT_SESSIONS_URL } from './ubisoft-sign-in'
 
 const PROTOCOL_VERSION = '1.3'
@@ -112,8 +113,4 @@ function send(
   return sessionId
     ? debug.sendCommand(method, params, sessionId)
     : debug.sendCommand(method, params)
-}
-
-function chromeUserAgent(userAgent: string): string {
-  return userAgent.replace(/ Electron\/\S+/, '').replace(/ [\w-]+\/[\d.]+(?= Chrome)/, '')
 }

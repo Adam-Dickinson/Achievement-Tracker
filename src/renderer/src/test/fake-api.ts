@@ -13,6 +13,8 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     connectEpic: vi.fn(),
     connectUbisoft: vi.fn(),
     cancelUbisoftSignIn: vi.fn().mockResolvedValue(undefined),
+    connectEa: vi.fn(),
+    cancelEaSignIn: vi.fn().mockResolvedValue(undefined),
     listLibrary: vi.fn().mockResolvedValue([]),
     getGame: vi.fn().mockResolvedValue(null),
     getDashboard: vi.fn().mockReturnValue(new Promise(() => {})),

@@ -106,6 +106,25 @@ export async function connectUbisoft(deps: UbisoftAccountsDeps): Promise<Connect
   }
 }
 
+export interface EaAccountsDeps {
+  readonly db: DatabaseSync
+  readonly ea: AchievementProvider
+  readonly signIn: () => Promise<Secret>
+  readonly secrets: SecretStore
+  readonly scheduler: Pick<Scheduler, 'startAccount'>
+}
+
+export async function connectEa(deps: EaAccountsDeps): Promise<ConnectResult> {
+  try {
+    const cookies = await deps.signIn()
+    const credentials = await deps.ea.authenticate({ kind: 'token', value: cookies })
+    const profile = await deps.ea.validate(credentials)
+    return { ok: true, account: saveAccount(deps, credentials, profile.displayName) }
+  } catch (err) {
+    return toEaFailure(err)
+  }
+}
+
 function saveAccount(
   deps: Pick<AccountsDeps, 'db' | 'secrets' | 'scheduler'>,
   credentials: AccountCredentials,
@@ -175,6 +194,22 @@ function toUbisoftFailure(err: unknown): ConnectResult {
     return failure('other', err.message)
   }
   console.error('Connecting a Ubisoft account failed', err)
+  return failure('other', 'Something went wrong while connecting. Please try again.')
+}
+function toEaFailure(err: unknown): ConnectResult {
+  if (err instanceof SignInError) {
+    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('EA'))
+  }
+  if (err instanceof ProviderError) {
+    if (err.kind === 'auth_expired') {
+      return failure('other', 'EA did not accept the sign-in. Please sign in again.')
+    }
+    if (err.isRetryable) {
+      return failure('network', "Couldn't reach EA. Check your connection and try again.")
+    }
+    return failure('other', err.message)
+  }
+  console.error('Connecting an EA account failed', err)
   return failure('other', 'Something went wrong while connecting. Please try again.')
 }
 

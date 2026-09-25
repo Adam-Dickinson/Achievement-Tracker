@@ -21,7 +21,7 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 | PlayStation | PSN trophy API (unofficial) | Polling | Medium |
 | Epic Games | Epic launcher services (unofficial), signed in with a code from the browser | Polling | Medium |
 | Ubisoft Connect | Ubisoft Connect launcher services (unofficial), signed in on Ubisoft's page in an app window | Polling | Medium-Low |
-| EA app | Research needed | n/a | Very low |
+| EA app | EA app services (unofficial), signed in on EA's page in an app window | Polling | Medium-Low |
 
 After v1: RetroAchievements (RetroArch, PPSSPP, DuckStation, Dolphin, PCSX2), RPCS3 (PS3) and Xenia (Xbox 360).
 

@@ -1,0 +1,340 @@
+{
+  "data": {
+    "me": {
+      "ownedGameProducts": {
+        "items": [
+          {
+            "originOfferId": "Origin.OFR.50.0005734",
+            "product": {
+              "id": "en-us_skate-4-pc-ww_VideoGameProduct_za_pc",
+              "name": "skate.™\n",
+              "gameSlug": "skate",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "skate.™\n",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/3uNiZglPub3NbkvVssq53V/348060d70ee6f989bdd158239280282e/SKTBG_EAapp_16x9_GameArt_FullGame_1536x864.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/6WmZ8hIyjbwKrFDXxilsE9/71a01ef3b37e181b75a5941988da14af/SKTBG_EAapp_9x16_PackArt_FullGame_360x640.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0003794",
+            "product": {
+              "id": "en-us_star-wars-jedi-fallen-order-pc-ww-juno_VideoGameProduct_za_pc",
+              "name": "Star Wars Jedi: Fallen Order™",
+              "gameSlug": "star-wars-jedi-fallen-order",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "STAR WARS Jedi: Fallen Order™",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/1i4xQcUxD9Bbojv6LkJM0e/3d4d8a7a6511c7e9295e1a6a6bd415fd/SWJFO-game-art-16x9.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/12O8ScbGPqzJ1jEA1GPV1T/e04fea70bf13a1cedc34616707231004/SWJFO-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0004640",
+            "product": {
+              "id": "en-us_star-wars-jedi-survivor_VideoGameProduct_za_pc",
+              "name": "STAR WARS Jedi: Survivor™",
+              "gameSlug": "star-wars-jedi-survivor",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "STAR WARS Jedi: Survivor™",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/38PwmlYXKI9xJcNsJILXy0/11966787d61ab9207971177d7fe07d41/star-wars-jedi-survivor-ce-m-keyart-16x9-en.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/4jWHUtg3ySVssAhk6XCkm6/f31cf11c42787d667409fa800156ea2c/star-wars-jedi-survivor-ce-m-packart-9x16-en.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0003795",
+            "product": {
+              "id": "en-us_star-wars-jedi-fallen-order-pc-na-latam-asia-juno_VideoGameProduct_za_pc",
+              "name": "Star Wars Jedi: Fallen Order™",
+              "gameSlug": "star-wars-jedi-fallen-order",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "STAR WARS Jedi: Fallen Order™",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/1i4xQcUxD9Bbojv6LkJM0e/3d4d8a7a6511c7e9295e1a6a6bd415fd/SWJFO-game-art-16x9.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/12O8ScbGPqzJ1jEA1GPV1T/e04fea70bf13a1cedc34616707231004/SWJFO-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0001131",
+            "product": {
+              "id": "en-us_dragon-age-inquisition-game-of-the-year-pcdd-row-juno_VideoGameProduct_za_pc",
+              "name": "Dragon Age: Inquisition",
+              "gameSlug": "dragon-age-inquisition",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "Dragon Age: Inquisition",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/6ck2MrtjkTo02A4TaAuuD/d721088e6b6fe567fe0e211cf3496fea/DAI-game-art-16x9.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/1tD2j1vQU94JZZ4Fv30hkO/8b5950f55fe171c8c0e20239178fe222/DAI-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "OFB-EAST:109552299",
+            "product": {
+              "id": "en-us_the-sims-4-standard-edition-pcdd-ww-juno_VideoGameProduct_za_pc",
+              "name": "The Sims™ 4",
+              "gameSlug": "the-sims-4",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "The Sims™ 4\n",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/W633VThkiGHrEmK9peyoi/d18c48878fcbca44902ed1f25de09843/TS4_base-game-art-16x9_en_us.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/3xQY2fEGPwxMkFybBoW6Bi/e715e5c683e9fa304aae76661eb8a597/TS4_base-game-art-9x16_en_us.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0004024",
+            "product": {
+              "id": "en-us_it-takes-two-pc-ww-juno_VideoGameProduct_za_pc",
+              "name": "It Takes Two",
+              "gameSlug": "it-takes-two",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "It Takes Two",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/35WiZTqTK6cFKFKZe5VmJF/8a302669e33e1d5403df22769b6e8c33/it-takes-two-ce-m-packart-2x1-en.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/4WNXY7O1HfAkqYhVFfCUT6/b92a5006805395daf046c3c3329fa1d2/itTakesTwo-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0003112",
+            "product": {
+              "id": "en-us_star-wars-squadrons-pc-ww-juno_VideoGameProduct_za_pc",
+              "name": "STAR WARS™: Squadrons",
+              "gameSlug": "star-wars-squadrons",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "STAR WARS™: Squadrons",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/6q3VtTxI4CJYxuJK3iZHSH/d9a00b79d702f939d4188e3b9acb710e/SW_Squadrons-game-art-16x9.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/1L30EP5PAwS5u2XK4nF2mu/d4c8a5d9519e14f809204075d9a9a260/SW_Squadrons-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0002520",
+            "product": {
+              "id": "en-us_unravel-two-pc-na-and-latam-juno_VideoGameProduct_za_pc",
+              "name": "Unravel Two",
+              "gameSlug": "unravel-two",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "Unravel Two",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/367Xt78ZHINL182RmlOpWE/0656949095f9515fb8834ffb16803f5d/unravel-two-ce-m-keyart-16x9-en.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/7pFuqiax2gQR3At2A1mR2S/f81194a094faea718d50e0b0f94cf3f7/unravel-two-ce-m-packart-9x16-en.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "OFB-EAST:109552314",
+            "product": {
+              "id": "en-us_battlefield-4-premium-edition-pc-jp-juno-odc-3pdd_VideoGameProduct_za_pc",
+              "name": "Battlefield 4",
+              "gameSlug": "battlefield-4",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "Battlefield 4",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/5V7BilT2pbPHzcQ9qzg1At/446bdd5389aa2625c06ea2df64854af8/BF4-game-art-16x9.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/7w9tjKm5JNilD6Kqp31Vwp/8aeabf3cb2e4968ed155a0b069d88d57/BF4-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0002015",
+            "product": {
+              "id": "en-us_star-wars-battlefront-ii-standard-edition-pc-jp-juno_VideoGameProduct_za_pc",
+              "name": "STAR WARS™ Battlefront™ II",
+              "gameSlug": "star-wars-battlefront-2",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "STAR WARS™ Battlefront™ II",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/4z7dOyLaItUNtszOlhiJKW/b1279f56c2ee69d13ed04816511fd6cb/star-wars-battlefront-2-ce-m-keyart-16x9-en.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/2CaPZEtJcNqF67973f2HaL/9cd06b83c641f793e4cd820e89b13623/star-wars-battlefront-2-ce-m-packart-9x16-en.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "DR:225064100",
+            "product": {
+              "id": "en-us_battlefield-3-standard-edition-pc-row-juno-odc_VideoGameProduct_za_pc",
+              "name": "Battlefield 3",
+              "gameSlug": "battlefield-3",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "Battlefield 3",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/3uyRY1X40uUMyoq0BXtznK/0059b20e83e17533425f9c304aee4fc7/battlefield-3-ce-m-keyart-16x9-en.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/8M6UQr3XsV5iTRVFdzta8/5d737fda8f64ea3da4888b528e8beb86/battlefield-3-ce-m-packart-9x16-en.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0002863",
+            "product": {
+              "id": "en-us_battlefield-5-standard-edition-pc-jp-juno_VideoGameProduct_za_pc",
+              "name": "Battlefield V",
+              "gameSlug": "battlefield-5",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "Battlefield V",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/5xSIXMbEN0sse8FTqm2AuT/4820be4460b49ac89f19aa6279be37db/BFV-game-art-16x9.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/5461Dl9gLlXJHNVfkcFvlN/cad4fac6ed47bb2d7766bf3a670fdfad/BFV-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0003797",
+            "product": {
+              "id": "en-us_star-wars-jedi-fallen-order-deluxe-edition-pc-ww-juno_VideoGameProduct_za_pc",
+              "name": "STAR WARS Jedi: Fallen Order™ Deluxe Edition",
+              "gameSlug": "star-wars-jedi-fallen-order",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "STAR WARS Jedi: Fallen Order™",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/1i4xQcUxD9Bbojv6LkJM0e/3d4d8a7a6511c7e9295e1a6a6bd415fd/SWJFO-game-art-16x9.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/12O8ScbGPqzJ1jEA1GPV1T/e04fea70bf13a1cedc34616707231004/SWJFO-pack-front-9x16.jpg"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "originOfferId": "Origin.OFR.50.0002694",
+            "product": {
+              "id": "en-us_apex-legends-pc-ww-juno_VideoGameProduct_za_pc",
+              "name": "Apex Legends",
+              "gameSlug": "apex-legends",
+              "baseItem": {
+                "gameType": "BASE_GAME",
+                "title": "Apex Legends",
+                "keyArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/6uQ9g96QkVPirGeXMxkIsy/b8cd8de2bb0f33d3685aa1a6bf8ebac8/APEXLS30_EAapp_16x9_GameArt_FullGame_1536x864.jpg"
+                  }
+                },
+                "packArt": {
+                  "largestImage": {
+                    "path": "https://app-images.ea.com/ps9x41qn6x3c/1NAM70rlMCDSmEa2v00se4/4e1b793d93fa33497e4ce9951e074bd2/APEXLS30_EAapp_9x16_PackArt_FullGame_360x640.jpg"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

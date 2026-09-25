@@ -1,0 +1,8 @@
+{
+  "error": {
+    "code": 401,
+    "name": "AUTHORIZATION_REQUIRED"
+  },
+  "id": "e6caaaa6-8835-42a4-b363-d75d783df458",
+  "message": "no requesting user credentials present"
+}

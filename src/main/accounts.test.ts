@@ -5,7 +5,7 @@ import type { AccountCredentials } from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { InMemorySecretStore, type SecretStore } from '@shared/secret-store'
-import { connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
+import { connectEa, connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
 import { applyMigrations } from './store/migrate'
 import { listAccountSummaries, setAccountStatus } from './store/sync-store'
 import { SignInError } from './sign-in-error'
@@ -500,6 +500,124 @@ describe('connectUbisoft', () => {
     const { deps } = setupUbisoft(fakeUbisoft(), () => Promise.reject(new Error('window crashed')))
 
     const result = await connectUbisoft(deps)
+
+    expect(result).toMatchObject({ ok: false, reason: 'other' })
+    expect(result.ok || result.message).not.toContain('crashed')
+    vi.restoreAllMocks()
+  })
+})
+
+const EA_ACCOUNT = '1000000000001'
+
+function fakeEa(overrides: Partial<AchievementProvider> = {}): AchievementProvider {
+  return fakeSteam({
+    platform: 'ea',
+    authenticate: () =>
+      Promise.resolve({
+        platform: 'ea',
+        externalId: EA_ACCOUNT,
+        secret: new Secret('rotated-cookies'),
+      }),
+    validate: () => Promise.resolve({ externalId: EA_ACCOUNT, displayName: 'TestPlayer' }),
+    ...overrides,
+  })
+}
+
+function setupEa(
+  ea = fakeEa(),
+  signIn: () => Promise<Secret> = () => Promise.resolve(new Secret('from-sign-in-window')),
+) {
+  const { db, secrets, scheduler } = setup()
+  return { db, secrets, scheduler, deps: { db, ea, signIn, secrets, scheduler } }
+}
+
+describe('connectEa', () => {
+  it('signs in, saves the account and its rotated sign-in cookies, and starts syncing it', async () => {
+    const { db, secrets, scheduler, deps } = setupEa()
+
+    const result = await connectEa(deps)
+
+    expect(result).toEqual({
+      ok: true,
+      account: {
+        id: 1,
+        platform: 'ea',
+        displayName: 'TestPlayer',
+        status: 'connected',
+        gameCount: 0,
+      },
+    })
+    expect(listAccountSummaries(db)).toHaveLength(1)
+    expect(secrets.find('1')?.expose()).toBe('rotated-cookies')
+    expect(scheduler.startAccount).toHaveBeenCalledWith(1)
+  })
+
+  it("hands the provider the sign-in window's cookies as a token", async () => {
+    const authenticate = vi.fn<AchievementProvider['authenticate']>(() =>
+      Promise.resolve({ platform: 'ea', externalId: EA_ACCOUNT, secret: new Secret('t') }),
+    )
+    const { deps } = setupEa(fakeEa({ authenticate }))
+
+    await connectEa(deps)
+
+    const [input] = authenticate.mock.calls[0] ?? []
+    expect(input?.kind).toBe('token')
+    expect(input?.kind === 'token' && input.value.expose()).toBe('from-sign-in-window')
+  })
+
+  it.each([
+    ['cancelled', 'The EA sign-in was cancelled.'],
+    ['timed_out', 'The EA sign-in timed out. Please try again.'],
+  ] as const)('reports a %s sign-in as cancelled, and saves nothing', async (reason, message) => {
+    const { db, scheduler, deps } = setupEa(fakeEa(), () =>
+      Promise.reject(new SignInError(reason, 'x')),
+    )
+
+    expect(await connectEa(deps)).toEqual({ ok: false, reason: 'cancelled', message })
+    expect(listAccountSummaries(db)).toEqual([])
+    expect(scheduler.startAccount).not.toHaveBeenCalled()
+  })
+
+  it('asks to sign in again when EA rejects the fresh cookies', async () => {
+    const { secrets, deps } = setupEa(
+      fakeEa({
+        authenticate: () =>
+          Promise.reject(new ProviderError('auth_expired', 'EA: the sign-in has expired')),
+      }),
+    )
+
+    expect(await connectEa(deps)).toEqual({
+      ok: false,
+      reason: 'other',
+      message: 'EA did not accept the sign-in. Please sign in again.',
+    })
+    expect(secrets.find('1')).toBeUndefined()
+  })
+
+  it('reports a network failure as a connection problem', async () => {
+    const { deps } = setupEa(
+      fakeEa({
+        authenticate: () => Promise.reject(new ProviderError('network', 'EA: could not reach')),
+      }),
+    )
+
+    expect(await connectEa(deps)).toMatchObject({ ok: false, reason: 'network' })
+  })
+
+  it("passes on the provider's own message for any other refusal", async () => {
+    const message = 'EA: unexpected reply from the sign-in (HTTP 400)'
+    const { deps } = setupEa(
+      fakeEa({ authenticate: () => Promise.reject(new ProviderError('other', message)) }),
+    )
+
+    expect(await connectEa(deps)).toEqual({ ok: false, reason: 'other', message })
+  })
+
+  it('reports an unexpected failure with a general message', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const { deps } = setupEa(fakeEa(), () => Promise.reject(new Error('window crashed')))
+
+    const result = await connectEa(deps)
 
     expect(result).toMatchObject({ ok: false, reason: 'other' })
     expect(result.ok || result.message).not.toContain('crashed')

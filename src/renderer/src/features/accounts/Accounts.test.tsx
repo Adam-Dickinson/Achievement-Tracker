@@ -107,6 +107,14 @@ describe('Accounts', () => {
     await screen.findByText('No accounts connected yet.')
   })
 
+  it('shows the EA connect card', async () => {
+    listAccounts.mockResolvedValue([])
+    render(<Accounts />)
+
+    expect(screen.getByRole('region', { name: 'Connect EA' })).toBeInTheDocument()
+    await screen.findByText('No accounts connected yet.')
+  })
+
   it('reloads the list after an account is connected', async () => {
     listAccounts.mockResolvedValueOnce([]).mockResolvedValueOnce([STEAM])
     connectSteam.mockResolvedValue({ ok: true, account: STEAM })

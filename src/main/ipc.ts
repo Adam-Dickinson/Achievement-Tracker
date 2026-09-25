@@ -6,6 +6,7 @@ import {
   type AccountSummary,
   type AppInfo,
   type ConnectResult,
+  type EaConnectInput,
   type EpicConnectInput,
   type SteamConnectInput,
   type UbisoftConnectInput,
@@ -29,6 +30,8 @@ export interface IpcHandlers {
   connectEpic(input: EpicConnectInput): Promise<ConnectResult>
   connectUbisoft(input: UbisoftConnectInput): Promise<ConnectResult>
   cancelUbisoftSignIn(): void
+  connectEa(input: EaConnectInput): Promise<ConnectResult>
+  cancelEaSignIn(): void
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   getDashboard(): DashboardStats
@@ -124,6 +127,24 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.cancelUbisoftSignIn, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     handlers.cancelUbisoftSignIn()
+  })
+
+  ipcMain.handle(IPC.connectEa, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = unofficialOptInSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the EA connection is unofficial.',
+      })
+    }
+    return handlers.connectEa(parsed.data)
+  })
+
+  ipcMain.handle(IPC.cancelEaSignIn, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.cancelEaSignIn()
   })
 
   ipcMain.handle(IPC.openEpicSignIn, (event) => {

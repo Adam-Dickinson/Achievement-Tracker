@@ -16,6 +16,8 @@ export const IPC = {
   connectEpic: 'accounts:connect-epic',
   connectUbisoft: 'accounts:connect-ubisoft',
   cancelUbisoftSignIn: 'accounts:cancel-ubisoft-sign-in',
+  connectEa: 'accounts:connect-ea',
+  cancelEaSignIn: 'accounts:cancel-ea-sign-in',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   getDashboard: 'dashboard:get',
@@ -63,6 +65,10 @@ export interface UbisoftConnectInput {
   readonly acceptedUnofficial: true
 }
 
+export interface EaConnectInput {
+  readonly acceptedUnofficial: true
+}
+
 export interface EpicConnectInput {
   readonly code: string
   readonly acceptedUnofficial: true
@@ -86,6 +92,8 @@ export interface TrophyLockerApi {
   connectEpic(input: EpicConnectInput): Promise<ConnectResult>
   connectUbisoft(input: UbisoftConnectInput): Promise<ConnectResult>
   cancelUbisoftSignIn(): Promise<void>
+  connectEa(input: EaConnectInput): Promise<ConnectResult>
+  cancelEaSignIn(): Promise<void>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   getDashboard(): Promise<DashboardStats>
