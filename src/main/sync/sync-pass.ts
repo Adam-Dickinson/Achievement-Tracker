@@ -1,5 +1,10 @@
 import type { DatabaseSync } from 'node:sqlite'
-import type { AccountCredentials, RemoteAchievement, UnlockEvent } from '@shared/models'
+import type {
+  AccountCredentials,
+  RemoteAchievement,
+  RemoteUnlock,
+  UnlockEvent,
+} from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
 import {
   type AccountRow,
@@ -34,6 +39,7 @@ export async function runSyncPass(
     const events = announced.map((unlock) =>
       toUnlockEvent(
         findAchievement(remote.achievements, unlock.achievementExternalId),
+        unlock,
         account,
         platformGame.title,
         detectedAt,
@@ -61,9 +67,16 @@ function findAchievement(
 
 function toUnlockEvent(
   achievement: RemoteAchievement,
+  unlock: RemoteUnlock,
   account: AccountRow,
   gameTitle: string,
   detectedAt: Date,
 ): UnlockEvent {
-  return { platform: account.platform, gameTitle, achievement, detectedAt }
+  return {
+    platform: account.platform,
+    gameTitle,
+    achievement,
+    unlockedAt: unlock.unlockedAt,
+    detectedAt,
+  }
 }

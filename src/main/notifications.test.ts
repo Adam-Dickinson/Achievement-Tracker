@@ -18,6 +18,7 @@ function unlock(
   return {
     platform: 'steam',
     gameTitle,
+    unlockedAt: new Date('2026-09-23T11:59:58Z'),
     detectedAt: new Date('2026-09-23T12:00:00Z'),
     achievement: {
       externalId,

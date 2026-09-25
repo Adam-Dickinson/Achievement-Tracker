@@ -3,12 +3,13 @@ import { resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProviderError } from '@shared/errors'
-import type { AccountCredentials } from '@shared/models'
+import type { AccountCredentials, RemoteGameRef } from '@shared/models'
 import { Secret } from '@shared/secret'
 import { applyMigrations } from '../../store/migrate'
 import { getAccount } from '../../store/sync-store'
 import { runSyncPass } from '../../sync/sync-pass'
 import { SteamProvider } from './index'
+import { DEBOUNCE_MS, type SteamLocalDeps } from './local'
 
 const KEY = '0123456789ABCDEF0123456789ABCDEF'
 const STEAM_ID = '76561190000000001'
@@ -86,14 +87,61 @@ async function errorFrom(request: Promise<unknown>): Promise<ProviderError> {
 const provider = new SteamProvider()
 
 describe('SteamProvider', () => {
-  it('declares an official, polled source with global rarity', () => {
+  it('declares an official, polled source with global rarity and a local watch', () => {
     expect(provider.platform).toBe('steam')
     expect(provider.capabilities).toEqual({
-      localWatch: false,
+      localWatch: true,
       polling: true,
       globalRarity: true,
       oauth: false,
       unofficial: false,
+    })
+  })
+
+  describe('watch', () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    function watchingProvider(): {
+      provider: SteamProvider
+      changeFile: (name: string) => void
+    } {
+      let onFile: (name: string) => void = () => undefined
+      const local: SteamLocalDeps = {
+        readRegistry: (_key, name) => Promise.resolve(name === 'SteamPath' ? 'C:/Steam' : null),
+        watchFolder: (_path, listener) => {
+          onFile = listener
+          return () => undefined
+        },
+      }
+      return { provider: new SteamProvider(local), changeFile: (name) => onFile(name) }
+    }
+
+    it("reports a changed stats file as that game's ref, for this account only", async () => {
+      vi.useFakeTimers()
+      const { provider: watching, changeFile } = watchingProvider()
+      const onChange = vi.fn<(game: RemoteGameRef) => void>()
+
+      const stop = watching.watch({ ...CREDENTIALS, externalId: '76561198000000001' }, onChange)
+      await vi.advanceTimersByTimeAsync(0)
+      changeFile('UserGameStats_39734273_883710.bin')
+      changeFile('UserGameStats_1_440.bin')
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+
+      expect(onChange).toHaveBeenCalledExactlyOnceWith({ externalId: '883710' })
+      stop()
+    })
+
+    it('does nothing for an account without a valid SteamID64', () => {
+      const local: SteamLocalDeps = {
+        readRegistry: vi.fn<SteamLocalDeps['readRegistry']>(),
+        watchFolder: vi.fn<SteamLocalDeps['watchFolder']>(),
+      }
+      const stop = new SteamProvider(local).watch({ ...CREDENTIALS, externalId: 'x' }, vi.fn())
+
+      expect(local.readRegistry).not.toHaveBeenCalled()
+      stop()
     })
   })
 

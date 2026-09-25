@@ -9,6 +9,7 @@ import type {
 import type { AchievementProvider, AuthInput, ProviderCapabilities } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { steamGet } from './api'
+import { accountIdOf, STEAM_LOCAL, type SteamLocalDeps, watchSteamLocal } from './local'
 import {
   parseGameSchema,
   parseGlobalPercentages,
@@ -32,11 +33,17 @@ const LANGUAGE = 'english'
 export class SteamProvider implements AchievementProvider {
   readonly platform = 'steam'
   readonly capabilities: ProviderCapabilities = {
-    localWatch: false,
+    localWatch: true,
     polling: true,
     globalRarity: true,
     oauth: false,
     unofficial: false,
+  }
+
+  readonly #local: SteamLocalDeps
+
+  constructor(local: SteamLocalDeps = STEAM_LOCAL) {
+    this.#local = local
   }
 
   async authenticate(input: AuthInput, signal?: AbortSignal): Promise<AccountCredentials> {
@@ -104,6 +111,12 @@ export class SteamProvider implements AchievementProvider {
       parsePlayerAchievements(player),
       parseGlobalPercentages(rarity),
     )
+  }
+
+  watch(credentials: AccountCredentials, onChange: (game: RemoteGameRef) => void): () => void {
+    const accountId = accountIdOf(credentials.externalId)
+    if (accountId === null) return () => undefined
+    return watchSteamLocal(this.#local, accountId, (appId) => onChange({ externalId: appId }))
   }
 }
 

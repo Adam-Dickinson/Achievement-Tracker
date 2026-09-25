@@ -54,5 +54,6 @@ export interface UnlockEvent {
   readonly platform: Platform
   readonly gameTitle: string
   readonly achievement: RemoteAchievement
+  readonly unlockedAt: Date | null
   readonly detectedAt: Date
 }
