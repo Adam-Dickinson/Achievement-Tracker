@@ -91,6 +91,14 @@ describe('Accounts', () => {
     await screen.findByText('No accounts connected yet.')
   })
 
+  it('shows the Epic connect card', async () => {
+    listAccounts.mockResolvedValue([])
+    render(<Accounts />)
+
+    expect(screen.getByRole('form', { name: 'Connect Epic Games' })).toBeInTheDocument()
+    await screen.findByText('No accounts connected yet.')
+  })
+
   it('reloads the list after an account is connected', async () => {
     listAccounts.mockResolvedValueOnce([]).mockResolvedValueOnce([STEAM])
     connectSteam.mockResolvedValue({ ok: true, account: STEAM })
@@ -99,7 +107,8 @@ describe('Accounts', () => {
 
     fireEvent.change(screen.getByLabelText('SteamID64'), { target: { value: '76561190000000001' } })
     fireEvent.change(screen.getByLabelText('Steam API key'), { target: { value: 'KEY' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Connect' }))
+    const steamForm = screen.getByRole('form', { name: 'Connect Steam' })
+    fireEvent.click(within(steamForm).getByRole('button', { name: 'Connect' }))
 
     expect(await screen.findByText('Steam Player')).toBeInTheDocument()
     expect(listAccounts).toHaveBeenCalledTimes(2)

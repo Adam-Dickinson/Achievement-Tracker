@@ -1,0 +1,14 @@
+{
+  "data": {
+    "Achievement": {
+      "productAchievementsRecordBySandbox": {
+        "productId": null,
+        "sandboxId": null,
+        "totalAchievements": null,
+        "totalProductXP": null,
+        "platinumRarity": null,
+        "achievements": null
+      }
+    }
+  }
+}

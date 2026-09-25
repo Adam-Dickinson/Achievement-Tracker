@@ -1,0 +1,65 @@
+{
+  "data": {
+    "Achievement": {
+      "productAchievementsRecordBySandbox": {
+        "productId": "3e4cea34f89d440d97cf22ddf6c122f2",
+        "sandboxId": "048550a9623d4824894430a2c2823e02",
+        "totalAchievements": 27,
+        "totalProductXP": 1000,
+        "platinumRarity": {
+          "percent": 0.1
+        },
+        "achievements": [
+          {
+            "achievement": {
+              "name": "ACH_01_CompleteTutorial",
+              "hidden": false,
+              "isBase": true,
+              "achievementSetId": "76nlj17",
+              "unlockedDisplayName": "The Fall",
+              "lockedDisplayName": "The Fall",
+              "unlockedDescription": "Enter the castle",
+              "lockedDescription": "Enter the castle",
+              "unlockedIconLink": "https://shared-static-prod.epicgames.com/epic-achievements/3e4cea34f89d440d97cf22ddf6c122f2/048550a9623d4824894430a2c2823e02/icons/8f6bedb3d02ab4811c3757771fff5a5f",
+              "lockedIconLink": "https://shared-static-prod.epicgames.com/epic-achievements/3e4cea34f89d440d97cf22ddf6c122f2/048550a9623d4824894430a2c2823e02/icons/292f983d107e34887aca5a9cdac07a03",
+              "XP": 10,
+              "tier": {
+                "name": "bronze",
+                "hexColor": "#CA512B",
+                "min": 0,
+                "max": 45
+              },
+              "rarity": {
+                "percent": 70
+              }
+            }
+          },
+          {
+            "achievement": {
+              "name": "ACH_03_DefeatEggplant",
+              "hidden": true,
+              "isBase": true,
+              "achievementSetId": "76nlj17",
+              "unlockedDisplayName": "The Vegetable",
+              "lockedDisplayName": "",
+              "unlockedDescription": "Defeat DJ Eggplant",
+              "lockedDescription": "",
+              "unlockedIconLink": "https://shared-static-prod.epicgames.com/epic-achievements/3e4cea34f89d440d97cf22ddf6c122f2/048550a9623d4824894430a2c2823e02/icons/625ada9ca9358fb646ece42bd77d8710",
+              "lockedIconLink": "https://shared-static-prod.epicgames.com/epic-achievements/3e4cea34f89d440d97cf22ddf6c122f2/048550a9623d4824894430a2c2823e02/icons/49493b50574118ba947f97ba541a5e81",
+              "XP": 10,
+              "tier": {
+                "name": "bronze",
+                "hexColor": "#CA512B",
+                "min": 0,
+                "max": 45
+              },
+              "rarity": {
+                "percent": 43
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@ import {
   type AccountSummary,
   type AppInfo,
   type ConnectResult,
+  type EpicConnectInput,
   type SteamConnectInput,
   type XboxConnectInput,
 } from '@shared/ipc'
@@ -23,6 +24,8 @@ export interface IpcHandlers {
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
   connectXbox(input: XboxConnectInput): Promise<ConnectResult>
   cancelXboxSignIn(): void
+  openEpicSignIn(): Promise<void>
+  connectEpic(input: EpicConnectInput): Promise<ConnectResult>
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   getDashboard(): DashboardStats
@@ -35,6 +38,11 @@ const steamConnectInputSchema = z.object({
 })
 
 const xboxConnectInputSchema = z.object({ acceptedUnofficial: z.literal(true) })
+
+const epicConnectInputSchema = z.object({
+  code: z.string().trim().min(1).max(2000),
+  acceptedUnofficial: z.literal(true),
+})
 
 const gameIdSchema = z.number().int().positive()
 
@@ -97,6 +105,24 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     handlers.cancelXboxSignIn()
   })
 
+  ipcMain.handle(IPC.openEpicSignIn, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.openEpicSignIn()
+  })
+
+  ipcMain.handle(IPC.connectEpic, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = epicConnectInputSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: epicInvalidInputMessage(parsed.error.issues[0]),
+      })
+    }
+    return handlers.connectEpic({ code: parsed.data.code, acceptedUnofficial: true })
+  })
+
   ipcMain.handle(IPC.listLibrary, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.listLibrary()
@@ -118,6 +144,15 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     const parsed = activityLimitSchema.safeParse(limit)
     return parsed.success ? handlers.listActivity(parsed.data) : { unlocks: [], hasMore: false }
   })
+}
+
+function epicInvalidInputMessage(issue: z.core.$ZodIssue | undefined): string {
+  if (issue?.path[0] === 'code') {
+    return issue.code === 'too_big'
+      ? "That's too long to be Epic's code. Copy just the Epic page and paste it here."
+      : "Paste the code from Epic's page."
+  }
+  return 'Confirm that you understand the Epic connection is unofficial.'
 }
 
 function invalidInputMessage(issue: z.core.$ZodIssue | undefined): string {

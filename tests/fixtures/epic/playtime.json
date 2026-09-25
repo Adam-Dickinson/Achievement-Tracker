@@ -1,0 +1,17 @@
+[
+  {
+    "accountId": "0123456789abcdef0123456789abcdef",
+    "artifactId": "Peony",
+    "totalTime": 12
+  },
+  {
+    "accountId": "0123456789abcdef0123456789abcdef",
+    "artifactId": "Sugar",
+    "totalTime": 166388
+  },
+  {
+    "accountId": "0123456789abcdef0123456789abcdef",
+    "artifactId": "shoebill",
+    "totalTime": 59650
+  }
+]

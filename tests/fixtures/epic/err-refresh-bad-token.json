@@ -1,0 +1,13 @@
+{
+  "errorCode": "errors.com.epicgames.account.auth_token.invalid_refresh_token",
+  "errorMessage": "Sorry the refresh token 'not-a-real-token' is invalid. Reason: INVALID_FORMAT",
+  "messageVars": [
+    "not-a-real-token",
+    "INVALID_FORMAT"
+  ],
+  "numericErrorCode": 18036,
+  "originatingService": "com.epicgames.account.public",
+  "intent": "prod",
+  "error_description": "Sorry the refresh token 'not-a-real-token' is invalid. Reason: INVALID_FORMAT",
+  "error": "invalid_grant"
+}

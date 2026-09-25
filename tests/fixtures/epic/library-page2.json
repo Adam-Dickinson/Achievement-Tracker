@@ -1,0 +1,67 @@
+{
+  "responseMetadata": {
+    "stateToken": "fake-state"
+  },
+  "records": [
+    {
+      "namespace": "e509c16d53714b13ba8e393966507255",
+      "catalogItemId": "90b0009374c14ce18caa3f193aeee861",
+      "appName": "shoebill",
+      "country": "GB",
+      "platform": [
+        "Windows"
+      ],
+      "productId": "fb935e697240486c99ff6886424fec4d",
+      "sandboxName": "Star Wars Jedi Fallen Order",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2020-05-16T08:43:24.716Z",
+      "dependencies": []
+    },
+    {
+      "namespace": "cd14dcaa4f3443f19f7169a980559c62",
+      "catalogItemId": "42ac1ee840304cb1807172a9b47dc8e3",
+      "appName": "Kinglet",
+      "country": "GB",
+      "platform": [
+        "Windows"
+      ],
+      "productId": "831ad738547e46e195f87d54e98b8e79",
+      "sandboxName": "Sid Meier's Civilization VI",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2020-05-24T14:54:40.471Z",
+      "dependencies": []
+    },
+    {
+      "namespace": "cd14dcaa4f3443f19f7169a980559c62",
+      "catalogItemId": "cd9e44a9d1b14b8d84923bb985bc1636",
+      "appName": "KingletAztec",
+      "country": "GB",
+      "platform": [
+        "Windows"
+      ],
+      "productId": "831ad738547e46e195f87d54e98b8e79",
+      "sandboxName": "Sid Meier's Civilization VI",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2020-05-24T14:54:40.471Z",
+      "dependencies": []
+    },
+    {
+      "namespace": "61bc780f42f84fe29e6dfee957ab82de",
+      "catalogItemId": "6e7e8e5c9bcc4352bec6bb2fa5134ad2",
+      "appName": "Peony",
+      "country": "GB",
+      "platform": [
+        "Windows"
+      ],
+      "productId": "eb88ba59290b406b8764fa3ec6ed33df",
+      "sandboxName": "The Escapists",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2019-12-13T14:46:10.795Z",
+      "dependencies": []
+    }
+  ]
+}

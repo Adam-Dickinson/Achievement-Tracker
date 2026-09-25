@@ -5,7 +5,7 @@ import type { AccountCredentials } from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { InMemorySecretStore, type SecretStore } from '@shared/secret-store'
-import { connectSteam, connectXbox } from './accounts'
+import { connectEpic, connectSteam, connectXbox } from './accounts'
 import { applyMigrations } from './store/migrate'
 import { listAccountSummaries, setAccountStatus } from './store/sync-store'
 import { SignInError } from './xbox-sign-in'
@@ -259,6 +259,131 @@ describe('connectXbox', () => {
 
     expect(result).toMatchObject({ ok: false, reason: 'other' })
     expect(result.ok || result.message).not.toContain('port')
+    vi.restoreAllMocks()
+  })
+})
+
+const EPIC_ACCOUNT = '0123456789abcdef0123456789abcdef'
+const EPIC_CODE = 'fedcba9876543210fedcba9876543210'
+
+function fakeEpic(overrides: Partial<AchievementProvider> = {}): AchievementProvider {
+  return fakeSteam({
+    platform: 'epic',
+    authenticate: () =>
+      Promise.resolve({
+        platform: 'epic',
+        externalId: EPIC_ACCOUNT,
+        secret: new Secret('refresh'),
+      }),
+    validate: () => Promise.resolve({ externalId: EPIC_ACCOUNT, displayName: 'EpicPlayer' }),
+    ...overrides,
+  })
+}
+
+function setupEpic(epic = fakeEpic()) {
+  const { db, secrets, scheduler } = setup()
+  return { db, secrets, scheduler, deps: { db, epic, secrets, scheduler } }
+}
+
+describe('connectEpic', () => {
+  it('signs in with the code, saves the account and its refresh token, and starts syncing it', async () => {
+    const { db, secrets, scheduler, deps } = setupEpic()
+
+    const result = await connectEpic(deps, { code: EPIC_CODE, acceptedUnofficial: true })
+
+    expect(result).toEqual({
+      ok: true,
+      account: {
+        id: 1,
+        platform: 'epic',
+        displayName: 'EpicPlayer',
+        status: 'connected',
+        gameCount: 0,
+      },
+    })
+    expect(listAccountSummaries(db)).toHaveLength(1)
+    expect(secrets.find('1')?.expose()).toBe('refresh')
+    expect(scheduler.startAccount).toHaveBeenCalledWith(1)
+  })
+
+  it('hands the provider the code alone, even when the whole Epic page was pasted', async () => {
+    const authenticate = vi.fn<AchievementProvider['authenticate']>(() =>
+      Promise.resolve({ platform: 'epic', externalId: EPIC_ACCOUNT, secret: new Secret('t') }),
+    )
+    const { deps } = setupEpic(fakeEpic({ authenticate }))
+    const page = `{"redirectUrl":"https://localhost/launcher/authorized?code=${EPIC_CODE}","authorizationCode":"${EPIC_CODE}","sid":null}`
+
+    await connectEpic(deps, { code: page, acceptedUnofficial: true })
+
+    const input = authenticate.mock.calls[0]?.[0]
+    expect(input?.kind === 'token' && input.value.expose()).toBe(EPIC_CODE)
+  })
+
+  it('says what to paste when there is no code in the text, without calling Epic', async () => {
+    const authenticate = vi.fn<AchievementProvider['authenticate']>()
+    const { deps } = setupEpic(fakeEpic({ authenticate }))
+
+    const result = await connectEpic(deps, { code: 'hello', acceptedUnofficial: true })
+
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_input' })
+    expect(authenticate).not.toHaveBeenCalled()
+  })
+
+  it('explains that codes expire when Epic rejects one, and saves nothing', async () => {
+    const { db, deps } = setupEpic(
+      fakeEpic({
+        authenticate: () =>
+          Promise.reject(
+            new ProviderError(
+              'auth_expired',
+              'Epic: that sign-in code has expired or was already used',
+            ),
+          ),
+      }),
+    )
+
+    const result = await connectEpic(deps, { code: EPIC_CODE, acceptedUnofficial: true })
+
+    expect(result).toMatchObject({ ok: false, reason: 'code_rejected' })
+    expect(result.ok || result.message).toMatch(/Codes only last a few minutes/)
+    expect(listAccountSummaries(db)).toEqual([])
+  })
+
+  it('reports a network failure as a connection problem', async () => {
+    const { deps } = setupEpic(
+      fakeEpic({
+        authenticate: () => Promise.reject(new ProviderError('network', 'Epic: could not reach')),
+      }),
+    )
+
+    expect(await connectEpic(deps, { code: EPIC_CODE, acceptedUnofficial: true })).toEqual({
+      ok: false,
+      reason: 'network',
+      message: "Couldn't reach Epic. Check your connection and try again.",
+    })
+  })
+
+  it("passes on the provider's own message for any other refusal", async () => {
+    const message = 'Epic: unexpected reply from the sign-in (HTTP 403)'
+    const { deps } = setupEpic(
+      fakeEpic({ authenticate: () => Promise.reject(new ProviderError('other', message)) }),
+    )
+
+    expect(await connectEpic(deps, { code: EPIC_CODE, acceptedUnofficial: true })).toEqual({
+      ok: false,
+      reason: 'other',
+      message,
+    })
+  })
+
+  it('reports an unexpected failure with a general message', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const { deps } = setupEpic(fakeEpic({ validate: () => Promise.reject(new Error('boom')) }))
+
+    const result = await connectEpic(deps, { code: EPIC_CODE, acceptedUnofficial: true })
+
+    expect(result).toMatchObject({ ok: false, reason: 'other' })
+    expect(result.ok || result.message).not.toContain('boom')
     vi.restoreAllMocks()
   })
 })

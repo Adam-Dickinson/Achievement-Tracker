@@ -1,0 +1,8 @@
+{
+  "errorCode": "errors.com.epicgames.common.oauth.invalid_token",
+  "errorMessage": "There was an issue verifying token. Token contains invalid data.",
+  "messageVars": [],
+  "numericErrorCode": 1014,
+  "originatingService": "library-service",
+  "intent": "prod"
+}

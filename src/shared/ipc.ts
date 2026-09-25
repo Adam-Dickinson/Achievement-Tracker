@@ -12,6 +12,8 @@ export const IPC = {
   connectSteam: 'accounts:connect-steam',
   connectXbox: 'accounts:connect-xbox',
   cancelXboxSignIn: 'accounts:cancel-xbox-sign-in',
+  openEpicSignIn: 'accounts:open-epic-sign-in',
+  connectEpic: 'accounts:connect-epic',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   getDashboard: 'dashboard:get',
@@ -55,7 +57,13 @@ export interface XboxConnectInput {
   readonly acceptedUnofficial: true
 }
 
-export type ConnectFailure = 'invalid_input' | 'key_rejected' | 'cancelled' | 'network' | 'other'
+export interface EpicConnectInput {
+  readonly code: string
+  readonly acceptedUnofficial: true
+}
+
+export type ConnectFailure =
+  'invalid_input' | 'key_rejected' | 'code_rejected' | 'cancelled' | 'network' | 'other'
 
 export type ConnectResult =
   | { readonly ok: true; readonly account: AccountSummary }
@@ -68,6 +76,8 @@ export interface AchievementTrackerApi {
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
   connectXbox(input: XboxConnectInput): Promise<ConnectResult>
   cancelXboxSignIn(): Promise<void>
+  openEpicSignIn(): Promise<void>
+  connectEpic(input: EpicConnectInput): Promise<ConnectResult>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   getDashboard(): Promise<DashboardStats>

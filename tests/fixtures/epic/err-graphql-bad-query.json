@@ -1,0 +1,16 @@
+{
+  "errors": [
+    {
+      "message": "Cannot query field \"noSuchField\" on type \"AchievementQuery\".",
+      "locations": [
+        {
+          "line": 1,
+          "column": 17
+        }
+      ],
+      "correlationId": "89448990-b8f3-11f1-9574-bbd1b92bacce",
+      "stack": null,
+      "status": 500
+    }
+  ]
+}
