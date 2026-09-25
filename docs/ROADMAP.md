@@ -46,7 +46,7 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 
 ## M4: PlayStation and unified library (P0 complete)
 
-- [ ] PSN provider (NPSSO flow, opt-in warning)
+- [x] PSN provider (NPSSO flow, opt-in warning). Built and verified live: the provider (Sony's sign-in page in an app window, the 60-day `npsso` cookie minting 10-day refresh tokens per [ADR-0012](adr/0012-playstation-sign-in-npsso.md), every trophy list including PS3 and Vita, tiers, global rarity, unlock dates), registered with the Scheduler, `connectPlayStation`/`cancelPlayStationSignIn` over IPC, and the Connect PlayStation card on the Accounts screen with the "unofficial" opt-in; a real account connected from the app (100 games, 5,002 trophies, 687 unlocks matching PSN's own count, a silent first sync)
 - [ ] Cross-platform game linking (auto-match + manual merge/split)
 - [ ] Artwork for every game. Today 4 of 231 games have no cover, all Epic games whose catalog entry is empty. In order: borrow the cover of a linked copy on another platform; otherwise look the game up on the Steam store by title (a public search with no key; verify it first, rule 10); as a last resort, generate an Afterglow-style cover (the title on a gradient) so no card is blank. Also find the real title for Epic games whose catalog is empty and whose library name is a codename (for example "yorkie Production")
 - [ ] Dashboard stats (completion %, rarest, closest to 100%)

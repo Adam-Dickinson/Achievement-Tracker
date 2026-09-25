@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { allowNavigation, isEaAddress, isSteamAddress, mayNavigate } from './navigation'
+import {
+  allowNavigation,
+  isEaAddress,
+  isSonyAddress,
+  isSteamAddress,
+  mayNavigate,
+} from './navigation'
 
 describe('mayNavigate', () => {
   it('blocks navigation for a window without a rule', () => {
@@ -56,5 +62,23 @@ describe('isSteamAddress', () => {
     'https://www.ea.com/',
   ])('blocks %s', (url) => {
     expect(isSteamAddress(url)).toBe(false)
+  })
+})
+
+describe('isSonyAddress', () => {
+  it.each([
+    'https://ca.account.sony.com/api/authz/v3/oauth/authorize',
+    'https://my.account.sony.com/sonyacct/signin/',
+  ])('allows %s', (url) => {
+    expect(isSonyAddress(url)).toBe(true)
+  })
+
+  it.each([
+    'http://my.account.sony.com/sonyacct/signin/',
+    'https://sony.com.example.org/',
+    'https://www.playstation.com/',
+    'com.scee.psxandroid.scecompcall://redirect/?code=1',
+  ])('blocks %s', (url) => {
+    expect(isSonyAddress(url)).toBe(false)
   })
 })

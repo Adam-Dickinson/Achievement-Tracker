@@ -104,7 +104,7 @@ export async function connectUbisoft(deps: UbisoftAccountsDeps): Promise<Connect
     const profile = await deps.ubisoft.validate(credentials)
     return { ok: true, account: saveAccount(deps, credentials, profile.displayName) }
   } catch (err) {
-    return toUbisoftFailure(err)
+    return toWindowSignInFailure('Ubisoft', err)
   }
 }
 
@@ -123,7 +123,26 @@ export async function connectEa(deps: EaAccountsDeps): Promise<ConnectResult> {
     const profile = await deps.ea.validate(credentials)
     return { ok: true, account: saveAccount(deps, credentials, profile.displayName) }
   } catch (err) {
-    return toEaFailure(err)
+    return toWindowSignInFailure('EA', err)
+  }
+}
+
+export interface PlayStationAccountsDeps {
+  readonly db: DatabaseSync
+  readonly playstation: AchievementProvider
+  readonly signIn: () => Promise<Secret>
+  readonly secrets: SecretStore
+  readonly scheduler: Pick<Scheduler, 'startAccount'>
+}
+
+export async function connectPlayStation(deps: PlayStationAccountsDeps): Promise<ConnectResult> {
+  try {
+    const npsso = await deps.signIn()
+    const credentials = await deps.playstation.authenticate({ kind: 'token', value: npsso })
+    const profile = await deps.playstation.validate(credentials)
+    return { ok: true, account: saveAccount(deps, credentials, profile.displayName) }
+  } catch (err) {
+    return toWindowSignInFailure('PlayStation', err)
   }
 }
 
@@ -159,7 +178,7 @@ export async function signInToSteam(
     deps.scheduler.lookForGamesNow(account.id)
     return { ok: true, account }
   } catch (err) {
-    return toSteamSignInFailure(err)
+    return toWindowSignInFailure('Steam', err)
   }
 }
 
@@ -218,53 +237,20 @@ function toEpicFailure(err: unknown): ConnectResult {
   return failure('other', 'Something went wrong while connecting. Please try again.')
 }
 
-function toUbisoftFailure(err: unknown): ConnectResult {
+function toWindowSignInFailure(service: string, err: unknown): ConnectResult {
   if (err instanceof SignInError) {
-    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('Ubisoft'))
+    return failure('cancelled', SIGN_IN_MESSAGES[err.reason](service))
   }
   if (err instanceof ProviderError) {
     if (err.kind === 'auth_expired') {
-      return failure('other', 'Ubisoft did not accept the sign-in. Please sign in again.')
+      return failure('other', `${service} did not accept the sign-in. Please sign in again.`)
     }
     if (err.isRetryable) {
-      return failure('network', "Couldn't reach Ubisoft. Check your connection and try again.")
+      return failure('network', `Couldn't reach ${service}. Check your connection and try again.`)
     }
     return failure('other', err.message)
   }
-  console.error('Connecting a Ubisoft account failed', err)
-  return failure('other', 'Something went wrong while connecting. Please try again.')
-}
-function toSteamSignInFailure(err: unknown): ConnectResult {
-  if (err instanceof SignInError) {
-    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('Steam'))
-  }
-  if (err instanceof ProviderError) {
-    if (err.kind === 'auth_expired') {
-      return failure('other', 'Steam did not accept the sign-in. Please sign in again.')
-    }
-    if (err.isRetryable) {
-      return failure('network', "Couldn't reach Steam. Check your connection and try again.")
-    }
-    return failure('other', err.message)
-  }
-  console.error('Signing in to Steam failed', err)
-  return failure('other', 'Something went wrong while connecting. Please try again.')
-}
-
-function toEaFailure(err: unknown): ConnectResult {
-  if (err instanceof SignInError) {
-    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('EA'))
-  }
-  if (err instanceof ProviderError) {
-    if (err.kind === 'auth_expired') {
-      return failure('other', 'EA did not accept the sign-in. Please sign in again.')
-    }
-    if (err.isRetryable) {
-      return failure('network', "Couldn't reach EA. Check your connection and try again.")
-    }
-    return failure('other', err.message)
-  }
-  console.error('Connecting an EA account failed', err)
+  console.error(`Connecting to ${service} failed`, err)
   return failure('other', 'Something went wrong while connecting. Please try again.')
 }
 

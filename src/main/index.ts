@@ -4,23 +4,26 @@ import { IPC } from '@shared/ipc'
 import {
   connectEa,
   connectEpic,
+  connectPlayStation,
   connectSteam,
   connectUbisoft,
   connectXbox,
   signInToSteam,
 } from './accounts'
 import { coalesce } from './coalesce'
-import { CookieSignIn } from './cookie-sign-in'
+import { CookieSignIn, isBackHome } from './cookie-sign-in'
 import { type CookieSignInPage, openCookieSignInWindow } from './cookie-sign-in-window'
 import { registerIpcHandlers } from './ipc'
 import { DATABASE_FILE, moveLegacyData } from './legacy-data'
-import { isEaAddress, isSteamAddress, mayNavigate } from './navigation'
+import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
 import { EaProvider } from './providers/ea'
 import { readSignInCookies } from './providers/ea/auth'
 import { EpicProvider } from './providers/epic'
 import { EPIC_SIGN_IN_URL } from './providers/epic/auth'
+import { PlayStationProvider } from './providers/playstation'
+import { isPsnRedirect, PSN_SIGN_IN_URL, readNpsso } from './providers/playstation/auth'
 import { SteamProvider } from './providers/steam'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
@@ -47,16 +50,22 @@ import { XboxSignIn } from './xbox-sign-in'
 const EA_SIGN_IN_URL = 'https://www.ea.com/login'
 const EA_SIGN_IN_PAGE: CookieSignInPage = {
   title: 'Sign in to EA',
-  home: 'https://www.ea.com',
+  isSignedIn: isBackHome('https://www.ea.com'),
   cookieDomain: 'ea.com',
   mayNavigate: isEaAddress,
 }
 const STEAM_SIGN_IN_URL = 'https://store.steampowered.com/login/'
 const STEAM_SIGN_IN_PAGE: CookieSignInPage = {
   title: 'Sign in to Steam',
-  home: 'https://store.steampowered.com',
+  isSignedIn: isBackHome('https://store.steampowered.com'),
   cookieDomain: 'steampowered.com',
   mayNavigate: isSteamAddress,
+}
+const PSN_SIGN_IN_PAGE: CookieSignInPage = {
+  title: 'Sign in to PlayStation',
+  isSignedIn: isPsnRedirect,
+  cookieDomain: 'sony.com',
+  mayNavigate: isSonyAddress,
 }
 
 if (!dataFolderReady() || !app.requestSingleInstanceLock()) {
@@ -121,6 +130,7 @@ async function start(): Promise<void> {
   const epic = new EpicProvider()
   const ubisoft = new UbisoftProvider()
   const ea = new EaProvider()
+  const playstation = new PlayStationProvider()
   const xboxSignIn = new XboxSignIn({ openExternal: (url) => shell.openExternal(url) })
   const ubisoftSignIn = new UbisoftSignIn({
     openWindow: (url) =>
@@ -147,6 +157,12 @@ async function start(): Promise<void> {
     read: readSteamSignIn,
     openWindow: cookieWindow(STEAM_SIGN_IN_PAGE),
   })
+  const playstationSignIn = new CookieSignIn({
+    service: 'PlayStation',
+    url: PSN_SIGN_IN_URL,
+    read: readNpsso,
+    openWindow: cookieWindow(PSN_SIGN_IN_PAGE),
+  })
   const secrets = new SafeStorageSecretStore(
     join(app.getPath('userData'), 'secrets.json'),
     safeStorage,
@@ -156,7 +172,7 @@ async function start(): Promise<void> {
   }, 1000)
   const scheduler = new Scheduler({
     db,
-    providers: { steam, xbox, epic, ubisoft, ea },
+    providers: { steam, xbox, playstation, epic, ubisoft, ea },
     secrets,
     onUnlocks: (events) => {
       for (const event of events) console.info(describeUnlockTiming(event))
@@ -171,6 +187,7 @@ async function start(): Promise<void> {
     xboxSignIn.cancel()
     ubisoftSignIn.cancel()
     eaSignIn.cancel()
+    playstationSignIn.cancel()
     steamSignIn.cancel()
   })
 
@@ -198,6 +215,15 @@ async function start(): Promise<void> {
     cancelUbisoftSignIn: () => ubisoftSignIn.cancel(),
     connectEa: () => connectEa({ db, ea, signIn: () => eaSignIn.run(), secrets, scheduler }),
     cancelEaSignIn: () => eaSignIn.cancel(),
+    connectPlayStation: () =>
+      connectPlayStation({
+        db,
+        playstation,
+        signIn: () => playstationSignIn.run(),
+        secrets,
+        scheduler,
+      }),
+    cancelPlayStationSignIn: () => playstationSignIn.cancel(),
     signInToSteam: (input) =>
       signInToSteam(
         {
