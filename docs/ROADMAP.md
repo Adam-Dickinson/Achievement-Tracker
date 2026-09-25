@@ -25,12 +25,13 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 ## M2: Real-time Steam and Xbox
 
-- [ ] Near real-time Steam toasts (a toast seconds after an unlock, not up to 5 minutes). Two signals, both from Steam itself, never from the game (rule 4); see PROVIDERS.md, Steam, "Local files and plan":
-  - [ ] Steam local stats files (`appcache/stats/UserGameStats_<accountid>_<appid>.bin`): watch the folder and sync that one game straight away when its file changes. Also finds borrowed Steam Families games last played more than two weeks ago, which the Web API can't list
-  - [ ] Running-game detection (Steam's `RunningAppID` registry value) → fast polling (about every 30 s) of the game being played, as a safety net for a missed file write; a game not played lately is checked the moment it launches instead of up to 6 hours later
-  - [ ] First, a timing check during a play session: when Steam rewrites the stats file relative to the unlock, and how soon `GetPlayerAchievements` shows it
+- [ ] Near real-time Steam toasts (a toast seconds after an unlock, not up to 5 minutes). Two signals, both from Steam itself, never from the game (rule 4); see PROVIDERS.md, Steam, "Local files and plan". Both are built; the item is done once a real unlock shows the delay:
+  - [x] Steam local stats files (`appcache/stats/UserGameStats_<accountid>_<appid>.bin`): watch the folder and sync that one game straight away when its file changes (`SteamProvider.watch()`, `Scheduler.syncGameNow()`). A game the library doesn't list yet triggers one library look first
+  - [ ] Borrowed Steam Families games last played more than two weeks ago, which the Web API can't list: their stats file changes, but the library look can't find them, so they are skipped for now (would need the game's title from its schema)
+  - [x] Running-game detection (Steam's `RunningAppID` registry value) → fast polling (every 30 s) of the game being played, as a safety net for a missed file write; a game not played lately is checked the moment it launches instead of up to 6 hours later. Verified live: `RunningAppID` holds the appid while a game runs
+  - [ ] Timing check with a real unlock: when Steam rewrites the stats file relative to the unlock, and how soon `GetPlayerAchievements` shows it. Launching and quitting without an unlock was checked (no file write, 2026-09-25); the app now logs each unlock's delay, so the next unlock during `npm run dev` answers it
 - [x] Xbox provider (OAuth via browser/loopback redirect, token refresh). Verified against a real account and built: the provider, the scheduler's credential refresh (ADR-0007), the sign-in in the main process, and the Xbox card on the Accounts screen with the "unofficial" opt-in; a live run fetched all 13 games of a real library
-- [ ] Activity feed screen
+- [x] Activity feed screen: every dated unlock across platforms, newest first, grouped under day headings, with description, game, platform, rarity and time; "Show more" loads 50 more (up to 1,000); refreshes as syncs land; a row opens its game. Built without a canvas design, in the Afterglow style of the Dashboard's recent unlocks
 - **Exit:** unlocks from Steam and Xbox appear in one library and fire toasts; a Steam unlock toasts within seconds
 
 ## M3: PlayStation and unified library (P0 complete)
