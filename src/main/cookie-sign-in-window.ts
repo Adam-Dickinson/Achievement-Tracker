@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { BrowserWindow, session } from 'electron'
 import { chromeUserAgent } from './chrome-user-agent'
-import type { CookieSignInWindow } from './cookie-sign-in'
+import { type CookieSignInWindow, isOnDomain } from './cookie-sign-in'
 import { allowNavigation, type NavigationRule } from './navigation'
 import type { BrowserCookie } from './providers/browser-cookie'
 
@@ -42,9 +42,11 @@ export function openCookieSignInWindow(
 
   contents.on('did-navigate', (_event, address) => {
     if (!isBackHome(page.home, address)) return
-    void partition.cookies.get({ domain: page.cookieDomain }).then(
+    void partition.cookies.get({}).then(
       (cookies) => {
-        const pairs = cookies.map(({ name, value }) => ({ name, value }))
+        const pairs = cookies
+          .filter((cookie) => isOnDomain(cookie.domain ?? '', page.cookieDomain))
+          .map(({ name, value }) => ({ name, value }))
         for (const listener of signedInListeners) listener(pairs)
       },
       () => undefined,

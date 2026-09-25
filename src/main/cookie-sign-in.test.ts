@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Secret } from '@shared/secret'
-import { CookieSignIn, type CookieSignInWindow, SIGN_IN_TIMEOUT_MS } from './cookie-sign-in'
+import {
+  CookieSignIn,
+  type CookieSignInWindow,
+  isOnDomain,
+  SIGN_IN_TIMEOUT_MS,
+} from './cookie-sign-in'
 import type { BrowserCookie } from './providers/browser-cookie'
 import { readSignInCookies } from './providers/ea/auth'
 import { SignInError } from './sign-in-error'
@@ -149,5 +154,26 @@ describe('CookieSignIn', () => {
 
     expect(cookiesOf(await running)).toMatchObject({ sid: 's-1' })
     expect(window?.closeCalls).toBe(1)
+  })
+})
+
+describe('isOnDomain', () => {
+  it.each([
+    ['.ea.com', 'ea.com'],
+    ['ea.com', 'ea.com'],
+    ['login.steampowered.com', 'steampowered.com'],
+    ['.steampowered.com', 'steampowered.com'],
+    ['Store.SteamPowered.com', 'steampowered.com'],
+  ])('keeps a cookie for %s on %s, including one set on a single subdomain', (cookie, domain) => {
+    expect(isOnDomain(cookie, domain)).toBe(true)
+  })
+
+  it.each([
+    ['steamcommunity.com', 'steampowered.com'],
+    ['notsteampowered.com', 'steampowered.com'],
+    ['ea.com.example.org', 'ea.com'],
+    ['', 'ea.com'],
+  ])('leaves out a cookie for %s when reading %s', (cookie, domain) => {
+    expect(isOnDomain(cookie, domain)).toBe(false)
   })
 })

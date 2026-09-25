@@ -18,6 +18,11 @@ export interface CookieSignInDeps {
   readonly timeoutMs?: number
 }
 
+export function isOnDomain(cookieDomain: string, domain: string): boolean {
+  const host = cookieDomain.replace(/^\./, '').toLowerCase()
+  return host === domain || host.endsWith(`.${domain}`)
+}
+
 export class CookieSignIn {
   readonly #deps: CookieSignInDeps
   #cancelCurrent: (() => void) | null = null
