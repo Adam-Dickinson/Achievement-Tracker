@@ -49,6 +49,7 @@ export function XboxConnectCard({ onConnected }: XboxConnectCardProps) {
       <label className="flex items-center gap-2 text-sm text-fg-muted">
         <input
           type="checkbox"
+          className="accent-primary"
           checked={accepted}
           onChange={(event) => setAccepted(event.target.checked)}
           disabled={waiting}
