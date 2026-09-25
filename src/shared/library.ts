@@ -33,7 +33,16 @@ export interface RecentUnlock {
   readonly gameTitle: string
   readonly platform: Platform
   readonly name: string
+  readonly description: string | null
   readonly iconUrl: string | null
   readonly globalPercent: number | null
   readonly unlockedAt: Date
+}
+
+export const ACTIVITY_PAGE_SIZE = 50
+export const MAX_ACTIVITY_LIMIT = 1000
+
+export interface ActivityPage {
+  readonly unlocks: readonly RecentUnlock[]
+  readonly hasMore: boolean
 }

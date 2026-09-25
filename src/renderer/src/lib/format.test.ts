@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatPercent, formatUnlockDate, plural } from './format'
+import { formatDayHeading, formatPercent, formatTime, formatUnlockDate, plural } from './format'
 
 describe('formatPercent', () => {
   it('shows one decimal place, dropping a trailing zero', () => {
@@ -30,6 +30,39 @@ describe('formatUnlockDate', () => {
 
     expect(formatUnlockDate(older, now)).toBe(
       older.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }),
+    )
+  })
+})
+
+describe('formatTime', () => {
+  it('gives the hours and minutes in the local format', () => {
+    const date = new Date(2026, 8, 23, 9, 5)
+
+    expect(formatTime(date)).toBe(
+      date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+    )
+  })
+})
+
+describe('formatDayHeading', () => {
+  const now = new Date(2026, 8, 23, 18, 0)
+
+  it('says Today and Yesterday by the calendar day, not the last 24 hours', () => {
+    expect(formatDayHeading(new Date(2026, 8, 23, 0, 1), now)).toBe('Today')
+    expect(formatDayHeading(new Date(2026, 8, 22, 23, 59), now)).toBe('Yesterday')
+    expect(formatDayHeading(new Date(2026, 8, 22, 0, 0), now)).toBe('Yesterday')
+  })
+
+  it('gives the weekday and full date for anything older', () => {
+    const older = new Date(2026, 8, 21, 12, 0)
+
+    expect(formatDayHeading(older, now)).toBe(
+      older.toLocaleDateString(undefined, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
     )
   })
 })

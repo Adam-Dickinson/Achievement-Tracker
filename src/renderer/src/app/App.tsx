@@ -5,6 +5,7 @@ import { NAV_ITEMS, type PageId } from './navigation'
 import { IslandNav } from './IslandNav'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { Accounts } from '@/features/accounts/Accounts'
+import { Activity } from '@/features/activity/Activity'
 import { Library } from '@/features/library/Library'
 import { GameDetail } from '@/features/game-detail/GameDetail'
 
@@ -19,6 +20,8 @@ function PageContent({ page, onOpenGame }: PageContentProps) {
       return <Dashboard onOpenGame={onOpenGame} />
     case 'library':
       return <Library onOpenGame={onOpenGame} />
+    case 'activity':
+      return <Activity onOpenGame={onOpenGame} />
     case 'accounts':
       return <Accounts />
     default:

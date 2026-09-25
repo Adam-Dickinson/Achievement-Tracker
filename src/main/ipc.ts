@@ -9,7 +9,12 @@ import {
   type SteamConnectInput,
   type XboxConnectInput,
 } from '@shared/ipc'
-import type { GameDetail, LibraryGame } from '@shared/library'
+import {
+  type ActivityPage,
+  type GameDetail,
+  type LibraryGame,
+  MAX_ACTIVITY_LIMIT,
+} from '@shared/library'
 
 export interface IpcHandlers {
   getAppInfo(): AppInfo
@@ -21,6 +26,7 @@ export interface IpcHandlers {
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   getDashboard(): DashboardStats
+  listActivity(limit: number): ActivityPage
 }
 
 const steamConnectInputSchema = z.object({
@@ -31,6 +37,8 @@ const steamConnectInputSchema = z.object({
 const xboxConnectInputSchema = z.object({ acceptedUnofficial: z.literal(true) })
 
 const gameIdSchema = z.number().int().positive()
+
+const activityLimitSchema = z.number().int().min(1).max(MAX_ACTIVITY_LIMIT)
 
 function isTrustedSender(event: IpcMainInvokeEvent): boolean {
   const url = event.senderFrame?.url ?? ''
@@ -103,6 +111,12 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.getDashboard, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.getDashboard()
+  })
+
+  ipcMain.handle(IPC.listActivity, (event, limit: unknown): ActivityPage => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = activityLimitSchema.safeParse(limit)
+    return parsed.success ? handlers.listActivity(parsed.data) : { unlocks: [], hasMore: false }
   })
 }
 

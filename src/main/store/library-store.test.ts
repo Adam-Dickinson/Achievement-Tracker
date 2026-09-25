@@ -4,6 +4,7 @@ import type { RemoteAchievement, RemoteGame } from '@shared/models'
 import {
   getDashboardStats,
   getGameDetail,
+  listActivity,
   listLibraryGames,
   listRecentUnlocks,
 } from './library-store'
@@ -171,9 +172,42 @@ describe('listRecentUnlocks', () => {
       gameId: portal,
       gameTitle: 'Portal',
       platform: 'steam',
+      description: 'Do 400-2',
       globalPercent: 30,
       unlockedAt: new Date('2026-09-03T10:00:00Z'),
     })
+  })
+})
+
+describe('listActivity', () => {
+  it('returns up to the limit, newest first, and says there are more', () => {
+    seedGame('400', 'Portal', 3, [
+      new Date('2026-09-01T10:00:00Z'),
+      new Date('2026-09-02T10:00:00Z'),
+      new Date('2026-09-03T10:00:00Z'),
+    ])
+
+    const page = listActivity(db, 2)
+
+    expect(page.unlocks.map((u) => u.name)).toEqual(['Achievement 400-2', 'Achievement 400-1'])
+    expect(page.hasMore).toBe(true)
+  })
+
+  it('says there are no more once every dated unlock is in the page', () => {
+    seedGame('400', 'Portal', 3, [
+      new Date('2026-09-01T10:00:00Z'),
+      null,
+      new Date('2026-09-03T10:00:00Z'),
+    ])
+
+    const page = listActivity(db, 2)
+
+    expect(page.unlocks).toHaveLength(2)
+    expect(page.hasMore).toBe(false)
+  })
+
+  it('returns an empty page when nothing is unlocked', () => {
+    expect(listActivity(db, 50)).toEqual({ unlocks: [], hasMore: false })
   })
 })
 
