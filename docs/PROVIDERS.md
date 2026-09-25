@@ -13,7 +13,7 @@
 | PlayStation | No (unofficial) | NPSSO token, then access token | Poll | Medium-Low | P0 |
 | Xenia | n/a (local) | none | File watch / log | Low, spike | After v1 |
 | Epic Games | No (unofficial, the Epic launcher's own services) | Browser sign-in, pasted authorization code, then launcher OAuth tokens | Poll | Medium | P1, feasible (verified 2026-09-25) |
-| Ubisoft Connect | No | Unknown/unofficial | Unknown | Low | P1 spike |
+| Ubisoft Connect | No (unofficial, the Ubisoft Connect launcher's own services) | Ubisoft's sign-in page in an app window, then remember-me tickets traded for launcher sessions | Poll | Medium-Low | P1, feasible (verified 2026-09-25) |
 | EA app | No | Unknown | Unknown | Very low | P1 spike |
 
 **Coverage shortcut:** many PC titles from Epic/Ubisoft/EA also use **Steam achievements** if they're on Steam. The Steam provider covers those, so the store-specific providers only matter for store-exclusive achievements.
@@ -180,10 +180,43 @@ Spike C verdict: **feasible, unofficial.** Captured against a real account (317 
 - **Covers:** `cdn1.epicgames.com` resizes with `?resize=1&w=920` (a 2560x1440 cover went from 760 KB to 124 KB; `?w=920` alone is ignored).
 - **Not yet verified:** an achievement with progress (all 66 unlocks had `progress` 1), whether the game list needs Mac-only records filtered out (every record seen included Windows), and a refresh token at the end of its year.
 
-## Ubisoft Connect (P1 spike)
+## Ubisoft Connect (P1): verified 2026-09-25, feasible
 
-- Ubisoft Connect has achievements/"challenges" served by Ubisoft services requiring an authenticated session; nothing public or documented. 2FA complicates any token flow.
-- **Spike questions:** feasibility of a token-based session without storing the user's password; local cache files; overlap with Steam for the same titles.
+Spike C verdict: **feasible, unofficial.** Captured against a real account (14 owned games, 10 with Ubisoft achievements, 79 unlocks) with Electron scripts that are not part of the app (kept in the session scratchpad; raw replies in `tests/fixtures/_raw/ubisoft/`, git-ignored). The endpoints and query shapes came from the Ubisoft Connect launcher's own cached web bundles (`%LOCALAPPDATA%\Ubisoft Game Launcher\cache\http2`), read for URLs and GraphQL query text only; its encrypted credential store (`ConnectSecureStorage.dat`) was not touched.
+
+- **Status: unofficial.** Ubisoft has no public API for a player's own achievements. These are the services behind the Ubisoft Connect launcher and ubisoft.com, reached with the **launcher's app ID** (`f68a4bb5-608a-4ff2-8123-be8ef797e0a6`). Opt-in and labelled (rule 5). The password is typed into Ubisoft's own page and never reaches our code ([ADR-0009](adr/0009-ubisoft-sign-in-window.md)).
+- **Local files:** the launcher keeps no achievement data on disk any more (no `cache/achievements`), so there is nothing to watch; the provider polls.
+- **App IDs** (sent as `Ubi-AppId`):
+
+  | App ID | Whose | Result |
+  |---|---|---|
+  | `1068ef52-dfd2-4e62-8ac9-37a47e6c0b78` | ubisoft.com's sign-in (the iframe on `www.ubisoft.com/en-gb/account/login`, reached from `https://account.ubisoft.com/login`) | Signs in. Its sessions list games, but achievements come back empty (`standardAchievements` 0/0) or refused (GraphQL error "401 Unauthorized from entitlement.api (errorCode=2000)", code `UNAUTHORIZED_USER`, HTTP 200) |
+  | `f68a4bb5-608a-4ff2-8123-be8ef797e0a6` | The Ubisoft Connect launcher | Its sessions read achievements. A website remember-me ticket can be traded for one |
+  | `314d4fef-e568-454a-ae06-43e3bece12a6` | The old web app ID in community tools (GOG Galaxy's plugin) | **Retired:** signing in answers **403** error **1002** "The Service: authentication, is not currently available for Application …" |
+
+- **Sign-in and renewal** (all verified):
+
+  | Step | Request | Reply |
+  |---|---|---|
+  | 1. Sign-in page | Ubisoft's page posts `POST https://public-ubiservices.ubi.com/v3/profiles/sessions` with `Ubi-AppId: 1068ef52-…`, `Authorization: Basic base64(email:password)` and reCAPTCHA, body with `rememberMe: true` | **200** with `ticket` (about 3,700 characters), `sessionId`, `rememberMeTicket` (about 720 characters), `userId` (a UUID; equal to `profileId` and to GraphQL's `viewer.id`), `nameOnPlatform`, `expiration` (**3 hours** after `serverTime`), `serverTime`, `twoFactorAuthenticationTicket` (null here), `sessionKey`, `spaceId`, `clientIp`. **A wrong password answers 403**, not 401. The app reads this reply only (ADR-0009) |
+  | 2. Renewal | `POST https://public-ubiservices.ubi.com/v3/profiles/sessions`, `Ubi-AppId: f68a4bb5-…` (the launcher), `Authorization: rm_v1 t=<rememberMeTicket>`, body `{"rememberMe":true}` | **200**, the same shape, a new ticket for the launcher's app ID, and a **new `rememberMeTicket`**: it rotates on every renewal |
+  | 3. Reuse | Renewing again with a remember-me ticket that was already used | **401** error **3** "Nonce was not found for the profile", **and the newest ticket is revoked too**: the account has to sign in again. So renewals must be one at a time and every new ticket saved (ADR-0007, ADR-0009) |
+
+- **Endpoint:** everything else is one GraphQL endpoint, `POST https://public-ubiservices.ubi.com/v1/profiles/me/uplay/graphql`, with headers `Ubi-AppId: f68a4bb5-…`, `Authorization: Ubi_v1 t=<ticket>`, `Ubi-SessionId: <sessionId>`, `Ubi-LocaleCode: en-US`. Introspection is off ("GraphQL introspection is not allowed by Apollo Server") and wrong field names get no suggestions, so only query shapes the launcher itself uses were relied on.
+
+  | Query | Used for | What we saw |
+  |---|---|---|
+  | `viewer { id name games(filterBy: { isOwned: true }) { nodes { id spaceId name avatarUrl backgroundUrl viewer { meta { id lastPlayedDate achievements { totalCount completedCount } } } } } }` | `validate()`, `listGames()` | All 14 owned games in one reply (the field takes no paging arguments; `first` is rejected), newest played first. `spaceId` is the game's ID (a UUID). `lastPlayedDate` is ISO with `Z` (2016 to 2026). `playTime` also exists (seconds, or null). **4 games have 0 achievements** (For Honor, and entries whose `platform.type` is PS3 or PS4). Images are on `ubiservices.cdn.ubi.com`: `backgroundUrl` is landscape art, `avatarUrl` a square icon; the CDN resizes with `?imwidth=` (the launcher uses it) |
+  | `game(spaceId) { id viewer { meta { id achievements { totalCount completedCount nodes { id achievementId title description icon viewer { meta { id completionDate isCompleted } } } } } } }` (the launcher's `GetAchievements`; its optional `productId` was not needed) | `fetchGame()` | Every achievement with the player's state in one reply, no paging (92 in one game). `id` is `<uplay product id>-<n>` (for example `7013-1`). Every achievement had a title, description and icon. `completionDate` has **no time zone** (`2022-12-13T13:08:21`); read as UTC, unverified. A game Ubisoft does not know answers `game: null` |
+  | `game(spaceId) { … standardAchievements(limit, nextToken) { … } }` (the launcher's `GetPlayerAchievements`) | not used | Returned 0 of 0 for every game on this account, with both app IDs |
+
+- **Not available:** no rarity, no hidden or secret flag, no points and no progress on these achievements (all four field names tried were rejected).
+- **Errors:** a bad ticket answers **401** `{"errors":[{"message":"Could not parse authorization header.","extensions":{"code":"INVALID_TICKET"}}]}`; the provider treats that code as an expired session even on a 200.
+- **Rate limits:** none seen (about 60 requests in a few minutes, no `429`, no rate-limit headers).
+- **Overlap with Steam:** several of these games (Assassin's Creed, Far Cry) are also Steam games; the Ubisoft achievements are Ubisoft's own set, so both are tracked until cross-platform linking (M4).
+- **Risks:** Ubisoft could block the launcher's app ID for third parties (it already retired `314d4fef-…`); reCAPTCHA or other bot checks on the sign-in page could tighten; a lost rotated ticket forces a new sign-in.
+- **Live run of the finished provider (2026-09-25):** connected from the Accounts screen through the sign-in window: **10 games** listed and synced (the 4 without achievements left out), **79 unlocks** matching the spike, all dated, and a silent first sync (no toasts, baseline rule).
+- **Not yet verified:** the time zone of `completionDate` (needs a fresh unlock), how long a remember-me ticket lasts if unused, 2-step sign-in (this account was not asked for a code), and an account with social sign-in only.
 
 ## EA app (P1 spike)
 
