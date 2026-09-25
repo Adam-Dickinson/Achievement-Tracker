@@ -107,6 +107,15 @@ describe('Accounts', () => {
     await screen.findByText('No accounts connected yet.')
   })
 
+  it('shows the Steam family card, enabled once a Steam account is connected', async () => {
+    listAccounts.mockResolvedValue([STEAM])
+    render(<Accounts />)
+
+    const card = screen.getByRole('region', { name: 'Add your Steam family library' })
+    await screen.findByText(STEAM.displayName)
+    expect(within(card).queryByText('Connect your Steam account first.')).not.toBeInTheDocument()
+  })
+
   it('shows the EA connect card', async () => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)

@@ -12,7 +12,8 @@ import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import type { SecretStore } from '@shared/secret-store'
 import { readAuthorizationCode } from './providers/epic/auth'
-import { listAccountSummaries, upsertAccount } from './store/sync-store'
+import { familySteamId, withFamily } from './providers/steam/family'
+import { getAccount, listAccountSummaries, upsertAccount } from './store/sync-store'
 import type { Scheduler } from './sync/scheduler'
 import { SignInError, type SignInFailure } from './sign-in-error'
 import type { MicrosoftAuthorization } from './xbox-sign-in'
@@ -125,6 +126,45 @@ export async function connectEa(deps: EaAccountsDeps): Promise<ConnectResult> {
   }
 }
 
+export interface SteamFamilyDeps {
+  readonly db: DatabaseSync
+  readonly signIn: () => Promise<Secret>
+  readonly checkSignIn: (family: Secret) => Promise<unknown>
+  readonly secrets: SecretStore
+  readonly scheduler: Pick<Scheduler, 'lookForGamesNow'>
+}
+
+export async function connectSteamFamily(deps: SteamFamilyDeps): Promise<ConnectResult> {
+  const steamAccounts = listAccountSummaries(deps.db).filter((row) => row.platform === 'steam')
+  if (steamAccounts.length === 0) {
+    return failure('other', 'Connect your Steam account first, then add its family library.')
+  }
+  try {
+    const family = await deps.signIn()
+    const steamId = familySteamId(family)
+    const summary = steamAccounts.find((row) => getAccount(deps.db, row.id).externalId === steamId)
+    if (!summary) {
+      return failure(
+        'other',
+        'That Steam sign-in is for a different account from the one connected here. Sign in with the connected account.',
+      )
+    }
+    const stored = deps.secrets.find(String(summary.id))
+    if (!stored) {
+      return failure(
+        'other',
+        'Connect your Steam account again first, then add its family library.',
+      )
+    }
+    await deps.checkSignIn(family)
+    deps.secrets.save(String(summary.id), withFamily(stored, family))
+    deps.scheduler.lookForGamesNow(summary.id)
+    return { ok: true, account: summary }
+  } catch (err) {
+    return toSteamFamilyFailure(err)
+  }
+}
+
 function saveAccount(
   deps: Pick<AccountsDeps, 'db' | 'secrets' | 'scheduler'>,
   credentials: AccountCredentials,
@@ -196,6 +236,23 @@ function toUbisoftFailure(err: unknown): ConnectResult {
   console.error('Connecting a Ubisoft account failed', err)
   return failure('other', 'Something went wrong while connecting. Please try again.')
 }
+function toSteamFamilyFailure(err: unknown): ConnectResult {
+  if (err instanceof SignInError) {
+    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('Steam'))
+  }
+  if (err instanceof ProviderError) {
+    if (err.kind === 'auth_expired') {
+      return failure('other', 'Steam did not accept the sign-in. Please sign in again.')
+    }
+    if (err.isRetryable) {
+      return failure('network', "Couldn't reach Steam. Check your connection and try again.")
+    }
+    return failure('other', err.message)
+  }
+  console.error('Adding a Steam family library failed', err)
+  return failure('other', 'Something went wrong while connecting. Please try again.')
+}
+
 function toEaFailure(err: unknown): ConnectResult {
   if (err instanceof SignInError) {
     return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('EA'))

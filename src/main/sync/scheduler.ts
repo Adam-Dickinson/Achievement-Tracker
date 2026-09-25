@@ -97,6 +97,12 @@ export class Scheduler {
     void this.#runLoop(accountId)
   }
 
+  lookForGamesNow(accountId: number): void {
+    const state = getSyncState(this.#db, accountId, LIBRARY_SCOPE)
+    if (state) upsertSyncState(this.#db, accountId, LIBRARY_SCOPE, { ...state, nextDueAt: null })
+    this.startAccount(accountId)
+  }
+
   async refreshCredentials(accountId: number): Promise<typeof READY | Date | null> {
     const signal = this.#abort.signal
     const account = getAccount(this.#db, accountId)

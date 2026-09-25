@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Secret } from '@shared/secret'
-import { EA_SIGN_IN_URL, EaSignIn, type EaSignInWindow, SIGN_IN_TIMEOUT_MS } from './ea-sign-in'
-import type { BrowserCookie } from './providers/ea/auth'
+import { CookieSignIn, type CookieSignInWindow, SIGN_IN_TIMEOUT_MS } from './cookie-sign-in'
+import type { BrowserCookie } from './providers/browser-cookie'
+import { readSignInCookies } from './providers/ea/auth'
 import { SignInError } from './sign-in-error'
+
+const SIGN_IN_URL = 'https://www.ea.com/login'
 
 const SIGNED_IN: readonly BrowserCookie[] = [
   { name: 'sid', value: 's-1' },
@@ -11,7 +14,7 @@ const SIGNED_IN: readonly BrowserCookie[] = [
   { name: '_ga', value: 'analytics' },
 ]
 
-class FakeWindow implements EaSignInWindow {
+class FakeWindow implements CookieSignInWindow {
   readonly #signedIn: ((cookies: readonly BrowserCookie[]) => void)[] = []
   readonly #closed: (() => void)[] = []
   closeCalls = 0
@@ -38,7 +41,7 @@ class FakeWindow implements EaSignInWindow {
 }
 
 let windows: FakeWindow[] = []
-const openWindow = vi.fn<(url: string) => EaSignInWindow>(() => {
+const openWindow = vi.fn<(url: string) => CookieSignInWindow>(() => {
   const window = new FakeWindow()
   windows.push(window)
   return window
@@ -54,8 +57,8 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function signIn(): EaSignIn {
-  return new EaSignIn({ openWindow })
+function signIn(): CookieSignIn {
+  return new CookieSignIn({ service: 'EA', url: SIGN_IN_URL, read: readSignInCookies, openWindow })
 }
 
 function cookiesOf(secret: Secret): unknown {
@@ -71,21 +74,21 @@ async function failureOf(run: Promise<unknown>): Promise<SignInError> {
   return error
 }
 
-describe('EaSignIn', () => {
-  it("opens EA's sign-in page and resolves with only the sign-in cookies once back on ea.com", async () => {
+describe('CookieSignIn', () => {
+  it("opens the service's sign-in page and resolves with what its reader keeps from the cookies", async () => {
     const running = signIn().run()
     const [window] = windows
 
     window?.arriveHome(SIGNED_IN)
     const cookies = await running
 
-    expect(openWindow).toHaveBeenCalledWith(EA_SIGN_IN_URL)
+    expect(openWindow).toHaveBeenCalledWith(SIGN_IN_URL)
     expect(cookies).toBeInstanceOf(Secret)
     expect(cookiesOf(cookies)).toEqual({ sid: 's-1', remid: 'r-1', _nx_mpcid: 'm-1' })
     expect(window?.closeCalls).toBe(1)
   })
 
-  it('keeps waiting while the page has no sign-in yet', async () => {
+  it('keeps waiting while the reader finds no sign-in yet', async () => {
     const running = signIn().run()
     const [window] = windows
 
@@ -96,19 +99,21 @@ describe('EaSignIn', () => {
     expect(cookiesOf(await running)).toMatchObject({ sid: 's-1' })
   })
 
-  it('reports closing the window as cancelled', async () => {
+  it('reports closing the window as cancelled, naming the service', async () => {
     const running = signIn().run()
 
     windows[0]?.closeByUser()
 
-    expect((await failureOf(running)).reason).toBe('cancelled')
+    const failure = await failureOf(running)
+    expect(failure.reason).toBe('cancelled')
+    expect(failure.message).toBe('The EA sign-in was cancelled')
   })
 
   it('closes the window and reports cancelled when cancelled from the app', async () => {
-    const ea = signIn()
-    const running = ea.run()
+    const flow = signIn()
+    const running = flow.run()
 
-    ea.cancel()
+    flow.cancel()
 
     expect((await failureOf(running)).reason).toBe('cancelled')
     expect(windows[0]?.closeCalls).toBe(1)
@@ -125,9 +130,9 @@ describe('EaSignIn', () => {
   })
 
   it('cancels the previous sign-in when a new one starts', async () => {
-    const ea = signIn()
-    const first = ea.run()
-    const second = ea.run()
+    const flow = signIn()
+    const first = flow.run()
+    const second = flow.run()
 
     expect((await failureOf(first)).reason).toBe('cancelled')
     windows[1]?.arriveHome(SIGNED_IN)

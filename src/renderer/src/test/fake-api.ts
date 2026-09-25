@@ -15,6 +15,8 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     cancelUbisoftSignIn: vi.fn().mockResolvedValue(undefined),
     connectEa: vi.fn(),
     cancelEaSignIn: vi.fn().mockResolvedValue(undefined),
+    connectSteamFamily: vi.fn(),
+    cancelSteamFamilySignIn: vi.fn().mockResolvedValue(undefined),
     listLibrary: vi.fn().mockResolvedValue([]),
     getGame: vi.fn().mockResolvedValue(null),
     getDashboard: vi.fn().mockReturnValue(new Promise(() => {})),

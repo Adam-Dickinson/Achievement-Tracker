@@ -9,6 +9,7 @@ import {
   type EaConnectInput,
   type EpicConnectInput,
   type SteamConnectInput,
+  type SteamFamilyConnectInput,
   type UbisoftConnectInput,
   type XboxConnectInput,
 } from '@shared/ipc'
@@ -32,6 +33,8 @@ export interface IpcHandlers {
   cancelUbisoftSignIn(): void
   connectEa(input: EaConnectInput): Promise<ConnectResult>
   cancelEaSignIn(): void
+  connectSteamFamily(input: SteamFamilyConnectInput): Promise<ConnectResult>
+  cancelSteamFamilySignIn(): void
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   getDashboard(): DashboardStats
@@ -145,6 +148,24 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.cancelEaSignIn, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     handlers.cancelEaSignIn()
+  })
+
+  ipcMain.handle(IPC.connectSteamFamily, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = unofficialOptInSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the Steam family connection is unofficial.',
+      })
+    }
+    return handlers.connectSteamFamily(parsed.data)
+  })
+
+  ipcMain.handle(IPC.cancelSteamFamilySignIn, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.cancelSteamFamilySignIn()
   })
 
   ipcMain.handle(IPC.openEpicSignIn, (event) => {

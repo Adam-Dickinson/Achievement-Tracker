@@ -569,6 +569,25 @@ describe('Scheduler.syncLibrary', () => {
     expect(listGames).toHaveBeenCalledOnce()
   })
 
+  it('looks again at once when asked, keeping the last look as the cutoff for new games', async () => {
+    const db = seedDb([{ id: 1, games: [] }])
+    let games = [libraryGame('g1')]
+    const listGames = vi.fn<AchievementProvider['listGames']>(() => Promise.resolve(games))
+    const { scheduler, advance } = harness(db, {
+      steam: fakeProvider(vi.fn(), 'steam', listGames),
+    })
+    await scheduler.syncLibrary(1)
+
+    advance(SECONDS)
+    scheduler.lookForGamesNow(1)
+    expect(getSyncState(db, 1, LIBRARY_SCOPE)).toMatchObject({ lastOkAt: START, nextDueAt: null })
+
+    games = [libraryGame('g1'), libraryGame('shared')]
+    await scheduler.syncLibrary(1)
+    expect(listGames).toHaveBeenCalledTimes(2)
+    expect(getPlatformGameByExternalId(db, 1, 'shared').baselineCutoff).toEqual(START)
+  })
+
   it('backs off on a network error and leaves the known games alone', async () => {
     const db = seedDb()
     const provider = fakeProvider(vi.fn(), 'steam', () =>

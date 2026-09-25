@@ -47,6 +47,8 @@ const fakes = {
   cancelUbisoftSignIn: vi.fn(),
   connectEa: vi.fn(() => Promise.resolve(CONNECTED)),
   cancelEaSignIn: vi.fn(),
+  connectSteamFamily: vi.fn(() => Promise.resolve(CONNECTED)),
+  cancelSteamFamilySignIn: vi.fn(),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   getDashboard: vi.fn(() => DASHBOARD),
@@ -85,6 +87,8 @@ describe('registerIpcHandlers', () => {
     IPC.cancelUbisoftSignIn,
     IPC.connectEa,
     IPC.cancelEaSignIn,
+    IPC.connectSteamFamily,
+    IPC.cancelSteamFamilySignIn,
     IPC.listLibrary,
     IPC.getGame,
     IPC.getDashboard,
@@ -242,6 +246,39 @@ describe('EA handlers', () => {
     call(IPC.cancelEaSignIn, TRUSTED)
 
     expect(fakes.cancelEaSignIn).toHaveBeenCalledOnce()
+  })
+})
+
+describe('Steam family handlers', () => {
+  it('connects once the unofficial connection has been accepted', async () => {
+    const result = await call(IPC.connectSteamFamily, TRUSTED, { acceptedUnofficial: true })
+
+    expect(result).toEqual(CONNECTED)
+    expect(fakes.connectSteamFamily).toHaveBeenCalledWith({ acceptedUnofficial: true })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a refusal', { acceptedUnofficial: false }],
+    ['a truthy string', { acceptedUnofficial: 'yes' }],
+  ])(
+    'answers %s with invalid_input, without opening the sign-in window',
+    async (_label, payload) => {
+      const result = await call(IPC.connectSteamFamily, TRUSTED, payload)
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the Steam family connection is unofficial.',
+      })
+      expect(fakes.connectSteamFamily).not.toHaveBeenCalled()
+    },
+  )
+
+  it('cancels a sign-in that is waiting', () => {
+    call(IPC.cancelSteamFamilySignIn, TRUSTED)
+
+    expect(fakes.cancelSteamFamilySignIn).toHaveBeenCalledOnce()
   })
 })
 
