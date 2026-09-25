@@ -2,6 +2,7 @@ import type { AccountSummary } from '@shared/ipc'
 import { AccountCard } from './AccountCard'
 import { EpicConnectCard } from './EpicConnectCard'
 import { SteamConnectForm } from './SteamConnectForm'
+import { UbisoftConnectCard } from './UbisoftConnectCard'
 import { useAccounts } from './useAccounts'
 import { XboxConnectCard } from './XboxConnectCard'
 
@@ -14,6 +15,7 @@ export function Accounts() {
         <SteamConnectForm onConnected={reload} />
         <XboxConnectCard onConnected={reload} />
         <EpicConnectCard onConnected={reload} />
+        <UbisoftConnectCard onConnected={reload} />
       </div>
       <AccountList accounts={accounts} />
     </div>
