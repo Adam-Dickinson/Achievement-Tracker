@@ -38,8 +38,8 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 
 Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-before-playstation.md)).
 
-- [ ] **Spike C:** can each be read without storing the user's password (rule 5)? Which games have store-specific achievements that Steam doesn't already cover? Write the verdicts into PROVIDERS.md
-- [ ] Epic provider, or documented as not supported
+- [ ] **Spike C:** can each be read without storing the user's password (rule 5)? Which games have store-specific achievements that Steam doesn't already cover? Write the verdicts into PROVIDERS.md. **Epic: feasible** (2026-09-25; unofficial, the launcher's own services, signed in with a code from the browser)
+- [ ] Epic provider, or documented as not supported. Built and verified live against a real account: the provider (sign-in with a pasted code, refresh-token rotation, library filtered to games with Epic achievements, catalog titles and covers, rarity, unlock dates), registered with the Scheduler, and `connectEpic`/`openEpicSignIn` over IPC. Still to do: the Connect Epic card on the Accounts screen
 - [ ] Ubisoft Connect provider, or documented as not supported
 - [ ] EA app provider, or documented as not supported (the likely verdict)
 - **Exit:** each of the three is either a working provider with fixtures or a recorded "not supported" verdict

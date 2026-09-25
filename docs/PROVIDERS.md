@@ -12,7 +12,7 @@
 | Xbox | Partly (Xbox Live services, community-documented) | Microsoft OAuth, Xbox/XSTS tokens | Poll | Medium | P0 |
 | PlayStation | No (unofficial) | NPSSO token, then access token | Poll | Medium-Low | P0 |
 | Xenia | n/a (local) | none | File watch / log | Low, spike | After v1 |
-| Epic Games | No | Unknown | Unknown | Low | P1 spike |
+| Epic Games | No (unofficial, the Epic launcher's own services) | Browser sign-in, pasted authorization code, then launcher OAuth tokens | Poll | Medium | P1, feasible (verified 2026-09-25) |
 | Ubisoft Connect | No | Unknown/unofficial | Unknown | Low | P1 spike |
 | EA app | No | Unknown | Unknown | Very low | P1 spike |
 
@@ -147,10 +147,38 @@ Captured against a real account (66 titles in its history, PC Game Pass) with a 
 - Xbox 360 emulator. Achievement data lives in emulated profile/GPD files (Xenia Canary tracks unlocks). Need to confirm where and in what format, and whether unlock times are recorded. Log-tailing is a fallback.
 - **Spike output:** file locations, format description, sample fixture, feasibility verdict.
 
-## Epic Games (P1 spike)
+## Epic Games (P1): verified 2026-09-25, feasible
 
-- Epic's launcher shows achievements, but there is no public user-facing API. Epic Online Services (EOS) achievements are developer-facing. Possibly reachable via undocumented launcher endpoints using the user's Epic session.
-- **Spike questions:** is there a stable, non-ToS-violating way to read a user's own achievements? Which games actually have Epic achievements? If not viable, ship as "manual/none" and rely on Steam overlap.
+Spike C verdict: **feasible, unofficial.** Captured against a real account (317 library items in 209 namespaces, 46 games with Epic achievements, 66 unlocks in 2 of them) with scripts that are not part of the app (`tests/fixtures/_raw/epic-capture.mjs`, `epic-player.mjs`, `epic-rotation.mjs`, `epic-errors.mjs`, git-ignored). The approach follows the Playnite plugin SuccessStory ([EpicApi.cs](https://github.com/Lacro59/playnite-plugincommon/blob/master/CommonPluginsStores/Epic/EpicApi.cs)) and the open-source launchers Legendary and Heroic.
+
+- **Status: unofficial.** Epic has no public API for a player's own achievements (Epic Online Services is for game developers). These are the Epic Games Launcher's own services, reached with the **launcher's client ID and secret** (`34a02cf8f4414e29b15921876da36f9a`, published by Legendary, Heroic and Playnite). Opt-in and labelled like Xbox (rule 5). No password is ever seen or stored.
+- **Sign-in** (all verified):
+
+  | Step | Request | Reply |
+  |---|---|---|
+  | 1. Browser | The user opens `https://www.epicgames.com/id/login?redirectUrl=https%3A%2F%2Fwww.epicgames.com%2Fid%2Fapi%2Fredirect%3FclientId%3D34a02cf8f4414e29b15921876da36f9a%26responseType%3Dcode` and signs in | A plain JSON page with `authorizationCode` (32 hex characters). There is no redirect to our app, so the user copies the code. It expires within minutes, and opening the page again issues a new one and voids the old |
+  | 2. Code for tokens | `POST https://account-public-service-prod03.ol.epicgames.com/account/api/oauth/token`, header `Authorization: basic base64(clientId:secret)`, form `grant_type=authorization_code&code=<code>&token_type=eg1` | `access_token` (`token_type` "bearer", `expires_in` **129600 s = 36 h**), `refresh_token` (`refresh_expires` **31540000 s, about a year**), `account_id` (32 hex), `displayName`, and `expires_at`/`refresh_expires_at` as ISO dates |
+  | 3. Refresh | Same URL, form `grant_type=refresh_token&refresh_token=<token>&token_type=eg1` | Same shape. **The refresh token rotates on every refresh** (the old one was still accepted straight afterwards), so save the new one each time (ADR-0007) |
+
+  A used, expired or wrong code answers **400** `errors.com.epicgames.account.oauth.authorization_code_not_found`; a bad refresh token **400** `errors.com.epicgames.account.auth_token.invalid_refresh_token`.
+- **Endpoints** (calls with a token send `Authorization: bearer <access token>`; SuccessStory's user agent, `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) EpicGamesLauncher`, was used throughout):
+
+  | Endpoint | Token | Used for | What we saw |
+  |---|---|---|---|
+  | `GET https://library-service.live.use1a.on.epicgames.com/library/api/public/items?includeMetadata=true&platform=Windows` (+ `&cursor=`) | yes | `listGames()` | `{ responseMetadata: { nextCursor }, records[] }`. Each record: `namespace` (the game's sandbox ID, 32 hex or a codename such as `jackal`), `catalogItemId`, `appName`, `sandboxName` (a good title, e.g. "Kingdom Come: Deliverance"), `productId`, `sandboxType` (all `PUBLIC`), `recordType` (all `APPLICATION`), `platform[]`, `acquisitionDate`. Several records can share a namespace (editions, DLC apps, and Unreal Engine and Fab items: "UE Marketplace", "fab-listing-live") |
+  | `POST https://launcher.store.epicgames.com/graphql`, query `Achievement.productAchievementsRecordBySandbox(sandboxId, locale)` | **no** | schema + rarity | `productId`, `totalAchievements`, `achievements[].achievement`: `name` (the ID), `hidden`, `unlockedDisplayName`/`lockedDisplayName`, `unlockedDescription`/`lockedDescription`, `unlockedIconLink`/`lockedIconLink` (on `shared-static-prod.epicgames.com`), `XP`, `tier` (bronze/silver/gold...), `rarity.percent` (**on all 3,323 achievements seen**, 0 to 100). A hidden achievement (352 seen) has an empty locked name and description. A sandbox with no achievements, or an unknown one, answers HTTP 200 with every field `null` |
+  | Same URL, query `PlayerAchievement.playerAchievementGameRecordsBySandbox(epicAccountId, sandboxId)` | yes | unlocks | `records: null` for a game never played; otherwise one record with `totalUnlocked` and `playerAchievements[].playerAchievement`: `achievementName`, `unlocked` (always true: **only unlocked achievements are listed**), `unlockDate` (ISO with milliseconds), `progress` (1), `XP`. SuccessStory's other query (`PlayerProfile.playerProfile.productAchievements(productId)`) gave identical unlocks but needs the `productId` from the schema first, and answers `ServiceError` for unplayed games and without a token |
+  | `GET https://catalog-public-service-prod06.ol.epicgames.com/catalog/api/shared/namespace/<ns>/bulk/items?id=<catalogItemIds>&country=GB&locale=en-GB&includeMainGameDetails=true` | yes (sent) | cover art | Items keyed by ID, with `title` and `keyImages[]`: `DieselGameBox` (2560x1440, the cover) and `DieselGameBoxTall` (860x1148), on `cdn1.epicgames.com` over https |
+  | `GET https://library-service.live.use1a.on.epicgames.com/library/api/public/playtime/account/<accountId>/all` | yes | "played" signal | `[{ accountId, artifactId, totalTime }]`: `artifactId` is the library's `appName`, `totalTime` in seconds; 18 entries. **No last-played date** |
+
+- **Only 46 of 209 namespaces have Epic achievements**, so the provider asks for each namespace's schema to know which to list. The schema needs no token and changes rarely, so it can be cached.
+- **Errors:** an invalid token on the library answers **401** JSON `errors.com.epicgames.common.oauth.invalid_token`. On GraphQL it answers **HTTP 500 with an HTML page that loads hCaptcha**, not a 401, so the provider must refresh before the 36 h expiry rather than wait for a rejection. A malformed GraphQL query answers 400 with `errors[]`.
+- **Rate limits:** none seen: about 300 requests at one every 300 ms, no `429` and no rate-limit headers.
+- **Risks:** the launcher's client credentials could be rotated or blocked, and the hCaptcha page shows the GraphQL endpoint sits behind bot protection that could start challenging us.
+- **Live run of the finished provider (2026-09-25):** `refresh` (with the saved refresh token), `validate`, `listGames` and `fetchGame` for every game: **47 games** (43 with a cover, 3 counted as recently played), **3,369 achievements** (352 hidden, all with rarity) and **66 unlocks, all dated**, matching the spike. A bad code gets "that sign-in code has expired or was already used". The first `listGames` took **85 s** (one achievement count per namespace, 209 of them, one at a time); the next, answered from the one-day cache, **3 s**.
+- **Titles:** the library's `sandboxName` is a codename for about 20 of the 47 games ("Live", "yorkie Production", "Munster"), so the provider takes the title from the catalog (43 of 47; it gave "SUPER CRAZY RHYTHM CASTLE" for "Live"). For 4 games the catalog answers `{}` (Fallout: New Vegas, Europa Universalis IV, Death Stranding and one codename); the provider falls back to `sandboxName`, so one game still shows "yorkie Production". The catalog needs a token (401 without). One real title is "[REDACTED]", as Epic has it.
+- **Covers:** `cdn1.epicgames.com` resizes with `?resize=1&w=920` (a 2560x1440 cover went from 760 KB to 124 KB; `?w=920` alone is ignored).
+- **Not yet verified:** an achievement with progress (all 66 unlocks had `progress` 1), whether the game list needs Mac-only records filtered out (every record seen included Windows), and a refresh token at the end of its year.
 
 ## Ubisoft Connect (P1 spike)
 
