@@ -1,0 +1,43 @@
+{
+  "data": {
+    "PlayerAchievement": {
+      "playerAchievementGameRecordsBySandbox": {
+        "records": [
+          {
+            "totalXP": 525,
+            "totalUnlocked": 3,
+            "playerAchievements": [
+              {
+                "playerAchievement": {
+                  "achievementName": "1",
+                  "unlocked": true,
+                  "progress": 1,
+                  "unlockDate": "2025-05-02T18:03:41.722Z",
+                  "XP": 50
+                }
+              },
+              {
+                "playerAchievement": {
+                  "achievementName": "10",
+                  "unlocked": true,
+                  "progress": 1,
+                  "unlockDate": "2023-07-05T21:05:39.306Z",
+                  "XP": 15
+                }
+              },
+              {
+                "playerAchievement": {
+                  "achievementName": "11",
+                  "unlocked": true,
+                  "progress": 1,
+                  "unlockDate": "2025-02-25T21:25:48.359Z",
+                  "XP": 15
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

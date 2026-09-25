@@ -1,0 +1,40 @@
+{
+  "530145df28a24424923f5828cc9031a1": {
+    "id": "530145df28a24424923f5828cc9031a1",
+    "title": "Rocket League®",
+    "namespace": "9773aa1aa54f4f7b80e44bef04986cea",
+    "keyImages": [
+      {
+        "type": "DieselGameBox",
+        "url": "https://cdn1.epicgames.com/item/9773aa1aa54f4f7b80e44bef04986cea/EGS_RocketLeague_PsyonixLLC_S1_2560x1440-210388d6fcf24369aa34461f9544c0b1",
+        "md5": "6258c9be86bb1c34c5899bdb6114ab8a",
+        "width": 2560,
+        "height": 1440,
+        "size": 594798,
+        "uploadedDate": "2026-06-10T17:35:45.584Z"
+      },
+      {
+        "type": "DieselGameBoxTall",
+        "url": "https://cdn1.epicgames.com/item/9773aa1aa54f4f7b80e44bef04986cea/EGS_RocketLeague_PsyonixLLC_S2_1200x1600-f91b1d8f2edb4a2c8ab77e538397cd0c",
+        "md5": "7ae2a59b98715cd7868f21bcdaa77578",
+        "width": 1200,
+        "height": 1600,
+        "size": 318652,
+        "uploadedDate": "2026-06-10T17:35:49.975Z"
+      }
+    ],
+    "categories": [
+      {
+        "path": "public"
+      },
+      {
+        "path": "games"
+      },
+      {
+        "path": "applications"
+      }
+    ],
+    "status": "ACTIVE",
+    "mainGameItemList": []
+  }
+}

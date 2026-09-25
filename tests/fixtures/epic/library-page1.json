@@ -1,0 +1,54 @@
+{
+  "responseMetadata": {
+    "nextCursor": "fake-cursor-2",
+    "stateToken": "fake-state"
+  },
+  "records": [
+    {
+      "namespace": "9773aa1aa54f4f7b80e44bef04986cea",
+      "catalogItemId": "530145df28a24424923f5828cc9031a1",
+      "appName": "Sugar",
+      "country": "GB",
+      "platform": [
+        "Windows"
+      ],
+      "productId": "e6bcca5b37d0457ca881aec508205542",
+      "sandboxName": "Rocket League®",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2020-09-28T08:30:30.554Z",
+      "dependencies": []
+    },
+    {
+      "namespace": "048550a9623d4824894430a2c2823e02",
+      "catalogItemId": "3e165bcb3f2a4924b58c75350c6e0987",
+      "appName": "8c5172fc5e454598aab78a4a19791638",
+      "country": "GB",
+      "platform": [
+        "Windows"
+      ],
+      "productId": "3e4cea34f89d440d97cf22ddf6c122f2",
+      "sandboxName": "Live",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2024-09-14T17:29:14.578Z",
+      "dependencies": []
+    },
+    {
+      "namespace": "ue",
+      "catalogItemId": "ed2b249a315e4493b084233d5167fea3",
+      "appName": "UE_4.27Chaos",
+      "platform": [
+        "Windows",
+        "Mac"
+      ],
+      "productId": "prod-ue",
+      "sandboxName": "UE Marketplace",
+      "sandboxType": "PUBLIC",
+      "recordType": "APPLICATION",
+      "acquisitionDate": "2018-10-21T18:05:43.119Z",
+      "dependencies": [],
+      "country": "GB"
+    }
+  ]
+}
