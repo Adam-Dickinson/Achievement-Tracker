@@ -14,7 +14,8 @@ import type { SecretStore } from '@shared/secret-store'
 import { readAuthorizationCode } from './providers/epic/auth'
 import { listAccountSummaries, upsertAccount } from './store/sync-store'
 import type { Scheduler } from './sync/scheduler'
-import { type MicrosoftAuthorization, SignInError } from './xbox-sign-in'
+import { SignInError, type SignInFailure } from './sign-in-error'
+import type { MicrosoftAuthorization } from './xbox-sign-in'
 
 export interface AccountsDeps {
   readonly db: DatabaseSync
@@ -86,6 +87,25 @@ export async function connectEpic(
   }
 }
 
+export interface UbisoftAccountsDeps {
+  readonly db: DatabaseSync
+  readonly ubisoft: AchievementProvider
+  readonly signIn: () => Promise<Secret>
+  readonly secrets: SecretStore
+  readonly scheduler: Pick<Scheduler, 'startAccount'>
+}
+
+export async function connectUbisoft(deps: UbisoftAccountsDeps): Promise<ConnectResult> {
+  try {
+    const rememberMeTicket = await deps.signIn()
+    const credentials = await deps.ubisoft.authenticate({ kind: 'token', value: rememberMeTicket })
+    const profile = await deps.ubisoft.validate(credentials)
+    return { ok: true, account: saveAccount(deps, credentials, profile.displayName) }
+  } catch (err) {
+    return toUbisoftFailure(err)
+  }
+}
+
 function saveAccount(
   deps: Pick<AccountsDeps, 'db' | 'secrets' | 'scheduler'>,
   credentials: AccountCredentials,
@@ -104,15 +124,15 @@ function saveAccount(
   return summary
 }
 
+const SIGN_IN_MESSAGES: Record<SignInFailure, (service: string) => string> = {
+  cancelled: (service) => `The ${service} sign-in was cancelled.`,
+  timed_out: (service) => `The ${service} sign-in timed out. Please try again.`,
+  denied: (service) => `The ${service} sign-in was not completed. Please try again.`,
+}
+
 function toXboxFailure(err: unknown): ConnectResult {
   if (err instanceof SignInError) {
-    if (err.reason === 'timed_out') {
-      return failure('cancelled', 'The Microsoft sign-in timed out. Please try again.')
-    }
-    if (err.reason === 'denied') {
-      return failure('cancelled', 'The Microsoft sign-in was not completed. Please try again.')
-    }
-    return failure('cancelled', 'The Microsoft sign-in was cancelled.')
+    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('Microsoft'))
   }
   if (err instanceof ProviderError) {
     if (err.isRetryable) {
@@ -138,6 +158,23 @@ function toEpicFailure(err: unknown): ConnectResult {
     return failure('other', err.message)
   }
   console.error('Connecting an Epic account failed', err)
+  return failure('other', 'Something went wrong while connecting. Please try again.')
+}
+
+function toUbisoftFailure(err: unknown): ConnectResult {
+  if (err instanceof SignInError) {
+    return failure('cancelled', SIGN_IN_MESSAGES[err.reason]('Ubisoft'))
+  }
+  if (err instanceof ProviderError) {
+    if (err.kind === 'auth_expired') {
+      return failure('other', 'Ubisoft did not accept the sign-in. Please sign in again.')
+    }
+    if (err.isRetryable) {
+      return failure('network', "Couldn't reach Ubisoft. Check your connection and try again.")
+    }
+    return failure('other', err.message)
+  }
+  console.error('Connecting a Ubisoft account failed', err)
   return failure('other', 'Something went wrong while connecting. Please try again.')
 }
 

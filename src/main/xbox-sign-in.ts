@@ -3,23 +3,12 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from 'node:net'
 import type { Secret } from '@shared/secret'
 import { authorizeUrl, createPkce } from './providers/xbox/auth'
+import { SignInError } from './sign-in-error'
 
 export const SIGN_IN_TIMEOUT_MS = 5 * 60_000
 
 const DONE_PAGE = 'Signed in. You can close this tab and go back to Achievement Tracker.'
 const FAILED_PAGE = 'Sign-in did not finish. Go back to Achievement Tracker and try again.'
-
-export type SignInFailure = 'cancelled' | 'timed_out' | 'denied'
-
-export class SignInError extends Error {
-  readonly reason: SignInFailure
-
-  constructor(reason: SignInFailure, message: string) {
-    super(message)
-    this.name = 'SignInError'
-    this.reason = reason
-  }
-}
 
 export interface MicrosoftAuthorization {
   readonly code: string

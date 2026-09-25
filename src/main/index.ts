@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, Menu, safeStorage, shell } from 'electron'
 import { IPC } from '@shared/ipc'
-import { connectEpic, connectSteam, connectXbox } from './accounts'
+import { connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
 import { coalesce } from './coalesce'
 import { registerIpcHandlers } from './ipc'
 import { NotificationService } from './notifications'
@@ -9,6 +9,7 @@ import { OverlayService } from './overlay-service'
 import { EpicProvider } from './providers/epic'
 import { EPIC_SIGN_IN_URL } from './providers/epic/auth'
 import { SteamProvider } from './providers/steam'
+import { UbisoftProvider } from './providers/ubisoft'
 import { XboxProvider } from './providers/xbox'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { launchedHidden, startWithWindows } from './startup'
@@ -23,6 +24,8 @@ import {
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { createTray } from './tray'
+import { UbisoftSignIn } from './ubisoft-sign-in'
+import { openUbisoftSignInWindow } from './ubisoft-sign-in-window'
 import { describeUnlockTiming } from './unlock-timing'
 import { createMainWindow, createOverlayWindow } from './windows'
 import { XboxSignIn } from './xbox-sign-in'
@@ -72,7 +75,15 @@ async function start(): Promise<void> {
   const steam = new SteamProvider()
   const xbox = new XboxProvider()
   const epic = new EpicProvider()
+  const ubisoft = new UbisoftProvider()
   const xboxSignIn = new XboxSignIn({ openExternal: (url) => shell.openExternal(url) })
+  const ubisoftSignIn = new UbisoftSignIn({
+    openWindow: (url) =>
+      openUbisoftSignInWindow(
+        url,
+        mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
+      ),
+  })
   const secrets = new SafeStorageSecretStore(
     join(app.getPath('userData'), 'secrets.json'),
     safeStorage,
@@ -82,7 +93,7 @@ async function start(): Promise<void> {
   }, 1000)
   const scheduler = new Scheduler({
     db,
-    providers: { steam, xbox, epic },
+    providers: { steam, xbox, epic, ubisoft },
     secrets,
     onUnlocks: (events) => {
       for (const event of events) console.info(describeUnlockTiming(event))
@@ -95,6 +106,7 @@ async function start(): Promise<void> {
     scheduler.stop()
     notifications.stop()
     xboxSignIn.cancel()
+    ubisoftSignIn.cancel()
   })
 
   registerIpcHandlers({
@@ -116,6 +128,9 @@ async function start(): Promise<void> {
     cancelXboxSignIn: () => xboxSignIn.cancel(),
     openEpicSignIn: () => shell.openExternal(EPIC_SIGN_IN_URL),
     connectEpic: (input) => connectEpic({ db, epic, secrets, scheduler }, input),
+    connectUbisoft: () =>
+      connectUbisoft({ db, ubisoft, signIn: () => ubisoftSignIn.run(), secrets, scheduler }),
+    cancelUbisoftSignIn: () => ubisoftSignIn.cancel(),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     getDashboard: () => getDashboardStats(db),

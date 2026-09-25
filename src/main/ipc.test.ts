@@ -43,6 +43,8 @@ const fakes = {
   cancelXboxSignIn: vi.fn(),
   openEpicSignIn: vi.fn(() => Promise.resolve()),
   connectEpic: vi.fn(() => Promise.resolve(CONNECTED)),
+  connectUbisoft: vi.fn(() => Promise.resolve(CONNECTED)),
+  cancelUbisoftSignIn: vi.fn(),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   getDashboard: vi.fn(() => DASHBOARD),
@@ -77,6 +79,8 @@ describe('registerIpcHandlers', () => {
     IPC.cancelXboxSignIn,
     IPC.openEpicSignIn,
     IPC.connectEpic,
+    IPC.connectUbisoft,
+    IPC.cancelUbisoftSignIn,
     IPC.listLibrary,
     IPC.getGame,
     IPC.getDashboard,
@@ -168,6 +172,39 @@ describe('Xbox handlers', () => {
     call(IPC.cancelXboxSignIn, TRUSTED)
 
     expect(fakes.cancelXboxSignIn).toHaveBeenCalledOnce()
+  })
+})
+
+describe('Ubisoft handlers', () => {
+  it('connects once the unofficial connection has been accepted', async () => {
+    const result = await call(IPC.connectUbisoft, TRUSTED, { acceptedUnofficial: true })
+
+    expect(result).toEqual(CONNECTED)
+    expect(fakes.connectUbisoft).toHaveBeenCalledWith({ acceptedUnofficial: true })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a refusal', { acceptedUnofficial: false }],
+    ['a truthy string', { acceptedUnofficial: 'yes' }],
+  ])(
+    'answers %s with invalid_input, without opening the sign-in window',
+    async (_label, payload) => {
+      const result = await call(IPC.connectUbisoft, TRUSTED, payload)
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the Ubisoft connection is unofficial.',
+      })
+      expect(fakes.connectUbisoft).not.toHaveBeenCalled()
+    },
+  )
+
+  it('cancels a sign-in that is waiting', () => {
+    call(IPC.cancelUbisoftSignIn, TRUSTED)
+
+    expect(fakes.cancelUbisoftSignIn).toHaveBeenCalledOnce()
   })
 })
 
