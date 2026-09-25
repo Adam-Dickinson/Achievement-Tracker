@@ -1,6 +1,6 @@
 # Provider Integration Notes
 
-> **Read this first:** Most of these platforms do **not** offer an official public API for a user's own achievements. Entries marked *unofficial* rely on reverse-engineered endpoints that can change or break, and may conflict with the platform's terms of service. Endpoints and file paths below are from prior knowledge and **must be verified in a research spike** (M4 for Epic, Ubisoft and EA) before implementation. Treat them as starting points, not facts.
+> **Read this first:** Most of these platforms do **not** offer an official public API for a user's own achievements. Entries marked *unofficial* rely on reverse-engineered endpoints that can change or break, and may conflict with the platform's terms of service. Endpoints and file paths below are from prior knowledge and **must be verified in a research spike** (M3 for Epic, Ubisoft and EA, ADR-0008) before implementation. Treat them as starting points, not facts.
 
 ## Summary matrix
 

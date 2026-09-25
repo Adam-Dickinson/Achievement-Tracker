@@ -9,7 +9,7 @@ An Electron desktop app (TypeScript everywhere, React UI) that tracks achievemen
 - [docs/SPEC.md](docs/SPEC.md): requirements, DB schema, provider interface, IPC contract
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): code areas, data flow, folder structure
 - [docs/PROVIDERS.md](docs/PROVIDERS.md): per-platform notes (endpoints there are **unverified**)
-- [docs/adr/](docs/adr/): decisions already made (ADR-0003 is the stack; ADR-0004 is zod for provider replies; ADR-0005 is the library scope, baseline cutoff and tiered polling; ADR-0006 is the v1 provider scope and order; ADR-0007 is refreshing provider credentials). Don't relitigate without a new ADR.
+- [docs/adr/](docs/adr/): decisions already made (ADR-0003 is the stack; ADR-0004 is zod for provider replies; ADR-0005 is the library scope, baseline cutoff and tiered polling; ADR-0006 is the v1 provider scope and order; ADR-0007 is refreshing provider credentials; ADR-0008 puts Epic, Ubisoft and EA before PlayStation). Don't relitigate without a new ADR.
 
 The owner is **new to React**: when writing UI code, favour clear, idiomatic code and explain non-obvious React concepts in your replies.
 
