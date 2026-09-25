@@ -30,7 +30,7 @@ Rule 5 forbids a provider that needs the user's password stored.
 
 **Sign in on EA's own page, shown in a locked-down app window, and keep only the three sign-in cookies.** The owner chose this option on 2026-09-25.
 
-The window (`src/main/ea-sign-in-window.ts`) is set up like the Ubisoft one: sandboxed, context isolation on, Node integration off, **no preload**, a fresh in-memory session per sign-in that refuses every permission request, pop-ups denied, and a plain Chrome user agent (EA's page stays blank with Electron's). In addition:
+The window (`src/main/cookie-sign-in-window.ts`, made generic for the Steam family library in ADR-0011) is set up like the Ubisoft one: sandboxed, context isolation on, Node integration off, **no preload**, a fresh in-memory session per sign-in that refuses every permission request, pop-ups denied, and a plain Chrome user agent (EA's page stays blank with Electron's). In addition:
 
 - **It may navigate, but only to `https://` addresses on `ea.com` or its subdomains.** `main/navigation.ts` keeps a per-window allow rule; the app-wide `will-navigate` handler still blocks everything else, for this window and every other. Links out of EA (Google or Apple sign-in, help pages) stay blocked.
 - **It reads cookies, never the page.** When the window arrives back on `www.ea.com` after sign-in, it reads the session's cookies for the `ea.com` domain (whatever their path: `sid` and `remid` are set for `/connect`), and only `sid`, `remid` and `_nx_mpcid` leave the window, wrapped in `Secret` as one JSON value. The window then closes at once, so the ea.com home page (with its trackers) is not left running.
@@ -46,7 +46,7 @@ The provider stores that value as the account's secret and renews tokens with it
 **Positive:**
 
 - EA is supported without the app storing, seeing or handling a password, with EA's own codes and bot checks intact.
-- The sign-in flow (`src/main/ea-sign-in.ts`) and the navigation rule are plain TypeScript and tested without Electron; only the thin window adapter needs a real run.
+- The sign-in flow (`src/main/cookie-sign-in.ts`) and the navigation rule are plain TypeScript and tested without Electron; only the thin window adapter needs a real run.
 
 **Negative / to accept:**
 
