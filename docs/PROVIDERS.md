@@ -250,6 +250,7 @@ Spike C verdict: **feasible, unofficial.** The old note here ("very few EA title
   - GraphQL `achievements(achievementSetIds: [...], playerPsd: "<psd>", showHidden: true) { id achievements { id name description awardCount date } }` gives the same unlocks (`awardCount` 1, `date` ISO with `Z`, matching `u`) but no icons or rarity, so REST is the one to use.
 - **Rate limits:** none seen (about 50 requests in a minute, no `429`).
 - **Overlap with Steam:** several of these games (Jedi, Battlefield, Apex) are also on Steam with Steam's own achievements; the EA set is separate, so both are tracked until cross-platform linking (M4).
+- **Live run of the finished provider (2026-09-25):** connected from the Accounts screen through the sign-in window: **12 games** listed and synced (Jedi: Fallen Order once, The Sims 4 left out), all with covers, **454 achievements** and **39 unlocks** matching the spike, rarity for 6 games, and a silent first sync (baseline rule).
 - **Risks:** EA could stop honouring `ORIGIN_JS_SDK` tokens for these services or add bot checks to the sign-in page (it already refuses Electron's user agent); a lost rotated `remid` forces a new sign-in.
 
 ## Generic local-file adapter (after v1)
