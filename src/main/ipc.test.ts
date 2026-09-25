@@ -41,6 +41,8 @@ const fakes = {
   connectSteam: vi.fn(() => Promise.resolve(CONNECTED)),
   connectXbox: vi.fn(() => Promise.resolve(CONNECTED)),
   cancelXboxSignIn: vi.fn(),
+  openEpicSignIn: vi.fn(() => Promise.resolve()),
+  connectEpic: vi.fn(() => Promise.resolve(CONNECTED)),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   getDashboard: vi.fn(() => DASHBOARD),
@@ -73,6 +75,8 @@ describe('registerIpcHandlers', () => {
     IPC.connectSteam,
     IPC.connectXbox,
     IPC.cancelXboxSignIn,
+    IPC.openEpicSignIn,
+    IPC.connectEpic,
     IPC.listLibrary,
     IPC.getGame,
     IPC.getDashboard,
@@ -165,6 +169,58 @@ describe('Xbox handlers', () => {
 
     expect(fakes.cancelXboxSignIn).toHaveBeenCalledOnce()
   })
+})
+
+describe('Epic handlers', () => {
+  const CODE = '0123456789abcdef0123456789abcdef'
+
+  it('opens the Epic sign-in page', async () => {
+    await call(IPC.openEpicSignIn, TRUSTED)
+
+    expect(fakes.openEpicSignIn).toHaveBeenCalledOnce()
+  })
+
+  it('connects with the pasted text, trimmed, once the unofficial connection is accepted', async () => {
+    const result = await call(IPC.connectEpic, TRUSTED, {
+      code: `  ${CODE}\n`,
+      acceptedUnofficial: true,
+    })
+
+    expect(result).toEqual(CONNECTED)
+    expect(fakes.connectEpic).toHaveBeenCalledWith({ code: CODE, acceptedUnofficial: true })
+  })
+
+  it.each([
+    ['nothing', undefined, 'Confirm that you understand the Epic connection is unofficial.'],
+    [
+      'no opt-in',
+      { code: CODE, acceptedUnofficial: false },
+      'Confirm that you understand the Epic connection is unofficial.',
+    ],
+    [
+      'an empty code',
+      { code: '   ', acceptedUnofficial: true },
+      "Paste the code from Epic's page.",
+    ],
+    [
+      'a number for the code',
+      { code: 42, acceptedUnofficial: true },
+      "Paste the code from Epic's page.",
+    ],
+    [
+      'an absurdly long paste',
+      { code: 'x'.repeat(2001), acceptedUnofficial: true },
+      "That's too long to be Epic's code. Copy just the Epic page and paste it here.",
+    ],
+  ])(
+    'answers %s with invalid_input, without trying to connect',
+    async (_label, payload, message) => {
+      const result = await call(IPC.connectEpic, TRUSTED, payload)
+
+      expect(result).toEqual({ ok: false, reason: 'invalid_input', message })
+      expect(fakes.connectEpic).not.toHaveBeenCalled()
+    },
+  )
 })
 
 describe('library and dashboard handlers', () => {

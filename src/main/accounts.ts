@@ -1,10 +1,17 @@
 import type { DatabaseSync } from 'node:sqlite'
 import { ProviderError } from '@shared/errors'
-import type { AccountSummary, ConnectFailure, ConnectResult, SteamConnectInput } from '@shared/ipc'
+import type {
+  AccountSummary,
+  ConnectFailure,
+  ConnectResult,
+  EpicConnectInput,
+  SteamConnectInput,
+} from '@shared/ipc'
 import type { AccountCredentials } from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import type { SecretStore } from '@shared/secret-store'
+import { readAuthorizationCode } from './providers/epic/auth'
 import { listAccountSummaries, upsertAccount } from './store/sync-store'
 import type { Scheduler } from './sync/scheduler'
 import { type MicrosoftAuthorization, SignInError } from './xbox-sign-in'
@@ -52,6 +59,33 @@ export async function connectXbox(deps: XboxAccountsDeps): Promise<ConnectResult
   }
 }
 
+export interface EpicAccountsDeps {
+  readonly db: DatabaseSync
+  readonly epic: AchievementProvider
+  readonly secrets: SecretStore
+  readonly scheduler: Pick<Scheduler, 'startAccount'>
+}
+
+export async function connectEpic(
+  deps: EpicAccountsDeps,
+  input: EpicConnectInput,
+): Promise<ConnectResult> {
+  const code = readAuthorizationCode(input.code)
+  if (code === null) {
+    return failure(
+      'invalid_input',
+      "That doesn't look like Epic's code. Copy the 32-character authorizationCode from the Epic page, or the whole page, and paste it here.",
+    )
+  }
+  try {
+    const credentials = await deps.epic.authenticate({ kind: 'token', value: new Secret(code) })
+    const profile = await deps.epic.validate(credentials)
+    return { ok: true, account: saveAccount(deps, credentials, profile.displayName) }
+  } catch (err) {
+    return toEpicFailure(err)
+  }
+}
+
 function saveAccount(
   deps: Pick<AccountsDeps, 'db' | 'secrets' | 'scheduler'>,
   credentials: AccountCredentials,
@@ -87,6 +121,23 @@ function toXboxFailure(err: unknown): ConnectResult {
     return failure('other', err.message)
   }
   console.error('Connecting an Xbox account failed', err)
+  return failure('other', 'Something went wrong while connecting. Please try again.')
+}
+
+function toEpicFailure(err: unknown): ConnectResult {
+  if (err instanceof ProviderError) {
+    if (err.kind === 'auth_expired') {
+      return failure(
+        'code_rejected',
+        'Epic did not accept that code. Codes only last a few minutes: open the Epic page again, copy the new code and paste it straight away.',
+      )
+    }
+    if (err.isRetryable) {
+      return failure('network', "Couldn't reach Epic. Check your connection and try again.")
+    }
+    return failure('other', err.message)
+  }
+  console.error('Connecting an Epic account failed', err)
   return failure('other', 'Something went wrong while connecting. Please try again.')
 }
 
