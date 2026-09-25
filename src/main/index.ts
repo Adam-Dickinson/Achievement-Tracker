@@ -1,12 +1,16 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, Menu, safeStorage, shell } from 'electron'
 import { IPC } from '@shared/ipc'
-import { connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
+import { connectEa, connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
 import { coalesce } from './coalesce'
+import { EaSignIn } from './ea-sign-in'
+import { openEaSignInWindow } from './ea-sign-in-window'
 import { registerIpcHandlers } from './ipc'
 import { DATABASE_FILE, moveLegacyData } from './legacy-data'
+import { mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
+import { EaProvider } from './providers/ea'
 import { EpicProvider } from './providers/epic'
 import { EPIC_SIGN_IN_URL } from './providers/epic/auth'
 import { SteamProvider } from './providers/steam'
@@ -69,7 +73,9 @@ async function start(): Promise<void> {
 
   app.on('web-contents-created', (_event, contents) => {
     contents.setWindowOpenHandler(() => ({ action: 'deny' }))
-    contents.on('will-navigate', (event) => event.preventDefault())
+    contents.on('will-navigate', (event, url) => {
+      if (!mayNavigate(contents, url)) event.preventDefault()
+    })
   })
 
   await app.whenReady()
@@ -90,6 +96,7 @@ async function start(): Promise<void> {
   const xbox = new XboxProvider()
   const epic = new EpicProvider()
   const ubisoft = new UbisoftProvider()
+  const ea = new EaProvider()
   const xboxSignIn = new XboxSignIn({ openExternal: (url) => shell.openExternal(url) })
   const ubisoftSignIn = new UbisoftSignIn({
     openWindow: (url) =>
@@ -97,6 +104,10 @@ async function start(): Promise<void> {
         url,
         mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
       ),
+  })
+  const eaSignIn = new EaSignIn({
+    openWindow: (url) =>
+      openEaSignInWindow(url, mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined),
   })
   const secrets = new SafeStorageSecretStore(
     join(app.getPath('userData'), 'secrets.json'),
@@ -107,7 +118,7 @@ async function start(): Promise<void> {
   }, 1000)
   const scheduler = new Scheduler({
     db,
-    providers: { steam, xbox, epic, ubisoft },
+    providers: { steam, xbox, epic, ubisoft, ea },
     secrets,
     onUnlocks: (events) => {
       for (const event of events) console.info(describeUnlockTiming(event))
@@ -121,6 +132,7 @@ async function start(): Promise<void> {
     notifications.stop()
     xboxSignIn.cancel()
     ubisoftSignIn.cancel()
+    eaSignIn.cancel()
   })
 
   registerIpcHandlers({
@@ -145,6 +157,8 @@ async function start(): Promise<void> {
     connectUbisoft: () =>
       connectUbisoft({ db, ubisoft, signIn: () => ubisoftSignIn.run(), secrets, scheduler }),
     cancelUbisoftSignIn: () => ubisoftSignIn.cancel(),
+    connectEa: () => connectEa({ db, ea, signIn: () => eaSignIn.run(), secrets, scheduler }),
+    cancelEaSignIn: () => eaSignIn.cancel(),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     getDashboard: () => getDashboardStats(db),
