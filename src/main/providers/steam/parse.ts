@@ -8,8 +8,8 @@ import type {
   RemoteUnlock,
 } from '@shared/models'
 
-const STEAM_APP_IMAGES = 'https://media.steampowered.com/steamcommunity/public/images/apps'
-const STEAM_STORE_ART = 'https://cdn.akamai.steamstatic.com/steam/apps'
+export const STEAM_APP_IMAGES = 'https://media.steampowered.com/steamcommunity/public/images/apps'
+export const STEAM_STORE_ART = 'https://cdn.akamai.steamstatic.com/steam/apps'
 
 const percentSchema = z
   .union([z.number(), z.string().trim().min(1).pipe(z.coerce.number())])
@@ -100,7 +100,7 @@ interface SteamLibraryGame {
   readonly rtime_last_played?: number
 }
 
-function check<Schema extends z.ZodType>(
+export function check<Schema extends z.ZodType>(
   schema: Schema,
   json: unknown,
   what: string,

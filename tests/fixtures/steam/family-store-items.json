@@ -1,0 +1,1432 @@
+{
+  "response": {
+    "store_items": [
+      {
+        "item_type": 0,
+        "id": 220,
+        "success": 1,
+        "visible": true,
+        "name": "Half-Life 2",
+        "store_url_path": "app/220/HalfLife_2",
+        "store_url_slug": "HalfLife_2",
+        "appid": 220,
+        "type": 0,
+        "related_items": {
+          "demo_appid": [
+            219
+          ],
+          "demos": [
+            {
+              "appid": 219,
+              "show_above_purchase": true
+            }
+          ]
+        },
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            13,
+            30,
+            65,
+            67,
+            68,
+            69,
+            70,
+            74,
+            78,
+            79,
+            23,
+            16,
+            14,
+            41,
+            42,
+            44,
+            62,
+            63
+          ],
+          "controller_categoryids": [
+            28,
+            55,
+            56,
+            57,
+            58,
+            59
+          ]
+        },
+        "basic_info": {
+          "short_description": "Reawakened from stasis in the occupied metropolis of City 17, Gordon Freeman is joined by Alyx Vance as he leads a desperate human resistance. Experience the landmark first-person shooter packed with immersive world-building, boundary-pushing physics, and exhilarating combat.",
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Half-Life",
+              "creator_clan_account_id": 33078398
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 36,
+          "purchase_option_name": "Half-Life 2",
+          "final_price_in_cents": "850",
+          "formatted_final_price": "£8.50",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 240,
+        "success": 1,
+        "visible": true,
+        "name": "Counter-Strike: Source",
+        "store_url_path": "app/240/CounterStrike_Source",
+        "store_url_slug": "CounterStrike_Source",
+        "appid": 240,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            1,
+            27
+          ],
+          "feature_categoryids": [
+            22,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            23,
+            8,
+            15,
+            16,
+            62
+          ]
+        },
+        "basic_info": {
+          "short_description": "Counter-Strike: Source blends Counter-Strike's award-winning teamplay action with the advanced technology of Source™ technology.",
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 37,
+          "purchase_option_name": "Counter-Strike: Source",
+          "final_price_in_cents": "850",
+          "formatted_final_price": "£8.50",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 500,
+        "success": 1,
+        "visible": true,
+        "name": "Left 4 Dead",
+        "store_url_path": "app/500/Left_4_Dead",
+        "store_url_slug": "Left_4_Dead",
+        "appid": 500,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            9
+          ],
+          "feature_categoryids": [
+            22,
+            13,
+            66,
+            67,
+            68,
+            69,
+            70,
+            78,
+            23,
+            8,
+            15,
+            25,
+            16,
+            14,
+            43,
+            62
+          ],
+          "controller_categoryids": [
+            28,
+            55,
+            56,
+            57,
+            58
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 1053,
+          "purchase_option_name": "Left 4 Dead",
+          "final_price_in_cents": "850",
+          "formatted_final_price": "£8.50",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 550,
+        "success": 1,
+        "visible": true,
+        "name": "Left 4 Dead 2",
+        "store_url_path": "app/550/Left_4_Dead_2",
+        "store_url_slug": "Left_4_Dead_2",
+        "appid": 550,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            49,
+            36,
+            9,
+            38
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            13,
+            30,
+            66,
+            67,
+            68,
+            69,
+            70,
+            74,
+            78,
+            23,
+            8,
+            15,
+            16,
+            14,
+            41,
+            42,
+            43,
+            44,
+            62,
+            63
+          ],
+          "controller_categoryids": [
+            28,
+            55,
+            56,
+            57,
+            58,
+            59
+          ]
+        },
+        "basic_info": {
+          "short_description": "Set in the zombie apocalypse, Left 4 Dead 2 is a co-operative action horror FPS takes you and your friends through the cities, swamps and cemeteries of the Deep South, from Savannah to New Orleans across five expansive campaigns.",
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 2481,
+          "purchase_option_name": "Left 4 Dead 2",
+          "final_price_in_cents": "850",
+          "formatted_final_price": "£8.50",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 21100,
+        "success": 1,
+        "visible": true,
+        "name": "F.E.A.R. 3",
+        "store_url_path": "app/21100/FEAR_3",
+        "store_url_slug": "FEAR_3",
+        "appid": 21100,
+        "type": 0,
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            9
+          ],
+          "feature_categoryids": [
+            22,
+            23,
+            25,
+            62
+          ],
+          "controller_categoryids": [
+            18
+          ]
+        },
+        "basic_info": {
+          "short_description": "F.E.A.R. 3 delivers all the hallmarks that define the F.E.A.R. brand: terrifying paranormal experience, frenetic combat and a dramatic storyline.",
+          "publishers": [
+            {
+              "name": "Warner Bros. Interactive Entertainment",
+              "creator_clan_account_id": 34133273
+            }
+          ],
+          "developers": [
+            {
+              "name": "Day 1 Studios"
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 8466,
+          "purchase_option_name": "FEAR 3",
+          "final_price_in_cents": "1599",
+          "formatted_final_price": "£15.99",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 34830,
+        "success": 1,
+        "visible": true,
+        "name": "Sniper: Ghost Warrior",
+        "store_url_path": "app/34830/Sniper_Ghost_Warrior",
+        "store_url_slug": "Sniper_Ghost_Warrior",
+        "appid": 34830,
+        "type": 0,
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1
+          ],
+          "feature_categoryids": [
+            22,
+            62
+          ],
+          "controller_categoryids": [
+            18
+          ]
+        },
+        "basic_info": {
+          "short_description": "As a Ghost Warrior, an elite sniper in a highly trained special ops unit, your unique skills in the art of stalking, target detection, surveillance and shooting accuracy will determine mission success.",
+          "publishers": [
+            {
+              "name": "CI Games",
+              "creator_clan_account_id": 32970584
+            }
+          ],
+          "developers": [
+            {
+              "name": "City Interactive"
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Sniper Ghost Warrior",
+              "creator_clan_account_id": 35590225
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 11762,
+          "purchase_option_name": "Sniper Ghost Warrior Gold Edition",
+          "final_price_in_cents": "669",
+          "formatted_final_price": "£6.69",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 34870,
+        "success": 1,
+        "visible": true,
+        "name": "Sniper: Ghost Warrior 2",
+        "store_url_path": "app/34870/Sniper_Ghost_Warrior_2",
+        "store_url_slug": "Sniper_Ghost_Warrior_2",
+        "appid": 34870,
+        "type": 0,
+        "related_items": {
+          "demo_appid": [
+            34880
+          ],
+          "demos": [
+            {
+              "appid": 34880,
+              "show_above_purchase": false
+            }
+          ]
+        },
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1
+          ],
+          "feature_categoryids": [
+            22,
+            25,
+            62
+          ],
+          "controller_categoryids": [
+            28
+          ]
+        },
+        "basic_info": {
+          "short_description": "Sniper: Ghost Warrior 2 takes the bulls-eye precision of its predecessor to new and exciting heights!",
+          "publishers": [
+            {
+              "name": "CI Games",
+              "creator_clan_account_id": 32970584
+            }
+          ],
+          "developers": [
+            {
+              "name": "City Interactive"
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Sniper Ghost Warrior",
+              "creator_clan_account_id": 35590225
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 25546,
+          "purchase_option_name": "Sniper: Ghost Warrior 2",
+          "final_price_in_cents": "850",
+          "formatted_final_price": "£8.50",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 40800,
+        "success": 1,
+        "visible": true,
+        "name": "Super Meat Boy",
+        "store_url_path": "app/40800/Super_Meat_Boy",
+        "store_url_slug": "Super_Meat_Boy",
+        "appid": 40800,
+        "type": 0,
+        "content_descriptorids": [
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            25,
+            41,
+            42,
+            43,
+            62
+          ],
+          "controller_categoryids": [
+            28,
+            60
+          ]
+        },
+        "basic_info": {
+          "short_description": "The infamous, tough-as-nails platformer comes to Steam with a playable Head Crab character (Steam-exclusive)!",
+          "developers": [
+            {
+              "name": "Team Meat",
+              "creator_clan_account_id": 1416968
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 6749,
+          "purchase_option_name": "Super Meat Boy",
+          "final_price_in_cents": "1099",
+          "formatted_final_price": "£10.99",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 43110,
+        "success": 1,
+        "visible": true,
+        "name": "Metro 2033",
+        "store_url_path": "app/43110/Metro_2033",
+        "store_url_slug": "Metro_2033",
+        "appid": 43110,
+        "type": 0,
+        "content_descriptorids": [
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            23,
+            43,
+            62
+          ],
+          "controller_categoryids": [
+            28
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Deep Silver",
+              "creator_clan_account_id": 4283115
+            }
+          ],
+          "developers": [
+            {
+              "name": "4A Games",
+              "creator_clan_account_id": 7473226
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Metro",
+              "creator_clan_account_id": 44748315
+            }
+          ]
+        },
+        "unlisted": true
+      },
+      {
+        "item_type": 0,
+        "id": 45740,
+        "success": 1,
+        "visible": true,
+        "name": "Dead Rising® 2",
+        "store_url_path": "app/45740/Dead_Rising_2",
+        "store_url_slug": "Dead_Rising_2",
+        "appid": 45740,
+        "type": 0,
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            9
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            23,
+            62
+          ],
+          "controller_categoryids": [
+            18
+          ]
+        },
+        "basic_info": {
+          "short_description": "The sequel to the million-plus selling Dead Rising, Dead Rising 2 takes the zombie survival horror to Fortune City, America’s latest and greatest entertainment playground.",
+          "publishers": [
+            {
+              "name": "Capcom",
+              "creator_clan_account_id": 33273264
+            }
+          ],
+          "developers": [
+            {
+              "name": "Capcom Vancouver",
+              "creator_clan_account_id": 34827957
+            }
+          ],
+          "capsule_headline": "Now with Steamworks!"
+        },
+        "best_purchase_option": {
+          "packageid": 6007,
+          "purchase_option_name": "Dead Rising 2",
+          "final_price_in_cents": "1598",
+          "formatted_final_price": "£15.98",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 63380,
+        "success": 1,
+        "visible": true,
+        "name": "Sniper Elite V2",
+        "store_url_path": "app/63380/Sniper_Elite_V2",
+        "store_url_slug": "Sniper_Elite_V2",
+        "appid": 63380,
+        "type": 0,
+        "related_items": {
+          "demo_appid": [
+            210470
+          ],
+          "demos": [
+            {
+              "appid": 210470,
+              "show_above_purchase": false
+            }
+          ]
+        },
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            9
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            23,
+            25,
+            62
+          ],
+          "controller_categoryids": [
+            18
+          ]
+        },
+        "basic_info": {
+          "short_description": "In the dark days of the end of World War Two amidst the ruins of Berlin, one bullet can change history…",
+          "publishers": [
+            {
+              "name": "Rebellion",
+              "creator_clan_account_id": 32806657
+            }
+          ],
+          "developers": [
+            {
+              "name": "Rebellion",
+              "creator_clan_account_id": 32806657
+            }
+          ],
+          "capsule_headline": "#label_new_dlc_available"
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 94300,
+        "success": 1,
+        "visible": true,
+        "name": "The Dream Machine: Chapter 1 & 2",
+        "store_url_path": "app/94300/The_Dream_Machine_Chapter_1_2",
+        "store_url_slug": "The_Dream_Machine_Chapter_1_2",
+        "appid": 94300,
+        "type": 0,
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            65,
+            66,
+            68,
+            69,
+            71,
+            74,
+            76,
+            77,
+            79,
+            23,
+            62
+          ]
+        },
+        "basic_info": {
+          "short_description": "The Dream Machine is an award-winning point & click adventure game about exploring other people's dreams. It's built by hand using materials such as clay, cardboard and broccoli.",
+          "publishers": [
+            {
+              "name": "The Sleeping Machine",
+              "creator_clan_account_id": 33018983
+            }
+          ],
+          "developers": [
+            {
+              "name": "Cockroach Inc."
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 14620,
+          "purchase_option_name": "The Dream Machine: Chapter 1 and 2",
+          "final_price_in_cents": "339",
+          "formatted_final_price": "£3.39",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 289070,
+        "success": 1,
+        "visible": true,
+        "name": "Sid Meier’s Civilization® VI",
+        "store_url_path": "app/289070/Sid_Meiers_Civilization_VI",
+        "store_url_slug": "Sid_Meiers_Civilization_VI",
+        "appid": 289070,
+        "type": 0,
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            49,
+            36,
+            47,
+            37,
+            24,
+            27
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            30,
+            35,
+            32,
+            42,
+            44,
+            62
+          ]
+        },
+        "basic_info": {
+          "short_description": "Expand your empire, advance your culture and go head-to-head against history’s greatest leaders. Will your civilization stand the test of time?",
+          "publishers": [
+            {
+              "name": "2K",
+              "creator_clan_account_id": 2428135
+            },
+            {
+              "name": "Aspyr (Mac)",
+              "creator_clan_account_id": 31936442
+            },
+            {
+              "name": "Aspyr (Linux)",
+              "creator_clan_account_id": 31936442
+            }
+          ],
+          "developers": [
+            {
+              "name": "Firaxis Games",
+              "creator_clan_account_id": 32844624
+            },
+            {
+              "name": "Aspyr (Mac)",
+              "creator_clan_account_id": 31936442
+            },
+            {
+              "name": "Aspyr (Linux)",
+              "creator_clan_account_id": 31936442
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Sid Meier's Civilization",
+              "creator_clan_account_id": 33339585
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 123215,
+          "purchase_option_name": "Sid Meier's Civilization VI",
+          "final_price_in_cents": "4999",
+          "formatted_final_price": "£49.99",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 524220,
+        "success": 1,
+        "visible": true,
+        "name": "NieR:Automata™",
+        "store_url_path": "app/524220/NieRAutomata",
+        "store_url_slug": "NieRAutomata",
+        "appid": 524220,
+        "type": 0,
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            68,
+            69,
+            74,
+            78,
+            80,
+            23,
+            41,
+            42,
+            62
+          ],
+          "controller_categoryids": [
+            18
+          ]
+        },
+        "basic_info": {
+          "short_description": "NieR: Automata tells the story of androids 2B, 9S and A2 and their battle to reclaim the machine-driven dystopia overrun by powerful machines.",
+          "publishers": [
+            {
+              "name": "Square Enix",
+              "creator_clan_account_id": 1012195
+            }
+          ],
+          "developers": [
+            {
+              "name": "Square Enix",
+              "creator_clan_account_id": 1012195
+            },
+            {
+              "name": "PlatinumGames Inc.",
+              "creator_clan_account_id": 42407224
+            }
+          ],
+          "franchises": [
+            {
+              "name": "NIER"
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 339705,
+          "purchase_option_name": "NieR:Automata™ Game of the YoRHa Edition",
+          "final_price_in_cents": "1199",
+          "original_price_in_cents": "2999",
+          "formatted_final_price": "£11.99",
+          "formatted_original_price": "£29.99",
+          "discount_pct": 60,
+          "active_discounts": [
+            {
+              "discount_amount": "1800",
+              "discount_description": "#discount_desc_preset_weekend",
+              "discount_end_date": 1790874000
+            }
+          ],
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 1091500,
+        "success": 1,
+        "visible": true,
+        "name": "Cyberpunk 2077",
+        "store_url_path": "app/1091500/Cyberpunk_2077",
+        "store_url_slug": "Cyberpunk_2077",
+        "appid": 1091500,
+        "type": 0,
+        "content_descriptorids": [
+          1,
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            74,
+            78,
+            79,
+            23,
+            61,
+            62
+          ],
+          "controller_categoryids": [
+            28,
+            55,
+            57,
+            58
+          ]
+        },
+        "basic_info": {
+          "short_description": "Cyberpunk 2077 is an open-world, action-adventure RPG set in the dark future of Night City — a dangerous megalopolis obsessed with power, glamor, and ceaseless body modification.",
+          "publishers": [
+            {
+              "name": "CD PROJEKT RED",
+              "creator_clan_account_id": 32989758
+            }
+          ],
+          "developers": [
+            {
+              "name": "CD PROJEKT RED",
+              "creator_clan_account_id": 32989758
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 367653,
+          "purchase_option_name": "Cyberpunk 2077",
+          "final_price_in_cents": "4999",
+          "formatted_final_price": "£49.99",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 1817070,
+        "success": 1,
+        "visible": true,
+        "name": "Marvel’s Spider-Man Remastered",
+        "store_url_path": "app/1817070/Marvels_SpiderMan_Remastered",
+        "store_url_slug": "Marvels_SpiderMan_Remastered",
+        "appid": 1817070,
+        "type": 0,
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            74,
+            78,
+            79,
+            23,
+            43,
+            62
+          ],
+          "controller_categoryids": [
+            28,
+            55,
+            56,
+            57,
+            58,
+            59
+          ]
+        },
+        "basic_info": {
+          "short_description": "In Marvel’s Spider-Man Remastered, the worlds of Peter Parker and Spider-Man collide in an original action-packed story. Play as an experienced Peter Parker, fighting big crime and iconic villains in Marvel’s New York. Web-swing through vibrant neighborhoods and defeat villains with epic takedowns.",
+          "publishers": [
+            {
+              "name": "PlayStation Publishing LLC",
+              "creator_clan_account_id": 40425349
+            }
+          ],
+          "developers": [
+            {
+              "name": "Insomniac Games",
+              "creator_clan_account_id": 42527123
+            },
+            {
+              "name": "Nixxes Software"
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Marvel's Spider-Man",
+              "creator_clan_account_id": 45312323
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 653391,
+          "purchase_option_name": "Marvel’s Spider-Man Remastered",
+          "final_price_in_cents": "4999",
+          "formatted_final_price": "£49.99",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 10,
+        "success": 1,
+        "visible": true,
+        "name": "Counter-Strike",
+        "store_url_path": "app/10/CounterStrike",
+        "store_url_slug": "CounterStrike",
+        "appid": 10,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            1,
+            49,
+            36,
+            37
+          ],
+          "feature_categoryids": [
+            66,
+            68,
+            69,
+            75,
+            8,
+            62
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 7,
+          "purchase_option_name": "Counter-Strike: Condition Zero",
+          "final_price_in_cents": "719",
+          "formatted_final_price": "£7.19",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 2,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 70,
+        "success": 1,
+        "visible": true,
+        "name": "Half-Life",
+        "store_url_path": "app/70/HalfLife",
+        "store_url_slug": "HalfLife",
+        "appid": 70,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            49,
+            36
+          ],
+          "feature_categoryids": [
+            66,
+            68,
+            69,
+            74,
+            75,
+            78,
+            79,
+            23,
+            8,
+            41,
+            42,
+            62
+          ],
+          "controller_categoryids": [
+            28,
+            55,
+            56,
+            57,
+            58
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Half-Life",
+              "creator_clan_account_id": 33078398
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 34,
+          "purchase_option_name": "Half-Life",
+          "final_price_in_cents": "719",
+          "formatted_final_price": "£7.19",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 80,
+        "success": 1,
+        "visible": true,
+        "name": "Counter-Strike: Condition Zero",
+        "store_url_path": "app/80/CounterStrike_Condition_Zero",
+        "store_url_slug": "CounterStrike_Condition_Zero",
+        "appid": 80,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1
+          ],
+          "feature_categoryids": [
+            66,
+            68,
+            69,
+            78,
+            8,
+            62
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 7,
+          "purchase_option_name": "Counter-Strike: Condition Zero",
+          "final_price_in_cents": "719",
+          "formatted_final_price": "£7.19",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 2,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 100,
+        "success": 1,
+        "visible": true,
+        "name": "Counter-Strike: Condition Zero Deleted Scenes",
+        "store_url_path": "app/100/CounterStrike_Condition_Zero_Deleted_Scenes",
+        "store_url_slug": "CounterStrike_Condition_Zero_Deleted_Scenes",
+        "appid": 100,
+        "type": 14,
+        "related_items": {
+          "parent_appid": 80
+        },
+        "categories": {
+          "feature_categoryids": [
+            62
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ]
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 320,
+        "success": 1,
+        "visible": true,
+        "name": "Half-Life 2: Deathmatch",
+        "store_url_path": "app/320/HalfLife_2_Deathmatch",
+        "store_url_slug": "HalfLife_2_Deathmatch",
+        "appid": 320,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            1
+          ],
+          "feature_categoryids": [
+            68,
+            69,
+            70,
+            74,
+            8,
+            16,
+            62
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ]
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 360,
+        "success": 1,
+        "visible": true,
+        "name": "Half-Life Deathmatch: Source",
+        "store_url_path": "app/360/HalfLife_Deathmatch_Source",
+        "store_url_slug": "HalfLife_Deathmatch_Source",
+        "appid": 360,
+        "type": 0,
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            1
+          ],
+          "feature_categoryids": [
+            67,
+            68,
+            69,
+            70,
+            74,
+            8,
+            62
+          ]
+        },
+        "basic_info": {
+          "publishers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "developers": [
+            {
+              "name": "Valve",
+              "creator_clan_account_id": 4
+            }
+          ],
+          "franchises": [
+            {
+              "name": "Half-Life",
+              "creator_clan_account_id": 33078398
+            }
+          ]
+        },
+        "best_purchase_option": {
+          "packageid": 38,
+          "purchase_option_name": "Half-Life 1: Source",
+          "final_price_in_cents": "850",
+          "formatted_final_price": "£8.50",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 2,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 43160,
+        "success": 15,
+        "visible": false,
+        "name": "",
+        "store_url_path": "app/0/",
+        "store_url_slug": "",
+        "appid": 0
+      },
+      {
+        "item_type": 0,
+        "id": 553850,
+        "success": 15,
+        "visible": false,
+        "unvailable_for_country_restriction": true,
+        "name": "HELLDIVERS™ 2",
+        "store_url_path": "app/553850/HELLDIVERS_2",
+        "store_url_slug": "HELLDIVERS_2",
+        "appid": 553850
+      },
+      {
+        "item_type": 0,
+        "id": 596870,
+        "success": 15,
+        "visible": false,
+        "name": "",
+        "store_url_path": "app/0/",
+        "store_url_slug": "",
+        "appid": 0
+      }
+    ]
+  }
+}

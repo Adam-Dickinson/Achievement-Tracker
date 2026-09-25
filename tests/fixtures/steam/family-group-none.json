@@ -1,0 +1,7 @@
+{
+  "response": {
+    "is_not_member_of_any_group": true,
+    "cooldown_seconds_remaining": 0,
+    "can_undelete_last_joined_family": false
+  }
+}
