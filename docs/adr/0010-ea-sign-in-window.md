@@ -33,7 +33,7 @@ Rule 5 forbids a provider that needs the user's password stored.
 The window (`src/main/ea-sign-in-window.ts`) is set up like the Ubisoft one: sandboxed, context isolation on, Node integration off, **no preload**, a fresh in-memory session per sign-in that refuses every permission request, pop-ups denied, and a plain Chrome user agent (EA's page stays blank with Electron's). In addition:
 
 - **It may navigate, but only to `https://` addresses on `ea.com` or its subdomains.** `main/navigation.ts` keeps a per-window allow rule; the app-wide `will-navigate` handler still blocks everything else, for this window and every other. Links out of EA (Google or Apple sign-in, help pages) stay blocked.
-- **It reads cookies, never the page.** When the window arrives back on `www.ea.com` after sign-in, it reads the session's cookies for `https://www.ea.com`, and only `sid`, `remid` and `_nx_mpcid` leave the window, wrapped in `Secret` as one JSON value. The window then closes at once, so the ea.com home page (with its trackers) is not left running.
+- **It reads cookies, never the page.** When the window arrives back on `www.ea.com` after sign-in, it reads the session's cookies for the `ea.com` domain (whatever their path: `sid` and `remid` are set for `/connect`), and only `sid`, `remid` and `_nx_mpcid` leave the window, wrapped in `Secret` as one JSON value. The window then closes at once, so the ea.com home page (with its trackers) is not left running.
 
 The provider stores that value as the account's secret and renews tokens with it, following ADR-0007 and ADR-0009's rules for rotating credentials:
 

@@ -6,6 +6,7 @@ import type { EaSignInWindow } from './ea-sign-in'
 import { allowNavigation, isEaAddress } from './navigation'
 
 const HOME = 'https://www.ea.com'
+const COOKIE_DOMAIN = 'ea.com'
 
 export function openEaSignInWindow(url: string, parent?: BrowserWindow): EaSignInWindow {
   const partition = session.fromPartition(`ea-sign-in-${randomUUID()}`, { cache: false })
@@ -33,7 +34,7 @@ export function openEaSignInWindow(url: string, parent?: BrowserWindow): EaSignI
 
   contents.on('did-navigate', (_event, address) => {
     if (!isBackHome(address)) return
-    void partition.cookies.get({ url: HOME }).then(
+    void partition.cookies.get({ domain: COOKIE_DOMAIN }).then(
       (cookies) => {
         const pairs = cookies.map(({ name, value }) => ({ name, value }))
         for (const listener of signedInListeners) listener(pairs)
