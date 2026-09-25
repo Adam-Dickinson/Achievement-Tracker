@@ -14,7 +14,7 @@
 | Xenia | n/a (local) | none | File watch / log | Low, spike | After v1 |
 | Epic Games | No (unofficial, the Epic launcher's own services) | Browser sign-in, pasted authorization code, then launcher OAuth tokens | Poll | Medium | P1, feasible (verified 2026-09-25) |
 | Ubisoft Connect | No (unofficial, the Ubisoft Connect launcher's own services) | Ubisoft's sign-in page in an app window, then remember-me tickets traded for launcher sessions | Poll | Medium-Low | P1, feasible (verified 2026-09-25) |
-| EA app | No | Unknown | Unknown | Very low | P1 spike |
+| EA app | No (unofficial, the EA app's own services) | EA's sign-in page in an app window, then its session cookies traded for 4-hour tokens | Poll | Medium-Low | P1, feasible (verified 2026-09-25) |
 
 **Coverage shortcut:** many PC titles from Epic/Ubisoft/EA also use **Steam achievements** if they're on Steam. The Steam provider covers those, so the store-specific providers only matter for store-exclusive achievements.
 
@@ -218,10 +218,39 @@ Spike C verdict: **feasible, unofficial.** Captured against a real account (14 o
 - **Live run of the finished provider (2026-09-25):** connected from the Accounts screen through the sign-in window: **10 games** listed and synced (the 4 without achievements left out), **79 unlocks** matching the spike, all dated, and a silent first sync (no toasts, baseline rule).
 - **Not yet verified:** the time zone of `completionDate` (needs a fresh unlock), how long a remember-me ticket lasts if unused, 2-step sign-in (this account was not asked for a code), and an account with social sign-in only.
 
-## EA app (P1 spike)
+## EA app (P1): verified 2026-09-25, feasible
 
-- Very few EA titles have first-party achievements in the EA app, and there is no known user-facing API. Likely **not feasible**; many EA games use Steam achievements on PC, and console versions are covered by Xbox/PSN.
-- **Spike output:** a documented "not supported" verdict is an acceptable outcome.
+Spike C verdict: **feasible, unofficial.** The old note here ("very few EA titles have achievements, no known API") was out of date: the EA app has shown achievements since 2022 and its own services return them. Captured against a real account (15 owned PC games, 14 with an achievement set, 39 unlocks across 5 games) with Electron and Node scripts that are not part of the app (`tests/fixtures/_raw/ea-*.{cjs,mjs}`, raw replies in `tests/fixtures/_raw/ea/`, all git-ignored). The endpoints came from community tools (a web project's `api/ea.js`, the GOG Galaxy Origin plugin, Playnite's SuccessStory) and were then checked live.
+
+- **Status: unofficial.** EA has no public API for a player's own achievements. These are the services behind the EA app and ea.com. Opt-in and labelled (rule 5). The password is typed into EA's own page and never reaches our code, as for Ubisoft ([ADR-0009](adr/0009-ubisoft-sign-in-window.md)).
+- **Sign-in page:** `https://www.ea.com/login` redirects to `https://accounts.ea.com/connect/auth` and on to `https://signin.ea.com/p/juno/login` (email, then password, then a code if EA asks). **It stays blank with Electron's default user agent;** it loads once `Electron/…` and the app-name token are removed (the same fix as the Ubisoft window). After sign-in: `www.ea.com/login_check` → `www.ea.com/` → `www.ea.com/static-pages/auth.html#access_token=…&expires_in=14399` (an implicit-flow token in the URL hash).
+- **Cookies** left on **`.ea.com`** (not on `accounts.ea.com`, which is why a first capture looking there found nothing):
+
+  | Cookie | Lifetime | Role |
+  |---|---|---|
+  | `sid` | session cookie (no expiry), httpOnly, 126 characters | Mints tokens on its own while EA's session lasts (how long is not yet known) |
+  | `remid` | **60 days**, httpOnly, 112 characters | The remember-me cookie. **Single use: a mint that uses it returns a new `remid` (and a new `sid`), and the old one then answers `login_required`** |
+  | `_nx_mpcid` | 1 year, httpOnly, 36 characters | Needed with `remid`: `remid` alone answers `login_required`, `remid` + `_nx_mpcid` mints |
+
+  `signin.ea.com` also keeps `JSESSIONID`, `signin-cookie` and `weblastlogin` (not needed afterwards), and ea.com sets many analytics and consent cookies (not needed).
+- **Token:** `GET https://accounts.ea.com/connect/auth?client_id=ORIGIN_JS_SDK&response_type=token&redirect_uri=nucleus:rest&prompt=none` with the cookies and a browser user agent. **Always HTTP 200:** success is `{"access_token","token_type":"Bearer","expires_in":14399}` (4 hours); failure is `{"error_code","error":"login_required","error_number"}`. Verified combinations: all three cookies → token (only `sid` re-set, `remid` **not** rotated while `sid` is valid); `sid` alone → token; `sid` + `_nx_mpcid` → token; `remid` + `_nx_mpcid` → token and `remid` rotated (a new 60-day `remid`, a deletion of the old one for another path, and a new `sid`); `remid` alone, no cookies, or an already-used `remid` → `login_required`.
+- **Renewal plan (ADR-0007):** store `sid`, `remid` and `_nx_mpcid` as one secret; mint with all three; save whatever `Set-Cookie` returns (a new `sid`, and a new `remid` when `sid` had expired); one mint per account at a time and never outside `refresh`, since a lost rotated `remid` means signing in again. **Not yet verified:** whether reusing an old `remid` also revokes the newest one (Ubisoft does this), how long `sid` lasts, and what happens after 60 days unused.
+- **Identity and library:** GraphQL `GET https://service-aggregation-layer.juno.ea.com/graphql?query=<url-encoded>` with `Authorization: Bearer <token>`.
+
+  | Query | Used for | What we saw |
+  |---|---|---|
+  | `me { player { pd psd displayName } }` | `validate()`, account id and name | `pd` (13 digits, the account's `pidId`), `psd` (10 digits, the **persona id** the achievement service wants), `displayName`. A bad token answers **200** with `errors[0].extensions.code: "UNAUTHENTICATED"` ("Not authenticated.") and `data: null` |
+  | `me { ownedGameProducts(storefronts: [EA, STEAM, EPIC], locale: "DEFAULT", paging: {limit: 9999}, productFound: true, ownershipMethod: [...], type: [DIGITAL_FULL_GAME, PACKAGED_FULL_GAME], downloadableOnly: false, platforms: [PC]) { items { id: originOfferId product { id name gameSlug baseItem { gameType } } } } }` | `listGames()` | All 15 PC games in one reply, every one `BASE_GAME`. Names carry ™ and sometimes a trailing newline (`skate.™` + `\n`). Jedi: Fallen Order appears **three times** (two offers plus the Deluxe Edition), all with the same achievement set |
+  | `legacyOffers(offerIds: [...], locale: "DEFAULT") { offerId: id displayName displayType contentId achievementSetOverride }` | the game's **achievement set id** | 14 of 15 offers have one, e.g. `75158_196485_50844`; old games use other forms (`BF_BF3_PC`). The Sims 4 has none (no achievements) |
+  | `me { recentGames(gameSlugs: [...]) { items { gameSlug totalPlayTimeSeconds lastSessionEndDate } } }` | recent play | Playtime in seconds; `lastSessionEndDate` is ISO with `Z`, or `1970-01-01T00:00:00.000Z` for "never recorded" |
+
+- **Achievements:** `GET https://achievements.gameservices.ea.com/achievements/personas/<psd>/<achievementSetId>/all?lang=en_US&metadata=true` with `X-AuthToken: <token>` (`Authorization: Bearer` works too). The reply is an object keyed by achievement id (`"1"`, `"a33"`, `"ACH38_00"`, `"1PAchievement_Skate_01_Task"`…), with every achievement in one reply (up to 69 here) and no paging. Each entry has `name`, `desc`, `howto`, `icons` (`"40"`, `"208"`, `"416"` px PNG URLs on the same host), `hidden` (boolean; 21 of 53 in Jedi: Survivor), `complete` (boolean), `u` (Unix seconds: **the unlock time when `complete`, but just "now" when not**), `state.a_st` (`COMPLETED` or `ACTIVE`), `state.st_ct` (the unlock time again), `p`/`t` (progress, e.g. `0/11000`), `xp`, and `achievedPercentage` (a string). A bad token answers **401** `{"error":{"code":401,"name":"AUTHORIZATION_REQUIRED"},…}`.
+  - **Rarity is partial:** `achievedPercentage` is real for 6 of 12 sets (Battlefield 3 and 4, Battlefront II, Dragon Age: Inquisition, Squadrons, Unravel Two) and `"0.00"` for **every** achievement of the other 6 (both Jedi games, skate., It Takes Two, Battlefield V, Apex Legends). An all-zero set means "no rarity".
+  - `…/personas/<psd>/all` (no set id) returned only 1 of the 12 sets, so the provider asks per set.
+  - GraphQL `achievements(achievementSetIds: [...], playerPsd: "<psd>", showHidden: true) { id achievements { id name description awardCount date } }` gives the same unlocks (`awardCount` 1, `date` ISO with `Z`, matching `u`) but no icons or rarity, so REST is the one to use.
+- **Rate limits:** none seen (about 50 requests in a minute, no `429`).
+- **Overlap with Steam:** several of these games (Jedi, Battlefield, Apex) are also on Steam with Steam's own achievements; the EA set is separate, so both are tracked until cross-platform linking (M4).
+- **Risks:** EA could stop honouring `ORIGIN_JS_SDK` tokens for these services or add bot checks to the sign-in page (it already refuses Electron's user agent); a lost rotated `remid` forces a new sign-in.
 
 ## Generic local-file adapter (after v1)
 
