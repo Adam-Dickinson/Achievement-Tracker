@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "message": "Could not parse authorization header.",
+      "extensions": {
+        "code": "INVALID_TICKET"
+      }
+    }
+  ]
+}

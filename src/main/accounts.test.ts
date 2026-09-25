@@ -5,10 +5,10 @@ import type { AccountCredentials } from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { InMemorySecretStore, type SecretStore } from '@shared/secret-store'
-import { connectEpic, connectSteam, connectXbox } from './accounts'
+import { connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
 import { applyMigrations } from './store/migrate'
 import { listAccountSummaries, setAccountStatus } from './store/sync-store'
-import { SignInError } from './xbox-sign-in'
+import { SignInError } from './sign-in-error'
 
 const STEAM_ID = '76561190000000001'
 const KEY = '0123456789ABCDEF0123456789ABCDEF'
@@ -384,6 +384,125 @@ describe('connectEpic', () => {
 
     expect(result).toMatchObject({ ok: false, reason: 'other' })
     expect(result.ok || result.message).not.toContain('boom')
+    vi.restoreAllMocks()
+  })
+})
+
+const UBISOFT_USER = '00000000-0000-4000-8000-0000000000aa'
+
+function fakeUbisoft(overrides: Partial<AchievementProvider> = {}): AchievementProvider {
+  return fakeSteam({
+    platform: 'ubisoft',
+    authenticate: () =>
+      Promise.resolve({
+        platform: 'ubisoft',
+        externalId: UBISOFT_USER,
+        secret: new Secret('rotated-remember-me'),
+      }),
+    validate: () => Promise.resolve({ externalId: UBISOFT_USER, displayName: 'TestPlayer' }),
+    ...overrides,
+  })
+}
+
+function setupUbisoft(
+  ubisoft = fakeUbisoft(),
+  signIn: () => Promise<Secret> = () => Promise.resolve(new Secret('from-sign-in-window')),
+) {
+  const { db, secrets, scheduler } = setup()
+  return { db, secrets, scheduler, deps: { db, ubisoft, signIn, secrets, scheduler } }
+}
+
+describe('connectUbisoft', () => {
+  it('signs in, saves the account and its rotated remember-me ticket, and starts syncing it', async () => {
+    const { db, secrets, scheduler, deps } = setupUbisoft()
+
+    const result = await connectUbisoft(deps)
+
+    expect(result).toEqual({
+      ok: true,
+      account: {
+        id: 1,
+        platform: 'ubisoft',
+        displayName: 'TestPlayer',
+        status: 'connected',
+        gameCount: 0,
+      },
+    })
+    expect(listAccountSummaries(db)).toHaveLength(1)
+    expect(secrets.find('1')?.expose()).toBe('rotated-remember-me')
+    expect(scheduler.startAccount).toHaveBeenCalledWith(1)
+  })
+
+  it("hands the provider the sign-in window's ticket as a token", async () => {
+    const authenticate = vi.fn<AchievementProvider['authenticate']>(() =>
+      Promise.resolve({ platform: 'ubisoft', externalId: UBISOFT_USER, secret: new Secret('t') }),
+    )
+    const { deps } = setupUbisoft(fakeUbisoft({ authenticate }))
+
+    await connectUbisoft(deps)
+
+    const [input] = authenticate.mock.calls[0] ?? []
+    expect(input?.kind).toBe('token')
+    expect(input?.kind === 'token' && input.value.expose()).toBe('from-sign-in-window')
+  })
+
+  it.each([
+    ['cancelled', 'The Ubisoft sign-in was cancelled.'],
+    ['timed_out', 'The Ubisoft sign-in timed out. Please try again.'],
+  ] as const)('reports a %s sign-in as cancelled, and saves nothing', async (reason, message) => {
+    const { db, scheduler, deps } = setupUbisoft(fakeUbisoft(), () =>
+      Promise.reject(new SignInError(reason, 'x')),
+    )
+
+    expect(await connectUbisoft(deps)).toEqual({ ok: false, reason: 'cancelled', message })
+    expect(listAccountSummaries(db)).toEqual([])
+    expect(scheduler.startAccount).not.toHaveBeenCalled()
+  })
+
+  it('asks to sign in again when Ubisoft rejects the fresh ticket', async () => {
+    const { secrets, deps } = setupUbisoft(
+      fakeUbisoft({
+        authenticate: () =>
+          Promise.reject(new ProviderError('auth_expired', 'Ubisoft: the sign-in has expired')),
+      }),
+    )
+
+    expect(await connectUbisoft(deps)).toEqual({
+      ok: false,
+      reason: 'other',
+      message: 'Ubisoft did not accept the sign-in. Please sign in again.',
+    })
+    expect(secrets.find('1')).toBeUndefined()
+  })
+
+  it('reports a network failure as a connection problem', async () => {
+    const { deps } = setupUbisoft(
+      fakeUbisoft({
+        authenticate: () =>
+          Promise.reject(new ProviderError('network', 'Ubisoft: could not reach')),
+      }),
+    )
+
+    expect(await connectUbisoft(deps)).toMatchObject({ ok: false, reason: 'network' })
+  })
+
+  it("passes on the provider's own message for any other refusal", async () => {
+    const message = 'Ubisoft: unexpected reply from the sign-in (HTTP 400)'
+    const { deps } = setupUbisoft(
+      fakeUbisoft({ authenticate: () => Promise.reject(new ProviderError('other', message)) }),
+    )
+
+    expect(await connectUbisoft(deps)).toEqual({ ok: false, reason: 'other', message })
+  })
+
+  it('reports an unexpected failure with a general message', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const { deps } = setupUbisoft(fakeUbisoft(), () => Promise.reject(new Error('window crashed')))
+
+    const result = await connectUbisoft(deps)
+
+    expect(result).toMatchObject({ ok: false, reason: 'other' })
+    expect(result.ok || result.message).not.toContain('crashed')
     vi.restoreAllMocks()
   })
 })

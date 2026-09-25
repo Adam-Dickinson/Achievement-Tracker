@@ -67,6 +67,9 @@ The UI asks the main process to begin the flow (`connectXbox`); the main process
 ### Auth (pasted code, Epic)
 Epic's sign-in can't redirect to our app, so the UI asks the main process to open Epic's sign-in page in the browser (`openEpicSignIn`). After signing in, Epic shows a page with a one-time code; the user copies it (or the whole page) into the app, and `connectEpic` swaps it for tokens in the main process. Then it works like Xbox: the refresh token goes to `SecretStore`, the access token stays in the provider's memory, and the rotated refresh token is saved each round (ADR-0007).
 
+### Auth (sign-in window, Ubisoft)
+Ubisoft's sign-in has no redirect and no code to copy, so `connectUbisoft` opens Ubisoft's own sign-in page in an app window (`main/ubisoft-sign-in-window.ts`): sandboxed, no preload, a throwaway in-memory session, no pop-ups or navigation away. The user signs in on Ubisoft's page; the main process reads only Ubisoft's reply to its session request, through the window's DevTools protocol, and keeps only the remember-me ticket (`main/ubisoft-sign-in.ts`, ADR-0009). The provider trades it for a launcher session. Remember-me tickets rotate on every renewal and Ubisoft revokes the chain if an old one is used again, so the provider renews only inside `authenticate()` and `refresh()`, one renewal per account at a time, and the Scheduler saves each new ticket at the start of the round (ADR-0007).
+
 ### An unlock toast (implemented)
 The `Scheduler` hands a sync pass's `UnlockEvent`s to `NotificationService.notify()` (`main/notifications.ts`), after the pass has committed. The service turns each into a `ToastPayload` (platform name, rarity from the global %, `null` description for hidden achievements), drops duplicates of toasts already on screen or waiting, and collapses more than 5 at once into one "N achievements unlocked" toast led by the rarest. It keeps **at most 3 on screen**, each for 5 s, the rest queued in order. Every change sends the whole on-screen list (`VisibleToast[]`, oldest first, each with a stable id) through `OverlayService.display()` → `overlay:set-toasts` → the overlay's `OverlayApp` (via `window.api.onToasts`) draws them stacked, newest at the bottom, and Motion animates arrivals, departures and the stack shifting. When the list empties, the main process hides the window after the exit animation.
 
@@ -117,7 +120,7 @@ achievement-tracker/
 │   │   │                            #   sync-store.ts (the sync engine's SQL)
 │   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts
 │   │   └── providers/               # steam/ xbox/ playstation/ retroachievements/ rpcs3/
-│   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (steam and xbox real, the rest stubs)
+│   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (steam, xbox, epic and ubisoft real, the rest stubs)
 │   ├── preload/index.ts             # exposes window.api
 │   └── renderer/
 │       ├── index.html  overlay.html # one entry per window

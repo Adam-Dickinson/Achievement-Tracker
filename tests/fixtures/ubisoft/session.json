@@ -1,0 +1,17 @@
+{
+  "platformType": "uplay",
+  "ticket": "fake-ticket-0001",
+  "twoFactorAuthenticationTicket": null,
+  "profileId": "00000000-0000-4000-8000-0000000000aa",
+  "userId": "00000000-0000-4000-8000-0000000000aa",
+  "nameOnPlatform": "TestPlayer",
+  "environment": "Prod",
+  "expiration": "2026-09-25T19:46:13.9865703Z",
+  "spaceId": "8652359e-0608-4d17-bb45-2ab5e140ba3f",
+  "clientIp": "192.0.2.1",
+  "clientIpCountry": "GB",
+  "serverTime": "2026-09-25T16:46:13.9914001Z",
+  "sessionId": "00000000-0000-4000-8000-0000000000bb",
+  "sessionKey": "fake-session-key",
+  "rememberMeTicket": "fake-remember-me-0002"
+}

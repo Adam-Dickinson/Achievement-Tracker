@@ -1,0 +1,1026 @@
+{
+  "data": {
+    "game": {
+      "id": "f40e304d-8e8d-4343-8270-d06487c35add",
+      "viewer": {
+        "meta": {
+          "id": "00000000-0000-4000-8000-0000000000aa-f40e304d-8e8d-4343-8270-d06487c35add",
+          "achievements": {
+            "totalCount": 72,
+            "completedCount": 1,
+            "nodes": [
+              {
+                "id": "1803-1",
+                "achievementId": 1,
+                "title": "The Spark",
+                "description": "Complete the game intro by liberating Dutch’s island (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_1.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-1",
+                    "completionDate": "2025-03-01T19:27:13",
+                    "isCompleted": true
+                  }
+                }
+              },
+              {
+                "id": "1803-2",
+                "achievementId": 2,
+                "title": "You Are Wrath",
+                "description": "Be deemed the Sin of Wrath (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_2.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-2",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-3",
+                "achievementId": 3,
+                "title": "Special Delivery",
+                "description": "Ensure a baby's safe passage into this world (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_3.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-3",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-4",
+                "achievementId": 4,
+                "title": "Only You",
+                "description": "Sucessfully complete the First Trial (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_4.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-4",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-5",
+                "achievementId": 5,
+                "title": "Walk The Path",
+                "description": "Discover the Bliss (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_5.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-5",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-6",
+                "achievementId": 6,
+                "title": "Together Forever",
+                "description": "Get to the End (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_6.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-6",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-7",
+                "achievementId": 7,
+                "title": "Saving Deputy Hudson",
+                "description": "Save Deputy Hudson (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_7.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-7",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-8",
+                "achievementId": 8,
+                "title": "Blissful",
+                "description": "Save the Marshal from the Bliss (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_8.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-8",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-9",
+                "achievementId": 9,
+                "title": "Saving Sheriff Whitehorse",
+                "description": "Save Sheriff Whitehorse (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_9.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-9",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-10",
+                "achievementId": 10,
+                "title": "Saving Deputy Pratt",
+                "description": "Save Deputy Pratt (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_10.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-10",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-11",
+                "achievementId": 11,
+                "title": "Science Fact",
+                "description": "Put aside skepticism and help Larry (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_11.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-11",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-12",
+                "achievementId": 12,
+                "title": "Ain't No Wallflower",
+                "description": "Who are these people? Speak to 50 citizens of Hope County (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_12.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-12",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-13",
+                "achievementId": 13,
+                "title": "Been There, Done That",
+                "description": "Complete all Hunting & Fishing Challenges (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_13.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-13",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-14",
+                "achievementId": 14,
+                "title": "Liberator",
+                "description": "Liberate 5 locations from the Project at Eden's Gate (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_14.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-14",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-15",
+                "achievementId": 15,
+                "title": "Scavenger",
+                "description": "Follow the clues to the end of 3 treasure hunts (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_15.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-15",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-16",
+                "achievementId": 16,
+                "title": "What Now?",
+                "description": "Complete 3 Side Missions in Hope County (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_16.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-16",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-17",
+                "achievementId": 17,
+                "title": "The Greatest SOB That Ever Lived",
+                "description": "Laugh in danger's face by executing a Clutch Nixon stunt in each region (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_17.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-17",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-18",
+                "achievementId": 18,
+                "title": "Pack Rat",
+                "description": "Grab 1 of each collectible item. You never know when it will come in handy (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_18.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-18",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-19",
+                "achievementId": 19,
+                "title": "A Wing And A Prayer",
+                "description": "Fly Nick's plane. Hopefully you're not afraid of heights (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_19.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-19",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-20",
+                "achievementId": 20,
+                "title": "Troublemaker",
+                "description": "Discover the joys of destroying cult property in every region (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_20.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-20",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-21",
+                "achievementId": 21,
+                "title": "Sewer Rat",
+                "description": "Destroy a cult water treatment pump and make them thirst for revenge (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_21.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-21",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-22",
+                "achievementId": 22,
+                "title": "Peachy Keen",
+                "description": "Bait Peaches into going back home (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_22.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-22",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-23",
+                "achievementId": 23,
+                "title": "Kicking the Hornet's Nest",
+                "description": "Trigger the wrath of a Herald (Solo Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_23.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-23",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-24",
+                "achievementId": 24,
+                "title": "ARCADE Player",
+                "description": "Reach level 20 in the Arcade (Arcade only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_24.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-24",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-25",
+                "achievementId": 25,
+                "title": "ARCADE Hero",
+                "description": "Play the 'Arcade Hero' mode 5 times (Arcade only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_25.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-25",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-26",
+                "achievementId": 26,
+                "title": "ARCADE Hunter",
+                "description": "Kill 100 enemies in Arcade Multiplayer maps (Arcade only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_26.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-26",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-27",
+                "achievementId": 27,
+                "title": "ARCADE Enthusiast",
+                "description": "Successfully complete 10 featured Arcade maps in Solo or Co-op (Arcade only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_27.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-27",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-28",
+                "achievementId": 28,
+                "title": "ARCADE Competitor",
+                "description": "Win 10 featured maps in Multiplayer (Arcade only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_28.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-28",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-29",
+                "achievementId": 29,
+                "title": "The Hurk Locker",
+                "description": "Truly bond with Hurk by destroying 15 vehicles together (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_29.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-29",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-30",
+                "achievementId": 30,
+                "title": "Hope County Master Angler",
+                "description": "Acquire all 4 Fishing Rods (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_30.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-30",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-31",
+                "achievementId": 31,
+                "title": "Locked and Loaded",
+                "description": "Fully customize your weapon (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_31.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-31",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-32",
+                "achievementId": 32,
+                "title": "Ghost Kill",
+                "description": "Perform a Headshot kill with any bow or rifle on an enemy cultist more than 150m away (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_32.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-32",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-33",
+                "achievementId": 33,
+                "title": "Extra Crafty",
+                "description": "Craft 25 recipes (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_33.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-33",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-34",
+                "achievementId": 34,
+                "title": "Fashion First",
+                "description": "Purchase $1000 in clothing (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_34.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-34",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-35",
+                "achievementId": 35,
+                "title": "Big Spender",
+                "description": "Spend $50000 in Vehicle Shops (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_35.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-35",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-36",
+                "achievementId": 36,
+                "title": "Stocked Garage",
+                "description": "Buy 3 vehicles to populate your garage (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_36.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-36",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-37",
+                "achievementId": 37,
+                "title": "Ace Killer",
+                "description": "Destroy 10 planes while driving any aerial vehicle (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_37.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-37",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-38",
+                "achievementId": 38,
+                "title": "Squash and Run",
+                "description": "Run over and kill 20 enemies (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_38.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-38",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-39",
+                "achievementId": 39,
+                "title": "Fertilizing the Land",
+                "description": "Using a tractor, obliterate 5 enemies (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_39.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-39",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-40",
+                "achievementId": 40,
+                "title": "Death From Above",
+                "description": "Drop a bomb from a plane and destroy or disable 4 vehicles at once (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_40.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-40",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-41",
+                "achievementId": 41,
+                "title": "Opportunity Knocks",
+                "description": "Using rocks or cans, distract 15 enemies (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_41.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-41",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-42",
+                "achievementId": 42,
+                "title": "Road Gunner",
+                "description": "While driving or leaning out of a vehicle, kill 25 enemies (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_42.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-42",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-43",
+                "achievementId": 43,
+                "title": "Fish Market",
+                "description": "Sell 20 fish for cash (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_43.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-43",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-44",
+                "achievementId": 44,
+                "title": "Where's the Beef?",
+                "description": "Tenderize a bull with your bare hands. To death (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_44.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-44",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-45",
+                "achievementId": 45,
+                "title": "Ignoble Beasts",
+                "description": "Kill a bison using only melee weapons (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_45.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-45",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-46",
+                "achievementId": 46,
+                "title": "Hitting it Off",
+                "description": "Play 3 quests with a friend (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_46.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-46",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-47",
+                "achievementId": 47,
+                "title": "Like A Bird",
+                "description": "Use a wingsuit to travel more than 5000m (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_47.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-47",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-48",
+                "achievementId": 48,
+                "title": "Close and Personal",
+                "description": "Perform 25 close combat Takedown Kills (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_48.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-48",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-49",
+                "achievementId": 49,
+                "title": "Explosive Surprise",
+                "description": "Sabotage 5 vehicles in a way that kills an enemy (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_49.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-49",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-50",
+                "achievementId": 50,
+                "title": "Survivalist",
+                "description": "Purchase half of all perks available (Campaign only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_50.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-50",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-51",
+                "achievementId": 51,
+                "title": "Silent Death",
+                "description": "Perform 25 stealth kills while you have the 4 survival instinct tokens.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_51.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-51",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-52",
+                "achievementId": 52,
+                "title": "80s Hero",
+                "description": "Complete the game in Action Movie Mode.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_52.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-52",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-53",
+                "achievementId": 53,
+                "title": "Wendell's Story",
+                "description": "Complete the game.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_53.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-53",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-54",
+                "achievementId": 54,
+                "title": "Roguelike",
+                "description": "Complete the game in Survivor Mode.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_54.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-54",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-55",
+                "achievementId": 55,
+                "title": "Leave no one behind",
+                "description": "Free the 3 US prisoner of war.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_55.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-55",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-56",
+                "achievementId": 56,
+                "title": "Make them count",
+                "description": "Kill a total of 25 enemies with airstrikes.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_56.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-56",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-57",
+                "achievementId": 57,
+                "title": "Welcome to Nam",
+                "description": "Get back your gear at the helicopter crash site.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_57.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-57",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-58",
+                "achievementId": 58,
+                "title": "DLC: Mars:Bug Squasher",
+                "description": "Perform 10 takedowns on Arachnids using the Power Glove.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_58.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-58",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-59",
+                "achievementId": 59,
+                "title": "DLC: Mars: Mars Second Amendment",
+                "description": "Buy 12 weapons.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_59.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-59",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-60",
+                "achievementId": 60,
+                "title": "DLC: Mars: Martian Journal",
+                "description": "Collect all of Larry's notes (Host Only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_60.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-60",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-61",
+                "achievementId": 61,
+                "title": "DLC: Mars: Nick's Story",
+                "description": "Complete the game (Host Only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_61.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-61",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-62",
+                "achievementId": 62,
+                "title": "DLC: Mars: Slimy Death",
+                "description": "Hit 10 Arachnids with Crabmones.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_62.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-62",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-63",
+                "achievementId": 63,
+                "title": "DLC: Mars: The Queen is Dead!",
+                "description": "Kill all the Queens (Host Only).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_63.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-63",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-64",
+                "achievementId": 64,
+                "title": "DLC: Mars: Welcome to Mars",
+                "description": "Reboot the Terminal on top of the Control Center Antenna.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_64.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-64",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-65",
+                "achievementId": 65,
+                "title": "DLC Zombies: FertiliZer",
+                "description": "Kill 10 Gougers or Hot Heads with the tractor in Fields of Terror.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_65.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-65",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-66",
+                "achievementId": 66,
+                "title": "DLC Zombies: Early ExZit Denied",
+                "description": "Try to escape the bridge early in Burned Bridges.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_66.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-66",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-67",
+                "achievementId": 67,
+                "title": "DLC Zombies: Blood Zragon",
+                "description": "Kill the Blood Dragon in Killer Climate.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_67.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-67",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-68",
+                "achievementId": 68,
+                "title": "DLC Zombies: Killer BeeZ",
+                "description": "Destroy all the Zom-bee nests in Laboratory of the Dead.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_68.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-68",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-69",
+                "achievementId": 69,
+                "title": "DLC Zombies: ReZolution",
+                "description": "Complete all 7 movie pitches.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_69.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-69",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-70",
+                "achievementId": 70,
+                "title": "DLC Zombies: DeceaZed to ExZist",
+                "description": "Kill 5000 total Gougers, Hot Heads, or Behemoths in any mode.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_70.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-70",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-71",
+                "achievementId": 71,
+                "title": "DLC Zombies: Gold MedaliZt",
+                "description": "Get a gold medal in all 7 movie pitches in Score Attack.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_71.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-71",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "1803-72",
+                "achievementId": 72,
+                "title": "Infamous",
+                "description": "Complete New Game+ with Infamous difficulty.",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/28d2842d071fd194f843618375dd8b8a_72.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-1803-72",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

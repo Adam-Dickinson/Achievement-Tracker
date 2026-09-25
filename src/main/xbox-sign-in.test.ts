@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
-import { SignInError, XboxSignIn } from './xbox-sign-in'
+import { SignInError } from './sign-in-error'
+import { XboxSignIn } from './xbox-sign-in'
 
 interface Visit {
   readonly status: number

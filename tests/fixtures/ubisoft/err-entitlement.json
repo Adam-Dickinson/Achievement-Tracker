@@ -1,0 +1,37 @@
+{
+  "errors": [
+    {
+      "message": "401 Unauthorized from entitlement.api (errorCode=2000)",
+      "locations": [
+        {
+          "line": 2,
+          "column": 51
+        }
+      ],
+      "path": [
+        "game",
+        "viewer",
+        "meta",
+        "achievements"
+      ],
+      "extensions": {
+        "code": "UNAUTHORIZED_USER",
+        "response": {
+          "url": "http://ue1-delegation-ubiservices.onbe-us.ubi.com/v1/profiles/me/global/ubiconnect/entitlement/api/entitlements",
+          "status": 401,
+          "statusText": "Unauthorized",
+          "body": {
+            "transactionId": "ba7e3527-6ef9-4ce8-9e89-1321a85cdc75",
+            "errorCode": "2000",
+            "message": "Unauthorized",
+            "errorContext": "entitlement.api",
+            "transactionTime": "2026-09-25T16:42:27.733Z",
+            "httpCode": 401,
+            "moreInfo": "Please reach Digital Entitlement team for more info."
+          }
+        }
+      }
+    }
+  ],
+  "data": null
+}

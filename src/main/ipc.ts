@@ -8,6 +8,7 @@ import {
   type ConnectResult,
   type EpicConnectInput,
   type SteamConnectInput,
+  type UbisoftConnectInput,
   type XboxConnectInput,
 } from '@shared/ipc'
 import {
@@ -26,6 +27,8 @@ export interface IpcHandlers {
   cancelXboxSignIn(): void
   openEpicSignIn(): Promise<void>
   connectEpic(input: EpicConnectInput): Promise<ConnectResult>
+  connectUbisoft(input: UbisoftConnectInput): Promise<ConnectResult>
+  cancelUbisoftSignIn(): void
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   getDashboard(): DashboardStats
@@ -37,7 +40,7 @@ const steamConnectInputSchema = z.object({
   apiKey: z.string().trim().min(1).max(100),
 })
 
-const xboxConnectInputSchema = z.object({ acceptedUnofficial: z.literal(true) })
+const unofficialOptInSchema = z.object({ acceptedUnofficial: z.literal(true) })
 
 const epicConnectInputSchema = z.object({
   code: z.string().trim().min(1).max(2000),
@@ -89,7 +92,7 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
 
   ipcMain.handle(IPC.connectXbox, (event, input: unknown): Promise<ConnectResult> => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
-    const parsed = xboxConnectInputSchema.safeParse(input)
+    const parsed = unofficialOptInSchema.safeParse(input)
     if (!parsed.success) {
       return Promise.resolve({
         ok: false,
@@ -103,6 +106,24 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.cancelXboxSignIn, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     handlers.cancelXboxSignIn()
+  })
+
+  ipcMain.handle(IPC.connectUbisoft, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = unofficialOptInSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the Ubisoft connection is unofficial.',
+      })
+    }
+    return handlers.connectUbisoft(parsed.data)
+  })
+
+  ipcMain.handle(IPC.cancelUbisoftSignIn, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.cancelUbisoftSignIn()
   })
 
   ipcMain.handle(IPC.openEpicSignIn, (event) => {

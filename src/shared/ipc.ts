@@ -14,6 +14,8 @@ export const IPC = {
   cancelXboxSignIn: 'accounts:cancel-xbox-sign-in',
   openEpicSignIn: 'accounts:open-epic-sign-in',
   connectEpic: 'accounts:connect-epic',
+  connectUbisoft: 'accounts:connect-ubisoft',
+  cancelUbisoftSignIn: 'accounts:cancel-ubisoft-sign-in',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   getDashboard: 'dashboard:get',
@@ -57,6 +59,10 @@ export interface XboxConnectInput {
   readonly acceptedUnofficial: true
 }
 
+export interface UbisoftConnectInput {
+  readonly acceptedUnofficial: true
+}
+
 export interface EpicConnectInput {
   readonly code: string
   readonly acceptedUnofficial: true
@@ -78,6 +84,8 @@ export interface AchievementTrackerApi {
   cancelXboxSignIn(): Promise<void>
   openEpicSignIn(): Promise<void>
   connectEpic(input: EpicConnectInput): Promise<ConnectResult>
+  connectUbisoft(input: UbisoftConnectInput): Promise<ConnectResult>
+  cancelUbisoftSignIn(): Promise<void>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   getDashboard(): Promise<DashboardStats>
