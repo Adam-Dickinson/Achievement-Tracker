@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import { IPC, type AchievementTrackerApi, type VisibleToast } from '@shared/ipc'
+import { IPC, type TrophyLockerApi, type VisibleToast } from '@shared/ipc'
 
-const api: AchievementTrackerApi = {
+const api: TrophyLockerApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC.getAppInfo),
   sendTestNotification: () => ipcRenderer.invoke(IPC.sendTestNotification),
   listAccounts: () => ipcRenderer.invoke(IPC.listAccounts),

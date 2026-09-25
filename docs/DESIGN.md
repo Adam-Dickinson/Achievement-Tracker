@@ -1,4 +1,4 @@
-# Design Document: Achievement Tracker
+# Design Document: Trophy Locker
 
 ## 1. Vision
 
@@ -77,6 +77,7 @@ Designed on the Superdesign canvas (see [design/README.md](design/README.md)). T
 - **Game art is the interface, and it colours in.** A game's art is shown desaturated, with the full-colour art revealed up to its completion %, marked by a glowing lime edge. 100% is fully vivid with a gold crown. Completion is never shown as a ring.
 - **One accent.** Lime (`#C4F542`) marks active navigation, primary actions, progress, toggles and focus. Gold is reserved for Ultra Rare and completed games.
 - **Dark-first**, with a light theme as a later option.
+- **The logo colours in too.** Trophy Locker's mark is a trophy with a keyhole through the cup, on a midnight aurora tile, filled with lime up to a glowing edge the way game art fills with completion ("Colour-in", chosen 2026-09-25 from four concepts on the canvas). Small sizes use simpler versions: no aurora or glow at 24–32px, and no keyhole at 16px. Files: `resources/` and `src/renderer/src/assets/logo.svg`.
 - **Rarity is always a gem icon + a text label + the %:** Common (slate circle), Uncommon (mint diamond), Rare (sky hexagon), Ultra Rare (gold sparkle with a glow). Never colour alone (see §10).
 - **Platform colours** appear only inside small circular platform badges (Steam blue, Xbox green, PlayStation blue, Epic grey, Ubisoft blue, EA red, emulator violet).
 - **Type:** Bricolage Grotesque for titles and big numerals, Figtree for UI text, tabular figures for every count and percentage.

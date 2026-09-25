@@ -1,9 +1,10 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, Menu, safeStorage, shell } from 'electron'
+import { app, BrowserWindow, dialog, Menu, safeStorage, shell } from 'electron'
 import { IPC } from '@shared/ipc'
 import { connectEpic, connectSteam, connectUbisoft, connectXbox } from './accounts'
 import { coalesce } from './coalesce'
 import { registerIpcHandlers } from './ipc'
+import { DATABASE_FILE, moveLegacyData } from './legacy-data'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
 import { EpicProvider } from './providers/epic'
@@ -30,10 +31,25 @@ import { describeUnlockTiming } from './unlock-timing'
 import { createMainWindow, createOverlayWindow } from './windows'
 import { XboxSignIn } from './xbox-sign-in'
 
-if (!app.requestSingleInstanceLock()) {
+if (!dataFolderReady() || !app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   void start()
+}
+
+function dataFolderReady(): boolean {
+  try {
+    if (moveLegacyData(app.getPath('appData'), app.getPath('userData'))) {
+      console.info('Moved the data folder from achievement-tracker to trophy-locker')
+    }
+    return true
+  } catch (error) {
+    dialog.showErrorBox(
+      'Trophy Locker could not move your data',
+      `Close Achievement Tracker if it is still running, then start Trophy Locker again.\n\n${String(error)}`,
+    )
+    return false
+  }
 }
 
 async function start(): Promise<void> {
@@ -59,9 +75,7 @@ async function start(): Promise<void> {
   await app.whenReady()
   if (app.isPackaged) Menu.setApplicationMenu(null)
 
-  const { db, schemaVersion } = openDatabase(
-    join(app.getPath('userData'), 'achievement-tracker.db'),
-  )
+  const { db, schemaVersion } = openDatabase(join(app.getPath('userData'), DATABASE_FILE))
 
   const overlay = new OverlayService(createOverlayWindow())
   const notifications = new NotificationService({

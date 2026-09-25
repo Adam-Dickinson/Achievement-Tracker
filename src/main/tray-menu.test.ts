@@ -34,7 +34,7 @@ describe('trayMenuTemplate', () => {
       .map((entry) => entry.label)
 
     expect(labels).toEqual([
-      'Open Achievement Tracker',
+      'Open Trophy Locker',
       'Send test notification',
       'Pause notifications',
       'Start with Windows',

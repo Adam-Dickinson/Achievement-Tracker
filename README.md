@@ -1,4 +1,4 @@
-# Achievement Tracker
+# Trophy Locker
 
 A lightweight desktop app that tracks your achievements and trophies across **PlayStation, Xbox, Steam, Epic Games, Ubisoft Connect** and **EA** in one place, with emulators planned after v1. It runs quietly in the system tray and pops up a notification the moment you unlock something, whichever platform it came from.
 

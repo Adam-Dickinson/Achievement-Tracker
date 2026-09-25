@@ -1,4 +1,4 @@
-import { TrophyIcon } from '@/components/TrophyIcon'
+import logo from '@/assets/logo.svg'
 import type { AppInfo } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
 
@@ -12,8 +12,8 @@ export function IslandNav({ selected, onSelect, info }: IslandNavProps) {
   return (
     <header className="mx-8 mt-5 flex shrink-0 items-center gap-6 rounded-panel border border-line bg-surface-1 px-5 py-3 shadow-float">
       <div className="flex items-center gap-2.5">
-        <TrophyIcon className="h-6 w-5 text-primary" />
-        <span className="font-display text-base font-semibold">Achievement Tracker</span>
+        <img src={logo} alt="" className="h-9 w-9" />
+        <span className="font-display text-base font-semibold">Trophy Locker</span>
       </div>
 
       <nav aria-label="Main" className="flex flex-1 items-center gap-1">

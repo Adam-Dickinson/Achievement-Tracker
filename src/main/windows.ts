@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { BrowserWindow } from 'electron'
-import appIcon from '../../resources/icon.png?asset'
+import appIcon from '../../resources/icon.ico?asset'
 
 export const OVERLAY_SIZE = { width: 480, height: 396 } as const
 
@@ -27,7 +27,7 @@ export function createMainWindow(): BrowserWindow {
     minWidth: 1024,
     minHeight: 680,
     show: false, // shown on 'ready-to-show' so there's no white flash
-    title: 'Achievement Tracker',
+    title: 'Trophy Locker',
     backgroundColor: '#0B0D12',
     icon: appIcon,
     autoHideMenuBar: true,
