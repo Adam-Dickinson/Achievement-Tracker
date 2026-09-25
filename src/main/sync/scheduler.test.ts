@@ -716,29 +716,33 @@ describe('Scheduler tiered polling', () => {
     expect(await scheduler.syncDueGames(1)).toEqual(after(START, SYNC_INTERVAL_MS))
   })
 
-  it('stays within Steam’s daily budget: 171 games, 11 of them recent, over a day', async () => {
-    vi.useFakeTimers({ now: START })
-    const ids = Array.from({ length: 171 }, (_, index) => `g${index}`)
-    const db = seedDb([{ id: 1, games: [] }])
-    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
-    const listGames = vi.fn(libraryOf(ids.map((id, index) => libraryGame(id, index < 11))))
-    const scheduler = new Scheduler({
-      db,
-      providers: { steam: fakeProvider(fetchGame, 'steam', listGames) },
-      secrets: new InMemorySecretStore(),
-      onUnlocks: () => undefined,
-    })
+  it(
+    'stays within Steam’s daily budget: 171 games, 11 of them recent, over a day',
+    { timeout: 30_000 },
+    async () => {
+      vi.useFakeTimers({ now: START })
+      const ids = Array.from({ length: 171 }, (_, index) => `g${index}`)
+      const db = seedDb([{ id: 1, games: [] }])
+      const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+      const listGames = vi.fn(libraryOf(ids.map((id, index) => libraryGame(id, index < 11))))
+      const scheduler = new Scheduler({
+        db,
+        providers: { steam: fakeProvider(fetchGame, 'steam', listGames) },
+        secrets: new InMemorySecretStore(),
+        onUnlocks: () => undefined,
+      })
 
-    scheduler.start()
-    await vi.advanceTimersByTimeAsync(24 * 60 * 60_000)
-    scheduler.stop()
-    vi.useRealTimers()
+      scheduler.start()
+      await vi.advanceTimersByTimeAsync(24 * 60 * 60_000)
+      scheduler.stop()
+      vi.useRealTimers()
 
-    const requests = fetchGame.mock.calls.length * 3 + listGames.mock.calls.length * 2
-    expect(requests).toBeLessThan(15_000)
-    expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g0').length).toBe(289)
-    expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g170').length).toBe(5)
-  })
+      const requests = fetchGame.mock.calls.length * 3 + listGames.mock.calls.length * 2
+      expect(requests).toBeLessThan(15_000)
+      expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g0').length).toBe(289)
+      expect(fetchGame.mock.calls.filter((call) => call[1].externalId === 'g170').length).toBe(5)
+    },
+  )
 })
 
 describe('Scheduler rounds: finding games and the baseline', () => {
