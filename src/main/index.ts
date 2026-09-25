@@ -12,10 +12,16 @@ import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
-import { getDashboardStats, getGameDetail, listLibraryGames } from './store/library-store'
+import {
+  getDashboardStats,
+  getGameDetail,
+  listActivity,
+  listLibraryGames,
+} from './store/library-store'
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { createTray } from './tray'
+import { describeUnlockTiming } from './unlock-timing'
 import { createMainWindow, createOverlayWindow } from './windows'
 import { XboxSignIn } from './xbox-sign-in'
 
@@ -75,7 +81,10 @@ async function start(): Promise<void> {
     db,
     providers: { steam, xbox },
     secrets,
-    onUnlocks: (events) => notifications.notify(events),
+    onUnlocks: (events) => {
+      for (const event of events) console.info(describeUnlockTiming(event))
+      notifications.notify(events)
+    },
     onDataChanged: dataChanged,
   })
   scheduler.start()
@@ -105,6 +114,7 @@ async function start(): Promise<void> {
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     getDashboard: () => getDashboardStats(db),
+    listActivity: (limit) => listActivity(db, limit),
   })
 
   createTray({

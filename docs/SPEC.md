@@ -231,7 +231,10 @@ Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watch
 
 On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attempt counts live in memory only, so a restart starts them again.
 
-**Not built yet:** fast polling while a game runs (F-12), progress reporting (F-10), manual "Sync now" (F-14). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
+- **Watches (M2).** `start()` and `startAccount()` also start the provider's optional `watch()` for each connected account; `stop()` and an expired login stop it. A watch only reports "this game may have changed"; `syncGameNow(accountId, gameId)` then syncs that game at once, outside the loop, with the same pass, outcomes and baseline rule. It skips a game that is backing off after an error. A game not in the library yet (bought or first launched since the last look) triggers one library look first, unless the library is backing off; if the look doesn't list it either, it is not looked for again until the next regular library look. Reports that arrive while that game is syncing lead to exactly one more sync. Steam's watch reports a changed stats file and, every 30 s, the game Steam is running (F-12; PROVIDERS.md, Steam).
+- **Unlock timing.** Each `UnlockEvent` carries the platform's `unlockedAt` next to `detectedAt`, and `main/index.ts` logs both for every unlock (`unlock-timing.ts`).
+
+**Not built yet:** fast polling for platforms other than Steam (F-12), progress reporting (F-10), manual "Sync now" (F-14). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
 
 ## 6. IPC contract (main process ⇄ UI)
 
@@ -245,6 +248,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `listLibrary()` | `library:list` | Every game on every platform as a `LibraryGame` (cover, unlocked/total, last unlock), most recently unlocked first |
 | `getGame(id)` | `library:get-game` | One game and all its achievements (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
 | `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, "Nearly there" and recent unlocks |
+| `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated unlocks across every platform (each a `RecentUnlock` with its description), and `hasMore`. The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
 | `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
 | `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
 | `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
@@ -259,7 +263,6 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `listGames(filter, sort, page)` | Library query |
 | `getGame(id)` | Game + platform entries |
 | `listAchievements(platformGameId, filter)` | |
-| `listActivity(cursor, limit)` | Unlock timeline |
 | `getDashboardStats()` | Aggregates |
 | `syncNow(scope)` | Manual sync |
 | `mergeGames(ids)` / `splitGame(id)` | Linking |

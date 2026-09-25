@@ -18,7 +18,7 @@ Static HTML snapshots live in [`mockups/`](mockups/); open them directly in a br
 | Notification settings | [notification-settings.html](mockups/notification-settings.html) | `c9f50582-a106-431f-8aba-e265a2b2985a` | `features/settings` |
 | Onboarding | [onboarding.html](mockups/onboarding.html) | `3b7abd38-f288-40e1-8a11-0b651ab8e5ba` | `features/onboarding` |
 
-Not yet designed: Activity timeline, and the tray menu.
+Not yet designed: the tray menu. The Activity timeline (`features/activity`) was built without a mockup, in the style of the Dashboard's recent unlocks.
 
 ## Notes for implementation
 

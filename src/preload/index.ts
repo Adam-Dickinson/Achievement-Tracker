@@ -11,6 +11,7 @@ const api: AchievementTrackerApi = {
   listLibrary: () => ipcRenderer.invoke(IPC.listLibrary),
   getGame: (id) => ipcRenderer.invoke(IPC.getGame, id),
   getDashboard: () => ipcRenderer.invoke(IPC.getDashboard),
+  listActivity: (limit) => ipcRenderer.invoke(IPC.listActivity, limit),
   onDataChanged: (listener) => {
     const handler = (): void => listener()
     ipcRenderer.on(IPC.dataChanged, handler)

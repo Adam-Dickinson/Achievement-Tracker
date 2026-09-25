@@ -18,6 +18,7 @@ const UNLOCK: RecentUnlock = {
   gameTitle: 'Elden Ring',
   platform: 'steam',
   name: 'Age of the Stars',
+  description: 'Achieve the "Age of the Stars" ending',
   iconUrl: null,
   globalPercent: 1.2,
   unlockedAt: new Date(2026, 2, 9, 12, 0),

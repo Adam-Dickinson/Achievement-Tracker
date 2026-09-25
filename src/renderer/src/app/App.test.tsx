@@ -39,6 +39,18 @@ describe('App', () => {
     expect(window.api.listAccounts).toHaveBeenCalledOnce()
   })
 
+  it('shows the Activity timeline on the Activity page', async () => {
+    window.api = fakeApi({
+      listActivity: vi.fn().mockResolvedValue({ unlocks: [], hasMore: false }),
+    })
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+
+    expect(await screen.findByText(/Nothing unlocked yet/)).toBeInTheDocument()
+    expect(window.api.listActivity).toHaveBeenCalledOnce()
+  })
+
   it('asks the main process for a test notification', async () => {
     render(<App />)
 

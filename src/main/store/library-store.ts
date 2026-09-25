@@ -1,6 +1,12 @@
 import type { DatabaseSync } from 'node:sqlite'
 import type { DashboardStats } from '@shared/dashboard'
-import type { GameAchievement, GameDetail, LibraryGame, RecentUnlock } from '@shared/library'
+import type {
+  ActivityPage,
+  GameAchievement,
+  GameDetail,
+  LibraryGame,
+  RecentUnlock,
+} from '@shared/library'
 import type { Platform } from '@shared/platform'
 
 const NEARLY_THERE_COUNT = 4
@@ -103,7 +109,8 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
 export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock[] {
   const rows = db
     .prepare(
-      `SELECT a.id AS achievement_id, a.name, a.icon_url, a.global_percent, u.unlocked_at,
+      `SELECT a.id AS achievement_id, a.name, a.description, a.icon_url, a.global_percent,
+              u.unlocked_at,
               pg.id AS game_id, pg.title AS game_title, pg.platform
        FROM unlock u
        JOIN achievement a ON a.id = u.achievement_id
@@ -115,6 +122,7 @@ export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock
     .all(limit) as unknown as {
     achievement_id: number
     name: string
+    description: string | null
     icon_url: string | null
     global_percent: number | null
     unlocked_at: string
@@ -129,10 +137,16 @@ export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock
     gameTitle: row.game_title,
     platform: row.platform,
     name: row.name,
+    description: row.description,
     iconUrl: row.icon_url,
     globalPercent: row.global_percent,
     unlockedAt: new Date(row.unlocked_at),
   }))
+}
+
+export function listActivity(db: DatabaseSync, limit: number): ActivityPage {
+  const unlocks = listRecentUnlocks(db, limit + 1)
+  return { unlocks: unlocks.slice(0, limit), hasMore: unlocks.length > limit }
 }
 
 function toLibraryGame(row: LibraryGameRecord): LibraryGame {

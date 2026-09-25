@@ -1,5 +1,5 @@
 import type { DashboardStats } from './dashboard'
-import type { GameDetail, LibraryGame } from './library'
+import type { ActivityPage, GameDetail, LibraryGame } from './library'
 import type { AccountStatus } from './models'
 import type { Platform } from './platform'
 import type { Rarity } from './rarity'
@@ -15,6 +15,7 @@ export const IPC = {
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   getDashboard: 'dashboard:get',
+  listActivity: 'activity:list',
   dataChanged: 'data:changed',
 } as const
 
@@ -70,6 +71,7 @@ export interface AchievementTrackerApi {
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   getDashboard(): Promise<DashboardStats>
+  listActivity(limit: number): Promise<ActivityPage>
   onDataChanged(listener: () => void): () => void
   onToasts(listener: (toasts: readonly VisibleToast[]) => void): () => void
 }

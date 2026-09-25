@@ -38,7 +38,7 @@ Closing the main window destroys it (freeing its renderer, ~90 MB). The tray ico
 | `src/shared` | both | Domain types (`Platform`, `Rarity`, `RemoteGame`, `UnlockEvent`...), the `AchievementProvider` interface, `ProviderError`, `Secret`, `SecretStore`, and the **IPC contract** (`ipc.ts`). Depends on nothing else in the repo. |
 | `src/main/store` | main | SQLite access, SQL migrations, migration runner. **The only place SQL lives.** |
 | `src/main/providers` | main | One folder per platform/emulator implementing `AchievementProvider` |
-| `src/main/sync` | main | Scheduler (`scheduler.ts`), one sync pass with the baseline rule (`sync-pass.ts`), backoff; game detector later (M2) |
+| `src/main/sync` | main | Scheduler (`scheduler.ts`: rounds, and syncing a game at once when a provider's watch reports it), one sync pass with the baseline rule (`sync-pass.ts`), backoff |
 | `src/main` (root files) | main | App lifecycle (`index.ts`), windows, tray, overlay service, IPC handlers |
 | `src/preload` | preload (sandboxed) | Builds `window.api` from the IPC contract |
 | `src/renderer` | renderer | The React UI: `app/` shell, `features/*` screens, `components/` shared UI, `overlay/` toast, `styles/` |
@@ -58,8 +58,8 @@ The main process is wired by hand, with no dependency-injection library. Each se
 4. The overlay service applies DND/settings and sends the toast to the overlay window over IPC
 5. The same event is pushed to the main window so its lists update live
 
-### Unlock detection (local watcher, e.g. RPCS3)
-`fs.watch` notices a change, the provider debounces (200-500 ms) and signals `onChange(gameRef)`. The sync engine re-fetches and diffs exactly as above (steps 2-5). Watchers never emit unlocks themselves.
+### Unlock detection (local watcher: Steam now, emulators later)
+`fs.watch` notices a change, the provider debounces (Steam: 500 ms) and signals `onChange(gameRef)` from its `watch()`. The Scheduler's `syncGameNow` re-fetches and diffs exactly as above (steps 2-5). Watchers never emit unlocks themselves. Steam's watch also reads Steam's `RunningAppID` registry value every 5 s and reports the running game every 30 s, so a game being played is polled fast even if a file write is missed (`providers/steam/local.ts`).
 
 ### Auth (OAuth-style, e.g. Xbox)
 The UI asks the main process to begin the flow (`connectXbox`); the main process opens the system browser at the sign-in page with PKCE and waits on a one-shot loopback server (`main/xbox-sign-in.ts`), exchanges tokens itself, stores the long-lived secret via `SecretStore`, creates the account row and closes the flow. Tokens never reach the renderer. Short-lived tokens stay in the provider's memory, and the Scheduler saves a rotated secret at the start of each round (ADR-0007).
@@ -112,7 +112,7 @@ achievement-tracker/
 │   │   ├── windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  ipc.ts  accounts.ts  sample-toasts.ts
 │   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts,
 │   │   │                            #   sync-store.ts (the sync engine's SQL)
-│   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts (+ detector in M2)
+│   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts
 │   │   └── providers/               # steam/ xbox/ playstation/ retroachievements/ rpcs3/
 │   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (steam and xbox real, the rest stubs)
 │   ├── preload/index.ts             # exposes window.api
@@ -147,7 +147,7 @@ Tests live next to the code they test (`*.test.ts`, `*.test.tsx`).
 | HTTP | Node `fetch` (M1) |
 | Validating provider replies | zod 4 schemas, main process only ([ADR-0004](adr/0004-zod-for-provider-responses.md)) |
 | File watching | `fs.watch` + debounce |
-| Process detection | `tasklist` / a small library (M2) |
+| Running-game detection | Steam's own `RunningAppID` registry value, read with `reg query` (never the game process, rule 4) |
 | Testing | Vitest; Testing Library + jsdom for UI |
 | Quality | ESLint (zero warnings), Prettier, GitHub Actions |
 | Packaging | electron-builder (M6) |

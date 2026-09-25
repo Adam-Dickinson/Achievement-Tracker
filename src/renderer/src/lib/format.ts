@@ -5,12 +5,31 @@ export function formatPercent(percent: number): string {
   return `${Math.round(percent * scale) / scale}%`
 }
 
+export function formatTime(date: Date): string {
+  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+}
+
 export function formatUnlockDate(date: Date, now = new Date()): string {
-  const time = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-  const days = Math.round((startOfDay(now) - startOfDay(date)) / DAY_MS)
-  if (days === 0) return `Today, ${time}`
-  if (days === 1) return `Yesterday, ${time}`
+  const days = daysBefore(date, now)
+  if (days === 0) return `Today, ${formatTime(date)}`
+  if (days === 1) return `Yesterday, ${formatTime(date)}`
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+export function formatDayHeading(date: Date, now = new Date()): string {
+  const days = daysBefore(date, now)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  return date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function daysBefore(date: Date, now: Date): number {
+  return Math.round((startOfDay(now) - startOfDay(date)) / DAY_MS)
 }
 
 function startOfDay(date: Date): number {

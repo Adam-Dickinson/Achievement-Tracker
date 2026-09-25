@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DashboardStats } from '@shared/dashboard'
 import { IPC, type AccountSummary, type ConnectResult } from '@shared/ipc'
+import { type ActivityPage, MAX_ACTIVITY_LIMIT } from '@shared/library'
 
 type Handler = (event: unknown, ...args: unknown[]) => unknown
 const handlers = new Map<string, Handler>()
@@ -31,6 +32,8 @@ const DASHBOARD: DashboardStats = {
   recentUnlocks: [],
 }
 
+const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
+
 const fakes = {
   getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
@@ -41,6 +44,7 @@ const fakes = {
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   getDashboard: vi.fn(() => DASHBOARD),
+  listActivity: vi.fn(() => ACTIVITY),
 }
 
 function call(channel: string, event: unknown, ...args: unknown[]): unknown {
@@ -72,6 +76,7 @@ describe('registerIpcHandlers', () => {
     IPC.listLibrary,
     IPC.getGame,
     IPC.getDashboard,
+    IPC.listActivity,
   ])('refuses %s from a page we did not ship', (channel) => {
     expect(() => call(channel, UNTRUSTED, { steamId: 'x', apiKey: 'y' })).toThrow(
       'Untrusted sender',
@@ -183,5 +188,29 @@ describe('library and dashboard handlers', () => {
   ])('answers %s as a game id with null, without looking it up', (_label, id) => {
     expect(call(IPC.getGame, TRUSTED, id)).toBeNull()
     expect(fakes.getGame).not.toHaveBeenCalled()
+  })
+})
+
+describe('activity handler', () => {
+  it('passes a valid limit on and returns the page', () => {
+    expect(call(IPC.listActivity, TRUSTED, 50)).toEqual(ACTIVITY)
+    expect(fakes.listActivity).toHaveBeenCalledWith(50)
+  })
+
+  it('accepts the largest limit', () => {
+    call(IPC.listActivity, TRUSTED, MAX_ACTIVITY_LIMIT)
+
+    expect(fakes.listActivity).toHaveBeenCalledWith(MAX_ACTIVITY_LIMIT)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a string', '50'],
+    ['zero', 0],
+    ['a fraction', 2.5],
+    ['more than the largest limit', MAX_ACTIVITY_LIMIT + 1],
+  ])('answers %s as a limit with an empty page, without a query', (_label, limit) => {
+    expect(call(IPC.listActivity, TRUSTED, limit)).toEqual({ unlocks: [], hasMore: false })
+    expect(fakes.listActivity).not.toHaveBeenCalled()
   })
 })

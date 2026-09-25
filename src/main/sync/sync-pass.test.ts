@@ -192,6 +192,19 @@ describe('runSyncPass', () => {
 
       expect(events.map((event) => event.achievement.externalId)).toEqual(['a2'])
     })
+
+    it("carries the platform's unlock time on each event", async () => {
+      const db = seedDb()
+      db.exec(`UPDATE platform_game SET baseline_cutoff = '${CUTOFF}' WHERE id = 1`)
+      const provider = returning({
+        achievements: [achievement('a1')],
+        unlocks: [datedUnlock('a1', '2026-09-23T10:00:05.000Z')],
+      })
+
+      const events = await runSyncPass(db, getAccount(db, 1), 'g1', provider, CREDENTIALS)
+
+      expect(events[0]?.unlockedAt).toEqual(new Date('2026-09-23T10:00:05.000Z'))
+    })
   })
 
   it('returns no events when nothing new has unlocked since the last pass', async () => {

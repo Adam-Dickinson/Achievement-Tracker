@@ -51,6 +51,9 @@ export class Scheduler {
   readonly #attempts = new Map<string, number>()
   readonly #recent = new Map<number, ReadonlySet<string>>()
   readonly #inRound = new Set<number>()
+  readonly #watches = new Map<number, () => void>()
+  readonly #urgent = new Map<string, boolean>()
+  readonly #unlisted = new Map<number, Set<string>>()
   #abort = new AbortController()
   #running = false
 
@@ -71,7 +74,9 @@ export class Scheduler {
     this.#abort = new AbortController()
 
     for (const account of listConnectedAccounts(this.#db)) {
-      if (this.#providers[account.platform]) void this.#runLoop(account.id)
+      if (!this.#providers[account.platform]) continue
+      this.#watch(account)
+      void this.#runLoop(account.id)
     }
   }
 
@@ -80,10 +85,13 @@ export class Scheduler {
     this.#abort.abort()
     for (const timer of this.#timers.values()) clearTimeout(timer)
     this.#timers.clear()
+    for (const accountId of [...this.#watches.keys()]) this.#unwatch(accountId)
   }
 
   startAccount(accountId: number): void {
-    if (!this.#running || this.#inRound.has(accountId)) return
+    if (!this.#running) return
+    this.#watch(getAccount(this.#db, accountId))
+    if (this.#inRound.has(accountId)) return
     clearTimeout(this.#timers.get(accountId))
     this.#timers.delete(accountId)
     void this.#runLoop(accountId)
@@ -116,14 +124,86 @@ export class Scheduler {
   }
 
   async syncLibrary(accountId: number): Promise<Date | null> {
-    const signal = this.#abort.signal
     const account = getAccount(this.#db, accountId)
     const provider = this.#providers[account.platform]
     if (!provider) return null
 
     const state = getSyncState(this.#db, account.id, LIBRARY_SCOPE)
     if (state?.nextDueAt && state.nextDueAt > this.#now()) return state.nextDueAt
+    return this.#fetchLibrary(account, provider, state)
+  }
 
+  async syncGameNow(accountId: number, gameId: string): Promise<void> {
+    if (!this.#running) return
+    const key = `${accountId}:${gameId}`
+    if (this.#urgent.has(key)) {
+      this.#urgent.set(key, true)
+      return
+    }
+
+    try {
+      do {
+        this.#urgent.set(key, false)
+        await this.#syncGameNow(accountId, gameId)
+      } while (this.#running && this.#urgent.get(key))
+    } catch (err) {
+      console.error(`Syncing game ${gameId} for account ${accountId} failed`, err)
+    } finally {
+      this.#urgent.delete(key)
+    }
+  }
+
+  async #syncGameNow(accountId: number, gameId: string): Promise<void> {
+    const account = getAccount(this.#db, accountId)
+    const provider = this.#providers[account.platform]
+    if (!provider) return
+    if (!(await this.#isListed(account, provider, gameId))) return
+
+    const scope = `game:${gameId}`
+    const state = getSyncState(this.#db, account.id, scope)
+    if (this.#isBackingOff(state)) return
+    await this.#syncGame(
+      account,
+      gameId,
+      provider,
+      this.#credentials(account),
+      state,
+      this.#abort.signal,
+    )
+  }
+
+  async #isListed(
+    account: AccountRow,
+    provider: AchievementProvider,
+    gameId: string,
+  ): Promise<boolean> {
+    const listed = (): boolean => listPlatformGameExternalIds(this.#db, account.id).includes(gameId)
+    if (listed()) return true
+    if (this.#unlisted.get(account.id)?.has(gameId)) return false
+
+    const state = getSyncState(this.#db, account.id, LIBRARY_SCOPE)
+    if (this.#isBackingOff(state)) return false
+    await this.#fetchLibrary(account, provider, state)
+    if (listed()) return true
+
+    if (getSyncState(this.#db, account.id, LIBRARY_SCOPE)?.lastError === null) {
+      const unlisted = this.#unlisted.get(account.id) ?? new Set<string>()
+      unlisted.add(gameId)
+      this.#unlisted.set(account.id, unlisted)
+    }
+    return false
+  }
+
+  #isBackingOff(state: SyncStateRow | null): boolean {
+    return !!state?.lastError && !!state.nextDueAt && state.nextDueAt > this.#now()
+  }
+
+  async #fetchLibrary(
+    account: AccountRow,
+    provider: AchievementProvider,
+    state: SyncStateRow | null,
+  ): Promise<Date | null> {
+    const signal = this.#abort.signal
     const attemptKey = `${account.id}:${LIBRARY_SCOPE}`
     let games: readonly RemoteGame[]
     try {
@@ -148,6 +228,7 @@ export class Scheduler {
       account.id,
       new Set(games.filter((game) => game.recentlyPlayed).map((game) => game.ref.externalId)),
     )
+    this.#unlisted.delete(account.id)
     this.#attempts.delete(attemptKey)
     const nextDueAt = this.#after(this.#intervalMs)
     upsertSyncState(this.#db, account.id, LIBRARY_SCOPE, {
@@ -188,6 +269,21 @@ export class Scheduler {
     }
 
     return earliest ?? this.#after(this.#intervalMs)
+  }
+
+  #watch(account: AccountRow): void {
+    const provider = this.#providers[account.platform]
+    if (!provider?.watch || this.#watches.has(account.id)) return
+    const stop = provider.watch(
+      this.#credentials(account),
+      (game) => void this.syncGameNow(account.id, game.externalId),
+    )
+    this.#watches.set(account.id, stop)
+  }
+
+  #unwatch(accountId: number): void {
+    this.#watches.get(accountId)?.()
+    this.#watches.delete(accountId)
   }
 
   #credentials(account: AccountRow): AccountCredentials {
@@ -254,6 +350,7 @@ export class Scheduler {
 
     if (err instanceof ProviderError && err.kind === 'auth_expired') {
       setAccountStatus(this.#db, account.id, 'needs_reauth')
+      this.#unwatch(account.id)
       record(null)
       this.#onDataChanged()
       return 'stop'
