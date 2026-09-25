@@ -34,21 +34,24 @@ Ordering principle: **prove the riskiest, most valuable path end-to-end first** 
 - [x] Activity feed screen: every dated unlock across platforms, newest first, grouped under day headings, with description, game, platform, rarity and time; "Show more" loads 50 more (up to 1,000); refreshes as syncs land; a row opens its game. Built without a canvas design, in the Afterglow style of the Dashboard's recent unlocks
 - **Exit:** unlocks from Steam and Xbox appear in one library and fire toasts; a Steam unlock toasts within seconds
 
-## M3: PlayStation and unified library (P0 complete)
+## M3: Epic, Ubisoft and EA (spike first)
 
-- [ ] PSN provider (NPSSO flow, opt-in warning)
-- [ ] Cross-platform game linking (auto-match + manual merge/split)
-- [ ] Dashboard stats (completion %, rarest, closest to 100%)
-- [ ] Search/filter/sort, virtualized lists
-- **Exit:** a game owned on two platforms shows as one entry with per-platform tabs
-
-## M4: Epic, Ubisoft and EA (spike first)
+Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-before-playstation.md)).
 
 - [ ] **Spike C:** can each be read without storing the user's password (rule 5)? Which games have store-specific achievements that Steam doesn't already cover? Write the verdicts into PROVIDERS.md
 - [ ] Epic provider, or documented as not supported
 - [ ] Ubisoft Connect provider, or documented as not supported
 - [ ] EA app provider, or documented as not supported (the likely verdict)
 - **Exit:** each of the three is either a working provider with fixtures or a recorded "not supported" verdict
+
+## M4: PlayStation and unified library (P0 complete)
+
+- [ ] PSN provider (NPSSO flow, opt-in warning)
+- [ ] Cross-platform game linking (auto-match + manual merge/split)
+- [ ] Artwork for every game. Today 4 of 231 games have no cover, all Epic games whose catalog entry is empty. In order: borrow the cover of a linked copy on another platform; otherwise look the game up on the Steam store by title (a public search with no key; verify it first, rule 10); as a last resort, generate an Afterglow-style cover (the title on a gradient) so no card is blank. Also find the real title for Epic games whose catalog is empty and whose library name is a codename (for example "yorkie Production")
+- [ ] Dashboard stats (completion %, rarest, closest to 100%)
+- [ ] Search/filter/sort, virtualized lists
+- **Exit:** a game owned on two platforms shows as one entry with per-platform tabs, and every game in the Library has an image
 
 ## M5: Polish and notification depth
 
