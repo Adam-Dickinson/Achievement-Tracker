@@ -7,6 +7,8 @@ export function fakeApi(overrides: Partial<AchievementTrackerApi> = {}): Achieve
     sendTestNotification: vi.fn().mockResolvedValue(undefined),
     listAccounts: vi.fn().mockResolvedValue([]),
     connectSteam: vi.fn(),
+    connectXbox: vi.fn(),
+    cancelXboxSignIn: vi.fn().mockResolvedValue(undefined),
     listLibrary: vi.fn().mockResolvedValue([]),
     getGame: vi.fn().mockResolvedValue(null),
     getDashboard: vi.fn().mockReturnValue(new Promise(() => {})),

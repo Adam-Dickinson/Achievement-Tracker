@@ -10,6 +10,8 @@ export const IPC = {
   setToasts: 'overlay:set-toasts',
   listAccounts: 'accounts:list',
   connectSteam: 'accounts:connect-steam',
+  connectXbox: 'accounts:connect-xbox',
+  cancelXboxSignIn: 'accounts:cancel-xbox-sign-in',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   getDashboard: 'dashboard:get',
@@ -48,7 +50,11 @@ export interface SteamConnectInput {
   readonly apiKey: string
 }
 
-export type ConnectFailure = 'invalid_input' | 'key_rejected' | 'network' | 'other'
+export interface XboxConnectInput {
+  readonly acceptedUnofficial: true
+}
+
+export type ConnectFailure = 'invalid_input' | 'key_rejected' | 'cancelled' | 'network' | 'other'
 
 export type ConnectResult =
   | { readonly ok: true; readonly account: AccountSummary }
@@ -59,6 +65,8 @@ export interface AchievementTrackerApi {
   sendTestNotification(): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
+  connectXbox(input: XboxConnectInput): Promise<ConnectResult>
+  cancelXboxSignIn(): Promise<void>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   getDashboard(): Promise<DashboardStats>

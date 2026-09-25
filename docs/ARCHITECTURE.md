@@ -62,7 +62,7 @@ The main process is wired by hand, with no dependency-injection library. Each se
 `fs.watch` notices a change, the provider debounces (200-500 ms) and signals `onChange(gameRef)`. The sync engine re-fetches and diffs exactly as above (steps 2-5). Watchers never emit unlocks themselves.
 
 ### Auth (OAuth-style, e.g. Xbox)
-The UI asks the main process to begin the flow; the main process opens the system browser (loopback redirect) or a short-lived auth window, exchanges tokens itself, stores secrets via `SecretStore`, creates the account row and closes the flow. Tokens never reach the renderer.
+The UI asks the main process to begin the flow (`connectXbox`); the main process opens the system browser at the sign-in page with PKCE and waits on a one-shot loopback server (`main/xbox-sign-in.ts`), exchanges tokens itself, stores the long-lived secret via `SecretStore`, creates the account row and closes the flow. Tokens never reach the renderer. Short-lived tokens stay in the provider's memory, and the Scheduler saves a rotated secret at the start of each round (ADR-0007).
 
 ### An unlock toast (implemented)
 The `Scheduler` hands a sync pass's `UnlockEvent`s to `NotificationService.notify()` (`main/notifications.ts`), after the pass has committed. The service turns each into a `ToastPayload` (platform name, rarity from the global %, `null` description for hidden achievements), drops duplicates of toasts already on screen or waiting, and collapses more than 5 at once into one "N achievements unlocked" toast led by the rarest. It keeps **at most 3 on screen**, each for 5 s, the rest queued in order. Every change sends the whole on-screen list (`VisibleToast[]`, oldest first, each with a stable id) through `OverlayService.display()` → `overlay:set-toasts` → the overlay's `OverlayApp` (via `window.api.onToasts`) draws them stacked, newest at the bottom, and Motion animates arrivals, departures and the stack shifting. When the list empties, the main process hides the window after the exit animation.
@@ -114,7 +114,7 @@ achievement-tracker/
 │   │   │                            #   sync-store.ts (the sync engine's SQL)
 │   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts (+ detector in M2)
 │   │   └── providers/               # steam/ xbox/ playstation/ retroachievements/ rpcs3/
-│   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (stubs)
+│   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (steam and xbox real, the rest stubs)
 │   ├── preload/index.ts             # exposes window.api
 │   └── renderer/
 │       ├── index.html  overlay.html # one entry per window

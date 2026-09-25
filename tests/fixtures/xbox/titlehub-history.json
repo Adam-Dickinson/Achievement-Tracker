@@ -1,0 +1,563 @@
+{
+  "xuid": "2535400000000001",
+  "titles": [
+    {
+      "titleId": "2079757188",
+      "pfn": "Microsoft.ForteBaseGame_8wekyb3d8bbwe",
+      "bingId": null,
+      "windowsPhoneProductId": null,
+      "name": "Forza Horizon 6",
+      "type": "Game",
+      "devices": [
+        "PC",
+        "XboxSeries"
+      ],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.47378.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.a6be6fee-fc3c-4547-9b9a-478ba3fd0d81",
+      "mediaItemType": "Application",
+      "modernTitleId": "2079757188",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 26,
+        "totalAchievements": 0,
+        "currentGamerscore": 290,
+        "totalGamerscore": 1000,
+        "progressPercentage": 28,
+        "sourceVersion": 2
+      },
+      "stats": null,
+      "gamePass": null,
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.29856.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.9472937a-30ec-4ce0-8cd4-62f282fd5d28",
+          "type": "Poster",
+          "caption": null
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.47378.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.a6be6fee-fc3c-4547-9b9a-478ba3fd0d81",
+          "type": "BoxArt",
+          "caption": null
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.50642.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.0073ed41-4cdf-4fbf-81f2-ba27e79fb5ab",
+          "type": "TitledHeroArt",
+          "caption": null
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.24935.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.206793b9-f38b-4616-8029-fdb3c7d0db77",
+          "type": "SuperHeroArt",
+          "caption": null
+        }
+      ],
+      "titleHistory": {
+        "lastTimePlayed": "2026-06-03T19:26:12.592981Z",
+        "visible": true,
+        "canHide": true
+      },
+      "titleRecord": null,
+      "detail": {
+        "attributes": [
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "BroadcastSupport"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "Capability4k"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox",
+              "Desktop"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "CapabilityHDR"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox",
+              "Desktop"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "DolbyAtmos"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "ConsoleGen9Optimized"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XblAchievements"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XblCloudSaves"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XPA"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XboxLive"
+          }
+        ],
+        "availabilities": [
+          {
+            "Actions": [
+              "Details",
+              "Browse",
+              "Curate",
+              "Fulfill",
+              "Redeem"
+            ],
+            "AvailabilityId": "9ZZC5HKV4SCT",
+            "Platforms": [
+              "PC",
+              "Xbox"
+            ],
+            "SkuId": "0010",
+            "ProductId": "9NR1R1XWLCNB"
+          }
+        ],
+        "capabilities": [
+          "internetClient",
+          "runFullTrust",
+          "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe",
+          "Microsoft.requiresNonSMode_8wekyb3d8bbwe"
+        ],
+        "description": "Discover the breathtaking landscapes of Japan in over 550 real-world cars and be",
+        "developerName": "Playground Games",
+        "genres": [
+          "Racing & flying"
+        ],
+        "minAge": 0,
+        "publisherName": "Xbox Game Studios",
+        "releaseDate": "9998-12-30T00:00:00Z",
+        "shortDescription": "Discover the breathtaking landscapes of Japan in more than 550 real-world cars and become a racing Legend in Forza Horizon's biggest open-world driving adventure yet.",
+        "vuiDisplayName": null,
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": null,
+      "contentBoards": null,
+      "xboxLiveTier": "Full",
+      "isStreamable": true
+    },
+    {
+      "titleId": "1889714780",
+      "pfn": "CIGamesS.A.LordsoftheFallen2_9609msxhzdsvj",
+      "bingId": null,
+      "windowsPhoneProductId": null,
+      "name": "Lords of the Fallen",
+      "type": "Game",
+      "devices": [
+        "XboxSeries"
+      ],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.40456.13730158504430842.5d8b674f-a354-40f2-b8d4-062bcbb0fd7c.6a18765b-7ee9-4719-96c0-5df34d3f06d8",
+      "mediaItemType": "Application",
+      "modernTitleId": "1889714780",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 0,
+        "totalAchievements": 77,
+        "currentGamerscore": 0,
+        "totalGamerscore": 1500,
+        "progressPercentage": 0,
+        "sourceVersion": 2
+      },
+      "stats": null,
+      "gamePass": null,
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.64441.13730158504430842.8679d8d3-c2c8-4039-88f0-2b52a1d48d71.289c9067-1c33-4605-a606-c10f881b96a6",
+          "type": "SuperHeroArt",
+          "caption": null
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.14068.13730158504430842.5d8b674f-a354-40f2-b8d4-062bcbb0fd7c.3e8551e5-1691-4364-8d54-a62485a2a3a3",
+          "type": "Poster",
+          "caption": null
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.51794.13730158504430842.5d8b674f-a354-40f2-b8d4-062bcbb0fd7c.f1e2eafb-ab7e-4ba8-9733-e7a908ffddd0",
+          "type": "BoxArt",
+          "caption": null
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.37553.13730158504430842.5d8b674f-a354-40f2-b8d4-062bcbb0fd7c.67b2ba61-56c8-48d9-bf85-f3bcb59b3e54",
+          "type": "TitledHeroArt",
+          "caption": null
+        }
+      ],
+      "titleHistory": {
+        "lastTimePlayed": "2024-08-10T19:06:09.6556283Z",
+        "visible": true,
+        "canHide": true
+      },
+      "titleRecord": null,
+      "detail": {
+        "attributes": [
+          {
+            "applicablePlatforms": null,
+            "maximum": 2,
+            "minimum": 2,
+            "name": "XblOnlineCoop"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": 3,
+            "minimum": 2,
+            "name": "XblOnlineMultiPlayer"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "BroadcastSupport"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XblCrossPlatformMultiPlayer"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "CapabilityHDR"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "SinglePlayer"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox",
+              "Desktop"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "XblCrossPlatformCoop"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XboxLiveCrossGenMP"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "RayTracing"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "60fps"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "SpatialSound"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "DolbyAtmos"
+          },
+          {
+            "applicablePlatforms": [
+              "Xbox"
+            ],
+            "maximum": null,
+            "minimum": null,
+            "name": "DTSX"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "ConsoleGen9Optimized"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XblAchievements"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XblPresence"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XblCloudSaves"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XboxLive"
+          }
+        ],
+        "availabilities": [
+          {
+            "Actions": [
+              "Details",
+              "Fulfill",
+              "Purchase",
+              "Browse",
+              "Curate",
+              "Redeem"
+            ],
+            "AvailabilityId": "9T5P7ZKKF1PR",
+            "Platforms": [
+              "Xbox"
+            ],
+            "SkuId": "0010",
+            "ProductId": "9N3CJZ3HFHTF"
+          },
+          {
+            "Actions": [
+              "Details",
+              "Fulfill",
+              "Purchase",
+              "Browse",
+              "Curate",
+              "Redeem"
+            ],
+            "AvailabilityId": "B1KMJW475MWZ",
+            "Platforms": [
+              "PC"
+            ],
+            "SkuId": "0010",
+            "ProductId": "9NP4C0X8MDK7"
+          }
+        ],
+        "capabilities": [],
+        "description": "Lords of the Fallen introduces an all-new, epic RPG adventure in a vast, interco",
+        "developerName": "CI Games",
+        "genres": [
+          "Role playing",
+          "Action & adventure"
+        ],
+        "minAge": 18,
+        "publisherName": "CI Games",
+        "releaseDate": "2023-10-13T04:00:00Z",
+        "shortDescription": "A vast world awaits in the medieval, dark fantasy action-RPG, Lords of the Fallen. As a fabled Dark Crusader, embark on an epic quest to overthrow Adyr, the demon God.",
+        "vuiDisplayName": null,
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": null,
+      "contentBoards": null,
+      "xboxLiveTier": "Full",
+      "isStreamable": true
+    },
+    {
+      "titleId": "1762047744",
+      "pfn": null,
+      "bingId": null,
+      "windowsPhoneProductId": null,
+      "name": "Destiny 2",
+      "type": "Game",
+      "devices": [
+        "Win32"
+      ],
+      "displayImage": "https://images-eds-ssl.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBAInhxUS6pI0HjtmvshPyK5xB.ZeLifyx3D2vFT1oxasbUttswJAmzXkESt4HS_v0gDQNx80mnrfmLDpFsK5gb6zgmC9b3YxevgYDn3TDSig--",
+      "mediaItemType": "Application",
+      "modernTitleId": null,
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 0,
+        "totalAchievements": 0,
+        "currentGamerscore": 0,
+        "totalGamerscore": 0,
+        "progressPercentage": 0,
+        "sourceVersion": 0
+      },
+      "stats": null,
+      "gamePass": null,
+      "images": [
+        {
+          "url": "https://images-eds-ssl.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBAInhxUS6pI0HjtmvshPyK5xB.ZeLifyx3D2vFT1oxasbUttswJAmzXkESt4HS_v0gDQNx80mnrfmLDpFsK5gb6zgmC9b3YxevgYDn3TDSig--",
+          "type": "BoxArt",
+          "caption": null
+        }
+      ],
+      "titleHistory": {
+        "lastTimePlayed": "2021-09-15T19:18:14.9422314Z",
+        "visible": true,
+        "canHide": true
+      },
+      "titleRecord": null,
+      "detail": {
+        "attributes": [],
+        "availabilities": [],
+        "capabilities": [],
+        "description": "",
+        "developerName": "Bungie Software",
+        "genres": [],
+        "minAge": 18,
+        "publisherName": "Activision",
+        "releaseDate": null,
+        "shortDescription": "Humanity’s last safe city has fallen to an overwhelming invasion force, led by Ghaul, the imposing commander of the brutal Red Legion. He has stripped the city’s Guardians of their power, and forced the survivors to flee. You will venture to mysterious, unexplored worlds of our solar system to discover an arsenal of weapons and devastating new combat abilities. To defeat the Red Legion and confront Ghaul, you must reunite humanity’s scattered heroes, stand together, and fight back to reclaim our home.",
+        "vuiDisplayName": null,
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": null,
+      "contentBoards": null,
+      "xboxLiveTier": "None"
+    },
+    {
+      "titleId": "1794566092",
+      "pfn": "Microsoft.4297127D64EC6_8wekyb3d8bbwe",
+      "bingId": null,
+      "windowsPhoneProductId": null,
+      "name": "Minecraft Launcher",
+      "type": "Game",
+      "devices": [
+        "PC"
+      ],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.1815.14247769038588514.a7fa20d7-bc1c-464b-bf78-16dfcd742fe5.20b70e8c-ab2e-45b9-b8c3-2390ebb38f59",
+      "mediaItemType": "Application",
+      "modernTitleId": "1794566092",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 0,
+        "totalAchievements": 0,
+        "currentGamerscore": 0,
+        "totalGamerscore": 0,
+        "progressPercentage": 0,
+        "sourceVersion": 0
+      },
+      "stats": null,
+      "gamePass": null,
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.52476.14247769038588514.a7fa20d7-bc1c-464b-bf78-16dfcd742fe5.d7a8f421-8edd-41e0-925b-4c7dfea0483b",
+          "type": "BoxArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.19881.14247769038588514.16fb8346-aeb3-4939-8ef6-f5fefab5177f.9e8fc093-2e52-4c04-86cb-a94e29ccede5",
+          "type": "Poster",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.42446.14247769038588514.a7fa20d7-bc1c-464b-bf78-16dfcd742fe5.1aa80fc8-cf92-43f6-9efb-17fa817cf339",
+          "type": "TitledHeroArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.43152.14247769038588514.3ce72ba0-ff44-4b91-b1ca-eef499b58987.a75b6a42-9c31-452f-b8ec-e955d3ab3d00",
+          "type": "SuperHeroArt",
+          "caption": ""
+        }
+      ],
+      "titleHistory": {
+        "lastTimePlayed": "2026-09-02T09:40:34.2431647Z",
+        "visible": true,
+        "canHide": true
+      },
+      "titleRecord": null,
+      "detail": {
+        "attributes": [
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "BroadcastSupport"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XboxLive"
+          }
+        ],
+        "availabilities": [
+          {
+            "Actions": [
+              "Details",
+              "Fulfill",
+              "Purchase",
+              "Browse",
+              "Curate",
+              "Redeem"
+            ],
+            "AvailabilityId": "B4RFD1SZ5BC7",
+            "Platforms": [
+              "PC"
+            ],
+            "SkuId": "0010",
+            "ProductId": "9PGW18NPBZV5"
+          }
+        ],
+        "capabilities": [
+          "internetClient",
+          "runFullTrust",
+          "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe",
+          "Microsoft.requiresNonSMode_8wekyb3d8bbwe"
+        ],
+        "description": "Now there's a version of the Minecraft Launcher especially for Windows 10 and Wi",
+        "developerName": "Mojang/Microsoft Studios",
+        "genres": [
+          "Action & adventure"
+        ],
+        "minAge": 7,
+        "publisherName": "Microsoft Studios",
+        "releaseDate": "2021-11-02T16:00:00Z",
+        "shortDescription": "It’s not just the Minecraft Launcher – it’s your basecamp into all things Minecraft on PC!\r\n\r\nThis is the Minecraft Launcher for players on Windows 10 and Windows 11. Here, you can buy, download and launch all your PC Minecraft titles – while learning about exciting Minecraft News as it comes out and experiencing Launcher-only Minecraft moments.\r\n\r\nHere you can access:\r\n-\tMinecraft: Java Edition\r\n-\tMinecraft for Windows (aka “Bedrock”)\r\n-\tMinecraft Dungeons\r\n-\tMinecraft Legends\r\n-\tSpecial events like the annual Minecraft Live event\r\n\r\nNo need to pick and choose – experience all the worlds of Minecraft on PC in one Launcher. \r\n\r\nWant to play Minecraft, but have a Mac, Linux or older Windows device? Select and install the right version for your Operating System at https://aka.ms/GetLegacyLauncher\r\n\r\nTerms and exclusions apply. For play on Windows 10 and 11 devices. Not supported on Windows 10 in S mode and on ARM devices.",
+        "vuiDisplayName": null,
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": null,
+      "contentBoards": null,
+      "xboxLiveTier": "Full"
+    }
+  ]
+}

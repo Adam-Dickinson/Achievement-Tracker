@@ -21,6 +21,7 @@ import { runSyncPass } from './sync-pass'
 export const SYNC_INTERVAL_MS = 5 * 60_000
 export const IDLE_INTERVAL_MS = 6 * 60 * 60_000
 export const LIBRARY_SCOPE = 'library'
+export const READY = 'ready'
 
 const BACKOFF_BASE_MS = 30_000
 const BACKOFF_MAX_MS = 30 * 60_000
@@ -86,6 +87,32 @@ export class Scheduler {
     clearTimeout(this.#timers.get(accountId))
     this.#timers.delete(accountId)
     void this.#runLoop(accountId)
+  }
+
+  async refreshCredentials(accountId: number): Promise<typeof READY | Date | null> {
+    const signal = this.#abort.signal
+    const account = getAccount(this.#db, accountId)
+    const provider = this.#providers[account.platform]
+    if (!provider) return null
+    if (!provider.refresh) return READY
+
+    const key = String(account.id)
+    const attemptKey = `${account.id}:refresh`
+    let refreshed: AccountCredentials
+    try {
+      refreshed = await provider.refresh(this.#credentials(account), signal)
+    } catch (err) {
+      if (signal.aborted) return null
+      const state = getSyncState(this.#db, account.id, LIBRARY_SCOPE)
+      const outcome = this.#recordFailure(account, LIBRARY_SCOPE, attemptKey, state, err)
+      return outcome === 'stop' ? null : outcome
+    }
+
+    this.#attempts.delete(attemptKey)
+    if (refreshed.secret && refreshed.secret.expose() !== this.#secrets.find(key)?.expose()) {
+      this.#secrets.save(key, refreshed.secret)
+    }
+    return READY
   }
 
   async syncLibrary(accountId: number): Promise<Date | null> {
@@ -273,6 +300,8 @@ export class Scheduler {
   }
 
   async #runRound(accountId: number): Promise<Date | null> {
+    const refreshed = await this.refreshCredentials(accountId)
+    if (refreshed !== READY) return refreshed
     const library = await this.syncLibrary(accountId)
     if (library === null) return null
     const games = await this.syncDueGames(accountId)

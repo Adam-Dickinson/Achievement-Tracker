@@ -7,6 +7,7 @@ import {
   type AppInfo,
   type ConnectResult,
   type SteamConnectInput,
+  type XboxConnectInput,
 } from '@shared/ipc'
 import type { GameDetail, LibraryGame } from '@shared/library'
 
@@ -15,6 +16,8 @@ export interface IpcHandlers {
   sendTestNotification(): Promise<void>
   listAccounts(): AccountSummary[]
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
+  connectXbox(input: XboxConnectInput): Promise<ConnectResult>
+  cancelXboxSignIn(): void
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   getDashboard(): DashboardStats
@@ -24,6 +27,8 @@ const steamConnectInputSchema = z.object({
   steamId: z.string().trim().min(1).max(100),
   apiKey: z.string().trim().min(1).max(100),
 })
+
+const xboxConnectInputSchema = z.object({ acceptedUnofficial: z.literal(true) })
 
 const gameIdSchema = z.number().int().positive()
 
@@ -64,6 +69,24 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
       })
     }
     return handlers.connectSteam(parsed.data)
+  })
+
+  ipcMain.handle(IPC.connectXbox, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = xboxConnectInputSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the Xbox connection is unofficial.',
+      })
+    }
+    return handlers.connectXbox(parsed.data)
+  })
+
+  ipcMain.handle(IPC.cancelXboxSignIn, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.cancelXboxSignIn()
   })
 
   ipcMain.handle(IPC.listLibrary, (event) => {

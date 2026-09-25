@@ -173,10 +173,19 @@ export interface AchievementProvider {
 
   /** Optional: event-driven sources signal changes instead of being polled. Returns a stop function. */
   watch?(credentials: AccountCredentials, onChange: (game: RemoteGameRef) => void): () => void
+
+  /** Optional (ADR-0007): renew short-lived tokens; the scheduler saves a changed secret. */
+  refresh?(credentials: AccountCredentials, signal?: AbortSignal): Promise<AccountCredentials>
 }
+
+type AuthInput =
+  | { kind: 'api_key'; key: Secret; accountId: string }
+  | { kind: 'token'; value: Secret }
+  | { kind: 'oauth_code'; code: string; redirectUri: string; codeVerifier: Secret } // ADR-0007
+  | { kind: 'local_path'; path: string }
 ```
 
-The real definitions are in `src/shared/provider.ts`.
+The real definitions are in `src/shared/provider.ts`. The Scheduler calls `refresh` at the start of each account round and saves the returned secret if it changed (ADR-0007); the Xbox provider implements it.
 
 - Providers are **pure adapters**: they return normalized `Remote*` objects and know nothing about SQLite or notifications
 - Failures are thrown as `ProviderError` with a `kind`: `auth_expired`, `rate_limited` (with `retryAfterMs`), `network`, `parse`, `unsupported`, `other`. The sync engine maps these to backoff, re-auth prompts or UI status. `isRetryable` is true for `network` and `rate_limited`.
@@ -206,10 +215,11 @@ Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watch
 - **Scopes.** Each account round starts with the `library` scope: `listGames`, then `addPlatformGames` in one transaction, which adds new games and updates known ones. Then each `platform_game` row is its own scope, `game:<externalId>`. Both use the outcomes table below. Decided in [ADR-0005](adr/0005-library-scope-baseline-cutoff-tiered-polling.md).
 - **A found game is never forgotten.** When the library scope is built, a game that stops appearing in `listGames` must keep its `platform_game` row and go on being synced. `listGames` is not a complete list: Steam's includes games borrowed through Steam Families only while they are in the two-week recently-played window (docs/PROVIDERS.md), and refunded or delisted games can also drop out. Removing a game is a user action, never a side effect of a sync.
 - **Baseline cutoff (F-16).** A game added by a library look gets `baseline_cutoff` = the previous look's `last_ok_at`; on the account's first look it is `NULL`. A game's first sync announces only unlocks dated after the cutoff. Undated unlocks, and all of them when the cutoff is `NULL`, are recorded silently. So connecting an account stays silent, while a game bought or borrowed later toasts what was unlocked since the app last looked.
-- **Tiered polling.** A game the platform counts as recently played (`RemoteGame.recentlyPlayed`; Steam: in `GetRecentlyPlayedGames`) syncs every interval; any other game at most every 6 hours after its last success (`IDLE_INTERVAL_MS`). This keeps Steam around 12,000 requests a day for 171 games instead of about 148,000 (the key's limit is 100,000). Until the library has been read in the current session, every game counts as recent.
+- **Tiered polling.** A game the platform counts as recently played (`RemoteGame.recentlyPlayed`; Steam: in `GetRecentlyPlayedGames`; Xbox: last played within 14 days, from the title history) syncs every interval; any other game at most every 6 hours after its last success (`IDLE_INTERVAL_MS`). This keeps Steam around 12,000 requests a day for 171 games instead of about 148,000 (the key's limit is 100,000). Until the library has been read in the current session, every game counts as recent.
 - **Fetch first.** The provider call happens *before* `BEGIN`. `node:sqlite` transactions are synchronous, so one must never stay open across a network await.
 - **Loops.** `start()` runs one loop per `connected` account whose platform has a registered provider. Each round syncs that account's due games in turn (no `next_due_at` means due now), then sleeps until the earliest next due time. `stop()` (on quit) clears the timers and aborts any provider call in flight through its `AbortSignal`.
 - **Credentials.** The token comes from `SecretStore`, keyed by `String(account.id)` (see §3).
+- **Refreshing credentials (ADR-0007).** Before the library scope, `refreshCredentials` calls the provider's optional `refresh`. A secret that comes back different (Xbox rotates its refresh token) is saved at once, and the rest of the round reads it from the store. A failure is recorded against the `library` scope with the outcomes below, and the round goes no further.
 
 | Outcome of a pass | `sync_state` | Next attempt |
 |---|---|---|
@@ -238,12 +248,13 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
 | `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
 | `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
-| `connectSteam({ steamId, apiKey })` | `accounts:connect-steam` | Checks the key with Steam, saves the account (reconnecting keeps its id) and the key (`SecretStore`), and starts syncing it. Returns a `ConnectResult`: `{ ok: true, account }` or `{ ok: false, reason, message }` with `reason` `invalid_input`, `key_rejected`, `network` or `other`. A result rather than a thrown error, because across IPC an error keeps only its message |
+| `connectSteam({ steamId, apiKey })` | `accounts:connect-steam` | Checks the key with Steam, saves the account (reconnecting keeps its id) and the key (`SecretStore`), and starts syncing it. Returns a `ConnectResult`: `{ ok: true, account }` or `{ ok: false, reason, message }` with `reason` `invalid_input`, `key_rejected`, `cancelled`, `network` or `other`. A result rather than a thrown error, because across IPC an error keeps only its message |
+| `connectXbox({ acceptedUnofficial: true })` | `accounts:connect-xbox` | Opens the Microsoft sign-in in the user's browser (PKCE, a one-shot loopback server on `127.0.0.1`), then signs in to Xbox Live, saves the account (keyed by XUID, named by gamertag) and the refresh token, and starts syncing it; the main window comes back to the front when it finishes. Refused with `invalid_input` unless `acceptedUnofficial` is exactly `true` (rule 5). A cancelled, timed-out (5 minutes) or declined sign-in answers `cancelled` |
+| `cancelXboxSignIn()` | `accounts:cancel-xbox-sign-in` | Stops a sign-in that is waiting for the browser; its `connectXbox` call answers `cancelled` |
 
 **Planned** (added in the milestones that need them)
 | API | Description |
 |---|---|
-| `beginConnect(platform)` / `completeConnect(platform, input)` | Auth flow for OAuth platforms (Steam uses `connectSteam`) |
 | `disconnectAccount(id)` | Remove account (option: keep data) |
 | `listGames(filter, sort, page)` | Library query |
 | `getGame(id)` | Game + platform entries |

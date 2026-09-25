@@ -19,7 +19,12 @@ export interface ProviderCapabilities {
 export type AuthInput =
   | { readonly kind: 'api_key'; readonly key: Secret; readonly accountId: string }
   | { readonly kind: 'token'; readonly value: Secret }
-  | { readonly kind: 'oauth_callback'; readonly redirectUrl: string }
+  | {
+      readonly kind: 'oauth_code'
+      readonly code: string
+      readonly redirectUri: string
+      readonly codeVerifier: Secret
+    }
   | { readonly kind: 'local_path'; readonly path: string }
 
 export interface AchievementProvider {
@@ -39,4 +44,6 @@ export interface AchievementProvider {
   ): Promise<RemoteGameAchievements>
 
   watch?(credentials: AccountCredentials, onChange: (game: RemoteGameRef) => void): () => void
+
+  refresh?(credentials: AccountCredentials, signal?: AbortSignal): Promise<AccountCredentials>
 }

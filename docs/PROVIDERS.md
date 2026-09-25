@@ -92,11 +92,46 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 
 ## Xbox (P0)
 
-- Xbox Live services (`achievements.xboxlive.com` and related) accessed with an XSTS token obtained via Microsoft OAuth, then Xbox user token, then XSTS. Needs correct `x-xbl-contract-version` headers. Widely used by community libraries, but not an officially supported public API for third-party desktop apps. *(Verify.)*
-- Alternative: third-party proxy (e.g., OpenXBL) as a simpler auth path, at the cost of a dependency and rate limits.
-- Covers Xbox consoles, Xbox PC / Game Pass titles. Gamerscore is available as `points`.
-- **Plan:** OAuth in a sandboxed webview, store refresh token in the keychain, poll title history + per-title achievements.
-- **Risks:** Azure app registration requirements and token refresh handling. Microsoft could restrict access.
+### Xbox Live: verified 2026-09-24
+
+Captured against a real account (66 titles in its history, PC Game Pass) with a script that is not part of the app (`tests/fixtures/_raw/xbox-capture.mjs`, git-ignored). Sanitized replies are in `tests/fixtures/xbox/`: the sign-in replies with fake tokens (`ms-token`, `ms-refresh`, `user-token`, `xsts`), four titles from the history (two with Xbox achievements, two without), five Call of Duty achievements (a Common and a Rare unlock, one in progress, one secret, one locked), two trimmed pages of Forza Horizon 6, and the empty reply a wrong contract version gives. The XUID, gamertag and user hash are fake.
+
+- **Status: unofficial.** These are Xbox Live's own services, documented by Microsoft for its partners (the GDK docs). Signing in to them from our own app works, but it is meant for approved partners, so the provider is opt-in and labelled like PlayStation (rule 5). No password is ever seen or stored.
+- **Our Azure app:** registered in the Azure portal as "Achievement Tracker (dev)", **Personal accounts only**, redirect URI `http://localhost` on the **Public client/native (mobile & desktop)** platform. Its client ID is not a secret; the app ships it. There is no client secret. Registering needed no approval and no paid subscription.
+- **Sign-in** (all verified):
+
+  | Step | Request | Reply |
+  |---|---|---|
+  | 1. Browser sign-in | `https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize` with `client_id`, `response_type=code`, `redirect_uri=http://localhost:<any port>`, `scope=XboxLive.signin offline_access`, PKCE (`code_challenge`, `S256`), `state` | Redirects to the loopback address with `code` and `state`. The `consumers` authority is needed; the scope needs no setup in the portal |
+  | 2. Code for tokens | `POST .../consumers/oauth2/v2.0/token` (form): `client_id`, `grant_type=authorization_code`, `code`, `redirect_uri`, `code_verifier`, `scope` | `access_token` (`expires_in` 3599 s), `refresh_token`, `scope` "XboxLive.signin" |
+  | 3. Refresh | Same URL: `grant_type=refresh_token`, `refresh_token`, `client_id`, `scope` | A new access token **and a new refresh token**: save the new one every time |
+  | 4. Xbox user token | `POST https://user.auth.xboxlive.com/user/authenticate`, `x-xbl-contract-version: 1`, JSON `{"Properties":{"AuthMethod":"RPS","SiteName":"user.auth.xboxlive.com","RpsTicket":"d=<access token>"},"RelyingParty":"http://auth.xboxlive.com","TokenType":"JWT"}` | `Token`, `NotAfter` (**4 days**), `DisplayClaims.xui[0].uhs`. The `d=` prefix is required for our own app |
+  | 5. XSTS token | `POST https://xsts.auth.xboxlive.com/xsts/authorize`, `x-xbl-contract-version: 1`, JSON `{"Properties":{"SandboxId":"RETAIL","UserTokens":["<user token>"]},"RelyingParty":"http://xboxlive.com","TokenType":"JWT"}` | `Token`, `NotAfter` (**about 16 hours**), `DisplayClaims.xui[0]` with `gtg` (gamertag), `xid` (XUID), `uhs` (user hash) and others |
+
+- **Calling the APIs:** header `Authorization: XBL3.0 x=<uhs>;<XSTS token>`, plus `x-xbl-contract-version` and `Accept-Language`. The XSTS claims already give the gamertag and XUID, so `validate()` needs no profile call.
+- **Endpoints** (all JSON):
+
+  | Endpoint | Contract | Used for | What we saw |
+  |---|---|---|---|
+  | `https://titlehub.xboxlive.com/users/xuid(<xuid>)/titles/titlehistory/decoration/achievement,image,detail` | 2 | `listGames()` | `{ xuid, titles[] }`, every title in one reply (66). Each has `titleId` (a **string** of digits), `name`, `devices` (`PC`, `XboxOne`, `XboxSeries`, `Win32`), `displayImage`, `images[]` (types include `BoxArt`, `Poster`, `SuperHeroArt`, `TitledHeroArt`), `titleHistory.lastTimePlayed` (ISO) and `achievement` (below) |
+  | `https://achievements.xboxlive.com/users/xuid(<xuid>)/achievements?titleId=<id>` | **4** | `fetchGame()` | `{ achievements[], pagingInfo: { continuationToken, totalRecords } }`, every achievement locked or not, **32 per page** by default |
+  | `https://profile.xboxlive.com/users/me/profile/settings?settings=Gamertag` | 2 | not needed | `profileUsers[0].id` is the XUID |
+
+- **Title art** (checked on four titles): `TitledHeroArt` is 1920x1080 with the game's logo, the closest match to Steam's header, so it is the cover (then `SuperHeroArt`, 3840x2160 or 1920x1080; then `BoxArt`, square; then `displayImage`). `displayImage` is square (300 or 2160 px), so it is the icon. The URLs come as **`http://`** on `store-images.s-microsoft.com`, which the app's CSP (`img-src https:`) would block; the same paths work over `https://`. That host resizes: `?w=920` gave 920x518 (159 KB instead of 597 KB), `?w=128&h=128` gave 128x128.
+- **Only games that were played are listed.** The history holds titles the account has launched, not everything it owns or the Game Pass catalogue. A game shows up once it is first launched, and the baseline cutoff (ADR-0005) makes its first unlocks toast.
+- **`achievement.sourceVersion`** tells titles apart: `2` = Xbox achievements (13 titles), `0` = no Xbox achievements (53, PC games the Xbox app has seen, such as Destiny 2 or Rainbow Six Siege). Only list `2`. Version `1` (Xbox 360 titles) did not appear; the account has none, so the Xbox 360 format is **not verified**.
+- **`achievement.totalAchievements` is unreliable:** it was `0` for every title with at least one unlock (Call of Duty: 28 unlocked, total 0). `currentAchievements`, `currentGamerscore`, `totalGamerscore` and `progressPercentage` looked right. For the real count use the achievements reply's `pagingInfo.totalRecords`.
+- **The contract version matters:** v2 has no rarity; **v4** returns the same fields plus `rarity` (`currentCategory` and `currentPercentage`, e.g. 64.86) on every achievement. **v3 and v5 answer HTTP 200 with no achievements** (`totalRecords` 0), so a wrong version looks like a game with no achievements instead of failing.
+- **Rarity categories are only "Common" and "Rare"**, and "Rare" means under 10% (9.91% was Rare, 11.78% Common; 214 achievements across two games). Use `currentPercentage` with our own thresholds (`shared/rarity.ts`) and ignore the category.
+- **Paging:** `continuationToken` is an offset as a string ("32"); pass it back as `&continuationToken=`. It is `null` on the last page. With `maxItems=1000` (v4) a whole game came back in one reply: 157 of 157 for Call of Duty, 57 of 57 for Forza Horizon 6.
+- **Achievement fields** (121 checked across two games): `id` (a string, "1"), `name`, `description`, `lockedDescription`, `isSecret`, `progressState` (`Achieved`, `InProgress`, `NotStarted`), `progression.timeUnlocked`, `progression.requirements[]` (`current` and `target` as **strings**, e.g. "66"/"100"), `rewards[]` (`type` "Gamerscore", `value` a **string**, "10"), `mediaAssets[]` (one `Icon`, on `images-eds-ssl.xboxlive.com`), `titleAssociations`, `platforms`, `isRevoked`.
+  - **A locked achievement has `timeUnlocked` "0001-01-01T00:00:00.0000000Z"**: map it to `null`. Every `Achieved` one had a real date.
+  - The one secret achievement had the same text in `description` and `lockedDescription`.
+  - Progress: `InProgress` achievements had a requirement such as 66/100; `NotStarted` ones 0/100; `Achieved` ones none.
+- **Errors:** an invalid XSTS token gets **HTTP 401 with an empty body** and a `WWW-Authenticate: Token realm='xboxlive.com', error='token_required'` header. No rate-limit headers were seen on any reply.
+- **Live run of the finished provider (2026-09-24):** the app's own sign-in (`XboxSignIn`, loopback redirect), then `authenticate`, `validate`, `refresh`, `listGames` and `fetchGame` for every game: 13 of 13 games, all with a cover and an icon (the history requested with `decoration/achievement,image`, without `detail`, which the app doesn't need), 1,193 achievements (138 secret, all with rarity, 1,187 with gamerscore), 79 unlocks, all dated, matching the history's `currentAchievements` totals. One request per game with `maxItems=1000`; 24 s for the whole run, no `429`.
+- **Not yet verified:** rate limiting. Microsoft documents fine-grained limits per user and endpoint (a 15-second burst limit and a 5-minute sustained limit), answered with `429`. Also the Xbox 360 format, whether hidden titles (`titleHistory.visible`) are left out, and what an expired refresh token returns.
+- **What we built:** browser sign-in with PKCE on a loopback redirect, handled in the main process (never in the renderer). Only the refresh token is stored, in the `SecretStore`. The provider's `refresh()` (ADR-0007) gets a fresh XSTS token from the refresh token (access token → user token → XSTS) and keeps it in memory until 5 minutes before it expires; the scheduler saves the rotated refresh token. A `401` from Xbox Live drops the in-memory session and retries once with a new one before reporting `auth_expired`. The library is the title history; each game is fetched with contract 4 and `maxItems=1000`, following `continuationToken` (at most 20 pages).
 
 ## PlayStation (P0)
 
