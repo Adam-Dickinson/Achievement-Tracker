@@ -1,0 +1,92 @@
+{
+  "data": {
+    "legacyOffers": [
+      {
+        "offerId": "Origin.OFR.50.0005734",
+        "achievementSetOverride": "68489_16382151_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0003794",
+        "achievementSetOverride": "75158_196485_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0004640",
+        "achievementSetOverride": "75158_198300_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0003795",
+        "achievementSetOverride": "75158_196485_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0001131",
+        "achievementSetOverride": "68222_74369_50844"
+      },
+      {
+        "offerId": "OFB-EAST:109552299",
+        "achievementSetOverride": ""
+      },
+      {
+        "offerId": "Origin.OFR.50.0004024",
+        "achievementSetOverride": "50318_16050355_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0003112",
+        "achievementSetOverride": "75158_317074_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0002520",
+        "achievementSetOverride": "50318_196492_50844"
+      },
+      {
+        "offerId": "OFB-EAST:109552314",
+        "achievementSetOverride": "51302_76889_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0002015",
+        "achievementSetOverride": "75158_193864_50844"
+      },
+      {
+        "offerId": "DR:225064100",
+        "achievementSetOverride": "BF_BF3_PC"
+      },
+      {
+        "offerId": "Origin.OFR.50.0002863",
+        "achievementSetOverride": "51302_196216_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0003797",
+        "achievementSetOverride": "75158_196485_50844"
+      },
+      {
+        "offerId": "Origin.OFR.50.0002694",
+        "achievementSetOverride": "193634_194908_50844"
+      }
+    ],
+    "me": {
+      "recentGames": {
+        "items": [
+          {
+            "gameSlug": "star-wars-jedi-fallen-order",
+            "lastSessionEndDate": "2025-04-22T18:44:17.000Z"
+          },
+          {
+            "gameSlug": "unravel-two",
+            "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
+          },
+          {
+            "gameSlug": "apex-legends",
+            "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
+          },
+          {
+            "gameSlug": "the-sims-4",
+            "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
+          },
+          {
+            "gameSlug": "it-takes-two",
+            "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
+          }
+        ]
+      }
+    }
+  }
+}
