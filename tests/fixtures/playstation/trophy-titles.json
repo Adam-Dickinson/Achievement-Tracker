@@ -1,0 +1,236 @@
+{
+  "trophyTitles": [
+    {
+      "npServiceName": "trophy",
+      "npCommunicationId": "NPWR27620_00",
+      "trophySetVersion": "01.07",
+      "trophyTitleName": "Gran Turismo 7",
+      "trophyTitleDetail": "This is the Gran Turismo 7 trophy set.",
+      "trophyTitleIconUrl": "https://image.api.playstation.com/trophy/np/NPWR27620_00_0066F6BAABAD4493A3DC5D351B3C16DB725E81D6C2/75615885740B1FEC77B291CF033AABCF27C9E9B9.PNG",
+      "trophyTitlePlatform": "PS4",
+      "hasTrophyGroups": false,
+      "trophyGroupCount": 1,
+      "definedTrophies": {
+        "bronze": 47,
+        "silver": 4,
+        "gold": 2,
+        "platinum": 1
+      },
+      "progress": 46,
+      "earnedTrophies": {
+        "bronze": 25,
+        "silver": 0,
+        "gold": 1,
+        "platinum": 0
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2026-09-08T14:35:55Z"
+    },
+    {
+      "npServiceName": "trophy",
+      "npCommunicationId": "NPWR08801_00",
+      "trophySetVersion": "01.07",
+      "trophyTitleName": "Call of Duty®: Black Ops III",
+      "trophyTitleDetail": "Call of Duty: Black Ops 3 deploys its players into a future where bio-technology has enabled a new breed of Black Ops soldier. Players are now always on and always connected to the intelligence grid and their fellow operatives during battle. In a world more divided than ever, this elite squad consists of men and women who have enhanced their combat capabilities to fight faster, stronger, and smarter. Every soldier has to make difficult decisions and visit dark places in this engaging, gritty narrative.",
+      "trophyTitleIconUrl": "https://image.api.playstation.com/trophy/np/NPWR08801_00_00164BF2B729BCF4C3F5083E55A49F3BCD6E4A0F91/CFA5D56C27423A504D7F63AEB01033BED6EB50D1.PNG",
+      "trophyTitlePlatform": "PS4",
+      "hasTrophyGroups": true,
+      "trophyGroupCount": 6,
+      "definedTrophies": {
+        "bronze": 72,
+        "silver": 25,
+        "gold": 1,
+        "platinum": 1
+      },
+      "progress": 51,
+      "earnedTrophies": {
+        "bronze": 44,
+        "silver": 11,
+        "gold": 0,
+        "platinum": 0
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2023-06-08T09:47:26Z"
+    },
+    {
+      "npServiceName": "trophy",
+      "npCommunicationId": "NPWR26627_00",
+      "trophySetVersion": "01.07",
+      "trophyTitleName": "God of War Ragnarök",
+      "trophyTitleDetail": "God of War Ragnarök",
+      "trophyTitleIconUrl": "https://image.api.playstation.com/trophy/np/NPWR26627_00_001DA171AB082952D14B66D843550C9876663DC7F4/8B5016BB9F0510686F1C397933F4AD7A12369CF7.PNG",
+      "trophyTitlePlatform": "PS4",
+      "hasTrophyGroups": true,
+      "trophyGroupCount": 2,
+      "definedTrophies": {
+        "bronze": 27,
+        "silver": 16,
+        "gold": 4,
+        "platinum": 1
+      },
+      "progress": 98,
+      "earnedTrophies": {
+        "bronze": 26,
+        "silver": 16,
+        "gold": 4,
+        "platinum": 1
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2023-12-26T10:34:33Z"
+    },
+    {
+      "npServiceName": "trophy",
+      "npCommunicationId": "NPWR04936_00",
+      "trophySetVersion": "01.05",
+      "trophyTitleName": "Destiny",
+      "trophyTitleDetail": "Your triumphs in Destiny.",
+      "trophyTitleIconUrl": "https://image.api.playstation.com/trophy/np/NPWR04936_00_0009941117B251664D0DF43E16ED52CFCD066BAF0B/9CD8E0B93D98952CB73788200BEAD1341913827F.PNG",
+      "trophyTitlePlatform": "PS3,PS4",
+      "hasTrophyGroups": true,
+      "trophyGroupCount": 3,
+      "definedTrophies": {
+        "bronze": 40,
+        "silver": 18,
+        "gold": 2,
+        "platinum": 1
+      },
+      "progress": 59,
+      "earnedTrophies": {
+        "bronze": 28,
+        "silver": 9,
+        "gold": 1,
+        "platinum": 0
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2017-07-06T18:38:49Z"
+    },
+    {
+      "npServiceName": "trophy2",
+      "npCommunicationId": "NPWR22392_00",
+      "trophySetVersion": "01.00",
+      "trophyTitleName": "God of War Ragnarök",
+      "trophyTitleIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR22392_00/e7fdc8c6-d6ee-4345-b174-3ccb46f617b0.png",
+      "trophyTitlePlatform": "PS5,PSPC",
+      "hasTrophyGroups": true,
+      "trophyGroupCount": 2,
+      "definedTrophies": {
+        "bronze": 27,
+        "silver": 16,
+        "gold": 4,
+        "platinum": 1
+      },
+      "progress": 93,
+      "earnedTrophies": {
+        "bronze": 24,
+        "silver": 15,
+        "gold": 4,
+        "platinum": 1
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2026-02-28T18:51:16Z"
+    },
+    {
+      "npServiceName": "trophy2",
+      "npCommunicationId": "NPWR37356_00",
+      "trophySetVersion": "01.00",
+      "trophyTitleName": "Stellar Blade",
+      "trophyTitleIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR37356_00/d1f990db-1929-4092-84dc-4b1c64af872d.png",
+      "trophyTitlePlatform": "PS5,PSPC",
+      "hasTrophyGroups": true,
+      "trophyGroupCount": 2,
+      "definedTrophies": {
+        "bronze": 29,
+        "silver": 12,
+        "gold": 3,
+        "platinum": 1
+      },
+      "progress": 78,
+      "earnedTrophies": {
+        "bronze": 26,
+        "silver": 12,
+        "gold": 1,
+        "platinum": 0
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2026-06-26T21:57:55Z"
+    },
+    {
+      "npServiceName": "trophy2",
+      "npCommunicationId": "NPWR22859_00",
+      "trophySetVersion": "01.25",
+      "trophyTitleName": "Ghost of Tsushima",
+      "trophyTitleIconUrl": "https://psnobj.prod.dl.playstation.net/psnobj/NPWR22859_00/d7213b2e-8048-40ae-859e-3ce1863b9390.png",
+      "trophyTitlePlatform": "PS5,PSPC",
+      "hasTrophyGroups": true,
+      "trophyGroupCount": 6,
+      "definedTrophies": {
+        "bronze": 59,
+        "silver": 13,
+        "gold": 4,
+        "platinum": 1
+      },
+      "progress": 0,
+      "earnedTrophies": {
+        "bronze": 0,
+        "silver": 0,
+        "gold": 0,
+        "platinum": 0
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2026-01-28T18:15:40Z"
+    },
+    {
+      "npServiceName": "trophy",
+      "npCommunicationId": "NPWR02488_00",
+      "trophySetVersion": "01.00",
+      "trophyTitleName": "Happy Feet Two Trophy Set",
+      "trophyTitleDetail": "The trophy set for Happy Feet Two",
+      "trophyTitleIconUrl": "https://image.api.playstation.com/trophy/np/NPWR02488_00_0053365B3F104129CAFFEDD1950C487AEC09C8E1FE/2D011745A1E8869BF091B80A942E27908407822A.PNG",
+      "trophyTitlePlatform": "PS3",
+      "hasTrophyGroups": false,
+      "trophyGroupCount": 1,
+      "definedTrophies": {
+        "bronze": 32,
+        "silver": 10,
+        "gold": 3,
+        "platinum": 1
+      },
+      "progress": 0,
+      "earnedTrophies": {
+        "bronze": 0,
+        "silver": 0,
+        "gold": 0,
+        "platinum": 0
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2026-07-16T08:51:58Z"
+    },
+    {
+      "npServiceName": "trophy",
+      "npCommunicationId": "NPWR04270_00",
+      "trophySetVersion": "01.07",
+      "trophyTitleName": "Terraria",
+      "trophyTitleDetail": "Trophies for Terraria",
+      "trophyTitleIconUrl": "https://image.api.playstation.com/trophy/np/NPWR04270_00_0022396415F240178A00F09426BFC3D467DB3A10DE/728F695A98AD44DA1238DAF81C849033E966B0C1.PNG",
+      "trophyTitlePlatform": "PS3,PSVITA,PS4",
+      "hasTrophyGroups": true,
+      "trophyGroupCount": 5,
+      "definedTrophies": {
+        "bronze": 28,
+        "silver": 20,
+        "gold": 2,
+        "platinum": 1
+      },
+      "progress": 8,
+      "earnedTrophies": {
+        "bronze": 5,
+        "silver": 1,
+        "gold": 0,
+        "platinum": 0
+      },
+      "hiddenFlag": false,
+      "lastUpdatedDateTime": "2019-11-29T19:01:37Z"
+    }
+  ],
+  "totalItemCount": 9
+}

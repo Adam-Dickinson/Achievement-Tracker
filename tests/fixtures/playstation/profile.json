@@ -1,0 +1,32 @@
+{
+  "onlineId": "ExamplePlayer",
+  "personalDetail": {
+    "firstName": "Example",
+    "lastName": "Player"
+  },
+  "aboutMe": "",
+  "avatars": [
+    {
+      "size": "s",
+      "url": "https://static-resource.np.community.playstation.net/avatar/example_s.png"
+    },
+    {
+      "size": "xl",
+      "url": "https://static-resource.np.community.playstation.net/avatar/example_xl.png"
+    },
+    {
+      "size": "l",
+      "url": "https://static-resource.np.community.playstation.net/avatar/example_l.png"
+    },
+    {
+      "size": "m",
+      "url": "https://static-resource.np.community.playstation.net/avatar/example_m.png"
+    }
+  ],
+  "languages": [
+    "en-GB"
+  ],
+  "isPlus": false,
+  "isOfficiallyVerified": false,
+  "isMe": true
+}
