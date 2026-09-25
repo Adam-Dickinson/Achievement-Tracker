@@ -1,0 +1,265 @@
+{
+  "data": {
+    "viewer": {
+      "id": "00000000-0000-4000-8000-0000000000aa",
+      "games": {
+        "totalCount": 14,
+        "nodes": [
+          {
+            "id": "0d2ae42d-4c27-4cb7-af6c-2099062302bb",
+            "spaceId": "0d2ae42d-4c27-4cb7-af6c-2099062302bb",
+            "name": "Tom Clancy's Rainbow Six® Siege",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/0d2ae42d-4c27-4cb7-af6c-2099062302bb/spaceCardAsset/gameIconAssetId.png",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/0d2ae42d-4c27-4cb7-af6c-2099062302bb/applicationCardAsset/RSIX70c0f.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-0d2ae42d-4c27-4cb7-af6c-2099062302bb",
+                "lastPlayedDate": "2026-09-23T18:09:47Z",
+                "playTime": 772854,
+                "achievements": {
+                  "totalCount": 48,
+                  "completedCount": 41
+                }
+              }
+            }
+          },
+          {
+            "id": "ee27f633-1c23-4a10-91ad-79fae60cad9f",
+            "spaceId": "ee27f633-1c23-4a10-91ad-79fae60cad9f",
+            "name": "Assassin's Creed Black Flag Resynced",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/ee27f633-1c23-4a10-91ad-79fae60cad9f/spaceCardAsset/OBD_Icon.png",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/ee27f633-1c23-4a10-91ad-79fae60cad9f/spaceCardAsset/OBD_Background.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-ee27f633-1c23-4a10-91ad-79fae60cad9f",
+                "lastPlayedDate": "2026-09-05T12:10:53Z",
+                "playTime": 82636,
+                "achievements": {
+                  "totalCount": 49,
+                  "completedCount": 23
+                }
+              }
+            }
+          },
+          {
+            "id": "1a99b369-2931-4b22-96a4-9a0b58e586e8",
+            "spaceId": "1a99b369-2931-4b22-96a4-9a0b58e586e8",
+            "name": "Assassin's Creed Shadows",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/1a99b369-2931-4b22-96a4-9a0b58e586e8/spaceCardAsset/Icon.png",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/1a99b369-2931-4b22-96a4-9a0b58e586e8/spaceCardAsset/Background.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-1a99b369-2931-4b22-96a4-9a0b58e586e8",
+                "lastPlayedDate": "2026-07-11T15:11:43Z",
+                "playTime": 0,
+                "achievements": {
+                  "totalCount": 75,
+                  "completedCount": 0
+                }
+              }
+            }
+          },
+          {
+            "id": "cef8b16c-9250-45e8-8867-09f8b6f13489",
+            "spaceId": "cef8b16c-9250-45e8-8867-09f8b6f13489",
+            "name": "Assassin’s Creed® III Remastered",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/cef8b16c-9250-45e8-8867-09f8b6f13489/spaceCardAsset/gameIconAssetId.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/cef8b16c-9250-45e8-8867-09f8b6f13489/spaceCardAsset/backgroundAssetId2.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-cef8b16c-9250-45e8-8867-09f8b6f13489",
+                "lastPlayedDate": "2025-09-27T11:48:50Z",
+                "playTime": null,
+                "achievements": {
+                  "totalCount": 84,
+                  "completedCount": 1
+                }
+              }
+            }
+          },
+          {
+            "id": "7d3950e6-41ce-43e3-976b-f893b246c31e",
+            "spaceId": "7d3950e6-41ce-43e3-976b-f893b246c31e",
+            "name": "Assassin's Creed® Odyssey",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/7d3950e6-41ce-43e3-976b-f893b246c31e/Club_Asset/Avatar.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/7d3950e6-41ce-43e3-976b-f893b246c31e/spaceCardAsset/backgroundAssetId2.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-7d3950e6-41ce-43e3-976b-f893b246c31e",
+                "lastPlayedDate": "2025-09-23T17:35:10Z",
+                "playTime": 0,
+                "achievements": {
+                  "totalCount": 93,
+                  "completedCount": 0
+                }
+              }
+            }
+          },
+          {
+            "id": "c4f15d67-1300-4e9e-bbe3-12e11a148e81",
+            "spaceId": "c4f15d67-1300-4e9e-bbe3-12e11a148e81",
+            "name": "Assassin's Creed® Valhalla",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/c4f15d67-1300-4e9e-bbe3-12e11a148e81/spaceCardAsset/gameIconAssetId.png",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/c4f15d67-1300-4e9e-bbe3-12e11a148e81/spaceCardAsset/backgroundAssetIdv2.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-c4f15d67-1300-4e9e-bbe3-12e11a148e81",
+                "lastPlayedDate": "2025-09-21T18:41:31Z",
+                "playTime": 30345,
+                "achievements": {
+                  "totalCount": 92,
+                  "completedCount": 4
+                }
+              }
+            }
+          },
+          {
+            "id": "c8b3f1c6-a246-4ffe-a837-a49d6bb0ce52",
+            "spaceId": "c8b3f1c6-a246-4ffe-a837-a49d6bb0ce52",
+            "name": "Assassin's Creed® IV Black Flag",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/c8b3f1c6-a246-4ffe-a837-a49d6bb0ce52/Club_Asset/Avatar.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/c8b3f1c6-a246-4ffe-a837-a49d6bb0ce52/spaceCardAsset/backgroundAssetId.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-c8b3f1c6-a246-4ffe-a837-a49d6bb0ce52",
+                "lastPlayedDate": "2025-09-21T17:59:36.8839292Z",
+                "playTime": null,
+                "achievements": {
+                  "totalCount": 60,
+                  "completedCount": 2
+                }
+              }
+            }
+          },
+          {
+            "id": "f40e304d-8e8d-4343-8270-d06487c35add",
+            "spaceId": "f40e304d-8e8d-4343-8270-d06487c35add",
+            "name": "Far Cry® 5",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/f40e304d-8e8d-4343-8270-d06487c35add/Club_Asset/Avatar.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/f40e304d-8e8d-4343-8270-d06487c35add/applicationCardAsset/FCZ2f05.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-f40e304d-8e8d-4343-8270-d06487c35add",
+                "lastPlayedDate": "2025-03-02T19:28:33Z",
+                "playTime": 4710,
+                "achievements": {
+                  "totalCount": 72,
+                  "completedCount": 1
+                }
+              }
+            }
+          },
+          {
+            "id": "6fbfb85f-567c-49ae-89fe-48fc6fcbd8ce",
+            "spaceId": "6fbfb85f-567c-49ae-89fe-48fc6fcbd8ce",
+            "name": "The Crew™",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/6fbfb85f-567c-49ae-89fe-48fc6fcbd8ce/Club_Asset/Avatar.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/6fbfb85f-567c-49ae-89fe-48fc6fcbd8ce/applicationCardAsset/TC4bf5.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-6fbfb85f-567c-49ae-89fe-48fc6fcbd8ce",
+                "lastPlayedDate": "2023-01-18T20:08:04Z",
+                "playTime": null,
+                "achievements": {
+                  "totalCount": 0,
+                  "completedCount": 0
+                }
+              }
+            }
+          },
+          {
+            "id": "c836bbda-7c0c-4b82-b0c2-b751b1843630",
+            "spaceId": "c836bbda-7c0c-4b82-b0c2-b751b1843630",
+            "name": "Rainbow Six® Extraction",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/c836bbda-7c0c-4b82-b0c2-b751b1843630/spaceCardAsset/gameIconAssetId.png",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/c836bbda-7c0c-4b82-b0c2-b751b1843630/applicationCardAsset/background.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-c836bbda-7c0c-4b82-b0c2-b751b1843630",
+                "lastPlayedDate": "2022-02-03T18:40:16.658Z",
+                "playTime": 4446,
+                "achievements": {
+                  "totalCount": 42,
+                  "completedCount": 0
+                }
+              }
+            }
+          },
+          {
+            "id": "882ad5b5-f549-44a1-a434-c465d22fe4bf",
+            "spaceId": "882ad5b5-f549-44a1-a434-c465d22fe4bf",
+            "name": "For Honor",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/882ad5b5-f549-44a1-a434-c465d22fe4bf/spaceCardAsset/FH_Icon_480x480.png",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/882ad5b5-f549-44a1-a434-c465d22fe4bf/spaceCardAsset/backgroundAssetId2.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-882ad5b5-f549-44a1-a434-c465d22fe4bf",
+                "lastPlayedDate": "2021-02-05T18:20:51.166Z",
+                "playTime": 18953,
+                "achievements": {
+                  "totalCount": 0,
+                  "completedCount": 0
+                }
+              }
+            }
+          },
+          {
+            "id": "60859c37-949d-49e2-8fc8-6d8dc40f1a9e",
+            "spaceId": "60859c37-949d-49e2-8fc8-6d8dc40f1a9e",
+            "name": "Tom Clancy's The Division 2",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/60859c37-949d-49e2-8fc8-6d8dc40f1a9e/Club_Asset/Avatar.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/60859c37-949d-49e2-8fc8-6d8dc40f1a9e/applicationCardAsset/background.png",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-60859c37-949d-49e2-8fc8-6d8dc40f1a9e",
+                "lastPlayedDate": "2020-03-26T22:37:30.022Z",
+                "playTime": 20023,
+                "achievements": {
+                  "totalCount": 67,
+                  "completedCount": 7
+                }
+              }
+            }
+          },
+          {
+            "id": "c3f9859b-2ca3-4ef3-9aac-fdbe32c2706f",
+            "spaceId": "c3f9859b-2ca3-4ef3-9aac-fdbe32c2706f",
+            "name": "Assassin's Creed® IV Black Flag",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/c3f9859b-2ca3-4ef3-9aac-fdbe32c2706f/Club_Asset/Avatar.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/c3f9859b-2ca3-4ef3-9aac-fdbe32c2706f/applicationCardAsset/ACBF3c4a.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-c3f9859b-2ca3-4ef3-9aac-fdbe32c2706f",
+                "lastPlayedDate": "2017-02-17T08:32:18Z",
+                "playTime": null,
+                "achievements": {
+                  "totalCount": 0,
+                  "completedCount": 0
+                }
+              }
+            }
+          },
+          {
+            "id": "1437bc51-401d-4f35-b0a7-107bd50fdb60",
+            "spaceId": "1437bc51-401d-4f35-b0a7-107bd50fdb60",
+            "name": "Far Cry® 4",
+            "avatarUrl": "https://ubiservices.cdn.ubi.com/1437bc51-401d-4f35-b0a7-107bd50fdb60/Club_Asset/Avatar.jpg",
+            "backgroundUrl": "https://ubiservices.cdn.ubi.com/1437bc51-401d-4f35-b0a7-107bd50fdb60/applicationCardAsset/FCC76db.jpg",
+            "viewer": {
+              "meta": {
+                "id": "00000000-0000-4000-8000-0000000000aa-1437bc51-401d-4f35-b0a7-107bd50fdb60",
+                "lastPlayedDate": "2016-01-17T15:34:21.33Z",
+                "playTime": null,
+                "achievements": {
+                  "totalCount": 0,
+                  "completedCount": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "name": "TestPlayer"
+    }
+  }
+}

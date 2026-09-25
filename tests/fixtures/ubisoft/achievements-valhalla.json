@@ -1,0 +1,1306 @@
+{
+  "data": {
+    "game": {
+      "id": "c4f15d67-1300-4e9e-bbe3-12e11a148e81",
+      "viewer": {
+        "meta": {
+          "id": "00000000-0000-4000-8000-0000000000aa-c4f15d67-1300-4e9e-bbe3-12e11a148e81",
+          "achievements": {
+            "totalCount": 92,
+            "completedCount": 4,
+            "nodes": [
+              {
+                "id": "7013-1",
+                "achievementId": 1,
+                "title": "The Saga Begins",
+                "description": "Complete the Prologue",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_1.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-1",
+                    "completionDate": "2022-12-13T13:08:21",
+                    "isCompleted": true
+                  }
+                }
+              },
+              {
+                "id": "7013-2",
+                "achievementId": 2,
+                "title": "To England!",
+                "description": "Leave Norway",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_2.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-2",
+                    "completionDate": "2022-12-15T19:38:01",
+                    "isCompleted": true
+                  }
+                }
+              },
+              {
+                "id": "7013-3",
+                "achievementId": 3,
+                "title": "Hard Choices",
+                "description": "Complete the Grantebridgescire Arc",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_3.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-3",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-4",
+                "achievementId": 4,
+                "title": "The Order Is Revealed",
+                "description": "Complete the Lunden Arc",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_4.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-4",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-5",
+                "achievementId": 5,
+                "title": "The Good Saxon",
+                "description": "Complete the East Anglia Arc",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_5.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-5",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-6",
+                "achievementId": 6,
+                "title": "Take My Hand",
+                "description": "Complete the Cent Arc",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_6.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-6",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-7",
+                "achievementId": 7,
+                "title": "Calling in a Favor",
+                "description": "Complete the Suthsexe Arc",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_7.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-7",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-8",
+                "achievementId": 8,
+                "title": "The Enemy of My Enemy",
+                "description": "Complete the Wincestre Arc",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_8.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-8",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-9",
+                "achievementId": 9,
+                "title": "In the Footsteps of the Gods",
+                "description": "Complete the Asgard and Jotunheim quests",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_9.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-9",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-10",
+                "achievementId": 10,
+                "title": "As It Was Foretold",
+                "description": "Complete \"The Prophecy\" storyline",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_10.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-10",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-11",
+                "achievementId": 11,
+                "title": "England Subdued",
+                "description": "Complete Hamtunscire Arc",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_11.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-11",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-12",
+                "achievementId": 12,
+                "title": "Disorder of the Ancients",
+                "description": "Eliminate all targets of the Order of Ancients",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_12.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-12",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-13",
+                "achievementId": 13,
+                "title": "Rampage",
+                "description": "Complete your first raid in England",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_13.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-13",
+                    "completionDate": "2022-12-15T21:47:43",
+                    "isCompleted": true
+                  }
+                }
+              },
+              {
+                "id": "7013-14",
+                "achievementId": 14,
+                "title": "It's Alive!",
+                "description": "Create a Jomsviking",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_14.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-14",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-15",
+                "achievementId": 15,
+                "title": "Tranquility",
+                "description": "Complete a Standing Stone puzzle",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_15.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-15",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-16",
+                "achievementId": 16,
+                "title": "Equilibrium",
+                "description": "Complete 3 Cairn challenges",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_16.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-16",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-17",
+                "achievementId": 17,
+                "title": "Old School Treasure Hunt",
+                "description": "Collect 5 Treasure Hoard rewards (Base game only)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_17.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-17",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-18",
+                "achievementId": 18,
+                "title": "Skadi's Hobby",
+                "description": "Perform a 150m slide in the snow",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_18.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-18",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-19",
+                "achievementId": 19,
+                "title": "Witch Hunter",
+                "description": "Defeat one Daughter of Lerion",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_19.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-19",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-20",
+                "achievementId": 20,
+                "title": "Equine Attack",
+                "description": "Assassinate an enemy from your horse",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_20.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-20",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-21",
+                "achievementId": 21,
+                "title": "Silent Viking",
+                "description": "Assassinate 10 enemies in a row without triggering a conflict",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_21.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-21",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-22",
+                "achievementId": 22,
+                "title": "Everyday Life",
+                "description": "Complete 10 World Events",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_22.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-22",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-23",
+                "achievementId": 23,
+                "title": "Overdesign II",
+                "description": "While on fire during a fight, kill 3 hard difficulty soldiers without breaking their shields",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_23.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-23",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-24",
+                "achievementId": 24,
+                "title": "Completionist All the Way!",
+                "description": "Complete all territories",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_24.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-24",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-25",
+                "achievementId": 25,
+                "title": "Row Rage",
+                "description": "Ram and destroy 5 boats in under 2 minutes with your longship (Base game only)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_25.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-25",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-26",
+                "achievementId": 26,
+                "title": "We're in the End Game Now",
+                "description": "Reach Power 280",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_26.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-26",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-27",
+                "achievementId": 27,
+                "title": "A Picture of Grace",
+                "description": "Run through 30 breakable objects",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_27.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-27",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-28",
+                "achievementId": 28,
+                "title": "Builder",
+                "description": "Reach settlement level 3",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_28.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-28",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-29",
+                "achievementId": 29,
+                "title": "Home Sweet Home",
+                "description": "Reach settlement level 6",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_29.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-29",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-30",
+                "achievementId": 30,
+                "title": "Pioneer",
+                "description": "Reach Vinland",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_30.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-30",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-31",
+                "achievementId": 31,
+                "title": "Home Decor",
+                "description": "Place an item on each settlement cosmetic spot (Base game only)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_31.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-31",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-32",
+                "achievementId": 32,
+                "title": "Not the Norse You're Looking For",
+                "description": "Successfully pass close to a guard in a distrust area by blending with a group of monks",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_32.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-32",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-33",
+                "achievementId": 33,
+                "title": "Face My Might!",
+                "description": "Equip 8 abilities",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_33.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-33",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-34",
+                "achievementId": 34,
+                "title": "Ultimate Refinement",
+                "description": "Fully upgrade and enhance a piece of gear",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_34.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-34",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-35",
+                "achievementId": 35,
+                "title": "Flying Eivor",
+                "description": "Get thrown 30 meters away by a destroyer or a housecarl",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_35.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-35",
+                    "completionDate": "2023-01-01T18:17:22",
+                    "isCompleted": true
+                  }
+                }
+              },
+              {
+                "id": "7013-36",
+                "achievementId": 36,
+                "title": "Twinkle Twinkle",
+                "description": "Release a firefly in your settlement",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_36.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-36",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-37",
+                "achievementId": 37,
+                "title": "Archaeologist",
+                "description": "Complete all Roman collector challenges",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_37.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-37",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-38",
+                "achievementId": 38,
+                "title": "Orlog Champion",
+                "description": "Beat all the Orlog players",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_38.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-38",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-39",
+                "achievementId": 39,
+                "title": "Good Catch!",
+                "description": "Catch a fish of each type using the fishing line",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_39.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-39",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-40",
+                "achievementId": 40,
+                "title": "Full Mastery",
+                "description": "Spend your first Mastery point",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_40.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-40",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-41",
+                "achievementId": 41,
+                "title": "Is There Anybody Out There?",
+                "description": "Light the unlit braziers on Hadrian's Wall",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_41.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-41",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-42",
+                "achievementId": 42,
+                "title": "Slam Master",
+                "description": "Complete all the flytings",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_42.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-42",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-43",
+                "achievementId": 43,
+                "title": "Caladfwlch",
+                "description": "Draw Excalibur from the Stone",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_43.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-43",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-44",
+                "achievementId": 44,
+                "title": "It's Not a Bug, It's a Feature!",
+                "description": "Complete your first Animus Anomaly",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_44.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-44",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-45",
+                "achievementId": 45,
+                "title": "Seahorse",
+                "description": "Swim a total of 3km with the horse",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_45.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-45",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-46",
+                "achievementId": 46,
+                "title": "The Hidden Truth",
+                "description": "Obtain all video fragments and watch the hidden truth video",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_46.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-46",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-47",
+                "achievementId": 47,
+                "title": "Master Hunter",
+                "description": "Defeat all Alpha animals (Base game only)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_47.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-47",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-48",
+                "achievementId": 48,
+                "title": "Dreamcatcher",
+                "description": "Destroy 10 Curse Symbols (Base game only)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_48.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-48",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-49",
+                "achievementId": 49,
+                "title": "Godly Reward",
+                "description": "Obtain Thor's Helmet",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_49.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-49",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-50",
+                "achievementId": 50,
+                "title": "Worthy",
+                "description": "Wield Mjolnir",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_50.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-50",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-51",
+                "achievementId": 51,
+                "title": "Irish Legend",
+                "description": "Complete all territories of Ireland (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_51.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-51",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-52",
+                "achievementId": 52,
+                "title": "Ireland's Deliverance",
+                "description": "Complete the Wrath of the Druids campaign (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_52.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-52",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-53",
+                "achievementId": 53,
+                "title": "Dawn of the Druids",
+                "description": "Collect all the amber shards for Deirdre (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_53.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-53",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-54",
+                "achievementId": 54,
+                "title": "Like a Druid",
+                "description": "Complete a Trial of the Morrigan (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_54.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-54",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-55",
+                "achievementId": 55,
+                "title": "All Roads Lead to Dublin",
+                "description": "Reach the max level of Dublin Renown (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_55.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-55",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-56",
+                "achievementId": 56,
+                "title": "The Legend of St. Patrick",
+                "description": "Kill the only snake in Ireland (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_56.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-56",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-57",
+                "achievementId": 57,
+                "title": "King’s Maker",
+                "description": "Complete 10 Royal Demands (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_57.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-57",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-58",
+                "achievementId": 58,
+                "title": "Double Trouble",
+                "description": "Equip a Sickle in both hands (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_58.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-58",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-59",
+                "achievementId": 59,
+                "title": "Decked Out",
+                "description": "Find the full Dublin Champion armor set (Wrath of the Druids).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_59.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-59",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-60",
+                "achievementId": 60,
+                "title": "All That Glitters",
+                "description": "Get your first Gold Medal in Mastery Challenge (Part 1)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_60.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-60",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-61",
+                "achievementId": 61,
+                "title": "A True Master",
+                "description": "Earn all Gold Medals available in Mastery Challenge (Part 1)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_61.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-61",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-62",
+                "achievementId": 62,
+                "title": "Do What Is Right",
+                "description": "Complete the Siege of Paris campaign (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_62.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-62",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-63",
+                "achievementId": 63,
+                "title": "Know What Is Right",
+                "description": "Complete all territories of Francia (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_63.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-63",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-64",
+                "achievementId": 64,
+                "title": "We Nobles Three",
+                "description": "Defeat all three Frankish Nobles (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_64.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-64",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-65",
+                "achievementId": 65,
+                "title": "Vive la Résistance",
+                "description": "Reach maximum Infamy in the Rebel Missions (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_65.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-65",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-66",
+                "achievementId": 66,
+                "title": "Future Past",
+                "description": "Enter the Assassin Bureau in Francia (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_66.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-66",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-67",
+                "achievementId": 67,
+                "title": "Bad Bull",
+                "description": "Defeat the Ghost Auroch Boss (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_67.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-67",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-68",
+                "achievementId": 68,
+                "title": "Vendange",
+                "description": "Kill an enemy with a scythe while wearing the full Reaper armor set (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_68.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-68",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-69",
+                "achievementId": 69,
+                "title": "Pat the Cats",
+                "description": "Pat all the cats in Evreux (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_69.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-69",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-70",
+                "achievementId": 70,
+                "title": "Lèse-majesté",
+                "description": "Complete 10 Rebel Missions (The Siege of Paris).",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_70.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-70",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-71",
+                "achievementId": 71,
+                "title": "Spelunker",
+                "description": "Complete one Tomb of the Fallen",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_71.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-71",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-72",
+                "achievementId": 72,
+                "title": "Crypt-ologist",
+                "description": "Complete three Tombs of the Fallen",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_72.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-72",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-73",
+                "achievementId": 73,
+                "title": "Over the Hills…",
+                "description": "Complete all territories of Svartalfheim (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_73.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-73",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-74",
+                "achievementId": 74,
+                "title": "Ashes of Svartalfheim",
+                "description": "Complete the Dawn of Ragnarök campaign (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_74.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-74",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-75",
+                "achievementId": 75,
+                "title": "Hugr Incarnate",
+                "description": "Fully upgrade the Hugr-Rip (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_75.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-75",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-76",
+                "achievementId": 76,
+                "title": "Expert Storyteller",
+                "description": "Tell Kára a Tale with at least four Boasts (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_76.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-76",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-77",
+                "achievementId": 77,
+                "title": "It's All in the Wrist",
+                "description": "Kill 30 enemies with an Atgeir (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_77.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-77",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-78",
+                "achievementId": 78,
+                "title": "Aesir Spelunker",
+                "description": "Discover all Shelters (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_78.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-78",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-79",
+                "achievementId": 79,
+                "title": "Motsognir's Blessing",
+                "description": "Purify Hreidmar's Cursed Armor (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_79.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-79",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-80",
+                "achievementId": 80,
+                "title": "See No Evil",
+                "description": "Teleport-Assassinate two enemies and fly away without being detected (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_80.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-80",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-81",
+                "achievementId": 81,
+                "title": "Flying Fortress",
+                "description": "Reach a Muspelheim Monolith (Dawn of Ragnarök)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_81.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-81",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-82",
+                "achievementId": 82,
+                "title": "Full Master",
+                "description": "Earn all Gold Medals available in Mastery Challenge",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_82.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-82",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-83",
+                "achievementId": 83,
+                "title": "Sacrificial Victory",
+                "description": "Defeat Hel with the Draugr's Toll Outfit equipped (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_83.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-83",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-84",
+                "achievementId": 84,
+                "title": "Freedom Fighter",
+                "description": "Reunite the dead within Kaldstad, Døkkerland and Nidheim (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_84.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-84",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-85",
+                "achievementId": 85,
+                "title": "Pure of Heart",
+                "description": "Defeat Nidhogg without using an Elk Shrine (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_85.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-85",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-86",
+                "achievementId": 86,
+                "title": "Crossing Dókkerland",
+                "description": "Complete all encounters in Dókkerland (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_86.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-86",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-87",
+                "achievementId": 87,
+                "title": "High Kick",
+                "description": "Knock 10 enemies off of ledges using the Kick of Tyr Ability (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_87.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-87",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-88",
+                "achievementId": 88,
+                "title": "Royal Treatment",
+                "description": "Find Hel's Majordomo (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_88.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-88",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-89",
+                "achievementId": 89,
+                "title": "A Favored Customer",
+                "description": "Buy all of Nar's Favors at least once (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_89.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-89",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-90",
+                "achievementId": 90,
+                "title": "The Queen's Fall",
+                "description": "Defeat Hel, ruler of Niflheim (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_90.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-90",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-91",
+                "achievementId": 91,
+                "title": "Returning to the Roots",
+                "description": "Return to Odin's Camp for the first time (The Forgotten Saga)",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_91.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-91",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              },
+              {
+                "id": "7013-92",
+                "achievementId": 92,
+                "title": "Heroes of Ancient Britain",
+                "description": "Complete all Tombs of the Fallen",
+                "icon": "https://ubiservices.cdn.ubi.com/10322023-976e-49e7-8e02-df5325c868bf/achievement/94874ec998162160471a29558d8b53a1_92.png",
+                "viewer": {
+                  "meta": {
+                    "id": "00000000-0000-4000-8000-0000000000aa-7013-92",
+                    "completionDate": null,
+                    "isCompleted": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

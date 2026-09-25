@@ -1,0 +1,11 @@
+{
+  "additionalDetails": {},
+  "moreInfo": "",
+  "errorCode": 3,
+  "httpCode": 401,
+  "errorContext": "Shipyard.Profiles.Services",
+  "message": "Nonce was not found for the profile",
+  "environment": "prod",
+  "transactionTime": "2026-09-25T16:46:21.6360366Z",
+  "transactionId": "fc833cef-dbf2-46c0-9bdc-18ccbe026731"
+}
