@@ -7,7 +7,7 @@ import type { BrowserCookie } from './providers/browser-cookie'
 
 export interface CookieSignInPage {
   readonly title: string
-  readonly home: string
+  readonly isSignedIn: (address: string) => boolean
   readonly cookieDomain: string
   readonly mayNavigate: NavigationRule
 }
@@ -40,8 +40,7 @@ export function openCookieSignInWindow(
   const signedInListeners: ((cookies: readonly BrowserCookie[]) => void)[] = []
   const closedListeners: (() => void)[] = []
 
-  contents.on('did-navigate', (_event, address) => {
-    if (!isBackHome(page.home, address)) return
+  const readCookies = (): void => {
     void partition.cookies.get({}).then(
       (cookies) => {
         const pairs = cookies
@@ -51,7 +50,18 @@ export function openCookieSignInWindow(
       },
       () => undefined,
     )
+  }
+  const leavesForApp = (event: { preventDefault(): void }, address: string): void => {
+    if (isWebAddress(address) || !page.isSignedIn(address)) return
+    event.preventDefault()
+    readCookies()
+  }
+
+  contents.on('did-navigate', (_event, address) => {
+    if (page.isSignedIn(address)) readCookies()
   })
+  contents.on('will-redirect', leavesForApp)
+  contents.on('will-navigate', leavesForApp)
   window.on('closed', () => {
     for (const listener of closedListeners) listener()
   })
@@ -66,11 +76,6 @@ export function openCookieSignInWindow(
   }
 }
 
-function isBackHome(home: string, address: string): boolean {
-  try {
-    const { origin, pathname } = new URL(address)
-    return origin === home && !pathname.startsWith('/login')
-  } catch {
-    return false
-  }
+function isWebAddress(address: string): boolean {
+  return address.startsWith('https:') || address.startsWith('http:')
 }

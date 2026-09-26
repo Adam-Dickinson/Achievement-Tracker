@@ -3,6 +3,7 @@ import { Secret } from '@shared/secret'
 import {
   CookieSignIn,
   type CookieSignInWindow,
+  isBackHome,
   isOnDomain,
   SIGN_IN_TIMEOUT_MS,
 } from './cookie-sign-in'
@@ -154,6 +155,27 @@ describe('CookieSignIn', () => {
 
     expect(cookiesOf(await running)).toMatchObject({ sid: 's-1' })
     expect(window?.closeCalls).toBe(1)
+  })
+})
+
+describe('isBackHome', () => {
+  const backOnEa = isBackHome('https://www.ea.com')
+
+  it.each(['https://www.ea.com/', 'https://www.ea.com/games', 'https://www.ea.com/?setLocale=en'])(
+    'counts %s as back home after signing in',
+    (address) => {
+      expect(backOnEa(address)).toBe(true)
+    },
+  )
+
+  it.each([
+    'https://www.ea.com/login',
+    'https://www.ea.com/login_check',
+    'https://signin.ea.com/p/juno/login',
+    'http://www.ea.com/',
+    'not a url',
+  ])('does not count %s', (address) => {
+    expect(backOnEa(address)).toBe(false)
   })
 })
 

@@ -14,6 +14,10 @@ export function isEaAddress(url: string): boolean {
   return isHttpsOn(url, ['ea.com'])
 }
 
+export function isSonyAddress(url: string): boolean {
+  return isHttpsOn(url, ['sony.com'])
+}
+
 export function isSteamAddress(url: string): boolean {
   return isHttpsOn(url, ['steampowered.com', 'steamcommunity.com'])
 }

@@ -47,6 +47,8 @@ const fakes = {
   cancelUbisoftSignIn: vi.fn(),
   connectEa: vi.fn(() => Promise.resolve(CONNECTED)),
   cancelEaSignIn: vi.fn(),
+  connectPlayStation: vi.fn(() => Promise.resolve(CONNECTED)),
+  cancelPlayStationSignIn: vi.fn(),
   signInToSteam: vi.fn(() => Promise.resolve(CONNECTED)),
   cancelSteamSignIn: vi.fn(),
   listLibrary: vi.fn(() => []),
@@ -87,6 +89,8 @@ describe('registerIpcHandlers', () => {
     IPC.cancelUbisoftSignIn,
     IPC.connectEa,
     IPC.cancelEaSignIn,
+    IPC.connectPlayStation,
+    IPC.cancelPlayStationSignIn,
     IPC.signInToSteam,
     IPC.cancelSteamSignIn,
     IPC.listLibrary,
@@ -246,6 +250,38 @@ describe('EA handlers', () => {
     call(IPC.cancelEaSignIn, TRUSTED)
 
     expect(fakes.cancelEaSignIn).toHaveBeenCalledOnce()
+  })
+})
+
+describe('PlayStation handlers', () => {
+  it('connects once the unofficial connection has been accepted', async () => {
+    const result = await call(IPC.connectPlayStation, TRUSTED, { acceptedUnofficial: true })
+
+    expect(result).toEqual(CONNECTED)
+    expect(fakes.connectPlayStation).toHaveBeenCalledWith({ acceptedUnofficial: true })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a refusal', { acceptedUnofficial: false }],
+  ])(
+    'answers %s with invalid_input, without opening the sign-in window',
+    async (_label, payload) => {
+      const result = await call(IPC.connectPlayStation, TRUSTED, payload)
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the PlayStation connection is unofficial.',
+      })
+      expect(fakes.connectPlayStation).not.toHaveBeenCalled()
+    },
+  )
+
+  it('cancels a sign-in that is waiting', () => {
+    call(IPC.cancelPlayStationSignIn, TRUSTED)
+
+    expect(fakes.cancelPlayStationSignIn).toHaveBeenCalledOnce()
   })
 })
 

@@ -18,6 +18,17 @@ export interface CookieSignInDeps {
   readonly timeoutMs?: number
 }
 
+export function isBackHome(home: string): (address: string) => boolean {
+  return (address) => {
+    try {
+      const { origin, pathname } = new URL(address)
+      return origin === home && !pathname.startsWith('/login')
+    } catch {
+      return false
+    }
+  }
+}
+
 export function isOnDomain(cookieDomain: string, domain: string): boolean {
   const host = cookieDomain.replace(/^\./, '').toLowerCase()
   return host === domain || host.endsWith(`.${domain}`)

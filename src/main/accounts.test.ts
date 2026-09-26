@@ -7,6 +7,7 @@ import { Secret } from '@shared/secret'
 import { InMemorySecretStore, type SecretStore } from '@shared/secret-store'
 import {
   connectEa,
+  connectPlayStation,
   connectEpic,
   connectSteam,
   connectUbisoft,
@@ -631,6 +632,95 @@ describe('connectEa', () => {
     expect(result).toMatchObject({ ok: false, reason: 'other' })
     expect(result.ok || result.message).not.toContain('crashed')
     vi.restoreAllMocks()
+  })
+})
+
+const PSN_ACCOUNT = '1234567890123456789'
+
+function fakePlayStation(overrides: Partial<AchievementProvider> = {}): AchievementProvider {
+  return fakeSteam({
+    platform: 'playstation',
+    authenticate: (input) =>
+      Promise.resolve({
+        platform: 'playstation',
+        externalId: PSN_ACCOUNT,
+        secret: input.kind === 'token' ? input.value : null,
+      }),
+    validate: () => Promise.resolve({ externalId: PSN_ACCOUNT, displayName: 'ExamplePlayer' }),
+    ...overrides,
+  })
+}
+
+function setupPlayStation(
+  playstation = fakePlayStation(),
+  signIn: () => Promise<Secret> = () => Promise.resolve(new Secret('npsso-from-window')),
+) {
+  const { db, secrets, scheduler } = setup()
+  return { db, secrets, scheduler, deps: { db, playstation, signIn, secrets, scheduler } }
+}
+
+describe('connectPlayStation', () => {
+  it('signs in, saves the account and its npsso cookie, and starts syncing it', async () => {
+    const { db, secrets, scheduler, deps } = setupPlayStation()
+
+    const result = await connectPlayStation(deps)
+
+    expect(result).toEqual({
+      ok: true,
+      account: {
+        id: 1,
+        platform: 'playstation',
+        displayName: 'ExamplePlayer',
+        status: 'connected',
+        gameCount: 0,
+      },
+    })
+    expect(listAccountSummaries(db)).toHaveLength(1)
+    expect(secrets.find('1')?.expose()).toBe('npsso-from-window')
+    expect(scheduler.startAccount).toHaveBeenCalledWith(1)
+  })
+
+  it('reports a cancelled sign-in, and saves nothing', async () => {
+    const { db, deps } = setupPlayStation(fakePlayStation(), () =>
+      Promise.reject(new SignInError('cancelled', 'x')),
+    )
+
+    expect(await connectPlayStation(deps)).toEqual({
+      ok: false,
+      reason: 'cancelled',
+      message: 'The PlayStation sign-in was cancelled.',
+    })
+    expect(listAccountSummaries(db)).toEqual([])
+  })
+
+  it('asks to sign in again when Sony refuses the new sign-in', async () => {
+    const { deps } = setupPlayStation(
+      fakePlayStation({
+        authenticate: () =>
+          Promise.reject(new ProviderError('auth_expired', 'PlayStation: the sign-in has expired')),
+      }),
+    )
+
+    expect(await connectPlayStation(deps)).toEqual({
+      ok: false,
+      reason: 'other',
+      message: 'PlayStation did not accept the sign-in. Please sign in again.',
+    })
+  })
+
+  it('reports a network failure as a connection problem', async () => {
+    const { deps } = setupPlayStation(
+      fakePlayStation({
+        authenticate: () =>
+          Promise.reject(new ProviderError('network', 'PlayStation: could not reach')),
+      }),
+    )
+
+    expect(await connectPlayStation(deps)).toEqual({
+      ok: false,
+      reason: 'network',
+      message: "Couldn't reach PlayStation. Check your connection and try again.",
+    })
   })
 })
 

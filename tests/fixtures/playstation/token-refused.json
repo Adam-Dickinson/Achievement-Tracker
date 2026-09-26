@@ -1,0 +1,6 @@
+{
+  "error": "invalid_request",
+  "error_description": "Invalid request",
+  "error_code": 4150,
+  "error_uri": "https://auth.api.sonyentertainmentnetwork.com/openapi/docs"
+}

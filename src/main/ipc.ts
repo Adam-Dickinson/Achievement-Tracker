@@ -8,6 +8,7 @@ import {
   type ConnectResult,
   type EaConnectInput,
   type EpicConnectInput,
+  type PlayStationConnectInput,
   type SteamConnectInput,
   type SteamSignInInput,
   type UbisoftConnectInput,
@@ -33,6 +34,8 @@ export interface IpcHandlers {
   cancelUbisoftSignIn(): void
   connectEa(input: EaConnectInput): Promise<ConnectResult>
   cancelEaSignIn(): void
+  connectPlayStation(input: PlayStationConnectInput): Promise<ConnectResult>
+  cancelPlayStationSignIn(): void
   signInToSteam(input: SteamSignInInput): Promise<ConnectResult>
   cancelSteamSignIn(): void
   listLibrary(): LibraryGame[]
@@ -153,6 +156,24 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.cancelEaSignIn, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     handlers.cancelEaSignIn()
+  })
+
+  ipcMain.handle(IPC.connectPlayStation, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = unofficialOptInSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Confirm that you understand the PlayStation connection is unofficial.',
+      })
+    }
+    return handlers.connectPlayStation(parsed.data)
+  })
+
+  ipcMain.handle(IPC.cancelPlayStationSignIn, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.cancelPlayStationSignIn()
   })
 
   ipcMain.handle(IPC.signInToSteam, (event, input: unknown): Promise<ConnectResult> => {

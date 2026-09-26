@@ -18,7 +18,7 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 |---|---|---|---|
 | Steam | Web API + local stats files | Yes | High |
 | Xbox | Xbox Live API | Polling | Medium |
-| PlayStation | PSN trophy API (unofficial) | Polling | Medium |
+| PlayStation | PlayStation App services (unofficial), signed in on Sony's page in an app window (again every 2 months) | Polling, after the console syncs | Medium-Low |
 | Epic Games | Epic launcher services (unofficial), signed in with a code from the browser | Polling | Medium |
 | Ubisoft Connect | Ubisoft Connect launcher services (unofficial), signed in on Ubisoft's page in an app window | Polling | Medium-Low |
 | EA app | EA app services (unofficial), signed in on EA's page in an app window | Polling | Medium-Low |
