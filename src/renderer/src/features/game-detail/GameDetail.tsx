@@ -2,28 +2,30 @@ import { ArrowLeft } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/Button'
 import { RarityChip } from '@/components/RarityChip'
+import { SearchBox } from '@/components/SearchBox'
+import { ToggleGroup } from '@/components/ToggleGroup'
+import { VirtualGrid } from '@/components/VirtualGrid'
 import { formatUnlockDate } from '@/lib/format'
 import { completionPercent } from '@shared/dashboard'
 import type { GameAchievement } from '@shared/library'
 import { platformName } from '@shared/platform'
 import { rarityFromPercent } from '@shared/rarity'
 import { AchievementRow } from './AchievementRow'
+import {
+  ACHIEVEMENT_SORTS,
+  applyAchievementView,
+  byRarity,
+  countAchievements,
+  DEFAULT_ACHIEVEMENT_VIEW,
+  FILTERS,
+  type AchievementSortId,
+  type AchievementView,
+  type FilterId,
+} from './achievement-view'
 import { entryLabel } from './entry-label'
 import { EntryTabs } from './EntryTabs'
 import { LinkGame } from './LinkGame'
 import { useGame } from './useGame'
-
-type FilterId = 'all' | 'unlocked' | 'locked'
-
-const FILTERS: Record<FilterId, { label: string; keep: (a: GameAchievement) => boolean }> = {
-  all: { label: 'All', keep: () => true },
-  unlocked: { label: 'Unlocked', keep: (a) => a.unlocked },
-  locked: { label: 'Locked', keep: (a) => !a.unlocked },
-}
-
-function byRarity(a: GameAchievement, b: GameAchievement): number {
-  return (a.globalPercent ?? 101) - (b.globalPercent ?? 101) || a.name.localeCompare(b.name)
-}
 
 function latestUnlock(achievements: readonly GameAchievement[]): Date | null {
   return achievements.reduce<Date | null>(
@@ -40,7 +42,7 @@ interface GameDetailProps {
 
 export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
   const { detail, reload } = useGame(id)
-  const [filter, setFilter] = useState<FilterId>('all')
+  const [view, setView] = useState<AchievementView>(DEFAULT_ACHIEVEMENT_VIEW)
   const [selected, setSelected] = useState(initialEntry)
   const [linking, setLinking] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,7 +98,8 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
     })
   const unlocked = achievements.filter((a) => a.unlocked)
   const rarest = unlocked.filter((a) => a.globalPercent !== null).sort(byRarity)[0]
-  const shown = achievements.filter(FILTERS[filter].keep).sort(byRarity)
+  const shown = applyAchievementView(achievements, view)
+  const update = (change: Partial<AchievementView>) => setView({ ...view, ...change })
 
   return (
     <div className="flex flex-col gap-6">
@@ -206,25 +209,33 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
           </Tile>
         </div>
 
-        <div role="group" aria-label="Show" className="flex gap-2">
-          {(Object.keys(FILTERS) as FilterId[]).map((id) => {
-            const count = achievements.filter(FILTERS[id].keep).length
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={filter === id}
-                onClick={() => setFilter(id)}
-                className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${
-                  filter === id
-                    ? 'bg-primary text-on-primary'
-                    : 'bg-surface-1 text-fg-muted hover:text-fg'
-                }`}
-              >
-                {FILTERS[id].label} {count}
-              </button>
-            )
-          })}
+        <div className="flex flex-wrap items-center gap-4">
+          <ToggleGroup
+            label="Show"
+            options={(Object.keys(FILTERS) as FilterId[]).map((filter) => ({
+              id: filter,
+              label: FILTERS[filter].label,
+              count: countAchievements(achievements, { ...view, filter }),
+            }))}
+            selected={view.filter}
+            onSelect={(filter) => update({ filter })}
+          />
+          <SearchBox
+            label="Search achievements"
+            placeholder="Search achievements"
+            value={view.query}
+            onChange={(query) => update({ query })}
+          />
+          <ToggleGroup
+            label="Sort by"
+            variant="segmented"
+            options={(Object.keys(ACHIEVEMENT_SORTS) as AchievementSortId[]).map((sort) => ({
+              id: sort,
+              label: ACHIEVEMENT_SORTS[sort].label,
+            }))}
+            selected={view.sort}
+            onSelect={(sort) => update({ sort })}
+          />
         </div>
 
         {achievements.length === 0 ? (
@@ -232,12 +243,23 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
             This game&apos;s achievements haven&apos;t been read yet. They appear after its first
             sync.
           </p>
+        ) : shown.length === 0 ? (
+          <p role="status" className="text-fg-muted">
+            {view.query.trim() === ''
+              ? 'No achievements to show here.'
+              : `No achievements match “${view.query.trim()}”.`}
+          </p>
         ) : (
-          <ul className="grid grid-cols-2 gap-4">
-            {shown.map((achievement) => (
-              <AchievementRow key={achievement.id} achievement={achievement} />
-            ))}
-          </ul>
+          <VirtualGrid
+            items={shown}
+            label="Achievements"
+            minColumnWidth={360}
+            maxColumns={2}
+            gap={16}
+            estimateRowHeight={96}
+            getKey={(achievement) => achievement.id}
+            renderItem={(achievement) => <AchievementRow achievement={achievement} />}
+          />
         )}
       </div>
     </div>

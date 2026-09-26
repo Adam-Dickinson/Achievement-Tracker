@@ -43,7 +43,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | ID | Requirement | Pri |
 |---|---|---|
 | F-30 | Dashboard, Library, Game detail, Activity, Accounts, Settings screens | P0 |
-| F-31 | Search, filter, sort across all games and achievements | P1 |
+| F-31 | Search, filter, sort across all games and achievements. Built for the Library (games) and Game detail (one game's achievements), in the UI ([ADR-0014](adr/0014-virtualized-lists-client-side-filtering.md)); one search across every game's achievements is not built | P1 |
 | F-32 | Cross-platform game linking (auto + manual). Built: same cleaned title links automatically; merge and unlink on Game detail ([design](superpowers/specs/2026-09-26-game-linking-design.md)) | P1 |
 | F-33 | Global achievement rarity display where the platform provides it | P1 |
 | F-34 | JSON/CSV export | P2 |
@@ -290,8 +290,6 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | API | Description |
 |---|---|
 | `disconnectAccount(id)` | Remove account (option: keep data) |
-| `listGames(filter, sort, page)` | Library query |
-| `listAchievements(platformGameId, filter)` | |
 | `syncNow(scope)` | Manual sync |
 | `getSettings()` / `updateSettings(patch)` | |
 | `exportData(format)` | |
