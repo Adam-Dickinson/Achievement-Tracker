@@ -1,0 +1,149 @@
+{
+  "response": {
+    "store_items": [
+      {
+        "item_type": 0,
+        "id": 2584270,
+        "success": 1,
+        "visible": true,
+        "name": "Mortal Shell II",
+        "store_url_path": "app/2584270/Mortal_Shell_II",
+        "store_url_slug": "Mortal_Shell_II",
+        "appid": 2584270,
+        "type": 0,
+        "related_items": {
+          "demo_appid": [
+            4711740
+          ],
+          "standalone_demo_appid": [
+            4711740
+          ],
+          "demos": [
+            {
+              "appid": 4711740,
+              "show_above_purchase": true
+            }
+          ],
+          "standalone_demos": [
+            {
+              "appid": 4711740,
+              "show_above_purchase": true
+            }
+          ]
+        },
+        "content_descriptorids": [
+          2,
+          5
+        ],
+        "categories": {
+          "supported_player_categoryids": [
+            2
+          ],
+          "feature_categoryids": [
+            22,
+            64,
+            65,
+            68,
+            69,
+            74,
+            82,
+            23,
+            62
+          ],
+          "controller_categoryids": [
+            28,
+            55,
+            57,
+            58
+          ]
+        },
+        "assets": {
+          "asset_url_format": "steam/apps/2584270/${FILENAME}?t=1788251111",
+          "header": "0a4c23b70ced29fac344186ea564dae67c80cfd6/header.jpg",
+          "main_capsule": "5b6a6b59c4f857165987b15fc116e5b3a06427dc/capsule_616x353.jpg",
+          "hero_capsule": "188a0c5dd6cd6fff9b7219a77752fbed2611f8e8/hero_capsule.jpg"
+        },
+        "best_purchase_option": {
+          "packageid": 1648783,
+          "purchase_option_name": "Mortal Shell II",
+          "final_price_in_cents": "4999",
+          "formatted_final_price": "$49.99",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 236850,
+        "success": 1,
+        "visible": true,
+        "name": "Europa Universalis IV",
+        "store_url_path": "app/236850/Europa_Universalis_IV",
+        "store_url_slug": "Europa_Universalis_IV",
+        "appid": 236850,
+        "type": 0,
+        "related_items": {
+          "demo_appid": [
+            247890
+          ],
+          "demos": [
+            {
+              "appid": 247890,
+              "show_above_purchase": true
+            }
+          ]
+        },
+        "categories": {
+          "supported_player_categoryids": [
+            2,
+            1,
+            49,
+            36,
+            9,
+            38,
+            27
+          ],
+          "feature_categoryids": [
+            22,
+            29,
+            30,
+            23,
+            62
+          ]
+        },
+        "assets": {
+          "asset_url_format": "steam/apps/236850/${FILENAME}?t=1778249292",
+          "header": "header.jpg",
+          "main_capsule": "23cbb7b306087b17601b7bd7d5eeec38722d38e6/capsule_616x353.jpg",
+          "hero_capsule": "259efee8b0b7fbd007f0c600073d6ccd4920e7a4/hero_capsule.jpg"
+        },
+        "best_purchase_option": {
+          "packageid": 977591,
+          "purchase_option_name": "Europa Universalis IV",
+          "final_price_in_cents": "4999",
+          "formatted_final_price": "$49.99",
+          "user_can_purchase_as_gift": true,
+          "hide_discount_pct_for_compliance": false,
+          "included_game_count": 1,
+          "must_purchase_as_set": false,
+          "package_group": "default",
+          "price_cannot_be_displayed_as_discount": false
+        }
+      },
+      {
+        "item_type": 0,
+        "id": 700580,
+        "success": 15,
+        "visible": false,
+        "name": "",
+        "store_url_path": "app/0/",
+        "store_url_slug": "",
+        "appid": 0
+      }
+    ]
+  }
+}

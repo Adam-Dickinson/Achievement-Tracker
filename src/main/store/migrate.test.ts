@@ -94,6 +94,59 @@ describe('migrations', () => {
     expect(tableNames(db)).toContain('game_alias')
   })
 
+  it('add an artwork table keyed by cleaned title, keeping existing games', () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 3))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'epic', 'acc1', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'Death Stranding', 'death stranding');
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title)
+      VALUES (1, 1, 1, 'epic', 'ns', 'Death Stranding');
+    `)
+
+    applyMigrations(db)
+    db.prepare('INSERT INTO artwork (match_key, url, checked_at) VALUES (?, ?, ?)').run(
+      'death stranding',
+      null,
+      '2026-09-26T00:00:00.000Z',
+    )
+
+    expect(tableNames(db)).toContain('artwork')
+    expect(db.prepare('SELECT COUNT(*) AS count FROM platform_game').get()).toEqual({ count: 1 })
+    expect(db.prepare('SELECT match_key, url FROM artwork').all()).toEqual([
+      { match_key: 'death stranding', url: null },
+    ])
+  })
+
+  it("clear Steam's old-style header links so the next sync stores working ones", () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 4))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 's', 'Test', 'connected', '2026-01-01'),
+             (2, 'epic', 'e', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'A', 'a'), (2, 'B', 'b'), (3, 'C', 'c');
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title, cover_url)
+      VALUES
+        (1, 1, 1, 'steam', '400', 'A', 'https://cdn.akamai.steamstatic.com/steam/apps/400/header.jpg'),
+        (2, 2, 1, 'steam', '500', 'B', 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/500/h/header.jpg'),
+        (3, 3, 2, 'epic', 'x', 'C', 'https://cdn1.epicgames.com/x.jpg');
+    `)
+
+    applyMigrations(db)
+
+    expect(db.prepare('SELECT id, cover_url FROM platform_game ORDER BY id').all()).toEqual([
+      { id: 1, cover_url: null },
+      {
+        id: 2,
+        cover_url:
+          'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/500/h/header.jpg',
+      },
+      { id: 3, cover_url: 'https://cdn1.epicgames.com/x.jpg' },
+    ])
+  })
+
   it('are a no-op when applied twice', () => {
     const db = new DatabaseSync(':memory:')
     const first = applyMigrations(db)

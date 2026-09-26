@@ -3,7 +3,7 @@ import { ProviderError } from '@shared/errors'
 import type { RemoteGame } from '@shared/models'
 import type { Secret } from '@shared/secret'
 import { steamGet } from './api'
-import { check, STEAM_APP_IMAGES, STEAM_STORE_ART } from './parse'
+import { check, STEAM_APP_IMAGES } from './parse'
 
 const FAMILY_GROUP = '/IFamilyGroupsService/GetFamilyGroupForUser/v1/'
 const SHARED_LIBRARY = '/IFamilyGroupsService/GetSharedLibraryApps/v1/'
@@ -133,7 +133,7 @@ export function toFamilyGame(app: FamilyApp, now: Date): RemoteGame {
     ref: { externalId: app.appid },
     title: app.name,
     iconUrl: app.iconHash ? `${STEAM_APP_IMAGES}/${app.appid}/${app.iconHash}.jpg` : null,
-    coverUrl: `${STEAM_STORE_ART}/${app.appid}/header.jpg`,
+    coverUrl: null,
     lastPlayed: app.lastPlayed,
     recentlyPlayed:
       app.lastPlayed !== null && now.getTime() - app.lastPlayed.getTime() <= RECENT_MS,

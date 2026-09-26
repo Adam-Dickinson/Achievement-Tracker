@@ -5,12 +5,16 @@ import {
   IPC,
   type AccountSummary,
   type AppInfo,
+  type ArtworkKeyResult,
+  type ArtworkRun,
+  type ArtworkSettings,
   type ConnectResult,
   type EaConnectInput,
   type EpicConnectInput,
   type MergeGamesInput,
   type PlayStationConnectInput,
   type SteamConnectInput,
+  type SteamGridDbKeyInput,
   type SteamSignInInput,
   type UnlinkGameInput,
   type UbisoftConnectInput,
@@ -44,6 +48,10 @@ export interface IpcHandlers {
   getGame(id: number): GameDetail | null
   mergeGames(input: MergeGamesInput): void
   unlinkGame(input: UnlinkGameInput): void
+  getArtworkSettings(): ArtworkSettings
+  saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
+  removeSteamGridDbKey(): void
+  findMissingArtwork(): Promise<ArtworkRun>
   getDashboard(): DashboardStats
   listActivity(limit: number): ActivityPage
 }
@@ -72,6 +80,13 @@ const mergeGamesSchema = z
   .refine((input) => input.intoGameId !== input.gameId)
 
 const unlinkGameSchema = z.object({ platformGameId: gameIdSchema })
+
+const steamGridDbKeySchema = z.object({
+  key: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9]{16,64}$/),
+})
 
 const activityLimitSchema = z.number().int().min(1).max(MAX_ACTIVITY_LIMIT)
 
@@ -243,6 +258,34 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     const parsed = unlinkGameSchema.safeParse(input)
     if (parsed.success) handlers.unlinkGame(parsed.data)
+  })
+
+  ipcMain.handle(IPC.getArtworkSettings, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getArtworkSettings()
+  })
+
+  ipcMain.handle(IPC.saveSteamGridDbKey, (event, input: unknown): Promise<ArtworkKeyResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = steamGridDbKeySchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'That does not look like a SteamGridDB API key (letters and digits only).',
+      })
+    }
+    return handlers.saveSteamGridDbKey(parsed.data)
+  })
+
+  ipcMain.handle(IPC.removeSteamGridDbKey, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.removeSteamGridDbKey()
+  })
+
+  ipcMain.handle(IPC.findMissingArtwork, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.findMissingArtwork()
   })
 
   ipcMain.handle(IPC.getDashboard, (event) => {

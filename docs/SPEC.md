@@ -121,6 +121,13 @@ CREATE TABLE game_alias (                -- cleaned titles that lead to a game (
   game_id   INTEGER NOT NULL REFERENCES game(id)
 );
 
+CREATE TABLE artwork (                   -- SteamGridDB lookups by cleaned title (0004)
+  match_key  TEXT PRIMARY KEY,
+  url        TEXT,                        -- NULL = nothing found; asked again after 30 days
+  checked_at TEXT NOT NULL
+);
+-- 0005 clears Steam cover_url values on the old /steam/apps/<appid>/header.jpg path (dead for newer games).
+
 CREATE TABLE achievement (
   id               INTEGER PRIMARY KEY,
   platform_game_id INTEGER NOT NULL REFERENCES platform_game(id),
@@ -256,6 +263,10 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `getGame(id)` | `library:get-game` | One game (by game id) with its `entries`, best first: each platform entry's id, platform, `tag` (set when two entries share a platform, e.g. `PS4`), counts and achievements (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
 | `mergeGames({ intoGameId, gameId })` | `library:merge-games` | Moves every entry of `gameId` into `intoGameId` (both then `manual`) and moves its cleaned titles too, so later entries with those titles join. Ids are positive integers and must differ, otherwise ignored. Fires `onDataChanged` |
 | `unlinkGame({ platformGameId })` | `library:unlink-game` | Moves one entry to a game of its own (`manual`, no cleaned titles, so nothing joins it automatically). Ignored for a game's only entry or a bad id. Fires `onDataChanged` |
+| `getArtworkSettings()` | `artwork:get-settings` | `ArtworkSettings`: whether a SteamGridDB key is saved, how many games have no artwork, and the last run's problem (`key_refused`, `unreachable` or `null`). Never the key |
+| `saveSteamGridDbKey({ key })` | `artwork:save-steamgriddb-key` | Checks the key with SteamGridDB (one search), saves it in the `SecretStore` and looks for missing artwork (ADR-0013). The key is trimmed and must be 16-64 letters and digits, else `invalid_input`. Answers `ArtworkKeyResult`: `{ ok: true }` or `{ ok: false, reason: invalid_input | key_rejected | network | other, message }` |
+| `removeSteamGridDbKey()` | `artwork:remove-steamgriddb-key` | Deletes the key; found artwork stays |
+| `findMissingArtwork()` | `artwork:find-missing` | Looks up every game with no artwork now (one run at a time) and answers `ArtworkRun`: `{ found, checked }` |
 | `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, "Nearly there" and recent unlocks |
 | `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated unlocks across every platform (each a `RecentUnlock` with its description, its game id and its platform entry id), and `hasMore`. The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
 | `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |

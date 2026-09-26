@@ -233,6 +233,61 @@ describe('SteamProvider', () => {
     expect(request.searchParams.get('include_played_free_games')).toBe('1')
   })
 
+  describe('listGames covers', () => {
+    const ASSETS = JSON.stringify({
+      response: {
+        store_items: [
+          {
+            id: 400,
+            success: 1,
+            assets: { asset_url_format: 'steam/apps/400/${FILENAME}?t=1', header: 'h1/header.jpg' },
+          },
+          { id: 883710, success: 15 },
+        ],
+      },
+    })
+    let now = new Date('2026-09-26T12:00:00Z')
+    const fresh = (): SteamProvider => new SteamProvider(undefined, { now: () => now })
+    const storeRequests = (): number =>
+      requests.filter((url) => url.pathname === '/IStoreBrowseService/GetItems/v1/').length
+
+    beforeEach(() => {
+      now = new Date('2026-09-26T12:00:00Z')
+      replies['/IStoreBrowseService/GetItems/v1/'] = { body: ASSETS }
+    })
+
+    it("uses each game's current Steam header image, or none", async () => {
+      const games = await fresh().listGames(CREDENTIALS)
+
+      expect(games.find((game) => game.ref.externalId === '400')?.coverUrl).toBe(
+        'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/400/h1/header.jpg?t=1',
+      )
+      expect(games.find((game) => game.ref.externalId === '883710')?.coverUrl).toBeNull()
+    })
+
+    it('asks Steam for images at most once a day', async () => {
+      const steam = fresh()
+      await steam.listGames(CREDENTIALS)
+      await steam.listGames(CREDENTIALS)
+      expect(storeRequests()).toBe(1)
+
+      now = new Date(now.getTime() + 25 * 60 * 60_000)
+      await steam.listGames(CREDENTIALS)
+      expect(storeRequests()).toBe(2)
+    })
+
+    it('still lists the games when the image request fails', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      replies['/IStoreBrowseService/GetItems/v1/'] = { body: '{}', status: 503 }
+
+      const games = await fresh().listGames(CREDENTIALS)
+
+      expect(games).toHaveLength(3)
+      expect(games.every((game) => game.coverUrl === null)).toBe(true)
+      vi.restoreAllMocks()
+    })
+  })
+
   describe('fetchGame', () => {
     it('combines the schema, the player’s unlocks and global rarity for one game', async () => {
       const result = await provider.fetchGame(CREDENTIALS, { externalId: '883710' })

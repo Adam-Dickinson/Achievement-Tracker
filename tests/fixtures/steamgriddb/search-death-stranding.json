@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 5250432,
+      "name": "Death Stranding",
+      "verified": true,
+      "types": [
+        "steam",
+        "egs"
+      ],
+      "release_date": 1573171200
+    },
+    {
+      "id": 5293743,
+      "name": "Death Stranding Director's Cut",
+      "verified": true,
+      "types": [
+        "steam"
+      ],
+      "release_date": 1632441600
+    },
+    {
+      "id": 5442930,
+      "name": "Death Stranding 2: On The Beach",
+      "verified": true,
+      "types": [
+        "steam"
+      ],
+      "release_date": 1735689600
+    },
+    {
+      "id": 5529381,
+      "name": "Death Standing",
+      "verified": true,
+      "types": [
+        "steam"
+      ],
+      "release_date": 1780617600
+    }
+  ]
+}

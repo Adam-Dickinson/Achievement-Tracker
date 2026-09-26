@@ -20,7 +20,9 @@ import {
   toGameAchievements,
 } from './parse'
 import { readSteamSecret, requestSteamSession, type SteamSession } from './session'
+import { fetchHeaderImages } from './store-assets'
 
+const COVER_TTL_MS = 24 * 60 * 60_000
 const PLAYER_SUMMARIES = '/ISteamUser/GetPlayerSummaries/v2/'
 const OWNED_GAMES = '/IPlayerService/GetOwnedGames/v1/'
 const RECENTLY_PLAYED = '/IPlayerService/GetRecentlyPlayedGames/v1/'
@@ -51,6 +53,7 @@ export class SteamProvider implements AchievementProvider {
   readonly #now: () => Date
   readonly #familyTokens = new Map<string, Promise<SteamSession>>()
   readonly #hasAchievements = new Map<string, boolean>()
+  readonly #covers = new Map<string, { readonly url: string | null; readonly at: number }>()
 
   constructor(
     local: SteamLocalDeps = STEAM_LOCAL,
@@ -102,10 +105,10 @@ export class SteamProvider implements AchievementProvider {
       steamGet(RECENTLY_PLAYED, { steamid }, { key, signal }),
     ])
     const games = parseLibrary(owned, recent)
-    if (family === null) return games
+    if (family === null) return this.#withCovers(games, signal)
     const known = new Set(games.map((game) => game.ref.externalId))
     const shared = await this.#familyGames(steamid, key, family, known, signal)
-    return [...games, ...shared]
+    return this.#withCovers([...games, ...shared], signal)
   }
 
   async fetchGame(
@@ -129,6 +132,33 @@ export class SteamProvider implements AchievementProvider {
       parsePlayerAchievements(player),
       parseGlobalPercentages(rarity),
     )
+  }
+
+  async #withCovers(
+    games: readonly RemoteGame[],
+    signal?: AbortSignal,
+  ): Promise<readonly RemoteGame[]> {
+    const now = this.#now().getTime()
+    const stale = games
+      .map((game) => game.ref.externalId)
+      .filter((appid) => {
+        const cover = this.#covers.get(appid)
+        return !cover || now - cover.at > COVER_TTL_MS
+      })
+    if (stale.length > 0) {
+      try {
+        for (const [appid, url] of await fetchHeaderImages(stale, signal)) {
+          this.#covers.set(appid, { url, at: now })
+        }
+      } catch (error) {
+        if (!(error instanceof ProviderError) || signal?.aborted) throw error
+        console.warn(`Steam: kept the last covers this time (${error.message})`)
+      }
+    }
+    return games.map((game) => ({
+      ...game,
+      coverUrl: this.#covers.get(game.ref.externalId)?.url ?? null,
+    }))
   }
 
   async #familyGames(

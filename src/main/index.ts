@@ -33,6 +33,7 @@ import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
+import { ArtworkService } from './artwork/artwork-service'
 import {
   getDashboardStats,
   getGameDetail,
@@ -62,6 +63,8 @@ const STEAM_SIGN_IN_PAGE: CookieSignInPage = {
   cookieDomain: 'steampowered.com',
   mayNavigate: isSteamAddress,
 }
+const ARTWORK_DELAY_MS = 30_000
+
 const PSN_SIGN_IN_PAGE: CookieSignInPage = {
   title: 'Sign in to PlayStation',
   isSignedIn: isPsnRedirect,
@@ -172,6 +175,8 @@ async function start(): Promise<void> {
   const dataChanged = coalesce(() => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.dataChanged)
   }, 1000)
+  const artwork = new ArtworkService({ db, secrets, onFound: () => dataChanged() })
+  const findArtworkSoon = coalesce(() => void artwork.run(), ARTWORK_DELAY_MS)
   const scheduler = new Scheduler({
     db,
     providers: { steam, xbox, playstation, epic, ubisoft, ea },
@@ -180,11 +185,16 @@ async function start(): Promise<void> {
       for (const event of events) console.info(describeUnlockTiming(event))
       notifications.notify(events)
     },
-    onDataChanged: dataChanged,
+    onDataChanged: () => {
+      dataChanged()
+      findArtworkSoon()
+    },
   })
   scheduler.start()
+  findArtworkSoon()
   app.on('before-quit', () => {
     scheduler.stop()
+    artwork.stop()
     notifications.stop()
     xboxSignIn.cancel()
     ubisoftSignIn.cancel()
@@ -247,6 +257,14 @@ async function start(): Promise<void> {
     unlinkGame: ({ platformGameId }) => {
       if (unlinkPlatformGame(db, platformGameId)) dataChanged()
     },
+    getArtworkSettings: () => ({
+      hasKey: artwork.hasKey(),
+      missing: listLibraryGames(db).filter((game) => game.coverUrl === null).length,
+      problem: artwork.problem,
+    }),
+    saveSteamGridDbKey: ({ key }) => artwork.saveKey(key),
+    removeSteamGridDbKey: () => artwork.removeKey(),
+    findMissingArtwork: () => artwork.run(),
     getDashboard: () => getDashboardStats(db),
     listActivity: (limit) => listActivity(db, limit),
   })
