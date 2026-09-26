@@ -65,7 +65,7 @@ describe('GameCard', () => {
     expect(colour).toHaveStyle({ clipPath: 'inset(0 50% 0 0)' })
   })
 
-  it('shows the title instead of art when there is no image, or it fails to load', () => {
+  it('draws a generated cover with the title when there is no image, or it fails to load', () => {
     const { container, rerender } = render(
       <GameCard game={game({ coverUrl: null })} onOpen={vi.fn()} />,
     )
@@ -77,7 +77,7 @@ describe('GameCard', () => {
     fireEvent.error(img)
 
     expect(container.querySelector('img')).toBeNull()
-    expect(screen.getAllByText('Portal')).toHaveLength(2)
+    expect(screen.getAllByText('Portal')).toHaveLength(3)
   })
 
   it('opens the game when clicked', () => {
