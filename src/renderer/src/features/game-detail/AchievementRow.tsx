@@ -16,9 +16,9 @@ export function AchievementRow({ achievement }: AchievementRowProps) {
   const highlight = unlocked && rarity === 'ultra_rare'
 
   return (
-    <li
+    <div
       data-rarity={rarity}
-      className={`flex items-center gap-4 rounded-panel border bg-surface-1 p-4 shadow-float ${
+      className={`flex w-full items-center gap-4 rounded-panel border bg-surface-1 p-4 shadow-float ${
         highlight ? 'border-(--rarity)/60' : 'border-line'
       }`}
     >
@@ -56,7 +56,7 @@ export function AchievementRow({ achievement }: AchievementRowProps) {
           <RarityChip rarity={rarity} />
         </div>
       )}
-    </li>
+    </div>
   )
 }
 

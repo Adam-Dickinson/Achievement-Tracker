@@ -151,7 +151,7 @@ Tests live next to the code they test (`*.test.ts`, `*.test.tsx`).
 |---|---|
 | Shell | Electron 44 (Chromium 152, Node 24) |
 | Language | TypeScript 6.0, strict, `noUncheckedIndexedAccess` |
-| UI | React 19, Tailwind CSS 4 (tokens in `@theme`), Motion (animation), lucide-react (icons) |
+| UI | React 19, Tailwind CSS 4 (tokens in `@theme`), Motion (animation), lucide-react (icons), `@tanstack/react-virtual` (long lists, [ADR-0014](adr/0014-virtualized-lists-client-side-filtering.md)) |
 | Fonts | Bricolage Grotesque and Figtree, bundled with `@fontsource-variable/*` |
 | Build | electron-vite 5 on Vite 7 |
 | DB | `node:sqlite` (built into Node), plain SQL migrations |

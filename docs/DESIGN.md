@@ -41,7 +41,7 @@ One place to see every achievement and trophy you've ever earned, on any platfor
 | Screen | Contents |
 |---|---|
 | **Dashboard** | Total unlocked, overall completion %, recent unlocks feed, rarest unlocked, "closest to 100%" games, per-platform breakdown |
-| **Library** | Grid/list of games, platform badges, completion ring, sort (recent, %, name, platform), filter (platform, completed, in-progress) |
+| **Library** | Grid/list of games, platform badges, completion ring, search, sort (recent, %, name, platform), filter (platform; in progress, not started, completed), virtualized for large libraries |
 | **Game detail** | Header art, per-platform tabs if linked, achievement list (locked/unlocked, rarity %, unlock date, description, hidden handling) |
 | **Activity** | Chronological unlock timeline across all platforms |
 | **Accounts** | Connected platforms, status (connected / needs re-auth / error), last sync, connect/disconnect |

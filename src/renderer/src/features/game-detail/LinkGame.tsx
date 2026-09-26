@@ -1,8 +1,8 @@
 import { useId, useState } from 'react'
 import { Button } from '@/components/Button'
 import { useLibrary } from '@/features/library/useLibrary'
+import { matchesSearch, searchWords } from '@/lib/search'
 import { platformName } from '@shared/platform'
-import { foldAccents } from '@shared/text'
 
 const MAX_RESULTS = 20
 
@@ -12,20 +12,16 @@ interface LinkGameProps {
   onClose: () => void
 }
 
-export function searchText(text: string): string {
-  return foldAccents(text).toLowerCase()
-}
-
 export function LinkGame({ gameId, onPick, onClose }: LinkGameProps) {
   const games = useLibrary()
   const [query, setQuery] = useState('')
   const id = useId()
-  const needle = searchText(query.trim())
+  const words = searchWords(query)
   const matches =
-    needle === ''
+    words.length === 0
       ? []
       : (games ?? [])
-          .filter((game) => game.id !== gameId && searchText(game.title).includes(needle))
+          .filter((game) => game.id !== gameId && matchesSearch(game.title, words))
           .slice(0, MAX_RESULTS)
 
   return (
@@ -54,7 +50,7 @@ export function LinkGame({ gameId, onPick, onClose }: LinkGameProps) {
       </label>
 
       {games === null && <p role="status">Loading...</p>}
-      {games !== null && needle !== '' && matches.length === 0 && (
+      {games !== null && words.length > 0 && matches.length === 0 && (
         <p role="status" className="text-sm text-fg-muted">
           No other game in your library matches “{query.trim()}”.
         </p>

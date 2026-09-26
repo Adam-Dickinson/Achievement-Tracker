@@ -4,10 +4,13 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { fakeApi } from '@/test/fake-api'
+import { fakeLayout } from '@/test/layout'
 
 const sendTestNotification = vi.fn()
+let restoreLayout: () => void
 
 beforeEach(() => {
+  restoreLayout = fakeLayout()
   window.api = fakeApi({
     sendTestNotification,
   })
@@ -15,6 +18,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  restoreLayout()
   vi.clearAllMocks()
 })
 
@@ -111,6 +115,51 @@ describe('App: opening a game', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
     expect(await screen.findByRole('heading', { name: 'Library' })).toBeInTheDocument()
+  })
+
+  it('keeps the Library search and filters after going back from a game', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.change(await screen.findByRole('searchbox', { name: 'Search games' }), {
+      target: { value: 'port' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Completion' }))
+
+    fireEvent.click(screen.getByRole('button', { name: /Portal/ }))
+    await screen.findByRole('heading', { name: 'Portal' })
+    fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
+
+    expect(await screen.findByRole('searchbox', { name: 'Search games' })).toHaveValue('port')
+    expect(screen.getByRole('button', { name: 'Completion' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  it('goes back to where the Library was scrolled, and starts a game at the top', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    const card = await screen.findByRole('button', { name: /Portal/ })
+    const main = screen.getByRole('main')
+    main.scrollTop = 500
+
+    fireEvent.click(card)
+    await screen.findByRole('heading', { name: 'Portal' })
+    expect(main.scrollTop).toBe(0)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
+    await screen.findByRole('list', { name: 'Games' })
+    expect(main.scrollTop).toBe(500)
+  })
+
+  it('starts each page at the top', async () => {
+    render(<App />)
+    const main = screen.getByRole('main')
+    main.scrollTop = 300
+
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+
+    expect(main.scrollTop).toBe(0)
   })
 
   it('opens a game from Activity on the tab of the unlock that was clicked', async () => {
