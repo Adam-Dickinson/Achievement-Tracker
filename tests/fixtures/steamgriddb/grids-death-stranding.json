@@ -1,0 +1,146 @@
+{
+  "success": true,
+  "page": 0,
+  "total": 29,
+  "limit": 50,
+  "data": [
+    {
+      "id": 146125,
+      "score": 0,
+      "style": "alternate",
+      "width": 920,
+      "height": 430,
+      "nsfw": false,
+      "humor": false,
+      "notes": "Companion horizontal grid to [Morente](https://www.steamgriddb.com/profile/76561197970305233)'s [vertical \"Vinyl soundtrack cover art\" grid](https://www.steamgriddb.com/grid/126663)\n\nCreated with cover art by Max Löffler, from Mondo's *Death Stranding - Original Video Game Score* 3XLP [listing](https://cdn.shopify.com/s/files/1/0558/2081/products/DS-Gate-2_1024x.jpg?v=1604608973)\n\nResized for Steam",
+      "mime": "image/png",
+      "language": "en",
+      "url": "https://cdn2.steamgriddb.com/grid/ca570775f8eae0ce6db8377b104b5330.png",
+      "thumb": "https://cdn2.steamgriddb.com/thumb/ca570775f8eae0ce6db8377b104b5330.jpg",
+      "lock": false,
+      "epilepsy": false,
+      "upvotes": 0,
+      "downvotes": 0,
+      "author": {
+        "name": "Example Artist 1",
+        "steam64": "76561190000000000",
+        "avatar": "https://example.invalid/avatar.png"
+      }
+    },
+    {
+      "id": 146132,
+      "score": 0,
+      "style": "alternate",
+      "width": 920,
+      "height": 430,
+      "nsfw": false,
+      "humor": false,
+      "notes": "Created with front cover art by Randy Ortiz, from Mondo's *Death Stranding: Songs From The Video Game* 3XLP [listing](https://cdn.shopify.com/s/files/1/0558/2081/products/DSIntGate_1024x.jpg?v=1607038782)\n\nCredit to [BETAFIX](https://www.steamgriddb.com/profile/76561198038132921) for [logo](https://www.steamgriddb.com/logo/28589)\n\nResized for Steam",
+      "mime": "image/png",
+      "language": "en",
+      "url": "https://cdn2.steamgriddb.com/grid/ee5c8919a66ab269018bd4d4840cc206.png",
+      "thumb": "https://cdn2.steamgriddb.com/thumb/ee5c8919a66ab269018bd4d4840cc206.jpg",
+      "lock": false,
+      "epilepsy": false,
+      "upvotes": 0,
+      "downvotes": 0,
+      "author": {
+        "name": "Example Artist 2",
+        "steam64": "76561190000000000",
+        "avatar": "https://example.invalid/avatar.png"
+      }
+    },
+    {
+      "id": 146133,
+      "score": 0,
+      "style": "alternate",
+      "width": 920,
+      "height": 430,
+      "nsfw": false,
+      "humor": false,
+      "notes": "Created with inner cover art by Randy Ortiz, from Mondo's *Death Stranding: Songs From The Video Game* 3XLP [listing](https://cdn.shopify.com/s/files/1/0558/2081/products/DSIntGate_1024x.jpg?v=1607038782)\n\nCredit to [BETAFIX](https://www.steamgriddb.com/profile/76561198038132921) for [logo](https://www.steamgriddb.com/logo/28589)\n\nResized for Steam",
+      "mime": "image/png",
+      "language": "en",
+      "url": "https://cdn2.steamgriddb.com/grid/f4e7ea2cd30d00566877f15f0b148521.png",
+      "thumb": "https://cdn2.steamgriddb.com/thumb/f4e7ea2cd30d00566877f15f0b148521.jpg",
+      "lock": false,
+      "epilepsy": false,
+      "upvotes": 0,
+      "downvotes": 0,
+      "author": {
+        "name": "Example Artist 3",
+        "steam64": "76561190000000000",
+        "avatar": "https://example.invalid/avatar.png"
+      }
+    },
+    {
+      "id": 100395,
+      "score": 0,
+      "style": "alternate",
+      "width": 920,
+      "height": 430,
+      "nsfw": false,
+      "humor": false,
+      "notes": null,
+      "mime": "image/png",
+      "language": "en",
+      "url": "https://cdn2.steamgriddb.com/grid/700e82309fe1a19aa17fd38b384e1304.png",
+      "thumb": "https://cdn2.steamgriddb.com/thumb/700e82309fe1a19aa17fd38b384e1304.jpg",
+      "lock": false,
+      "epilepsy": false,
+      "upvotes": 0,
+      "downvotes": 0,
+      "author": {
+        "name": "Example Artist 4",
+        "steam64": "76561190000000000",
+        "avatar": "https://example.invalid/avatar.png"
+      }
+    },
+    {
+      "id": 166363,
+      "score": 0,
+      "style": "material",
+      "width": 920,
+      "height": 430,
+      "nsfw": false,
+      "humor": false,
+      "notes": null,
+      "mime": "image/png",
+      "language": "en",
+      "url": "https://cdn2.steamgriddb.com/grid/6bec063efe7eee36a64d163f92863d2e.png",
+      "thumb": "https://cdn2.steamgriddb.com/thumb/6bec063efe7eee36a64d163f92863d2e.jpg",
+      "lock": false,
+      "epilepsy": false,
+      "upvotes": 0,
+      "downvotes": 0,
+      "author": {
+        "name": "Example Artist 5",
+        "steam64": "76561190000000000",
+        "avatar": "https://example.invalid/avatar.png"
+      }
+    },
+    {
+      "id": 501680,
+      "score": 0,
+      "style": "alternate",
+      "width": 920,
+      "height": 430,
+      "nsfw": false,
+      "humor": false,
+      "notes": "Part of my 'Death Stranding' series collection with consistent logo design & position",
+      "mime": "image/png",
+      "language": "en",
+      "url": "https://cdn2.steamgriddb.com/grid/6ded1374e517679dc8e7251fb1a94e2f.png",
+      "thumb": "https://cdn2.steamgriddb.com/thumb/6ded1374e517679dc8e7251fb1a94e2f.jpg",
+      "lock": false,
+      "epilepsy": false,
+      "upvotes": 0,
+      "downvotes": 0,
+      "author": {
+        "name": "Example Artist 6",
+        "steam64": "76561190000000000",
+        "avatar": "https://example.invalid/avatar.png"
+      }
+    }
+  ]
+}

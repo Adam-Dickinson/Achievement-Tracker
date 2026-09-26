@@ -26,6 +26,10 @@ export const IPC = {
   getGame: 'library:get-game',
   mergeGames: 'library:merge-games',
   unlinkGame: 'library:unlink-game',
+  getArtworkSettings: 'artwork:get-settings',
+  saveSteamGridDbKey: 'artwork:save-steamgriddb-key',
+  removeSteamGridDbKey: 'artwork:remove-steamgriddb-key',
+  findMissingArtwork: 'artwork:find-missing',
   getDashboard: 'dashboard:get',
   listActivity: 'activity:list',
   dataChanged: 'data:changed',
@@ -98,6 +102,31 @@ export interface UnlinkGameInput {
   readonly platformGameId: number
 }
 
+export type ArtworkProblem = 'key_refused' | 'unreachable' | null
+
+export interface ArtworkSettings {
+  readonly hasKey: boolean
+  readonly missing: number
+  readonly problem: ArtworkProblem
+}
+
+export interface ArtworkRun {
+  readonly found: number
+  readonly checked: number
+}
+
+export interface SteamGridDbKeyInput {
+  readonly key: string
+}
+
+export type ArtworkKeyResult =
+  | { readonly ok: true }
+  | {
+      readonly ok: false
+      readonly reason: 'invalid_input' | 'key_rejected' | 'network' | 'other'
+      readonly message: string
+    }
+
 export type ConnectFailure =
   'invalid_input' | 'key_rejected' | 'code_rejected' | 'cancelled' | 'network' | 'other'
 
@@ -126,6 +155,10 @@ export interface TrophyLockerApi {
   getGame(id: number): Promise<GameDetail | null>
   mergeGames(input: MergeGamesInput): Promise<void>
   unlinkGame(input: UnlinkGameInput): Promise<void>
+  getArtworkSettings(): Promise<ArtworkSettings>
+  saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
+  removeSteamGridDbKey(): Promise<void>
+  findMissingArtwork(): Promise<ArtworkRun>
   getDashboard(): Promise<DashboardStats>
   listActivity(limit: number): Promise<ActivityPage>
   onDataChanged(listener: () => void): () => void

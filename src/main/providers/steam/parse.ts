@@ -9,7 +9,6 @@ import type {
 } from '@shared/models'
 
 export const STEAM_APP_IMAGES = 'https://media.steampowered.com/steamcommunity/public/images/apps'
-export const STEAM_STORE_ART = 'https://cdn.akamai.steamstatic.com/steam/apps'
 
 const percentSchema = z
   .union([z.number(), z.string().trim().min(1).pipe(z.coerce.number())])
@@ -175,7 +174,7 @@ function toRemoteGame(game: SteamLibraryGame, recentlyPlayed: boolean): RemoteGa
     ref: { externalId: String(game.appid) },
     title: game.name,
     iconUrl: iconHash === null ? null : `${STEAM_APP_IMAGES}/${game.appid}/${iconHash}.jpg`,
-    coverUrl: `${STEAM_STORE_ART}/${game.appid}/header.jpg`,
+    coverUrl: null,
     lastPlayed: fromUnixSeconds(game.rtime_last_played ?? 0),
     recentlyPlayed,
   }

@@ -55,6 +55,10 @@ const fakes = {
   getGame: vi.fn(() => null),
   mergeGames: vi.fn(),
   unlinkGame: vi.fn(),
+  getArtworkSettings: vi.fn(() => ({ hasKey: false, missing: 3, problem: null })),
+  saveSteamGridDbKey: vi.fn(() => Promise.resolve({ ok: true as const })),
+  removeSteamGridDbKey: vi.fn(),
+  findMissingArtwork: vi.fn(() => Promise.resolve({ found: 2, checked: 3 })),
   getDashboard: vi.fn(() => DASHBOARD),
   listActivity: vi.fn(() => ACTIVITY),
 }
@@ -99,6 +103,10 @@ describe('registerIpcHandlers', () => {
     IPC.getGame,
     IPC.mergeGames,
     IPC.unlinkGame,
+    IPC.getArtworkSettings,
+    IPC.saveSteamGridDbKey,
+    IPC.removeSteamGridDbKey,
+    IPC.findMissingArtwork,
     IPC.getDashboard,
     IPC.listActivity,
   ])('refuses %s from a page we did not ship', (channel) => {
@@ -460,5 +468,47 @@ describe('game linking handlers', () => {
     call(IPC.unlinkGame, TRUSTED, payload)
 
     expect(fakes.unlinkGame).not.toHaveBeenCalled()
+  })
+})
+
+describe('artwork handlers', () => {
+  it('reports the artwork settings and runs a search for missing artwork', async () => {
+    expect(call(IPC.getArtworkSettings, TRUSTED)).toEqual({
+      hasKey: false,
+      missing: 3,
+      problem: null,
+    })
+    expect(await call(IPC.findMissingArtwork, TRUSTED)).toEqual({ found: 2, checked: 3 })
+  })
+
+  it('saves a trimmed SteamGridDB key', async () => {
+    const result = await call(IPC.saveSteamGridDbKey, TRUSTED, {
+      key: ' 0123456789abcdef0123456789abcdef ',
+    })
+
+    expect(result).toEqual({ ok: true })
+    expect(fakes.saveSteamGridDbKey).toHaveBeenCalledWith({
+      key: '0123456789abcdef0123456789abcdef',
+    })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['an empty key', { key: '' }],
+    ['a key with spaces inside', { key: '0123456789abcdef 0123456789abcdef' }],
+    ['a key that is too short', { key: 'abc123' }],
+    ['a number', { key: 1234567890123456 }],
+  ])('refuses %s without asking SteamGridDB', async (_label, payload) => {
+    expect(await call(IPC.saveSteamGridDbKey, TRUSTED, payload)).toMatchObject({
+      ok: false,
+      reason: 'invalid_input',
+    })
+    expect(fakes.saveSteamGridDbKey).not.toHaveBeenCalled()
+  })
+
+  it('removes the key', () => {
+    call(IPC.removeSteamGridDbKey, TRUSTED)
+
+    expect(fakes.removeSteamGridDbKey).toHaveBeenCalledOnce()
   })
 })

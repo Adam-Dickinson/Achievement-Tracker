@@ -39,6 +39,15 @@ describe('App', () => {
     expect(window.api.listAccounts).toHaveBeenCalledOnce()
   })
 
+  it('shows the Artwork settings on the Settings page', async () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+
+    expect(await screen.findByRole('region', { name: 'Artwork' })).toBeInTheDocument()
+    expect(window.api.getArtworkSettings).toHaveBeenCalled()
+  })
+
   it('shows the Activity timeline on the Activity page', async () => {
     window.api = fakeApi({
       listActivity: vi.fn().mockResolvedValue({ unlocks: [], hasMore: false }),

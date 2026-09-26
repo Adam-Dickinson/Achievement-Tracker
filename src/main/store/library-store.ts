@@ -9,6 +9,8 @@ import type {
   RecentUnlock,
 } from '@shared/library'
 import type { Platform } from '@shared/platform'
+import { listArtworkUrls } from './artwork-store'
+import { matchKey } from './match-key'
 
 const NEARLY_THERE_COUNT = 4
 const RECENT_UNLOCK_COUNT = 6
@@ -39,7 +41,10 @@ const ENTRIES = `
   LEFT JOIN unlock u ON u.achievement_id = a.id`
 
 export function listLibraryGames(db: DatabaseSync): LibraryGame[] {
-  return groupByGame(listEntries(db)).map(toLibraryGame).sort(byLatestUnlock)
+  const artwork = listArtworkUrls(db)
+  return groupByGame(listEntries(db))
+    .map((game) => toLibraryGame(game, artwork))
+    .sort(byLatestUnlock)
 }
 
 export function getGameDetail(db: DatabaseSync, gameId: number): GameDetail | null {
@@ -50,14 +55,15 @@ export function getGameDetail(db: DatabaseSync, gameId: number): GameDetail | nu
   if (!ranked) return null
 
   return {
-    game: toLibraryGame(ranked),
+    game: toLibraryGame(ranked, listArtworkUrls(db)),
     entries: ranked.all.map((entry) => toGameEntry(db, entry, ranked.all)),
   }
 }
 
 export function getDashboardStats(db: DatabaseSync, now = new Date()): DashboardStats {
   const entries = listEntries(db)
-  const games = groupByGame(entries).map(toLibraryGame)
+  const artwork = listArtworkUrls(db)
+  const games = groupByGame(entries).map((game) => toLibraryGame(game, artwork))
   const nearlyThere = games
     .filter((game) => game.unlocked < game.total)
     .sort((a, b) => b.unlocked / b.total - a.unlocked / a.total || a.title.localeCompare(b.title))
@@ -149,7 +155,10 @@ function share(entry: EntryRecord): number {
   return entry.total === 0 ? -1 : entry.unlocked / entry.total
 }
 
-function toLibraryGame({ best, all }: RankedEntries): LibraryGame {
+function toLibraryGame(
+  { best, all }: RankedEntries,
+  artwork: ReadonlyMap<string, string>,
+): LibraryGame {
   const title = all
     .map((entry) => entry.title.trim())
     .reduce((shortest, candidate) => (candidate.length < shortest.length ? candidate : shortest))
@@ -162,11 +171,25 @@ function toLibraryGame({ best, all }: RankedEntries): LibraryGame {
     id: best.game_id,
     title,
     platforms: [...new Set(all.map((entry) => entry.platform))],
-    coverUrl: best.cover_url ?? all.find((entry) => entry.cover_url !== null)?.cover_url ?? null,
+    coverUrl:
+      best.cover_url ??
+      all.find((entry) => entry.cover_url !== null)?.cover_url ??
+      foundArtwork(all, artwork),
     unlocked: best.unlocked,
     total: best.total,
     lastUnlockAt: toDate(lastUnlock),
   }
+}
+
+function foundArtwork(
+  entries: readonly EntryRecord[],
+  artwork: ReadonlyMap<string, string>,
+): string | null {
+  for (const entry of entries) {
+    const url = artwork.get(matchKey(entry.title))
+    if (url) return url
+  }
+  return null
 }
 
 function toGameEntry(db: DatabaseSync, entry: EntryRecord, all: readonly EntryRecord[]): GameEntry {

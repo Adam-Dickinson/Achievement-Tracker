@@ -127,7 +127,7 @@ describe('fetchStoreAchievementFlags', () => {
 describe('toFamilyGame', () => {
   const now = new Date('2026-09-10T00:00:00.000Z')
 
-  it("builds a library game with Steam's icon and header art", () => {
+  it("builds a library game with Steam's icon, leaving the cover to the provider", () => {
     const game = toFamilyGame(
       { appid: '220', name: 'Half-Life 2', iconHash: 'abc', lastPlayed: null },
       now,
@@ -137,7 +137,7 @@ describe('toFamilyGame', () => {
       ref: { externalId: '220' },
       title: 'Half-Life 2',
       iconUrl: 'https://media.steampowered.com/steamcommunity/public/images/apps/220/abc.jpg',
-      coverUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/220/header.jpg',
+      coverUrl: null,
       lastPlayed: null,
       recentlyPlayed: false,
     })

@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 5467489,
+      "name": "Georgie-Yolkie",
+      "verified": true,
+      "types": [
+        "steam"
+      ],
+      "release_date": 1733011200
+    },
+    {
+      "id": 5483104,
+      "name": "Georgie-Yolkie 64 - The Furry Tale",
+      "verified": true,
+      "types": [
+        "steam"
+      ],
+      "release_date": 1743465600
+    }
+  ]
+}
