@@ -89,8 +89,8 @@ Design work (mockups for Dashboard, Library, Game detail, Toast, Accounts, Notif
 ## 8. Cross-platform game linking
 
 The same game appears under different IDs on each platform. We maintain a **canonical game** with multiple **platform entries**:
-- Auto-match by normalized title + release year, with manual merge/split UI
-- Achievements are *not* merged across platforms (they differ per platform); the game detail page shows one tab per platform and a combined summary
+- Auto-match by cleaned title (case, accents, ®/™, punctuation, PlayStation tags and edition words such as GOTY or Deluxe Edition ignored; "Remastered" and "Enhanced Edition" kept, so those stay separate), with merge ("Link another game…") and unlink on Game detail. Providers give no release year, so it is not used. Manual choices stick: auto-matching never moves a merged or unlinked entry. See the [design](superpowers/specs/2026-09-26-game-linking-design.md)
+- Achievements are *not* merged across platforms (they differ per platform); the game detail page shows one tab per platform entry (the tabs double as the combined summary, each with its progress), and the Library card shows the best platform's completion with a badge per platform
 - Steam-sourced games that are also sold on Epic/Ubisoft/EA are already covered via Steam, so those stores need no separate integration for those titles
 
 ## 9. Privacy & security

@@ -5,7 +5,7 @@ import { StatTile } from './StatTile'
 import { useDashboardStats } from './useDashboardStats'
 
 interface DashboardProps {
-  onOpenGame: (id: number) => void
+  onOpenGame: (id: number, platformGameId?: number) => void
 }
 
 export function Dashboard({ onOpenGame }: DashboardProps) {

@@ -3,7 +3,7 @@ import type { Platform } from './platform'
 export interface LibraryGame {
   readonly id: number
   readonly title: string
-  readonly platform: Platform
+  readonly platforms: readonly Platform[]
   readonly coverUrl: string | null
   readonly unlocked: number
   readonly total: number
@@ -22,14 +22,25 @@ export interface GameAchievement {
   readonly unlockedAt: Date | null
 }
 
+export interface GameEntry {
+  readonly platformGameId: number
+  readonly platform: Platform
+  readonly tag: string | null
+  readonly title: string
+  readonly unlocked: number
+  readonly total: number
+  readonly achievements: readonly GameAchievement[]
+}
+
 export interface GameDetail {
   readonly game: LibraryGame
-  readonly achievements: readonly GameAchievement[]
+  readonly entries: readonly GameEntry[]
 }
 
 export interface RecentUnlock {
   readonly achievementId: number
   readonly gameId: number
+  readonly platformGameId: number
   readonly gameTitle: string
   readonly platform: Platform
   readonly name: string

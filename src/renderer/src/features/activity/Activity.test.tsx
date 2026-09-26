@@ -22,6 +22,7 @@ function unlock(overrides: Partial<RecentUnlock> = {}): RecentUnlock {
   return {
     achievementId: 1,
     gameId: 3,
+    platformGameId: 30,
     gameTitle: 'Elden Ring',
     platform: 'steam',
     name: 'Age of the Stars',
@@ -126,7 +127,7 @@ describe('Activity', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /First Win/ }))
 
-    expect(onOpenGame).toHaveBeenCalledWith(4)
+    expect(onOpenGame).toHaveBeenCalledWith(4, 30)
   })
 
   it('says when nothing has been unlocked yet', async () => {

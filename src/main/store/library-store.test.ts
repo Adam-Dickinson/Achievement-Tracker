@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { RemoteAchievement, RemoteGame } from '@shared/models'
+import type { Platform } from '@shared/platform'
 import {
   getDashboardStats,
   getGameDetail,
@@ -51,14 +52,21 @@ function achievement(
   }
 }
 
+interface Seeded {
+  readonly gameId: number
+  readonly platformGameId: number
+}
+
 function seedGame(
   externalId: string,
   title: string,
   total: number,
   unlockedAt: readonly (Date | null)[] = [],
-): number {
-  const account = upsertAccount(db, { platform: 'steam', externalId: 'acc', displayName: 'Player' })
-  addPlatformGames(db, account, [game(externalId, title)])
+  platform: Platform = 'steam',
+  coverUrl: string | null = `https://cover/${externalId}.jpg`,
+): Seeded {
+  const account = upsertAccount(db, { platform, externalId: 'acc', displayName: 'Player' })
+  addPlatformGames(db, account, [{ ...game(externalId, title), coverUrl }])
   const { id } = getPlatformGameByExternalId(db, account.id, externalId)
   upsertAchievements(
     db,
@@ -76,7 +84,10 @@ function seedGame(
       progress: null,
     })),
   )
-  return id
+  const row = db.prepare('SELECT game_id FROM platform_game WHERE id = ?').get(id) as {
+    game_id: number
+  }
+  return { gameId: row.game_id, platformGameId: id }
 }
 
 beforeEach(() => {
@@ -86,16 +97,16 @@ beforeEach(() => {
 
 describe('listLibraryGames', () => {
   it('lists each game with its cover, achievement counts and last unlock', () => {
-    const id = seedGame('400', 'Portal', 3, [
+    const { gameId } = seedGame('400', 'Portal', 3, [
       new Date('2026-09-01T10:00:00Z'),
       new Date('2026-09-05T10:00:00Z'),
     ])
 
     expect(listLibraryGames(db)).toEqual([
       {
-        id,
+        id: gameId,
         title: 'Portal',
-        platform: 'steam',
+        platforms: ['steam'],
         coverUrl: 'https://cover/400.jpg',
         unlocked: 2,
         total: 3,
@@ -118,16 +129,57 @@ describe('listLibraryGames', () => {
 
     expect(listLibraryGames(db).map((g) => g.title)).toEqual(['New', 'Old', 'A game', 'b game'])
   })
+
+  it('shows a linked game once, with the best platform, every badge and the shortest title', () => {
+    const steam = seedGame('1', 'Apex Legends', 4, [new Date('2026-09-01T00:00:00Z')])
+    seedGame('set-1', 'Apex Legends™', 2, [null, null], 'ea', null)
+    seedGame('trophy/NPWR1', 'Apex Legends', 10, [new Date('2026-09-10T00:00:00Z')], 'playstation')
+
+    expect(listLibraryGames(db)).toEqual([
+      {
+        id: steam.gameId,
+        title: 'Apex Legends',
+        platforms: ['ea', 'steam', 'playstation'],
+        coverUrl: 'https://cover/1.jpg',
+        unlocked: 2,
+        total: 2,
+        lastUnlockAt: new Date('2026-09-10T00:00:00Z'),
+      },
+    ])
+  })
+
+  it('breaks a tie on share by the most unlocked, and puts entries with no achievements last', () => {
+    seedGame('1', 'Doom', 0)
+    seedGame('trophy/NPWR1', 'Doom', 4, [null, null], 'playstation')
+    seedGame('set-1', 'Doom', 2, [null], 'ea')
+
+    expect(listLibraryGames(db)[0]).toMatchObject({
+      platforms: ['playstation', 'ea', 'steam'],
+      unlocked: 2,
+      total: 4,
+    })
+  })
 })
 
 describe('getGameDetail', () => {
   it('returns the game and every achievement with its unlock state', () => {
-    const id = seedGame('400', 'Portal', 2, [new Date('2026-09-01T10:00:00Z')])
+    const { gameId, platformGameId } = seedGame('400', 'Portal', 2, [
+      new Date('2026-09-01T10:00:00Z'),
+    ])
 
-    const detail = getGameDetail(db, id)
+    const detail = getGameDetail(db, gameId)
 
-    expect(detail?.game).toMatchObject({ id, title: 'Portal', unlocked: 1, total: 2 })
-    expect(detail?.achievements).toEqual([
+    expect(detail?.game).toMatchObject({ id: gameId, title: 'Portal', unlocked: 1, total: 2 })
+    expect(detail?.entries).toHaveLength(1)
+    expect(detail?.entries[0]).toMatchObject({
+      platformGameId,
+      platform: 'steam',
+      tag: null,
+      title: 'Portal',
+      unlocked: 1,
+      total: 2,
+    })
+    expect(detail?.entries[0]?.achievements).toEqual([
       expect.objectContaining({
         name: 'Achievement 400-0',
         description: 'Do 400-0',
@@ -143,12 +195,47 @@ describe('getGameDetail', () => {
   })
 
   it('counts an unlock with no date as unlocked', () => {
-    const id = seedGame('400', 'Portal', 1, [null])
+    const { gameId } = seedGame('400', 'Portal', 1, [null])
 
-    expect(getGameDetail(db, id)?.achievements[0]).toMatchObject({
+    expect(getGameDetail(db, gameId)?.entries[0]?.achievements[0]).toMatchObject({
       unlocked: true,
       unlockedAt: null,
     })
+  })
+
+  it('lists every linked entry, best first, tagging entries that share a platform', () => {
+    const steam = seedGame('2322010', 'God of War Ragnarök', 10, [null])
+    const ps4 = seedGame(
+      'trophy/NPWR1',
+      'God of War Ragnarök (PS4)',
+      4,
+      [null, null],
+      'playstation',
+    )
+    const ps5 = seedGame(
+      'trophy2/NPWR2',
+      'God of War Ragnarök (PS5 / PC)',
+      2,
+      [null, null],
+      'playstation',
+    )
+
+    const detail = getGameDetail(db, steam.gameId)
+
+    expect(detail?.game).toMatchObject({ title: 'God of War Ragnarök', unlocked: 2, total: 2 })
+    expect(
+      detail?.entries.map((entry) => [
+        entry.platformGameId,
+        entry.platform,
+        entry.tag,
+        entry.total,
+      ]),
+    ).toEqual([
+      [ps5.platformGameId, 'playstation', 'PS5 / PC', 2],
+      [ps4.platformGameId, 'playstation', 'PS4', 4],
+      [steam.platformGameId, 'steam', null, 10],
+    ])
+    expect(detail?.entries[2]?.achievements).toHaveLength(10)
   })
 
   it('returns null for a game that does not exist', () => {
@@ -169,7 +256,8 @@ describe('listRecentUnlocks', () => {
 
     expect(recent.map((u) => u.name)).toEqual(['Achievement 400-2', 'Achievement 500-0'])
     expect(recent[0]).toMatchObject({
-      gameId: portal,
+      gameId: portal.gameId,
+      platformGameId: portal.platformGameId,
       gameTitle: 'Portal',
       platform: 'steam',
       description: 'Do 400-2',
@@ -257,5 +345,19 @@ describe('getDashboardStats', () => {
 
     expect(stats.nearlyThere).toHaveLength(4)
     expect(stats.recentUnlocks).toHaveLength(6)
+  })
+
+  it('counts a linked game once but adds up the achievements of every platform', () => {
+    seedGame('1', 'Apex Legends', 2, [null, null])
+    seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
+    seedGame('2', 'Portal', 4, [null, null, null])
+
+    expect(getDashboardStats(db, NOW)).toMatchObject({
+      unlockedAchievements: 6,
+      totalAchievements: 10,
+      gamesTracked: 2,
+      completedGames: 1,
+    })
+    expect(getDashboardStats(db, NOW).nearlyThere.map((g) => g.title)).toEqual(['Portal'])
   })
 })

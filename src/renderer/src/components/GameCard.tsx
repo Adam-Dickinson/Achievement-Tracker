@@ -36,7 +36,16 @@ export function GameCard({ game, onOpen }: GameCardProps) {
 
       <div className="flex flex-col gap-1 px-2 pt-3 pb-2">
         <span className="truncate font-semibold">{game.title}</span>
-        <span className="text-xs text-fg-subtle">{platformName(game.platform)}</span>
+        <span className="flex flex-wrap gap-1">
+          {game.platforms.map((platform) => (
+            <span
+              key={platform}
+              className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-fg-subtle"
+            >
+              {platformName(platform)}
+            </span>
+          ))}
+        </span>
         <span className="mt-1 flex justify-between gap-2 text-xs text-fg-muted">
           <span>
             {synced ? (

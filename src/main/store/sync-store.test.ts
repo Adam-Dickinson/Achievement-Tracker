@@ -525,10 +525,11 @@ describe('addPlatformGames', () => {
     expect(platformGames(db).map((game) => game.game_id)).toEqual([1, 2])
   })
 
-  it('stores the cover on the game, and updates it when a later list has one', () => {
+  it('stores the cover on the platform game, and updates it when a later list has one', () => {
     const { db, account } = setup()
     const cover = (): unknown =>
-      (db.prepare('SELECT cover_url FROM game').get() as { cover_url: string | null }).cover_url
+      (db.prepare('SELECT cover_url FROM platform_game').get() as { cover_url: string | null })
+        .cover_url
 
     addPlatformGames(db, account, [remoteGame('1', { coverUrl: null })])
     expect(cover()).toBeNull()
@@ -538,6 +539,23 @@ describe('addPlatformGames', () => {
 
     addPlatformGames(db, account, [remoteGame('1', { coverUrl: null })])
     expect(cover()).toBe('https://img/1-cover.jpg')
+  })
+
+  it('links a new game to an existing game with the same cleaned title, on any account', () => {
+    const { db, account } = setup()
+    const playstation = upsertAccount(db, {
+      platform: 'playstation',
+      externalId: '1234567890123456789',
+      displayName: 'Test',
+    })
+
+    addPlatformGames(db, account, [remoteGame('1', { title: 'Apex Legends' })])
+    addPlatformGames(db, playstation, [
+      remoteGame('trophy2/NPWR1', { title: 'Apex Legends™' }),
+      remoteGame('trophy2/NPWR2', { title: 'Destiny 2' }),
+    ])
+
+    expect(platformGames(db).map((game) => game.game_id)).toEqual([1, 1, 2])
   })
 
   it('stores a never-played game, or one without an icon, with nulls', () => {

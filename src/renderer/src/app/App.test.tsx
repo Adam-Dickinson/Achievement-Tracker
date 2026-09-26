@@ -65,7 +65,7 @@ describe('App: opening a game', () => {
   const PORTAL = {
     id: 7,
     title: 'Portal',
-    platform: 'steam' as const,
+    platforms: ['steam' as const],
     coverUrl: null,
     unlocked: 1,
     total: 2,
@@ -75,7 +75,20 @@ describe('App: opening a game', () => {
   beforeEach(() => {
     window.api = fakeApi({
       listLibrary: vi.fn().mockResolvedValue([PORTAL]),
-      getGame: vi.fn().mockResolvedValue({ game: PORTAL, achievements: [] }),
+      getGame: vi.fn().mockResolvedValue({
+        game: PORTAL,
+        entries: [
+          {
+            platformGameId: 70,
+            platform: 'steam',
+            tag: null,
+            title: 'Portal',
+            unlocked: 1,
+            total: 2,
+            achievements: [],
+          },
+        ],
+      }),
     })
   })
 
@@ -89,6 +102,61 @@ describe('App: opening a game', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
     expect(await screen.findByRole('heading', { name: 'Library' })).toBeInTheDocument()
+  })
+
+  it('opens a game from Activity on the tab of the unlock that was clicked', async () => {
+    window.api = fakeApi({
+      getGame: window.api.getGame,
+      listActivity: vi.fn().mockResolvedValue({
+        unlocks: [
+          {
+            achievementId: 1,
+            gameId: 7,
+            platformGameId: 71,
+            gameTitle: 'Portal',
+            platform: 'xbox',
+            name: 'Test Subject',
+            description: null,
+            iconUrl: null,
+            globalPercent: null,
+            unlockedAt: new Date(),
+          },
+        ],
+        hasMore: false,
+      }),
+    })
+    vi.mocked(window.api.getGame).mockResolvedValue({
+      game: { ...PORTAL, platforms: ['steam', 'xbox'] },
+      entries: [
+        {
+          platformGameId: 70,
+          platform: 'steam',
+          tag: null,
+          title: 'Portal',
+          unlocked: 1,
+          total: 2,
+          achievements: [],
+        },
+        {
+          platformGameId: 71,
+          platform: 'xbox',
+          tag: null,
+          title: 'Portal',
+          unlocked: 0,
+          total: 2,
+          achievements: [],
+        },
+      ],
+    })
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+
+    fireEvent.click(await screen.findByRole('button', { name: /Test Subject/ }))
+
+    expect(await screen.findByRole('tab', { name: /Xbox/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
   })
 
   it('leaves a game when another page is picked in the nav', async () => {

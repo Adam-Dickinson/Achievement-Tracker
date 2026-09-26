@@ -11,7 +11,7 @@ function game(overrides: Partial<LibraryGame> = {}): LibraryGame {
   return {
     id: 7,
     title: 'Portal',
-    platform: 'steam',
+    platforms: ['steam'],
     coverUrl: 'https://cover/400.jpg',
     unlocked: 34,
     total: 42,
@@ -30,6 +30,12 @@ describe('GameCard', () => {
     expect(card).toHaveTextContent('80%')
     expect(card).toHaveTextContent('34 / 42 achievements')
     expect(card).toHaveTextContent('8 left')
+  })
+
+  it('names every platform a linked game is on', () => {
+    render(<GameCard game={game({ platforms: ['playstation', 'steam', 'ea'] })} onOpen={vi.fn()} />)
+
+    expect(screen.getByRole('button')).toHaveTextContent('PlayStationSteamEA app')
   })
 
   it('marks a finished game as completed', () => {

@@ -6,6 +6,7 @@ function unlock(achievementId: number, unlockedAt: Date): RecentUnlock {
   return {
     achievementId,
     gameId: 1,
+    platformGameId: 10,
     gameTitle: 'Hades',
     platform: 'steam',
     name: `Achievement ${achievementId}`,

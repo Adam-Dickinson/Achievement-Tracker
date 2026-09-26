@@ -47,7 +47,7 @@ CREATE TABLE game_alias (
 1. Unicode-normalise (NFKD) and drop accents; lower case.
 2. Drop `®`, `™`, `©`; drop apostrophes (`'`, `’`) without a space (`assassin's` → `assassins`).
 3. Drop a trailing platform tag the PlayStation parser adds: `(PS4)`, `(PS5 / PC)`, `(PS3 / PS Vita / PS4)`.
-4. Drop edition words: `game of the year` / `goty` (with or without `edition`), and `edition` preceded by `digital deluxe`, `deluxe`, `standard`, `complete`, `definitive`, `ultimate`, `gold`, `enhanced` or `anniversary`.
+4. Drop edition words: `game of the year` / `goty` (with or without `edition`), and `edition` preceded by `digital deluxe`, `deluxe`, `standard`, `complete`, `definitive`, `ultimate`, `gold` or `anniversary`. (`enhanced` was dropped after the live run: on Steam, Little Nightmares and Metro Exodus have separate Enhanced Edition products with their own achievements, so it behaves like "Remastered".)
 5. Turn every other run of non-letters/digits into one space; trim.
 
 An empty result never matches (the entry keeps a game of its own).

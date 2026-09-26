@@ -5,7 +5,7 @@ import { groupByDay } from './groupByDay'
 import { useActivity } from './useActivity'
 
 interface ActivityProps {
-  onOpenGame: (id: number) => void
+  onOpenGame: (id: number, platformGameId?: number) => void
 }
 
 export function Activity({ onOpenGame }: ActivityProps) {

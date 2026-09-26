@@ -10,7 +10,7 @@ function game(id: number, title: string, unlocked: number, total: number): Libra
   return {
     id,
     title,
-    platform: 'steam',
+    platforms: ['steam'],
     coverUrl: `https://cover/${id}.jpg`,
     unlocked,
     total,
