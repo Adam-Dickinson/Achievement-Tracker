@@ -2,7 +2,8 @@
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { GameAchievement, GameDetail as GameDetailData } from '@shared/library'
+import type { MergeGamesInput, UnlinkGameInput } from '@shared/ipc'
+import type { GameAchievement, GameDetail as GameDetailData, GameEntry } from '@shared/library'
 import { fakeApi } from '@/test/fake-api'
 import { GameDetail } from './GameDetail'
 
@@ -21,31 +22,80 @@ function achievement(id: number, overrides: Partial<GameAchievement> = {}): Game
   }
 }
 
+function entry(overrides: Partial<GameEntry> = {}): GameEntry {
+  const achievements = overrides.achievements ?? [
+    achievement(1, { globalPercent: 40, unlocked: true, unlockedAt: new Date(2026, 2, 9, 12, 0) }),
+    achievement(2, { globalPercent: 1.2, unlocked: true, unlockedAt: null }),
+    achievement(3, { globalPercent: 0.5 }),
+    achievement(4, { hidden: true, description: null, globalPercent: 8 }),
+  ]
+  return {
+    platformGameId: 70,
+    platform: 'steam',
+    tag: null,
+    title: 'Elden Ring',
+    unlocked: achievements.filter((a) => a.unlocked).length,
+    total: achievements.length,
+    achievements,
+    ...overrides,
+  }
+}
+
 const DETAIL: GameDetailData = {
   game: {
     id: 7,
     title: 'Elden Ring',
-    platform: 'steam',
+    platforms: ['steam'],
     coverUrl: 'https://cover/7.jpg',
     unlocked: 2,
     total: 4,
     lastUnlockAt: new Date(2026, 2, 9, 12, 0),
   },
+  entries: [entry()],
+}
+
+const PS5 = entry({
+  platformGameId: 71,
+  platform: 'playstation',
+  tag: 'PS5',
+  title: 'Elden Ring (PS5)',
   achievements: [
-    achievement(1, { globalPercent: 40, unlocked: true, unlockedAt: new Date(2026, 2, 9, 12, 0) }),
-    achievement(2, { globalPercent: 1.2, unlocked: true, unlockedAt: null }),
-    achievement(3, { globalPercent: 0.5 }),
-    achievement(4, { hidden: true, description: null, globalPercent: 8 }),
+    achievement(11, { name: 'Elden Lord', unlocked: true, unlockedAt: new Date(2026, 3, 1) }),
   ],
+})
+const PS4 = entry({
+  platformGameId: 72,
+  platform: 'playstation',
+  tag: 'PS4',
+  title: 'Elden Ring (PS4)',
+  achievements: [achievement(21, { name: 'Roundtable Hold' }), achievement(22)],
+})
+
+const LINKED: GameDetailData = {
+  game: { ...DETAIL.game, platforms: ['playstation', 'steam'], unlocked: 1, total: 1 },
+  entries: [PS5, entry(), PS4],
 }
 
 const getGame = vi.fn<(id: number) => Promise<GameDetailData | null>>()
+const listLibrary = vi.fn()
+const mergeGames = vi.fn<(input: MergeGamesInput) => Promise<void>>()
+const unlinkGame = vi.fn<(input: UnlinkGameInput) => Promise<void>>()
 let dataChanged: () => void = () => {}
 const onBack = vi.fn()
 
 beforeEach(() => {
+  mergeGames.mockResolvedValue(undefined)
+  unlinkGame.mockResolvedValue(undefined)
+  listLibrary.mockResolvedValue([
+    { ...DETAIL.game },
+    { ...DETAIL.game, id: 8, title: 'Elden Ring Nightreign', platforms: ['xbox'] },
+    { ...DETAIL.game, id: 9, title: 'Ragnarök Tales', platforms: ['epic'] },
+  ])
   window.api = fakeApi({
     getGame,
+    listLibrary,
+    mergeGames,
+    unlinkGame,
     onDataChanged: (listener) => {
       dataChanged = listener
       return () => {}
@@ -113,10 +163,10 @@ describe('GameDetail', () => {
   })
 
   it('reloads when the main process says the data changed', async () => {
-    getGame.mockResolvedValueOnce(DETAIL).mockResolvedValueOnce({
-      ...DETAIL,
-      game: { ...DETAIL.game, unlocked: 3 },
-    })
+    const three = entry().achievements.map((a) => ({ ...a, unlocked: a.id !== 4 }))
+    getGame
+      .mockResolvedValueOnce(DETAIL)
+      .mockResolvedValueOnce({ ...DETAIL, entries: [entry({ achievements: three, unlocked: 3 })] })
     render(<GameDetail id={7} onBack={onBack} />)
     await screen.findByText('2 / 4')
 
@@ -126,9 +176,121 @@ describe('GameDetail', () => {
   })
 
   it('says when the achievements have not been read yet', async () => {
-    getGame.mockResolvedValue({ game: { ...DETAIL.game, unlocked: 0, total: 0 }, achievements: [] })
+    getGame.mockResolvedValue({
+      game: { ...DETAIL.game, unlocked: 0, total: 0 },
+      entries: [entry({ achievements: [], unlocked: 0, total: 0 })],
+    })
     render(<GameDetail id={7} onBack={onBack} />)
 
     expect(await screen.findByText(/achievements haven't been read yet/)).toBeInTheDocument()
+  })
+
+  it('shows no platform tabs and no Unlink button for a game on one platform', async () => {
+    getGame.mockResolvedValue(DETAIL)
+    render(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Unlink/ })).not.toBeInTheDocument()
+  })
+
+  it('shows a tab per platform entry with its progress, opening on the best one', async () => {
+    getGame.mockResolvedValue(LINKED)
+    render(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    expect(screen.getByText('PlayStation · Steam')).toBeInTheDocument()
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'PlayStation · PS51 / 1',
+      'Steam2 / 4',
+      'PlayStation · PS40 / 2',
+    ])
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Elden Lord')
+  })
+
+  it("shows the chosen tab's achievements and counts", async () => {
+    getGame.mockResolvedValue(LINKED)
+    render(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    fireEvent.click(screen.getByRole('tab', { name: /PS4/ }))
+
+    expect(screen.getByRole('tab', { name: /PS4/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Roundtable Hold')
+    expect(screen.getByRole('tabpanel')).not.toHaveTextContent('Elden Lord')
+    expect(within(screen.getByRole('tabpanel')).getByText('0 / 2')).toBeInTheDocument()
+  })
+
+  it('opens on the entry it was asked to, such as the platform of a clicked unlock', async () => {
+    getGame.mockResolvedValue(LINKED)
+    render(<GameDetail id={7} initialEntry={70} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    expect(screen.getByRole('tab', { name: /Steam/ })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('unlinks the shown platform, then reloads', async () => {
+    getGame.mockResolvedValueOnce(LINKED).mockResolvedValueOnce(DETAIL)
+    render(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    fireEvent.click(screen.getByRole('tab', { name: /PS4/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Unlink PlayStation · PS4' }))
+
+    await vi.waitFor(() => expect(getGame).toHaveBeenCalledTimes(2))
+    expect(unlinkGame).toHaveBeenCalledWith({ platformGameId: 72 })
+    await vi.waitFor(() => expect(screen.queryByRole('tablist')).not.toBeInTheDocument())
+  })
+
+  it('finds another game by name, ignoring case and accents, and links it into this one', async () => {
+    getGame.mockResolvedValue(DETAIL)
+    render(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Link another game…' }))
+    const search = await screen.findByRole('searchbox')
+    fireEvent.change(search, { target: { value: 'ELDEN' } })
+
+    const results = await screen.findByRole('list', { name: 'Matching games' })
+    expect(
+      within(results)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Elden Ring NightreignXbox'])
+
+    fireEvent.change(search, { target: { value: 'ragnarok' } })
+    fireEvent.click(await screen.findByRole('button', { name: /Ragnarök Tales/ }))
+
+    await vi.waitFor(() => expect(mergeGames).toHaveBeenCalledWith({ intoGameId: 7, gameId: 9 }))
+    await vi.waitFor(() => expect(screen.queryByRole('searchbox')).not.toBeInTheDocument())
+    expect(getGame).toHaveBeenCalledTimes(2)
+  })
+
+  it('says when no other game matches, and closes the search on Cancel', async () => {
+    getGame.mockResolvedValue(DETAIL)
+    render(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Link another game…' }))
+    fireEvent.change(await screen.findByRole('searchbox'), { target: { value: 'Portal' } })
+
+    expect(
+      await screen.findByText('No other game in your library matches “Portal”.'),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+  })
+
+  it('shows an error if changing a link fails', async () => {
+    getGame.mockResolvedValue(LINKED)
+    unlinkGame.mockRejectedValue(new Error('IPC broke'))
+    render(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    fireEvent.click(screen.getByRole('button', { name: /Unlink/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong')
   })
 })

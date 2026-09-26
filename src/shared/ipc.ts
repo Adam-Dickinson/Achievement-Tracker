@@ -24,6 +24,8 @@ export const IPC = {
   cancelSteamSignIn: 'accounts:cancel-steam-sign-in',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
+  mergeGames: 'library:merge-games',
+  unlinkGame: 'library:unlink-game',
   getDashboard: 'dashboard:get',
   listActivity: 'activity:list',
   dataChanged: 'data:changed',
@@ -87,6 +89,15 @@ export interface EpicConnectInput {
   readonly acceptedUnofficial: true
 }
 
+export interface MergeGamesInput {
+  readonly intoGameId: number
+  readonly gameId: number
+}
+
+export interface UnlinkGameInput {
+  readonly platformGameId: number
+}
+
 export type ConnectFailure =
   'invalid_input' | 'key_rejected' | 'code_rejected' | 'cancelled' | 'network' | 'other'
 
@@ -113,6 +124,8 @@ export interface TrophyLockerApi {
   cancelSteamSignIn(): Promise<void>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
+  mergeGames(input: MergeGamesInput): Promise<void>
+  unlinkGame(input: UnlinkGameInput): Promise<void>
   getDashboard(): Promise<DashboardStats>
   listActivity(limit: number): Promise<ActivityPage>
   onDataChanged(listener: () => void): () => void

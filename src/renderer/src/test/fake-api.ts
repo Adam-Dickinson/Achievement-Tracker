@@ -21,6 +21,8 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     cancelSteamSignIn: vi.fn().mockResolvedValue(undefined),
     listLibrary: vi.fn().mockResolvedValue([]),
     getGame: vi.fn().mockResolvedValue(null),
+    mergeGames: vi.fn().mockResolvedValue(undefined),
+    unlinkGame: vi.fn().mockResolvedValue(undefined),
     getDashboard: vi.fn().mockReturnValue(new Promise(() => {})),
     listActivity: vi.fn().mockReturnValue(new Promise(() => {})),
     onDataChanged: vi.fn(() => () => {}),

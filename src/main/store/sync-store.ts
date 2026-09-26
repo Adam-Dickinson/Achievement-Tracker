@@ -2,6 +2,7 @@ import type { AccountSummary } from '@shared/ipc'
 import { AccountStatus, RemoteAchievement, RemoteGame, RemoteUnlock } from '@shared/models'
 import { Platform } from '@shared/platform'
 import { DatabaseSync } from 'node:sqlite'
+import { gameForTitle } from './game-links'
 
 export interface AccountRow {
   readonly id: number
@@ -273,44 +274,39 @@ export function addPlatformGames(
   baselineCutoff: Date | null = null,
 ): number {
   const findGame = db.prepare(
-    'SELECT id, game_id FROM platform_game WHERE account_id = ? AND external_id = ?',
+    'SELECT id FROM platform_game WHERE account_id = ? AND external_id = ?',
   )
   const updateGame = db.prepare(`
     UPDATE platform_game
-    SET title = ?, icon_url = ?, last_played = COALESCE(?, last_played)
+    SET title = ?, icon_url = ?, cover_url = COALESCE(?, cover_url),
+        last_played = COALESCE(?, last_played)
     WHERE id = ?
   `)
-  const updateCover = db.prepare('UPDATE game SET cover_url = COALESCE(?, cover_url) WHERE id = ?')
-  const insertGame = db.prepare('INSERT INTO game (title, sort_title, cover_url) VALUES (?, ?, ?)')
   const insertPlatformGame = db.prepare(`
     INSERT INTO platform_game
-      (game_id, account_id, platform, external_id, title, icon_url, last_played, baseline_done,
-       baseline_cutoff)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+      (game_id, account_id, platform, external_id, title, icon_url, cover_url, last_played,
+       baseline_done, baseline_cutoff)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
   `)
 
   let added = 0
   for (const game of games) {
     const lastPlayed = game.lastPlayed?.toISOString() ?? null
-    const existing = findGame.get(account.id, game.ref.externalId) as
-      { id: number; game_id: number } | undefined
+    const existing = findGame.get(account.id, game.ref.externalId) as { id: number } | undefined
 
     if (existing) {
-      updateGame.run(game.title, game.iconUrl, lastPlayed, existing.id)
-      updateCover.run(game.coverUrl, existing.game_id)
+      updateGame.run(game.title, game.iconUrl, game.coverUrl, lastPlayed, existing.id)
       continue
     }
 
-    const gameId = Number(
-      insertGame.run(game.title, game.title.toLowerCase(), game.coverUrl).lastInsertRowid,
-    )
     insertPlatformGame.run(
-      gameId,
+      gameForTitle(db, game.title),
       account.id,
       account.platform,
       game.ref.externalId,
       game.title,
       game.iconUrl,
+      game.coverUrl,
       lastPlayed,
       baselineCutoff?.toISOString() ?? null,
     )

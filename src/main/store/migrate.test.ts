@@ -71,6 +71,29 @@ describe('migrations', () => {
     ).toEqual([{ external_id: '400', title: 'Portal', baseline_done: 1, baseline_cutoff: null }])
   })
 
+  it('upgrade a version 2 database for game linking, moving each cover to its platform game', () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 2))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 'acc1', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title, cover_url)
+      VALUES (1, 'Portal', 'portal', 'https://cover/portal.jpg'), (2, 'Doom', 'doom', NULL);
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title)
+      VALUES (1, 1, 1, 'steam', '400', 'Portal'), (2, 2, 1, 'steam', '500', 'Doom');
+    `)
+
+    applyMigrations(db)
+
+    expect(db.prepare('SELECT id, cover_url, linked FROM platform_game ORDER BY id').all()).toEqual(
+      [
+        { id: 1, cover_url: 'https://cover/portal.jpg', linked: 'auto' },
+        { id: 2, cover_url: null, linked: 'auto' },
+      ],
+    )
+    expect(tableNames(db)).toContain('game_alias')
+  })
+
   it('are a no-op when applied twice', () => {
     const db = new DatabaseSync(':memory:')
     const first = applyMigrations(db)

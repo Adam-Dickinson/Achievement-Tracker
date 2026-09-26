@@ -32,6 +32,7 @@ import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
+import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
 import {
   getDashboardStats,
   getGameDetail,
@@ -115,6 +116,7 @@ async function start(): Promise<void> {
   if (app.isPackaged) Menu.setApplicationMenu(null)
 
   const { db, schemaVersion } = openDatabase(join(app.getPath('userData'), DATABASE_FILE))
+  relinkGames(db)
 
   const overlay = new OverlayService(createOverlayWindow())
   const notifications = new NotificationService({
@@ -239,6 +241,12 @@ async function start(): Promise<void> {
     cancelSteamSignIn: () => steamSignIn.cancel(),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
+    mergeGames: ({ intoGameId, gameId }) => {
+      if (mergeGames(db, intoGameId, gameId)) dataChanged()
+    },
+    unlinkGame: ({ platformGameId }) => {
+      if (unlinkPlatformGame(db, platformGameId)) dataChanged()
+    },
     getDashboard: () => getDashboardStats(db),
     listActivity: (limit) => listActivity(db, limit),
   })

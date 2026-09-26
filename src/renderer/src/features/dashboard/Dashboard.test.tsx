@@ -9,12 +9,21 @@ import { fakeApi } from '@/test/fake-api'
 import { Dashboard } from './Dashboard'
 
 function game(id: number, title: string, unlocked: number, total: number): LibraryGame {
-  return { id, title, platform: 'steam', coverUrl: null, unlocked, total, lastUnlockAt: null }
+  return {
+    id,
+    title,
+    platforms: ['steam'],
+    coverUrl: null,
+    unlocked,
+    total,
+    lastUnlockAt: null,
+  }
 }
 
 const UNLOCK: RecentUnlock = {
   achievementId: 11,
   gameId: 3,
+  platformGameId: 30,
   gameTitle: 'Elden Ring',
   platform: 'steam',
   name: 'Age of the Stars',
@@ -107,7 +116,7 @@ describe('Dashboard', () => {
     expect(row).toHaveTextContent('1.2%')
 
     fireEvent.click(row)
-    expect(onOpenGame).toHaveBeenCalledWith(3)
+    expect(onOpenGame).toHaveBeenCalledWith(3, 30)
   })
 
   it('says when nothing has been unlocked yet', async () => {

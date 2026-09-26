@@ -4,7 +4,7 @@ import type { RecentUnlock } from '@shared/library'
 
 interface RecentUnlocksProps {
   unlocks: readonly RecentUnlock[]
-  onOpenGame: (id: number) => void
+  onOpenGame: (id: number, platformGameId?: number) => void
 }
 
 export function RecentUnlocks({ unlocks, onOpenGame }: RecentUnlocksProps) {

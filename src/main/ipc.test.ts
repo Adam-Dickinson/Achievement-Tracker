@@ -53,6 +53,8 @@ const fakes = {
   cancelSteamSignIn: vi.fn(),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
+  mergeGames: vi.fn(),
+  unlinkGame: vi.fn(),
   getDashboard: vi.fn(() => DASHBOARD),
   listActivity: vi.fn(() => ACTIVITY),
 }
@@ -95,6 +97,8 @@ describe('registerIpcHandlers', () => {
     IPC.cancelSteamSignIn,
     IPC.listLibrary,
     IPC.getGame,
+    IPC.mergeGames,
+    IPC.unlinkGame,
     IPC.getDashboard,
     IPC.listActivity,
   ])('refuses %s from a page we did not ship', (channel) => {
@@ -419,5 +423,42 @@ describe('activity handler', () => {
   ])('answers %s as a limit with an empty page, without a query', (_label, limit) => {
     expect(call(IPC.listActivity, TRUSTED, limit)).toEqual({ unlocks: [], hasMore: false })
     expect(fakes.listActivity).not.toHaveBeenCalled()
+  })
+})
+
+describe('game linking handlers', () => {
+  it('merges one game into another', () => {
+    call(IPC.mergeGames, TRUSTED, { intoGameId: 1, gameId: 2 })
+
+    expect(fakes.mergeGames).toHaveBeenCalledWith({ intoGameId: 1, gameId: 2 })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['the same game twice', { intoGameId: 3, gameId: 3 }],
+    ['a missing id', { intoGameId: 1 }],
+    ['a fractional id', { intoGameId: 1.5, gameId: 2 }],
+    ['a negative id', { intoGameId: -1, gameId: 2 }],
+    ['ids as text', { intoGameId: '1', gameId: '2' }],
+  ])('ignores a merge with %s', (_label, payload) => {
+    call(IPC.mergeGames, TRUSTED, payload)
+
+    expect(fakes.mergeGames).not.toHaveBeenCalled()
+  })
+
+  it('unlinks one platform entry', () => {
+    call(IPC.unlinkGame, TRUSTED, { platformGameId: 7 })
+
+    expect(fakes.unlinkGame).toHaveBeenCalledWith({ platformGameId: 7 })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['zero', { platformGameId: 0 }],
+    ['text', { platformGameId: '7' }],
+  ])('ignores an unlink with %s', (_label, payload) => {
+    call(IPC.unlinkGame, TRUSTED, payload)
+
+    expect(fakes.unlinkGame).not.toHaveBeenCalled()
   })
 })

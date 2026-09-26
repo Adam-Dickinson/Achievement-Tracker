@@ -10,7 +10,7 @@ interface UnlockRowProps {
   unlock: RecentUnlock
   when: string
   showDescription?: boolean
-  onOpenGame: (id: number) => void
+  onOpenGame: (id: number, platformGameId?: number) => void
 }
 
 export function UnlockRow({ unlock, when, showDescription = false, onOpenGame }: UnlockRowProps) {
@@ -20,7 +20,7 @@ export function UnlockRow({ unlock, when, showDescription = false, onOpenGame }:
     <li>
       <button
         type="button"
-        onClick={() => onOpenGame(unlock.gameId)}
+        onClick={() => onOpenGame(unlock.gameId, unlock.platformGameId)}
         className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors first:rounded-t-panel last:rounded-b-panel hover:bg-surface-2"
       >
         <UnlockIcon url={unlock.iconUrl} />

@@ -44,7 +44,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 |---|---|---|
 | F-30 | Dashboard, Library, Game detail, Activity, Accounts, Settings screens | P0 |
 | F-31 | Search, filter, sort across all games and achievements | P1 |
-| F-32 | Cross-platform game linking (auto + manual) | P1 |
+| F-32 | Cross-platform game linking (auto + manual). Built: same cleaned title links automatically; merge and unlink on Game detail ([design](superpowers/specs/2026-09-26-game-linking-design.md)) | P1 |
 | F-33 | Global achievement rarity display where the platform provides it | P1 |
 | F-34 | JSON/CSV export | P2 |
 
@@ -111,7 +111,14 @@ CREATE TABLE platform_game (             -- a game as it exists on one platform/
   baseline_done INTEGER NOT NULL DEFAULT 0,   -- 0 = first sync pending
   last_played   TEXT,
   baseline_cutoff TEXT,                 -- first sync toasts only unlocks after this; NULL = fully silent (0002)
+  cover_url     TEXT,                   -- this entry's cover (0003; game.cover_url is no longer read)
+  linked        TEXT NOT NULL DEFAULT 'auto', -- auto | manual: manual entries are never regrouped (0003)
   UNIQUE (account_id, external_id)
+);
+
+CREATE TABLE game_alias (                -- cleaned titles that lead to a game (0003)
+  match_key TEXT PRIMARY KEY,
+  game_id   INTEGER NOT NULL REFERENCES game(id)
 );
 
 CREATE TABLE achievement (
@@ -245,10 +252,12 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 |---|---|---|
 | `getAppInfo()` | `app:get-info` | App version and database schema version |
 | `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers) |
-| `listLibrary()` | `library:list` | Every game on every platform as a `LibraryGame` (cover, unlocked/total, last unlock), most recently unlocked first |
-| `getGame(id)` | `library:get-game` | One game and all its achievements (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
+| `listLibrary()` | `library:list` | Every game as a `LibraryGame`, linked platforms counted once: its id is the canonical **game** id; `platforms` (best first), the best entry's unlocked/total and cover (else any entry's), the shortest entry title, the latest unlock across entries; most recently unlocked first |
+| `getGame(id)` | `library:get-game` | One game (by game id) with its `entries`, best first: each platform entry's id, platform, `tag` (set when two entries share a platform, e.g. `PS4`), counts and achievements (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
+| `mergeGames({ intoGameId, gameId })` | `library:merge-games` | Moves every entry of `gameId` into `intoGameId` (both then `manual`) and moves its cleaned titles too, so later entries with those titles join. Ids are positive integers and must differ, otherwise ignored. Fires `onDataChanged` |
+| `unlinkGame({ platformGameId })` | `library:unlink-game` | Moves one entry to a game of its own (`manual`, no cleaned titles, so nothing joins it automatically). Ignored for a game's only entry or a bad id. Fires `onDataChanged` |
 | `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, "Nearly there" and recent unlocks |
-| `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated unlocks across every platform (each a `RecentUnlock` with its description), and `hasMore`. The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
+| `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated unlocks across every platform (each a `RecentUnlock` with its description, its game id and its platform entry id), and `hasMore`. The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
 | `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
 | `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
 | `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
@@ -271,11 +280,9 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 |---|---|
 | `disconnectAccount(id)` | Remove account (option: keep data) |
 | `listGames(filter, sort, page)` | Library query |
-| `getGame(id)` | Game + platform entries |
 | `listAchievements(platformGameId, filter)` | |
 | `getDashboardStats()` | Aggregates |
 | `syncNow(scope)` | Manual sync |
-| `mergeGames(ids)` / `splitGame(id)` | Linking |
 | `getSettings()` / `updateSettings(patch)` | |
 | `exportData(format)` | |
 

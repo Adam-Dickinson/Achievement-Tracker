@@ -8,9 +8,11 @@ import {
   type ConnectResult,
   type EaConnectInput,
   type EpicConnectInput,
+  type MergeGamesInput,
   type PlayStationConnectInput,
   type SteamConnectInput,
   type SteamSignInInput,
+  type UnlinkGameInput,
   type UbisoftConnectInput,
   type XboxConnectInput,
 } from '@shared/ipc'
@@ -40,6 +42,8 @@ export interface IpcHandlers {
   cancelSteamSignIn(): void
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
+  mergeGames(input: MergeGamesInput): void
+  unlinkGame(input: UnlinkGameInput): void
   getDashboard(): DashboardStats
   listActivity(limit: number): ActivityPage
 }
@@ -62,6 +66,12 @@ const epicConnectInputSchema = z.object({
 })
 
 const gameIdSchema = z.number().int().positive()
+
+const mergeGamesSchema = z
+  .object({ intoGameId: gameIdSchema, gameId: gameIdSchema })
+  .refine((input) => input.intoGameId !== input.gameId)
+
+const unlinkGameSchema = z.object({ platformGameId: gameIdSchema })
 
 const activityLimitSchema = z.number().int().min(1).max(MAX_ACTIVITY_LIMIT)
 
@@ -221,6 +231,18 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     const parsed = gameIdSchema.safeParse(id)
     return parsed.success ? handlers.getGame(parsed.data) : null
+  })
+
+  ipcMain.handle(IPC.mergeGames, (event, input: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = mergeGamesSchema.safeParse(input)
+    if (parsed.success) handlers.mergeGames(parsed.data)
+  })
+
+  ipcMain.handle(IPC.unlinkGame, (event, input: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = unlinkGameSchema.safeParse(input)
+    if (parsed.success) handlers.unlinkGame(parsed.data)
   })
 
   ipcMain.handle(IPC.getDashboard, (event) => {
