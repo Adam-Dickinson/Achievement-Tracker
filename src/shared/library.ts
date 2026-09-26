@@ -37,7 +37,7 @@ export interface GameDetail {
   readonly entries: readonly GameEntry[]
 }
 
-export interface RecentUnlock {
+export interface UnlockedAchievement {
   readonly achievementId: number
   readonly gameId: number
   readonly platformGameId: number
@@ -47,6 +47,10 @@ export interface RecentUnlock {
   readonly description: string | null
   readonly iconUrl: string | null
   readonly globalPercent: number | null
+  readonly unlockedAt: Date | null
+}
+
+export interface RecentUnlock extends UnlockedAchievement {
   readonly unlockedAt: Date
 }
 

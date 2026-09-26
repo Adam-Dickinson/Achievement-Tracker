@@ -267,7 +267,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `saveSteamGridDbKey({ key })` | `artwork:save-steamgriddb-key` | Checks the key with SteamGridDB (one search), saves it in the `SecretStore` and looks for missing artwork (ADR-0013). The key is trimmed and must be 16-64 letters and digits, else `invalid_input`. Answers `ArtworkKeyResult`: `{ ok: true }` or `{ ok: false, reason: invalid_input | key_rejected | network | other, message }` |
 | `removeSteamGridDbKey()` | `artwork:remove-steamgriddb-key` | Deletes the key; found artwork stays |
 | `findMissingArtwork()` | `artwork:find-missing` | Looks up every game with no artwork now (one run at a time) and answers `ArtworkRun`: `{ found, checked }` |
-| `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, "Nearly there" and recent unlocks |
+| `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, per-platform progress (games, unlocked and total for each platform with games, most unlocked first), "Nearly there", recent unlocks, and the five rarest unlocks (lowest global percentage first; achievements with no rarity left out; the date may be `null`) |
 | `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated unlocks across every platform (each a `RecentUnlock` with its description, its game id and its platform entry id), and `hasMore`. The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
 | `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
 | `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
@@ -292,7 +292,6 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `disconnectAccount(id)` | Remove account (option: keep data) |
 | `listGames(filter, sort, page)` | Library query |
 | `listAchievements(platformGameId, filter)` | |
-| `getDashboardStats()` | Aggregates |
 | `syncNow(scope)` | Manual sync |
 | `getSettings()` / `updateSettings(patch)` | |
 | `exportData(format)` | |

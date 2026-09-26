@@ -2,12 +2,12 @@ import { Trophy } from 'lucide-react'
 import { useState } from 'react'
 import { RarityChip } from '@/components/RarityChip'
 import { formatPercent } from '@/lib/format'
-import type { RecentUnlock } from '@shared/library'
+import type { UnlockedAchievement } from '@shared/library'
 import { platformName } from '@shared/platform'
 import { rarityFromPercent } from '@shared/rarity'
 
 interface UnlockRowProps {
-  unlock: RecentUnlock
+  unlock: UnlockedAchievement
   when: string
   showDescription?: boolean
   onOpenGame: (id: number, platformGameId?: number) => void

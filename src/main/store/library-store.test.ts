@@ -360,4 +360,62 @@ describe('getDashboardStats', () => {
     })
     expect(getDashboardStats(db, NOW).nearlyThere.map((g) => g.title)).toEqual(['Portal'])
   })
+
+  it('adds up games and achievements per platform, most unlocked first', () => {
+    seedGame('1', 'Portal', 4, [null])
+    seedGame('2', 'Unsynced', 0)
+    seedGame('trophy/NPWR1', 'Apex Legends', 3, [null, null], 'playstation')
+    seedGame('trophy/NPWR2', 'Astro Bot', 2, [null, null], 'playstation')
+
+    expect(getDashboardStats(db, NOW).platforms).toEqual([
+      { platform: 'playstation', games: 2, unlocked: 4, total: 5 },
+      { platform: 'steam', games: 2, unlocked: 1, total: 4 },
+    ])
+  })
+
+  it('lists no platforms before any account has games', () => {
+    expect(getDashboardStats(db, NOW).platforms).toEqual([])
+  })
+
+  it('lists the rarest unlocks first, newest first on a tie, with their game, up to five', () => {
+    const at = new Date(NOW.getTime() - DAY)
+    const { gameId, platformGameId } = seedGame('400', 'Portal', 4, [at, at, at, at])
+    const earlier = new Date(NOW.getTime() - 3 * DAY)
+    seedGame('500', 'Celeste', 3, [earlier, null, earlier])
+
+    const rarest = getDashboardStats(db, NOW).rarestUnlocks
+
+    expect(rarest.map((u) => [u.gameTitle, u.globalPercent])).toEqual([
+      ['Portal', 10],
+      ['Celeste', 10],
+      ['Portal', 20],
+      ['Celeste', 20],
+      ['Portal', 30],
+    ])
+    expect(rarest[0]).toEqual({
+      achievementId: expect.any(Number),
+      gameId,
+      platformGameId,
+      gameTitle: 'Portal',
+      platform: 'steam',
+      name: 'Achievement 400-0',
+      description: 'Do 400-0',
+      iconUrl: 'https://icon/400-0.jpg',
+      globalPercent: 10,
+      unlockedAt: at,
+    })
+    expect(rarest[3]?.unlockedAt).toBeNull()
+  })
+
+  it('leaves locked achievements and ones with no rarity out of the rarest unlocks', () => {
+    seedGame('400', 'Portal', 3, [null])
+    const { platformGameId } = seedGame('500', 'Unrated', 1, [null], 'ubisoft')
+    db.prepare('UPDATE achievement SET global_percent = NULL WHERE platform_game_id = ?').run(
+      platformGameId,
+    )
+
+    expect(getDashboardStats(db, NOW).rarestUnlocks.map((u) => u.name)).toEqual([
+      'Achievement 400-0',
+    ])
+  })
 })

@@ -13,7 +13,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    description: 'Overall progress, recent unlocks, closest to 100%.',
+    description: 'Overall progress, platforms, closest to 100%, recent and rarest unlocks.',
     icon: LayoutDashboard,
   },
   {
