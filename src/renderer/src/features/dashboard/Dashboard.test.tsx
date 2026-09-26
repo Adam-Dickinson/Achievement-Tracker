@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DashboardStats } from '@shared/dashboard'
-import type { LibraryGame, RecentUnlock } from '@shared/library'
+import type { LibraryGame, RecentUnlock, UnlockedAchievement } from '@shared/library'
 import { fakeApi } from '@/test/fake-api'
 import { Dashboard } from './Dashboard'
 
@@ -33,14 +33,32 @@ const UNLOCK: RecentUnlock = {
   unlockedAt: new Date(2026, 2, 9, 12, 0),
 }
 
+const RARE: UnlockedAchievement = {
+  achievementId: 21,
+  gameId: 4,
+  platformGameId: 40,
+  gameTitle: 'Call of Duty: Black Ops III',
+  platform: 'playstation',
+  name: 'Time Travel Will Tell',
+  description: 'Complete the Zombies story',
+  iconUrl: null,
+  globalPercent: 0.1,
+  unlockedAt: null,
+}
+
 const STATS: DashboardStats = {
   unlockedAchievements: 3482,
   totalAchievements: 5120,
   gamesTracked: 214,
   completedGames: 27,
   unlockedThisWeek: 41,
+  platforms: [
+    { platform: 'steam', games: 120, unlocked: 402, total: 536 },
+    { platform: 'playstation', games: 1, unlocked: 0, total: 0 },
+  ],
   nearlyThere: [game(1, 'Hollow Knight', 61, 63), game(2, 'Celeste', 31, 33)],
   recentUnlocks: [UNLOCK],
+  rarestUnlocks: [RARE, UNLOCK],
 }
 
 const getDashboard = vi.fn<() => Promise<DashboardStats>>()
@@ -124,6 +142,56 @@ describe('Dashboard', () => {
     render(<Dashboard onOpenGame={onOpenGame} />)
 
     expect(await screen.findByText(/Nothing unlocked yet/)).toBeInTheDocument()
+  })
+
+  it('shows each platform with its completion, achievements and games', async () => {
+    getDashboard.mockResolvedValue(STATS)
+    render(<Dashboard onOpenGame={onOpenGame} />)
+
+    const section = await screen.findByRole('region', { name: 'Platforms' })
+    const [steam, playstation] = within(section).getAllByRole('listitem')
+    expect(steam).toHaveTextContent('Steam')
+    expect(steam).toHaveTextContent('75%')
+    expect(steam).toHaveTextContent('402 / 536 achievements120 games')
+    expect(within(steam!).getByRole('progressbar', { name: 'Steam completion' })).toHaveAttribute(
+      'aria-valuenow',
+      '75',
+    )
+    expect(playstation).toHaveTextContent('0%')
+    expect(playstation).toHaveTextContent('0 / 0 achievements1 game')
+  })
+
+  it('leaves out "Platforms" before any account has games', async () => {
+    getDashboard.mockResolvedValue({ ...STATS, platforms: [] })
+    render(<Dashboard onOpenGame={onOpenGame} />)
+
+    await screen.findByText('68%')
+    expect(screen.queryByRole('region', { name: 'Platforms' })).not.toBeInTheDocument()
+  })
+
+  it('lists the rarest unlocks in order, with their rarity and date, and opens the game', async () => {
+    getDashboard.mockResolvedValue(STATS)
+    render(<Dashboard onOpenGame={onOpenGame} />)
+
+    const section = await screen.findByRole('region', { name: 'Rarest unlocked' })
+    const [rarest, next] = within(section).getAllByRole('button')
+    expect(rarest).toHaveTextContent('Time Travel Will Tell')
+    expect(rarest).toHaveTextContent('Call of Duty: Black Ops III · PlayStation')
+    expect(rarest).toHaveTextContent('Ultra Rare')
+    expect(rarest).toHaveTextContent('0.1%')
+    expect(rarest).toHaveTextContent('Date unknown')
+    expect(next).toHaveTextContent('Age of the Stars')
+
+    fireEvent.click(rarest!)
+    expect(onOpenGame).toHaveBeenCalledWith(4, 40)
+  })
+
+  it('leaves out "Rarest unlocked" when no unlock has a rarity', async () => {
+    getDashboard.mockResolvedValue({ ...STATS, rarestUnlocks: [] })
+    render(<Dashboard onOpenGame={onOpenGame} />)
+
+    await screen.findByText('68%')
+    expect(screen.queryByRole('region', { name: 'Rarest unlocked' })).not.toBeInTheDocument()
   })
 
   it('reloads when the main process says the data changed', async () => {

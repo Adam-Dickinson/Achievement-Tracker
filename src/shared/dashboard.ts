@@ -1,4 +1,12 @@
-import type { LibraryGame, RecentUnlock } from './library'
+import type { LibraryGame, RecentUnlock, UnlockedAchievement } from './library'
+import type { Platform } from './platform'
+
+export interface PlatformProgress {
+  readonly platform: Platform
+  readonly games: number
+  readonly unlocked: number
+  readonly total: number
+}
 
 export interface DashboardStats {
   readonly unlockedAchievements: number
@@ -6,8 +14,10 @@ export interface DashboardStats {
   readonly gamesTracked: number
   readonly completedGames: number
   readonly unlockedThisWeek: number
+  readonly platforms: readonly PlatformProgress[]
   readonly nearlyThere: readonly LibraryGame[]
   readonly recentUnlocks: readonly RecentUnlock[]
+  readonly rarestUnlocks: readonly UnlockedAchievement[]
 }
 
 export function completionPercent(unlocked: number, total: number): number {

@@ -28,8 +28,10 @@ const DASHBOARD: DashboardStats = {
   gamesTracked: 0,
   completedGames: 0,
   unlockedThisWeek: 0,
+  platforms: [],
   nearlyThere: [],
   recentUnlocks: [],
+  rarestUnlocks: [],
 }
 
 const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }

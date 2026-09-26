@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite'
-import type { DashboardStats } from '@shared/dashboard'
+import type { DashboardStats, PlatformProgress } from '@shared/dashboard'
 import type {
   ActivityPage,
   GameAchievement,
@@ -7,13 +7,15 @@ import type {
   GameEntry,
   LibraryGame,
   RecentUnlock,
+  UnlockedAchievement,
 } from '@shared/library'
-import type { Platform } from '@shared/platform'
+import { PLATFORMS, type Platform } from '@shared/platform'
 import { listArtworkUrls } from './artwork-store'
 import { matchKey } from './match-key'
 
 const NEARLY_THERE_COUNT = 4
 const RECENT_UNLOCK_COUNT = 6
+const RAREST_UNLOCK_COUNT = 5
 const WEEK_MS = 7 * 24 * 60 * 60_000
 const TRAILING_TAG = /\(([^()]+)\)\s*$/
 
@@ -32,6 +34,27 @@ interface RankedEntries {
   readonly best: EntryRecord
   readonly all: readonly EntryRecord[]
 }
+
+interface UnlockRecord {
+  achievement_id: number
+  name: string
+  description: string | null
+  icon_url: string | null
+  global_percent: number | null
+  unlocked_at: string | null
+  game_id: number
+  platform_game_id: number
+  game_title: string
+  platform: Platform
+}
+
+const UNLOCKS = `
+  SELECT a.id AS achievement_id, a.name, a.description, a.icon_url, a.global_percent,
+         u.unlocked_at,
+         pg.game_id, pg.id AS platform_game_id, pg.title AS game_title, pg.platform
+  FROM unlock u
+  JOIN achievement a ON a.id = u.achievement_id
+  JOIN platform_game pg ON pg.id = a.platform_game_id`
 
 const ENTRIES = `
   SELECT pg.id, pg.game_id, pg.title, pg.platform, pg.cover_url,
@@ -79,38 +102,44 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
     gamesTracked: games.length,
     completedGames: games.filter((game) => game.total > 0 && game.unlocked === game.total).length,
     unlockedThisWeek,
+    platforms: byPlatform(entries),
     nearlyThere,
     recentUnlocks: listRecentUnlocks(db, RECENT_UNLOCK_COUNT),
+    rarestUnlocks: listRarestUnlocks(db, RAREST_UNLOCK_COUNT),
   }
 }
 
 export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock[] {
   const rows = db
     .prepare(
-      `SELECT a.id AS achievement_id, a.name, a.description, a.icon_url, a.global_percent,
-              u.unlocked_at,
-              pg.game_id, pg.id AS platform_game_id, pg.title AS game_title, pg.platform
-       FROM unlock u
-       JOIN achievement a ON a.id = u.achievement_id
-       JOIN platform_game pg ON pg.id = a.platform_game_id
+      `${UNLOCKS}
        WHERE u.unlocked_at IS NOT NULL
        ORDER BY u.unlocked_at DESC, a.id DESC
        LIMIT ?`,
     )
-    .all(limit) as unknown as {
-    achievement_id: number
-    name: string
-    description: string | null
-    icon_url: string | null
-    global_percent: number | null
-    unlocked_at: string
-    game_id: number
-    platform_game_id: number
-    game_title: string
-    platform: Platform
-  }[]
+    .all(limit) as unknown as (UnlockRecord & { unlocked_at: string })[]
+  return rows.map((row) => ({ ...toUnlock(row), unlockedAt: new Date(row.unlocked_at) }))
+}
 
-  return rows.map((row) => ({
+function listRarestUnlocks(db: DatabaseSync, limit: number): UnlockedAchievement[] {
+  const rows = db
+    .prepare(
+      `${UNLOCKS}
+       WHERE a.global_percent IS NOT NULL
+       ORDER BY a.global_percent, u.unlocked_at DESC, a.id DESC
+       LIMIT ?`,
+    )
+    .all(limit) as unknown as UnlockRecord[]
+  return rows.map(toUnlock)
+}
+
+export function listActivity(db: DatabaseSync, limit: number): ActivityPage {
+  const unlocks = listRecentUnlocks(db, limit + 1)
+  return { unlocks: unlocks.slice(0, limit), hasMore: unlocks.length > limit }
+}
+
+function toUnlock(row: UnlockRecord): UnlockedAchievement {
+  return {
     achievementId: row.achievement_id,
     gameId: row.game_id,
     platformGameId: row.platform_game_id,
@@ -120,13 +149,23 @@ export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock
     description: row.description,
     iconUrl: row.icon_url,
     globalPercent: row.global_percent,
-    unlockedAt: new Date(row.unlocked_at),
-  }))
+    unlockedAt: toDate(row.unlocked_at),
+  }
 }
 
-export function listActivity(db: DatabaseSync, limit: number): ActivityPage {
-  const unlocks = listRecentUnlocks(db, limit + 1)
-  return { unlocks: unlocks.slice(0, limit), hasMore: unlocks.length > limit }
+function byPlatform(entries: readonly EntryRecord[]): PlatformProgress[] {
+  return PLATFORMS.flatMap((platform) => {
+    const own = entries.filter((entry) => entry.platform === platform)
+    if (own.length === 0) return []
+    return [
+      {
+        platform,
+        games: own.length,
+        unlocked: sum(own, (entry) => entry.unlocked),
+        total: sum(own, (entry) => entry.total),
+      },
+    ]
+  }).sort((a, b) => b.unlocked - a.unlocked)
 }
 
 function listEntries(db: DatabaseSync): EntryRecord[] {
