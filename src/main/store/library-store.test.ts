@@ -492,6 +492,18 @@ describe('getDashboardStats', () => {
     const LOCAL_NOW = new Date(2026, 8, 23, 15, 0)
     const at = (daysAgo: number, hour: number) => new Date(2026, 8, 23 - daysAgo, hour, 0)
 
+    it('finds the rarest unlock of the same seven days, ignoring older ones', () => {
+      seedGame('1', 'Portal', 4, [at(7, 12), at(3, 12), at(6, 0)])
+
+      expect(getDashboardStats(db, LOCAL_NOW).rarestThisWeek).toBe(20)
+    })
+
+    it('has no rarest unlock this week without one', () => {
+      seedGame('1', 'Portal', 2, [at(8, 12), null])
+
+      expect(getDashboardStats(db, LOCAL_NOW).rarestThisWeek).toBeNull()
+    })
+
     it('counts unlocks today and on each of the last seven days, oldest first', () => {
       seedGame('1', 'Portal', 8, [
         at(0, 10),

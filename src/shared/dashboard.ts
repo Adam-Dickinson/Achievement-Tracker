@@ -33,6 +33,7 @@ export interface DashboardStats {
   readonly nearlyThere: readonly LibraryGame[]
   readonly recentUnlocks: readonly RecentUnlock[]
   readonly rarestUnlock: RarestUnlock | null
+  readonly rarestThisWeek: number | null
 }
 
 export function completionPercent(unlocked: number, total: number): number {

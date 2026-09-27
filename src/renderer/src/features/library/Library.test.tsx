@@ -51,6 +51,7 @@ const STATS: DashboardStats = {
   nearlyThere: [],
   recentUnlocks: [],
   rarestUnlock: null,
+  rarestThisWeek: null,
 }
 
 const listLibrary = vi.fn<() => Promise<LibraryGame[]>>()

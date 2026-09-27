@@ -51,14 +51,16 @@ const TODAY_XBOX = unlock({
 const OLDER = unlock({ achievementId: 3, name: 'Elden Lord', unlockedAt: daysAgo(3, 12) })
 
 const listActivity = vi.fn<(limit: number) => Promise<ActivityPage>>()
-let dataChanged: () => void = () => {}
+let listeners: (() => void)[] = []
+const dataChanged = () => listeners.forEach((listener) => listener())
 const onOpenGame = vi.fn()
 
 beforeEach(() => {
+  listeners = []
   window.api = fakeApi({
     listActivity,
     onDataChanged: (listener) => {
-      dataChanged = listener
+      listeners.push(listener)
       return () => {}
     },
   })
@@ -85,11 +87,32 @@ describe('Activity', () => {
     expect(listActivity).toHaveBeenCalledWith(ACTIVITY_PAGE_SIZE)
   })
 
+  it('names today and yesterday with their full date beside them', async () => {
+    listActivity.mockResolvedValue({ unlocks: [TODAY], hasMore: false })
+    render(<Activity onOpenGame={onOpenGame} />)
+
+    const heading = await screen.findByRole('heading', { level: 2, name: /^Today/ })
+    const date = TODAY.unlockedAt.toLocaleDateString(undefined, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+    expect(heading).toHaveTextContent(`Today${date}`)
+  })
+
+  it('shows the header card while the unlocks load', () => {
+    listActivity.mockReturnValue(new Promise(() => {}))
+    render(<Activity onOpenGame={onOpenGame} />)
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Activity' })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Loading')
+  })
+
   it('groups unlocks under a heading for each day, with a count', async () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY, TODAY_XBOX, OLDER], hasMore: false })
     render(<Activity onOpenGame={onOpenGame} />)
 
-    const today = await screen.findByRole('region', { name: 'Today' })
+    const today = await screen.findByRole('region', { name: /^Today/ })
     expect(
       within(today)
         .getAllByRole('button')
@@ -156,7 +179,7 @@ describe('Activity', () => {
     listActivity.mockResolvedValue({ unlocks: [platinum, TODAY], hasMore: false })
     render(<Activity onOpenGame={onOpenGame} />)
 
-    const today = await screen.findByRole('region', { name: 'Today' })
+    const today = await screen.findByRole('region', { name: /^Today/ })
     expect(today).toHaveTextContent('2 unlocks')
     const row = within(today).getByRole('button', { name: /Every achievement in Portal/ })
     expect(row).toHaveTextContent('Platinum')
