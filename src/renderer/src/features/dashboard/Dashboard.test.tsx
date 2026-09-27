@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { DashboardStats } from '@shared/dashboard'
-import type { LibraryGame, RecentUnlock, UnlockedAchievement } from '@shared/library'
+import type { DashboardStats, DayCount, RarestUnlock } from '@shared/dashboard'
+import type { LibraryGame, RecentUnlock } from '@shared/library'
 import { fakeApi } from '@/test/fake-api'
 import { Dashboard } from './Dashboard'
 
@@ -35,7 +35,7 @@ const UNLOCK: RecentUnlock = {
   unlockedAt: new Date(2026, 2, 9, 12, 0),
 }
 
-const RARE: UnlockedAchievement = {
+const RAREST: RarestUnlock = {
   achievementId: 21,
   gameId: 4,
   platformGameId: 40,
@@ -47,14 +47,24 @@ const RARE: UnlockedAchievement = {
   globalPercent: 0.1,
   platinum: false,
   unlockedAt: null,
+  coverUrl: 'https://cover/4.jpg',
 }
+
+const WEEK: DayCount[] = [0, 1, 5, 1, 3, 2, 3].map((count, i) => ({
+  date: new Date(2026, 8, 21 + i),
+  count,
+}))
 
 const STATS: DashboardStats = {
   unlockedAchievements: 3482,
   totalAchievements: 5120,
   gamesTracked: 214,
   completedGames: 27,
-  unlockedThisWeek: 41,
+  unlockedToday: 3,
+  unlockedThisWeek: 15,
+  streakDays: 12,
+  week: WEEK,
+  unlockedByRarity: { ultra_rare: 9, rare: 142, uncommon: 388, common: 745 },
   platinums: 9,
   platforms: [
     { platform: 'steam', games: 120, unlocked: 402, total: 536 },
@@ -62,12 +72,22 @@ const STATS: DashboardStats = {
   ],
   nearlyThere: [game(1, 'Hollow Knight', 61, 63), game(2, 'Celeste', 31, 33)],
   recentUnlocks: [UNLOCK],
-  rarestUnlocks: [RARE, UNLOCK],
+  rarestUnlock: RAREST,
 }
 
 const getDashboard = vi.fn<() => Promise<DashboardStats>>()
 let dataChanged: () => void = () => {}
 const onOpenGame = vi.fn()
+const onNavigate = vi.fn()
+
+function renderDashboard(stats: DashboardStats = STATS) {
+  getDashboard.mockResolvedValue(stats)
+  return render(<Dashboard onOpenGame={onOpenGame} onNavigate={onNavigate} />)
+}
+
+const n = (value: number) => value.toLocaleString().replace(/\s/g, ' ')
+
+const hero = () => screen.findByRole('region', { name: 'Achievements unlocked' })
 
 beforeEach(() => {
   window.api = fakeApi({
@@ -87,145 +107,199 @@ afterEach(() => {
 describe('Dashboard', () => {
   it('shows a loading status before the stats arrive', () => {
     getDashboard.mockReturnValue(new Promise(() => {}))
-    render(<Dashboard onOpenGame={onOpenGame} />)
+    render(<Dashboard onOpenGame={onOpenGame} onNavigate={onNavigate} />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading')
   })
 
-  it('shows the totals from the main process, then clears the loading status', async () => {
-    getDashboard.mockResolvedValue(STATS)
-    render(<Dashboard onOpenGame={onOpenGame} />)
+  it('names the page for screen readers and greets you', async () => {
+    renderDashboard()
 
-    expect(await screen.findByText('68%')).toBeInTheDocument()
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByText((214).toLocaleString())).toBeInTheDocument()
-    expect(screen.getByText('27')).toBeInTheDocument()
-    expect(screen.getByText('41')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Dashboard' })).toBeInTheDocument()
+    expect(await hero()).toHaveTextContent(/Good (morning|afternoon|evening)/)
   })
 
-  it('counts the Platinums held', async () => {
-    getDashboard.mockResolvedValue(STATS)
-    render(<Dashboard onOpenGame={onOpenGame} />)
+  it('leads with the achievements unlocked, the share done and what is left', async () => {
+    renderDashboard()
 
-    expect(await screen.findByText('Platinums')).toBeInTheDocument()
-    expect(screen.getByText('9')).toBeInTheDocument()
-  })
-
-  it('shows the games closest to 100%, and opens one when clicked', async () => {
-    getDashboard.mockResolvedValue(STATS)
-    render(<Dashboard onOpenGame={onOpenGame} />)
-
-    const section = await screen.findByRole('region', { name: 'Nearly there' })
+    const section = await hero()
+    expect(section).toHaveTextContent(n(3482))
+    expect(section).toHaveTextContent(`of ${n(5120)}`)
+    expect(section).toHaveTextContent('68.0%')
+    expect(section).toHaveTextContent(`${n(1638)} still to go across ${n(214)} games`)
     expect(
-      within(section)
-        .getAllByRole('button')
-        .map((b) => b.textContent),
-    ).toEqual([expect.stringContaining('Hollow Knight'), expect.stringContaining('Celeste')])
+      within(section).getByRole('progressbar', { name: 'Achievements unlocked' }),
+    ).toHaveAttribute('aria-valuenow', '68')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
 
-    fireEvent.click(within(section).getByRole('button', { name: /Celeste/ }))
+  it("shows today's and this week's unlocks and the streak", async () => {
+    renderDashboard()
+
+    const section = await hero()
+    expect(section).toHaveTextContent('3 today')
+    expect(section).toHaveTextContent('15 this week')
+    expect(section).toHaveTextContent('12-day streak')
+  })
+
+  it('leaves out the streak when there is none', async () => {
+    renderDashboard({ ...STATS, streakDays: 0 })
+
+    expect(await hero()).not.toHaveTextContent('streak')
+  })
+
+  it('counts the unlocks of each rarity, in words', async () => {
+    renderDashboard()
+
+    const rarity = within(await hero()).getByRole('list', { name: 'By rarity' })
+    expect(
+      within(rarity)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['9Ultra Rare', '142Rare', '388Uncommon', '745Common'])
+  })
+
+  it('fans out the covers of the games closest to 100%, each opening its game', async () => {
+    renderDashboard()
+
+    const cover = within(await hero()).getByRole('button', { name: 'Celeste, 93%' })
+    fireEvent.click(cover)
     expect(onOpenGame).toHaveBeenCalledWith(2)
   })
 
-  it('leaves out "Nearly there" when no game is part-way through', async () => {
-    getDashboard.mockResolvedValue({ ...STATS, nearlyThere: [] })
-    render(<Dashboard onOpenGame={onOpenGame} />)
+  it('features the rarest unlock with its game, rarity and global rate, opening the game', async () => {
+    renderDashboard()
 
-    await screen.findByText('68%')
+    const card = await screen.findByRole('region', { name: 'Rarest unlock' })
+    expect(card).toHaveTextContent('Time Travel Will Tell')
+    expect(card).toHaveTextContent('Call of Duty: Black Ops III')
+    expect(card).toHaveTextContent('Ultra Rare')
+    expect(card).toHaveTextContent('Global unlock rate0.1%')
+    expect(within(card).getByRole('img', { name: 'PlayStation' })).toBeInTheDocument()
+
+    fireEvent.click(within(card).getByRole('button', { name: /Time Travel Will Tell/ }))
+    expect(onOpenGame).toHaveBeenCalledWith(4, 40)
+  })
+
+  it('explains the rarest unlock before any platform reports rarity', async () => {
+    renderDashboard({ ...STATS, rarestUnlock: null })
+
+    expect(await screen.findByRole('region', { name: 'Rarest unlock' })).toHaveTextContent(
+      /appears here/,
+    )
+  })
+
+  it('shows the games closest to 100%, opens one, and links to the Library', async () => {
+    renderDashboard()
+
+    const section = await screen.findByRole('region', { name: 'Nearly there' })
+    const cards = within(section).getAllByRole('button', { name: /achievements/ })
+    expect(cards.map((b) => b.textContent)).toEqual([
+      expect.stringContaining('Hollow Knight'),
+      expect.stringContaining('Celeste'),
+    ])
+
+    fireEvent.click(within(section).getByRole('button', { name: /Celeste/ }))
+    expect(onOpenGame).toHaveBeenCalledWith(2)
+
+    fireEvent.click(within(section).getByRole('button', { name: 'Library' }))
+    expect(onNavigate).toHaveBeenCalledWith('library')
+  })
+
+  it('leaves out "Nearly there" when no game is part-way through', async () => {
+    renderDashboard({ ...STATS, nearlyThere: [] })
+
+    await hero()
     expect(screen.queryByRole('region', { name: 'Nearly there' })).not.toBeInTheDocument()
   })
 
-  it('lists recent unlocks with their game, rarity and percentage, and opens the game', async () => {
-    getDashboard.mockResolvedValue(STATS)
-    render(<Dashboard onOpenGame={onOpenGame} />)
+  it('lists recent unlocks with their game, platform, rarity and percentage, and opens the game', async () => {
+    renderDashboard()
 
     const section = await screen.findByRole('region', { name: 'Recent unlocks' })
-    const row = within(section).getByRole('button')
-    expect(row).toHaveTextContent('Age of the Stars')
-    expect(row).toHaveTextContent('Elden Ring · Steam')
+    const row = within(section).getByRole('button', { name: /Age of the Stars/ })
+    expect(row).toHaveTextContent('Elden Ring')
+    expect(within(row).getByRole('img', { name: 'Steam' })).toBeInTheDocument()
     expect(row).toHaveTextContent('Ultra Rare')
     expect(row).toHaveTextContent('1.2%')
 
     fireEvent.click(row)
     expect(onOpenGame).toHaveBeenCalledWith(3, 30)
+
+    fireEvent.click(within(section).getByRole('button', { name: 'All activity' }))
+    expect(onNavigate).toHaveBeenCalledWith('activity')
   })
 
   it('says when nothing has been unlocked yet', async () => {
-    getDashboard.mockResolvedValue({ ...STATS, recentUnlocks: [] })
-    render(<Dashboard onOpenGame={onOpenGame} />)
+    renderDashboard({ ...STATS, recentUnlocks: [] })
 
     expect(await screen.findByText(/Nothing unlocked yet/)).toBeInTheDocument()
   })
 
-  it('shows each platform with its completion, achievements and games', async () => {
-    getDashboard.mockResolvedValue(STATS)
-    render(<Dashboard onOpenGame={onOpenGame} />)
+  it('shows each platform with its completion and achievements, and links to Accounts', async () => {
+    renderDashboard()
 
     const section = await screen.findByRole('region', { name: 'Platforms' })
     const [steam, playstation] = within(section).getAllByRole('listitem')
     expect(steam).toHaveTextContent('Steam')
-    expect(steam).toHaveTextContent('75%')
-    expect(steam).toHaveTextContent('402 / 536 achievements120 games')
+    expect(steam).toHaveTextContent('402 / 536')
+    expect(steam).toHaveTextContent('75.0%')
     expect(within(steam!).getByRole('progressbar', { name: 'Steam completion' })).toHaveAttribute(
       'aria-valuenow',
       '75',
     )
+    expect(playstation).toHaveTextContent('0 / 0')
     expect(playstation).toHaveTextContent('0%')
-    expect(playstation).toHaveTextContent('0 / 0 achievements1 game')
+
+    fireEvent.click(within(section).getByRole('button', { name: 'Accounts' }))
+    expect(onNavigate).toHaveBeenCalledWith('accounts')
   })
 
   it('leaves out "Platforms" before any account has games', async () => {
-    getDashboard.mockResolvedValue({ ...STATS, platforms: [] })
-    render(<Dashboard onOpenGame={onOpenGame} />)
+    renderDashboard({ ...STATS, platforms: [] })
 
-    await screen.findByText('68%')
+    await hero()
     expect(screen.queryByRole('region', { name: 'Platforms' })).not.toBeInTheDocument()
   })
 
-  it('lists the rarest unlocks in order, with their rarity and date, and opens the game', async () => {
-    getDashboard.mockResolvedValue(STATS)
-    render(<Dashboard onOpenGame={onOpenGame} />)
+  it('charts the last seven days, with the best day and the daily average', async () => {
+    renderDashboard()
 
-    const section = await screen.findByRole('region', { name: 'Rarest unlocked' })
-    const [rarest, next] = within(section).getAllByRole('button')
-    expect(rarest).toHaveTextContent('Time Travel Will Tell')
-    expect(rarest).toHaveTextContent('Call of Duty: Black Ops III · PlayStation')
-    expect(rarest).toHaveTextContent('Ultra Rare')
-    expect(rarest).toHaveTextContent('0.1%')
-    expect(rarest).toHaveTextContent('Date unknown')
-    expect(next).toHaveTextContent('Age of the Stars')
-
-    fireEvent.click(rarest!)
-    expect(onOpenGame).toHaveBeenCalledWith(4, 40)
+    const section = await screen.findByRole('region', { name: 'This week' })
+    const days = within(section).getAllByRole('listitem')
+    expect(days).toHaveLength(7)
+    const wednesday = new Date(2026, 8, 23).toLocaleDateString(undefined, { weekday: 'long' })
+    expect(days[2]).toHaveAccessibleName(`${wednesday}: 5 unlocks`)
+    expect(section).toHaveTextContent(`Best day ${wednesday} · 5`)
+    expect(section).toHaveTextContent('Daily avg 2.1')
   })
 
-  it('leaves out "Rarest unlocked" when no unlock has a rarity', async () => {
-    getDashboard.mockResolvedValue({ ...STATS, rarestUnlocks: [] })
-    render(<Dashboard onOpenGame={onOpenGame} />)
+  it('says when nothing was unlocked in the last seven days', async () => {
+    renderDashboard({ ...STATS, week: WEEK.map((day) => ({ ...day, count: 0 })) })
 
-    await screen.findByText('68%')
-    expect(screen.queryByRole('region', { name: 'Rarest unlocked' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'This week' })).toHaveTextContent(
+      'No unlocks in the last 7 days',
+    )
   })
 
   it('reloads when the main process says the data changed', async () => {
-    getDashboard
-      .mockResolvedValueOnce(STATS)
-      .mockResolvedValueOnce({ ...STATS, unlockedThisWeek: 42 })
-    render(<Dashboard onOpenGame={onOpenGame} />)
-    await screen.findByText('41')
+    getDashboard.mockResolvedValueOnce(STATS).mockResolvedValueOnce({ ...STATS, unlockedToday: 4 })
+    render(<Dashboard onOpenGame={onOpenGame} onNavigate={onNavigate} />)
+    expect(await hero()).toHaveTextContent('3 today')
 
     act(() => dataChanged())
 
-    expect(await screen.findByText('42')).toBeInTheDocument()
+    expect(await screen.findByText('4 today')).toBeInTheDocument()
   })
 
   it('still loads under StrictMode, where effects run twice', async () => {
     getDashboard.mockResolvedValue(STATS)
     render(
       <StrictMode>
-        <Dashboard onOpenGame={onOpenGame} />
+        <Dashboard onOpenGame={onOpenGame} onNavigate={onNavigate} />
       </StrictMode>,
     )
 
-    expect(await screen.findByText('68%')).toBeInTheDocument()
+    expect(await hero()).toBeInTheDocument()
   })
 })

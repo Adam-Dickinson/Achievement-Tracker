@@ -114,14 +114,15 @@ describe('Activity', () => {
 
     const row = await screen.findByRole('button', { name: /Age of the Stars/ })
     expect(row).toHaveTextContent('Achieve the "Age of the Stars" ending')
-    expect(row).toHaveTextContent('Elden Ring · Steam')
+    expect(row).toHaveTextContent('Elden Ring')
+    expect(within(row).getByRole('img', { name: 'Steam' })).toBeInTheDocument()
     expect(row).toHaveTextContent('Ultra Rare')
     expect(row).toHaveTextContent('1.2%')
     expect(row).toHaveTextContent(formatTime(TODAY.unlockedAt))
 
-    expect(screen.getByRole('button', { name: /First Win/ })).toHaveTextContent(
-      'Forza Horizon 6 · Xbox',
-    )
+    const xbox = screen.getByRole('button', { name: /First Win/ })
+    expect(xbox).toHaveTextContent('Forza Horizon 6')
+    expect(within(xbox).getByRole('img', { name: 'Xbox' })).toBeInTheDocument()
   })
 
   it('opens the game when an unlock is clicked', async () => {
@@ -159,7 +160,7 @@ describe('Activity', () => {
     expect(today).toHaveTextContent('2 unlocks')
     const row = within(today).getByRole('button', { name: /Every achievement in Portal/ })
     expect(row).toHaveTextContent('Platinum')
-    expect(row).toHaveTextContent('Portal · Xbox')
+    expect(within(row).getByRole('img', { name: 'Xbox' })).toBeInTheDocument()
     expect(row).toHaveTextContent(formatTime(platinum.unlockedAt))
 
     fireEvent.click(row)

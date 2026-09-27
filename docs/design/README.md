@@ -10,7 +10,7 @@ Static HTML snapshots live in [`mockups/`](mockups/); open them directly in a br
 
 | Screen | Snapshot | Superdesign draft id | Build under `src/renderer/src/` |
 |---|---|---|---|
-| Dashboard | [dashboard.html](mockups/dashboard.html) | `8204918a-4869-4cec-ba73-bfe098a3887f` | `features/dashboard` (built on real data: hero, tiles, Platforms, "Nearly there", Recent unlocks and Rarest unlocked; the hero's rarity chips and fanned covers and the weekly chart still to build) |
+| Dashboard | [dashboard.html](mockups/dashboard.html) | `8204918a-4869-4cec-ba73-bfe098a3887f` | `features/dashboard` (built to the design) |
 | Library | [library.html](mockups/library.html) | `aacf7ec7-8501-4806-9cc6-f648f81879ca` | `features/library` (built: virtualized grid with colour-in covers, search, platform and progress filters, sorts; the portrait/list views still to do) |
 | Game detail | [game-detail.html](mockups/game-detail.html) | `5b6a84ea-0715-41dd-a09c-2db27bc83791` | `features/game-detail` (built: header, four tiles, per-platform tabs, filters, search, sort choice, virtualized achievements; "Open in Steam" still to do) |
 | Unlock toast (overlay) | [unlock-toast.html](mockups/unlock-toast.html) | `4d4e0785-71b2-4354-9da8-d98c9f6f2ecd` | `overlay/Toast.tsx` (built in the Afterglow look, stacking up to 3; platform badge still to do) |

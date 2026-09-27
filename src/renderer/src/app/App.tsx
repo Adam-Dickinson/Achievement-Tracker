@@ -18,6 +18,7 @@ interface PageContentProps {
   onLibraryViewChange: (view: LibraryView) => void
   libraryScrollTop: number
   onOpenGame: (id: number, platformGameId?: number) => void
+  onNavigate: (page: PageId) => void
 }
 
 function PageContent({
@@ -26,10 +27,11 @@ function PageContent({
   onLibraryViewChange,
   libraryScrollTop,
   onOpenGame,
+  onNavigate,
 }: PageContentProps) {
   switch (page) {
     case 'dashboard':
-      return <Dashboard onOpenGame={onOpenGame} />
+      return <Dashboard onOpenGame={onOpenGame} onNavigate={onNavigate} />
     case 'library':
       return (
         <Library
@@ -86,14 +88,19 @@ export function App() {
         <ScrollParentContext value={scrollParent}>
           {opened === null ? (
             <>
-              <h1 className="font-display text-3xl font-semibold">{current.label}</h1>
-              <p className="mt-2 text-fg-muted">{current.description}</p>
+              {!current.ownHeading && (
+                <>
+                  <h1 className="font-display text-3xl font-semibold">{current.label}</h1>
+                  <p className="mt-2 text-fg-muted">{current.description}</p>
+                </>
+              )}
               <PageContent
                 page={page}
                 libraryView={libraryView}
                 onLibraryViewChange={setLibraryView}
                 libraryScrollTop={libraryScrollTop}
                 onOpenGame={openGame}
+                onNavigate={selectPage}
               />
             </>
           ) : (

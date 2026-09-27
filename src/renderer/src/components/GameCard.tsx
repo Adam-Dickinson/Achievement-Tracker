@@ -1,8 +1,8 @@
 import { Crown } from 'lucide-react'
 import { completionPercent } from '@shared/dashboard'
 import type { LibraryGame } from '@shared/library'
-import { platformName } from '@shared/platform'
 import { CoverArt } from './CoverArt'
+import { PlatformBadge } from './PlatformBadge'
 
 interface GameCardProps {
   game: LibraryGame
@@ -34,19 +34,16 @@ export function GameCard({ game, onOpen }: GameCardProps) {
         </span>
       </div>
 
-      <div className="flex flex-col gap-1 px-2 pt-3 pb-2">
-        <span className="truncate font-semibold">{game.title}</span>
-        <span className="flex flex-wrap gap-1">
-          {game.platforms.map((platform) => (
-            <span
-              key={platform}
-              className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-fg-subtle"
-            >
-              {platformName(platform)}
-            </span>
-          ))}
+      <div className="flex flex-col gap-1.5 px-2 pt-3 pb-2">
+        <span className="flex items-center justify-between gap-2">
+          <span className="truncate text-sm font-semibold">{game.title}</span>
+          <span className="flex shrink-0 -space-x-1">
+            {game.platforms.map((platform) => (
+              <PlatformBadge key={platform} platform={platform} />
+            ))}
+          </span>
         </span>
-        <span className="mt-1 flex justify-between gap-2 text-xs text-fg-muted">
+        <span className="flex justify-between gap-2 text-xs text-fg-muted">
           <span>
             {synced ? (
               <>

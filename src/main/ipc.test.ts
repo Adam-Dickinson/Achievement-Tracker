@@ -30,12 +30,16 @@ const DASHBOARD: DashboardStats = {
   totalAchievements: 0,
   gamesTracked: 0,
   completedGames: 0,
+  unlockedToday: 0,
   unlockedThisWeek: 0,
+  streakDays: 0,
+  week: [],
+  unlockedByRarity: { ultra_rare: 0, rare: 0, uncommon: 0, common: 0 },
   platinums: 0,
   platforms: [],
   nearlyThere: [],
   recentUnlocks: [],
-  rarestUnlocks: [],
+  rarestUnlock: null,
 }
 
 const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
