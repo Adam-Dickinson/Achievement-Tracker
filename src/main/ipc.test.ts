@@ -31,6 +31,7 @@ const DASHBOARD: DashboardStats = {
   gamesTracked: 0,
   completedGames: 0,
   unlockedThisWeek: 0,
+  platinums: 0,
   platforms: [],
   nearlyThere: [],
   recentUnlocks: [],

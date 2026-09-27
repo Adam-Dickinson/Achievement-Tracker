@@ -1,17 +1,21 @@
 import type { DatabaseSync } from 'node:sqlite'
 import type { DashboardStats, PlatformProgress } from '@shared/dashboard'
 import type {
+  ActivityItem,
   ActivityPage,
+  AppPlatinum,
   GameAchievement,
   GameDetail,
   GameEntry,
   LibraryGame,
+  RecentPlatinum,
   RecentUnlock,
   UnlockedAchievement,
 } from '@shared/library'
 import { PLATFORMS, type Platform } from '@shared/platform'
 import { listArtworkUrls } from './artwork-store'
 import { matchKey } from './match-key'
+import { isPlatinumAchievement } from './platinum'
 
 const NEARLY_THERE_COUNT = 4
 const RECENT_UNLOCK_COUNT = 6
@@ -39,6 +43,7 @@ interface UnlockRecord {
   achievement_id: number
   name: string
   description: string | null
+  tier: string | null
   icon_url: string | null
   global_percent: number | null
   unlocked_at: string | null
@@ -49,7 +54,7 @@ interface UnlockRecord {
 }
 
 const UNLOCKS = `
-  SELECT a.id AS achievement_id, a.name, a.description, a.icon_url, a.global_percent,
+  SELECT a.id AS achievement_id, a.name, a.description, a.tier, a.icon_url, a.global_percent,
          u.unlocked_at,
          pg.game_id, pg.id AS platform_game_id, pg.title AS game_title, pg.platform
   FROM unlock u
@@ -77,9 +82,14 @@ export function getGameDetail(db: DatabaseSync, gameId: number): GameDetail | nu
   const ranked = rank(entries)
   if (!ranked) return null
 
+  const appPlatinums = new Map(
+    listAppPlatinums(db).map((platinum) => [platinum.platformGameId, platinum]),
+  )
   return {
     game: toLibraryGame(ranked, listArtworkUrls(db)),
-    entries: ranked.all.map((entry) => toGameEntry(db, entry, ranked.all)),
+    entries: ranked.all.map((entry) =>
+      toGameEntry(db, entry, ranked.all, appPlatinums.get(entry.id) ?? null),
+    ),
   }
 }
 
@@ -102,6 +112,7 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
     gamesTracked: games.length,
     completedGames: games.filter((game) => game.total > 0 && game.unlocked === game.total).length,
     unlockedThisWeek,
+    platinums: countPlatinums(db),
     platforms: byPlatform(entries),
     nearlyThere,
     recentUnlocks: listRecentUnlocks(db, RECENT_UNLOCK_COUNT),
@@ -118,7 +129,11 @@ export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock
        LIMIT ?`,
     )
     .all(limit) as unknown as (UnlockRecord & { unlocked_at: string })[]
-  return rows.map((row) => ({ ...toUnlock(row), unlockedAt: new Date(row.unlocked_at) }))
+  return rows.map((row) => ({
+    ...toUnlock(row),
+    kind: 'achievement',
+    unlockedAt: new Date(row.unlocked_at),
+  }))
 }
 
 function listRarestUnlocks(db: DatabaseSync, limit: number): UnlockedAchievement[] {
@@ -134,8 +149,90 @@ function listRarestUnlocks(db: DatabaseSync, limit: number): UnlockedAchievement
 }
 
 export function listActivity(db: DatabaseSync, limit: number): ActivityPage {
-  const unlocks = listRecentUnlocks(db, limit + 1)
-  return { unlocks: unlocks.slice(0, limit), hasMore: unlocks.length > limit }
+  const platinums = listAppPlatinums(db).flatMap((platinum): RecentPlatinum[] =>
+    platinum.earnedAt === null
+      ? []
+      : [
+          {
+            kind: 'platinum',
+            gameId: platinum.gameId,
+            platformGameId: platinum.platformGameId,
+            gameTitle: platinum.gameTitle,
+            platform: platinum.platform,
+            unlockedAt: platinum.earnedAt,
+          },
+        ],
+  )
+  const items: ActivityItem[] = [...platinums, ...listRecentUnlocks(db, limit + 1)]
+    .sort((a, b) => b.unlockedAt.getTime() - a.unlockedAt.getTime() || kindOrder(a) - kindOrder(b))
+    .slice(0, limit + 1)
+  return { unlocks: items.slice(0, limit), hasMore: items.length > limit }
+}
+
+function kindOrder(item: ActivityItem): number {
+  return item.kind === 'platinum' ? 0 : 1
+}
+
+interface AppPlatinumRecord extends AppPlatinum {
+  readonly gameId: number
+  readonly platformGameId: number
+  readonly gameTitle: string
+  readonly platform: Platform
+}
+
+function listAppPlatinums(db: DatabaseSync): AppPlatinumRecord[] {
+  const rows = db
+    .prepare(
+      `SELECT p.platform_game_id, p.earned_at, pg.game_id, pg.title, pg.platform
+       FROM platinum p
+       JOIN platform_game pg ON pg.id = p.platform_game_id`,
+    )
+    .all() as unknown as {
+    platform_game_id: number
+    earned_at: string | null
+    game_id: number
+    title: string
+    platform: Platform
+  }[]
+  const withOwn = entriesWithOwnPlatinum(db, 'awarded')
+  return rows
+    .filter((row) => !withOwn.has(row.platform_game_id))
+    .map((row) => ({
+      gameId: row.game_id,
+      platformGameId: row.platform_game_id,
+      gameTitle: row.title,
+      platform: row.platform,
+      earnedAt: toDate(row.earned_at),
+    }))
+}
+
+const OWN_PLATINUM_SCOPE: Record<'unlocked' | 'awarded', string> = {
+  unlocked: 'JOIN unlock u ON u.achievement_id = a.id',
+  awarded: 'JOIN platinum p ON p.platform_game_id = a.platform_game_id',
+}
+
+function entriesWithOwnPlatinum(db: DatabaseSync, among: 'unlocked' | 'awarded'): Set<number> {
+  const rows = db
+    .prepare(
+      `SELECT a.platform_game_id, a.tier, a.description, pg.title
+       FROM achievement a
+       JOIN platform_game pg ON pg.id = a.platform_game_id
+       ${OWN_PLATINUM_SCOPE[among]}
+       WHERE (a.tier IS NOT NULL OR a.description IS NOT NULL)`,
+    )
+    .all() as unknown as {
+    platform_game_id: number
+    tier: string | null
+    description: string | null
+    title: string
+  }[]
+  return new Set(
+    rows.filter((row) => isPlatinumAchievement(row, row.title)).map((row) => row.platform_game_id),
+  )
+}
+
+function countPlatinums(db: DatabaseSync): number {
+  return entriesWithOwnPlatinum(db, 'unlocked').size + listAppPlatinums(db).length
 }
 
 function toUnlock(row: UnlockRecord): UnlockedAchievement {
@@ -149,6 +246,7 @@ function toUnlock(row: UnlockRecord): UnlockedAchievement {
     description: row.description,
     iconUrl: row.icon_url,
     globalPercent: row.global_percent,
+    platinum: isPlatinumAchievement(row, row.game_title),
     unlockedAt: toDate(row.unlocked_at),
   }
 }
@@ -231,7 +329,12 @@ function foundArtwork(
   return null
 }
 
-function toGameEntry(db: DatabaseSync, entry: EntryRecord, all: readonly EntryRecord[]): GameEntry {
+function toGameEntry(
+  db: DatabaseSync,
+  entry: EntryRecord,
+  all: readonly EntryRecord[],
+  appPlatinum: AppPlatinum | null,
+): GameEntry {
   const sharesPlatform = all.filter((other) => other.platform === entry.platform).length > 1
   return {
     platformGameId: entry.id,
@@ -240,7 +343,8 @@ function toGameEntry(db: DatabaseSync, entry: EntryRecord, all: readonly EntryRe
     title: entry.title.trim(),
     unlocked: entry.unlocked,
     total: entry.total,
-    achievements: listAchievements(db, entry.id),
+    achievements: listAchievements(db, entry.id, entry.title),
+    appPlatinum: appPlatinum && { earnedAt: appPlatinum.earnedAt },
   }
 }
 
@@ -248,10 +352,14 @@ function tagOf(title: string): string {
   return TRAILING_TAG.exec(title)?.[1]?.trim() ?? title.trim()
 }
 
-function listAchievements(db: DatabaseSync, platformGameId: number): GameAchievement[] {
+function listAchievements(
+  db: DatabaseSync,
+  platformGameId: number,
+  gameTitle: string,
+): GameAchievement[] {
   const rows = db
     .prepare(
-      `SELECT a.id, a.name, a.description, a.hidden, a.icon_url, a.icon_locked_url,
+      `SELECT a.id, a.name, a.description, a.tier, a.hidden, a.icon_url, a.icon_locked_url,
               a.global_percent, u.id AS unlock_id, u.unlocked_at
        FROM achievement a
        LEFT JOIN unlock u ON u.achievement_id = a.id
@@ -262,6 +370,7 @@ function listAchievements(db: DatabaseSync, platformGameId: number): GameAchieve
     id: number
     name: string
     description: string | null
+    tier: string | null
     hidden: number
     icon_url: string | null
     icon_locked_url: string | null
@@ -278,6 +387,7 @@ function listAchievements(db: DatabaseSync, platformGameId: number): GameAchieve
     iconUrl: a.icon_url,
     iconLockedUrl: a.icon_locked_url,
     globalPercent: a.global_percent,
+    platinum: isPlatinumAchievement(a, gameTitle),
     unlocked: a.unlock_id !== null,
     unlockedAt: toDate(a.unlocked_at),
   }))

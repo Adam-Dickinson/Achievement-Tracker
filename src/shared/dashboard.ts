@@ -14,6 +14,7 @@ export interface DashboardStats {
   readonly gamesTracked: number
   readonly completedGames: number
   readonly unlockedThisWeek: number
+  readonly platinums: number
   readonly platforms: readonly PlatformProgress[]
   readonly nearlyThere: readonly LibraryGame[]
   readonly recentUnlocks: readonly RecentUnlock[]
