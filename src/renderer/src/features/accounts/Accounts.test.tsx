@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AccountSummary, ConnectResult, SteamConnectInput } from '@shared/ipc'
-import { Accounts } from './Accounts'
+import { Accounts, countAccounts } from './Accounts'
 import { fakeApi } from '@/test/fake-api'
 
 const STEAM: AccountSummary = {
@@ -14,6 +14,7 @@ const STEAM: AccountSummary = {
   status: 'connected',
   gameCount: 3,
   checkedGames: 0,
+  unlockedCount: 0,
   lastSyncAt: null,
   syncing: false,
 }
@@ -24,6 +25,7 @@ const XBOX: AccountSummary = {
   status: 'needs_reauth',
   gameCount: 0,
   checkedGames: 0,
+  unlockedCount: 0,
   lastSyncAt: null,
   syncing: false,
 }
@@ -49,33 +51,52 @@ afterEach(() => {
   vi.resetAllMocks()
 })
 
+const platformCards = () =>
+  within(screen.getByRole('region', { name: 'Online platforms' }))
+    .getAllByRole('region')
+    .map((card) => card.getAttribute('aria-label'))
+
 describe('Accounts', () => {
-  it('shows a loading status until the main process replies', () => {
+  it('titles the page and shows a loading status until the main process replies', () => {
     listAccounts.mockReturnValue(new Promise(() => {}))
     render(<Accounts />)
 
+    expect(screen.getByRole('heading', { level: 1, name: 'Accounts' })).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Loading')
   })
 
-  it('says so when no account is connected', async () => {
+  it('offers every online platform to connect when there are no accounts', async () => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)
 
-    expect(await screen.findByText('No accounts connected yet.')).toBeInTheDocument()
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    await screen.findByRole('region', { name: 'Online platforms' })
+    expect(platformCards()).toEqual([
+      'Steam, not connected',
+      'Xbox, not connected',
+      'PlayStation, not connected',
+      'Epic, not connected',
+      'Ubisoft, not connected',
+      'EA, not connected',
+    ])
+    expect(screen.getByText('Available to connect').previousElementSibling).toHaveTextContent('6')
   })
 
-  it('lists every account, in the order the main process gives them', async () => {
-    listAccounts.mockResolvedValue([STEAM, XBOX])
+  it('shows each account in its platform’s place, and a connect card for the rest', async () => {
+    listAccounts.mockResolvedValue([XBOX, STEAM])
     render(<Accounts />)
 
-    const items = within(await screen.findByRole('list')).getAllByRole('listitem')
-    expect(items).toHaveLength(2)
-    expect(items[0]).toHaveTextContent('Steam Player')
-    expect(items[1]).toHaveTextContent('Xbox Player')
-    expect(items[1]).toHaveTextContent('Needs reconnecting')
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(listAccounts).toHaveBeenCalledOnce()
+    await screen.findByRole('region', { name: 'Online platforms' })
+    expect(platformCards()).toEqual([
+      'Steam: Steam Player',
+      'Xbox: Xbox Player',
+      'PlayStation, not connected',
+      'Epic, not connected',
+      'Ubisoft, not connected',
+      'EA, not connected',
+    ])
+    expect(screen.getByText('Connected sources').previousElementSibling).toHaveTextContent('1')
+    expect(screen.getByText('Need signing in again').previousElementSibling).toHaveTextContent('1')
+    expect(screen.getByText('Available to connect').previousElementSibling).toHaveTextContent('4')
   })
 
   it('still loads under StrictMode, where effects run twice', async () => {
@@ -89,59 +110,38 @@ describe('Accounts', () => {
     expect(await screen.findByText('Steam Player')).toBeInTheDocument()
   })
 
-  it('shows the Steam connect form', async () => {
+  it.each([
+    ['Steam', 'Connect Steam'],
+    ['Xbox', 'Connect Xbox'],
+    ['PlayStation', 'Connect PlayStation'],
+    ['Ubisoft', 'Connect Ubisoft'],
+    ['EA', 'Connect EA'],
+  ])('opens the %s sign-in flow from its card, and closes it again', async (_platform, name) => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)
 
-    expect(screen.getByRole('form', { name: 'Connect with an API key' })).toBeInTheDocument()
-    await screen.findByText('No accounts connected yet.')
+    fireEvent.click(await screen.findByRole('button', { name }))
+    expect(screen.getByRole('region', { name })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('region', { name })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name })).toBeInTheDocument()
   })
 
-  it('shows the Epic connect card', async () => {
+  it('opens the Epic flow with its code box', async () => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Connect Epic' }))
 
     expect(screen.getByRole('form', { name: 'Connect Epic Games' })).toBeInTheDocument()
-    await screen.findByText('No accounts connected yet.')
-  })
-
-  it('shows the Ubisoft connect card', async () => {
-    listAccounts.mockResolvedValue([])
-    render(<Accounts />)
-
-    expect(screen.getByRole('region', { name: 'Connect Ubisoft' })).toBeInTheDocument()
-    await screen.findByText('No accounts connected yet.')
-  })
-
-  it('shows the Steam card with its sign-in and the API key fallback', async () => {
-    listAccounts.mockResolvedValue([])
-    render(<Accounts />)
-
-    expect(screen.getByRole('region', { name: 'Connect Steam' })).toBeInTheDocument()
-    await screen.findByText('No accounts connected yet.')
-  })
-
-  it('shows the EA connect card', async () => {
-    listAccounts.mockResolvedValue([])
-    render(<Accounts />)
-
-    expect(screen.getByRole('region', { name: 'Connect EA' })).toBeInTheDocument()
-    await screen.findByText('No accounts connected yet.')
-  })
-
-  it('shows the PlayStation connect card', async () => {
-    listAccounts.mockResolvedValue([])
-    render(<Accounts />)
-
-    expect(screen.getByRole('region', { name: 'Connect PlayStation' })).toBeInTheDocument()
-    await screen.findByText('No accounts connected yet.')
   })
 
   it('reloads the list after an account is connected', async () => {
     listAccounts.mockResolvedValueOnce([]).mockResolvedValueOnce([STEAM])
     connectSteam.mockResolvedValue({ ok: true, account: STEAM })
     render(<Accounts />)
-    await screen.findByText('No accounts connected yet.')
+    fireEvent.click(await screen.findByRole('button', { name: 'Connect Steam' }))
 
     fireEvent.change(screen.getByLabelText('SteamID64'), { target: { value: '76561190000000001' } })
     fireEvent.change(screen.getByLabelText('Steam API key'), { target: { value: 'KEY' } })
@@ -152,16 +152,27 @@ describe('Accounts', () => {
     expect(listAccounts).toHaveBeenCalledTimes(2)
   })
 
+  it('opens the sign-in flow under a signed-out account to reconnect it', async () => {
+    listAccounts.mockResolvedValue([XBOX])
+    render(<Accounts />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Reconnect' }))
+
+    expect(screen.getByRole('region', { name: 'Connect Xbox' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('region', { name: 'Connect Xbox' })).not.toBeInTheDocument()
+  })
+
   it('reloads the list when the main process says the data changed', async () => {
     listAccounts
       .mockResolvedValueOnce([{ ...STEAM, gameCount: 0 }])
       .mockResolvedValueOnce([{ ...STEAM, gameCount: 212 }])
     render(<Accounts />)
-    expect(await screen.findByText('0 games')).toBeInTheDocument()
+    await screen.findByText('Steam Player')
 
     act(() => dataChanged())
 
-    expect(await screen.findByText('212 games')).toBeInTheDocument()
+    expect(await screen.findByText('212')).toBeInTheDocument()
   })
 
   it('stops listening for changes when the page closes', () => {
@@ -172,25 +183,6 @@ describe('Accounts', () => {
 
     expect(unsubscribe).toHaveBeenCalledOnce()
   })
-})
-
-describe('Accounts: syncing', () => {
-  it('syncs every account from Sync all', async () => {
-    listAccounts.mockResolvedValue([STEAM, XBOX])
-    render(<Accounts />)
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Sync all' }))
-
-    expect(window.api.syncNow).toHaveBeenCalledWith({ kind: 'all' })
-  })
-
-  it('offers no Sync all when no account is connected', async () => {
-    listAccounts.mockResolvedValue([XBOX])
-    render(<Accounts />)
-
-    await screen.findByText('Xbox Player')
-    expect(screen.queryByRole('button', { name: 'Sync all' })).not.toBeInTheDocument()
-  })
 
   it('reloads the list after an account is disconnected', async () => {
     listAccounts.mockResolvedValueOnce([STEAM]).mockResolvedValueOnce([])
@@ -199,6 +191,27 @@ describe('Accounts: syncing', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Disconnect…' }))
     fireEvent.click(screen.getByRole('button', { name: 'Remove its games' }))
 
-    expect(await screen.findByText('No accounts connected yet.')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Connect Steam' })).toBeInTheDocument()
+  })
+
+  it('explains where keys live and what unofficial means', async () => {
+    listAccounts.mockResolvedValue([])
+    render(<Accounts />)
+
+    expect(await screen.findByRole('heading', { name: 'Where your keys live' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'About “unofficial” sources' })).toBeInTheDocument()
+  })
+})
+
+describe('countAccounts', () => {
+  it('counts connected, signed-out or failing, and platforms with no active account', () => {
+    expect(
+      countAccounts([
+        STEAM,
+        XBOX,
+        { ...STEAM, id: 3, platform: 'epic', status: 'error' },
+        { ...STEAM, id: 4, platform: 'ea', status: 'disabled' },
+      ]),
+    ).toEqual({ connected: 1, needsSignIn: 2, available: 3 })
   })
 })

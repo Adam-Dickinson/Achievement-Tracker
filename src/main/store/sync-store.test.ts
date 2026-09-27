@@ -346,6 +346,31 @@ function accountRows(db: DatabaseSync): unknown[] {
 }
 
 describe('listAccountSummaries', () => {
+  it("counts each account's own unlocks", () => {
+    const db = seedDb()
+    upsertAchievements(
+      db,
+      1,
+      ['a', 'b', 'c'].map((externalId) => ({
+        externalId,
+        name: externalId,
+        description: null,
+        iconUrl: null,
+        iconLockedUrl: null,
+        hidden: false,
+        points: null,
+        tier: null,
+        globalPercent: null,
+      })),
+    )
+    insertNewUnlocks(db, 1, [
+      { achievementExternalId: 'a', unlockedAt: new Date('2026-01-05T00:00:00Z'), progress: null },
+      { achievementExternalId: 'b', unlockedAt: null, progress: null },
+    ])
+
+    expect(listAccountSummaries(db).map((account) => account.unlockedCount)).toEqual([2])
+  })
+
   it('lists every account with its status and number of games, in id order', () => {
     const db = freshDb()
     const steam = upsertAccount(db, {
@@ -386,6 +411,7 @@ describe('listAccountSummaries', () => {
         status: 'connected',
         gameCount: 2,
         checkedGames: 0,
+        unlockedCount: 0,
         lastSyncAt: null,
         syncing: false,
       },
@@ -396,6 +422,7 @@ describe('listAccountSummaries', () => {
         status: 'needs_reauth',
         gameCount: 0,
         checkedGames: 0,
+        unlockedCount: 0,
         lastSyncAt: null,
         syncing: false,
       },
@@ -750,6 +777,7 @@ describe('listAccountSummaries sync progress', () => {
     expect(listAccountSummaries(db)[0]).toMatchObject({
       gameCount: 3,
       checkedGames: 2,
+      unlockedCount: 0,
       lastSyncAt: new Date('2026-09-26T09:00:00.000Z'),
     })
   })

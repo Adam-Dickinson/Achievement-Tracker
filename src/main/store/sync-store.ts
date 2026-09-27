@@ -227,6 +227,10 @@ export function listAccountSummaries(
             JOIN sync_state ON sync_state.account_id = platform_game.account_id
                            AND sync_state.scope = 'game:' || platform_game.external_id
             WHERE platform_game.account_id = account.id) AS checked_games,
+           (SELECT COUNT(*) FROM unlock
+            JOIN achievement ON achievement.id = unlock.achievement_id
+            JOIN platform_game ON platform_game.id = achievement.platform_game_id
+            WHERE platform_game.account_id = account.id) AS unlocked_count,
            (SELECT MAX(last_ok_at) FROM sync_state WHERE sync_state.account_id = account.id)
              AS last_sync_at
     FROM account
@@ -240,6 +244,7 @@ export function listAccountSummaries(
     status: AccountStatus
     game_count: number
     checked_games: number
+    unlocked_count: number
     last_sync_at: string | null
   }[]
 
@@ -250,6 +255,7 @@ export function listAccountSummaries(
     status: row.status,
     gameCount: row.game_count,
     checkedGames: row.checked_games,
+    unlockedCount: row.unlocked_count,
     lastSyncAt: row.last_sync_at === null ? null : new Date(row.last_sync_at),
     syncing: isSyncing(row.id),
   }))

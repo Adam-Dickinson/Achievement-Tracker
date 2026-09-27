@@ -77,6 +77,7 @@ export interface AccountSummary {
   readonly status: AccountStatus
   readonly gameCount: number
   readonly checkedGames: number
+  readonly unlockedCount: number
   readonly lastSyncAt: Date | null
   readonly syncing: boolean
 }

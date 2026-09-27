@@ -39,7 +39,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Accounts' }))
 
-    expect(await screen.findByText('No accounts connected yet.')).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Online platforms' })).toBeInTheDocument()
     expect(window.api.listAccounts).toHaveBeenCalled()
   })
 
