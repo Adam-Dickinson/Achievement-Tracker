@@ -1,6 +1,5 @@
 import type { ToastPayload, VisibleToast } from '@shared/ipc'
 import type { UnlockEvent } from '@shared/models'
-import { platformName } from '@shared/platform'
 import { rarityFromPercent } from '@shared/rarity'
 import { APP_PLATINUM_ID, isPlatinumAchievement } from './store/platinum'
 
@@ -124,7 +123,7 @@ export function unlockToast(event: UnlockEvent): ToastPayload {
     title: event.achievement.name,
     description: event.achievement.description,
     game: event.gameTitle,
-    platform: platformName(event.platform),
+    platform: event.platform,
     percent: percent === null ? null : roundPercent(percent),
     platinum,
   }
@@ -143,7 +142,7 @@ export function burstToast(events: readonly UnlockEvent[]): ToastPayload {
     heading: `${events.length} achievements unlocked`,
     description: `and ${rest.length} more`,
     game: games.size === 1 ? rarest.gameTitle : `${games.size} games`,
-    platform: platforms.size === 1 ? platformName(rarest.platform) : 'Several platforms',
+    platform: platforms.size === 1 ? rarest.platform : null,
     platinum: false,
   }
 }

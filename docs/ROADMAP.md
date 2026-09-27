@@ -67,7 +67,7 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
   - [x] Game detail: rebuilt to the design (full-bleed banner with badges and a large title, stat cards overlapping it, a segmented platform bar, filters, search and a sort dropdown in one row), with **Open in Steam** (the Steam client, `steam://nav/games/details/<appid>`) and **View on Xbox.com** (the store page from the title history's ProductId), kept per entry in `platform_game.store_url` (migration 0007) and opened by the main process only if the link matches an allowed pattern. Epic, Ubisoft, EA and PlayStation replies carry no store page or id that opens one, so they have no button. Sync, Link and Unlink moved into the banner. Checked in the built app on a copy of the owner's data
   - [x] Activity: the header card (this week's unlocks, the streak and the rarest this week, counted like the Dashboard, and a rarity legend), day headings with the full date beside Today and Yesterday, and the design's narrower column. Checked in the built app on a copy of the owner's data
   - [ ] Accounts: one card per platform with its status, stats, Resync and Disconnect, in place of the connect forms and the account list
-  - [ ] Toast: the platform badge
+  - [x] Toast: the platform badge beside the game (the toast payload now carries the platform id, `null` for a burst across several platforms). Checked with test toasts in the built app
   - Settings and Onboarding are designed too; they are built to their designs in the items below
 - [ ] Notification settings (corner, monitor, scale, rarity styling, per-platform toggles)
 - [ ] Toast sound per rarity tier, with volume and a mute (F-22)

@@ -1,5 +1,6 @@
 import { Crown } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
+import { PlatformBadge } from '@/components/PlatformBadge'
 import { PlatinumChip } from '@/components/PlatinumChip'
 import { RarityChip } from '@/components/RarityChip'
 import { RarityGem } from '@/components/RarityGem'
@@ -60,8 +61,9 @@ export function Toast({
         </div>
         <div className="font-display truncate text-lg leading-6 font-bold">{title}</div>
         {description && <div className="truncate text-xs text-fg-muted">{description}</div>}
-        <div className="mt-0.5 truncate text-[11px] text-fg-subtle">
-          {game} · {platform}
+        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-fg-subtle">
+          {platform && <PlatformBadge platform={platform} size={16} />}
+          <span className="truncate">{game}</span>
         </div>
       </div>
 
