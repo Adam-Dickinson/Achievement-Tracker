@@ -364,7 +364,7 @@ describe('GameDetail', () => {
         screen.queryByRole('searchbox', { name: /Find the same game/ }),
       ).not.toBeInTheDocument(),
     )
-    expect(getGame).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => expect(getGame).toHaveBeenCalledTimes(2))
   })
 
   it('says when no other game matches, and closes the search on Cancel', async () => {
@@ -416,7 +416,7 @@ describe('GameDetail: syncing', () => {
     expect(screen.getByRole('button', { name: 'Syncing…' })).toBeDisabled()
     act(() => finish())
     expect(await screen.findByRole('button', { name: 'Sync this game' })).toBeEnabled()
-    expect(getGame).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => expect(getGame).toHaveBeenCalledTimes(2))
   })
 })
 
