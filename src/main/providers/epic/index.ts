@@ -13,6 +13,7 @@ import { type EpicSession, exchangeCode, refreshSession } from './auth'
 import {
   type EpicCatalogDetails,
   type EpicLibraryRecord,
+  NO_CATALOG,
   parseAchievementCount,
   parseAchievements,
   parseCatalog,
@@ -151,6 +152,8 @@ export class EpicProvider implements AchievementProvider {
           title: details.title ?? group[0]?.sandboxName?.trim() ?? namespace,
           iconUrl: null,
           coverUrl: details.coverUrl,
+          portraitUrl: details.portraitUrl,
+          heroUrl: details.heroUrl,
           lastPlayed: null,
           recentlyPlayed: before === undefined ? played > 0 : played > before,
         })
@@ -218,7 +221,7 @@ export class EpicProvider implements AchievementProvider {
         { signal },
       ),
     )
-    let catalog: EpicCatalogDetails = { title: null, coverUrl: null }
+    let catalog: EpicCatalogDetails = NO_CATALOG
     if (achievements > 0) {
       const url = new URL(`${CATALOG}/${namespace}/bulk/items`)
       url.searchParams.set('id', [...new Set(records.map((r) => r.catalogItemId))].join(','))

@@ -130,11 +130,26 @@ describe('listLibraryGames', () => {
         title: 'Portal',
         platforms: ['steam'],
         coverUrl: 'https://cover/400.jpg',
+        portraitUrl: null,
+        heroUrl: null,
         unlocked: 2,
         total: 3,
         lastUnlockAt: new Date('2026-09-05T10:00:00Z'),
       },
     ])
+  })
+
+  it('takes the tall and hero art from the best entry, else from any entry that has it', () => {
+    const steam = seedGame('1', 'Apex Legends', 4, [new Date('2026-09-01T00:00:00Z')])
+    const ea = seedGame('set-1', 'Apex Legends', 2, [null, null], 'ea')
+    const art = db.prepare('UPDATE platform_game SET portrait_url = ?, hero_url = ? WHERE id = ?')
+    art.run('https://steam/tall.jpg', 'https://steam/hero.jpg', steam.platformGameId)
+    art.run('https://ea/tall.jpg', null, ea.platformGameId)
+
+    expect(listLibraryGames(db)[0]).toMatchObject({
+      portraitUrl: 'https://ea/tall.jpg',
+      heroUrl: 'https://steam/hero.jpg',
+    })
   })
 
   it('shows a game not synced yet with no achievements', () => {
@@ -163,6 +178,8 @@ describe('listLibraryGames', () => {
         title: 'Apex Legends',
         platforms: ['ea', 'steam', 'playstation'],
         coverUrl: 'https://cover/1.jpg',
+        portraitUrl: null,
+        heroUrl: null,
         unlocked: 2,
         total: 2,
         lastUnlockAt: new Date('2026-09-10T00:00:00Z'),

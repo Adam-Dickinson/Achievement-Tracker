@@ -30,6 +30,8 @@ interface EntryRecord {
   platform: Platform
   cover_url: string | null
   store_url: string | null
+  portrait_url: string | null
+  hero_url: string | null
   total: number
   unlocked: number
   last_unlock: string | null
@@ -64,6 +66,7 @@ const UNLOCKS = `
 
 const ENTRIES = `
   SELECT pg.id, pg.game_id, pg.title, pg.platform, pg.cover_url, pg.store_url,
+         pg.portrait_url, pg.hero_url,
          COUNT(a.id) AS total, COUNT(u.id) AS unlocked, MAX(u.unlocked_at) AS last_unlock
   FROM platform_game pg
   LEFT JOIN achievement a ON a.platform_game_id = pg.id
@@ -368,6 +371,9 @@ function toLibraryGame(
       best.cover_url ??
       all.find((entry) => entry.cover_url !== null)?.cover_url ??
       foundArtwork(all, artwork),
+    portraitUrl:
+      best.portrait_url ?? all.find((entry) => entry.portrait_url !== null)?.portrait_url ?? null,
+    heroUrl: best.hero_url ?? all.find((entry) => entry.hero_url !== null)?.hero_url ?? null,
     unlocked: best.unlocked,
     total: best.total,
     lastUnlockAt: toDate(lastUnlock),

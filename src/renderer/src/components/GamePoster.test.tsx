@@ -45,6 +45,20 @@ describe('GamePoster', () => {
     expect(container.querySelector('img.blur-xl')).toHaveAttribute('aria-hidden', 'true')
   })
 
+  it("uses the game's own tall art when there is some, coloured in to its completion", () => {
+    const { container } = render(
+      <GamePoster game={game({ portraitUrl: 'https://tall/7.jpg' })} onOpen={vi.fn()} />,
+    )
+
+    const images = [...container.querySelectorAll('img')]
+    expect(images.map((img) => img.getAttribute('src'))).toEqual([
+      'https://tall/7.jpg',
+      'https://tall/7.jpg',
+    ])
+    expect(images[1]).toHaveStyle({ clipPath: 'inset(0 20% 0 0)' })
+    expect(container.querySelector('img.blur-xl')).toBeNull()
+  })
+
   it('uses a generated backdrop and cover when the game has no art', () => {
     const { container } = render(<GamePoster game={game({ coverUrl: null })} onOpen={vi.fn()} />)
 

@@ -63,6 +63,8 @@ describe('parseTitleHistory', () => {
       lastPlayed: FORZA_LAST_PLAYED,
       recentlyPlayed: true,
       storeUrl: 'https://www.xbox.com/games/store/_/9NR1R1XWLCNB',
+      portraitUrl: `${STORE}/apps.29856.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.9472937a-30ec-4ce0-8cd4-62f282fd5d28?w=600`,
+      heroUrl: `${STORE}/apps.24935.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.206793b9-f38b-4616-8029-fdb3c7d0db77?w=1920`,
     })
   })
 
@@ -134,6 +136,8 @@ describe('parseTitleHistory', () => {
         lastPlayed: null,
         recentlyPlayed: false,
         storeUrl: null,
+        portraitUrl: null,
+        heroUrl: null,
       },
     ])
   })

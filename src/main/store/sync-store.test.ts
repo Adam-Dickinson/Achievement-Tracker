@@ -543,6 +543,34 @@ describe('addPlatformGames', () => {
     ])
   })
 
+  it('stores tall and hero art, keeping what it had when a later sync has none', () => {
+    const { db, account } = setup()
+    const art = () =>
+      db
+        .prepare('SELECT portrait_url, hero_url FROM platform_game WHERE external_id = ?')
+        .get('400')
+
+    addPlatformGames(db, account, [
+      remoteGame('400', { portraitUrl: 'https://img/tall.jpg', heroUrl: 'https://img/hero.jpg' }),
+    ])
+    expect(art()).toEqual({
+      portrait_url: 'https://img/tall.jpg',
+      hero_url: 'https://img/hero.jpg',
+    })
+
+    addPlatformGames(db, account, [remoteGame('400', { portraitUrl: null })])
+    expect(art()).toEqual({
+      portrait_url: 'https://img/tall.jpg',
+      hero_url: 'https://img/hero.jpg',
+    })
+
+    addPlatformGames(db, account, [remoteGame('400', { heroUrl: 'https://img/hero2.jpg' })])
+    expect(art()).toEqual({
+      portrait_url: 'https://img/tall.jpg',
+      hero_url: 'https://img/hero2.jpg',
+    })
+  })
+
   it('stores a store link, keeping the old one when a later sync has none', () => {
     const { db, account } = setup()
     const storeUrl = () =>

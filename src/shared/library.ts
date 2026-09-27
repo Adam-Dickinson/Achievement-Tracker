@@ -5,6 +5,8 @@ export interface LibraryGame {
   readonly title: string
   readonly platforms: readonly Platform[]
   readonly coverUrl: string | null
+  readonly portraitUrl?: string | null
+  readonly heroUrl?: string | null
   readonly unlocked: number
   readonly total: number
   readonly lastUnlockAt: Date | null

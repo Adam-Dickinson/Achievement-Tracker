@@ -43,6 +43,14 @@ describe('GameBanner', () => {
     expect(container.querySelector('img')).toHaveAttribute('src', 'https://cover/7.jpg')
   })
 
+  it('prefers the wide hero art to the cover', () => {
+    const { container } = render(
+      <GameBanner game={game({ heroUrl: 'https://hero/7.jpg' })} back={null} actions={null} />,
+    )
+
+    expect(container.querySelector('img')).toHaveAttribute('src', 'https://hero/7.jpg')
+  })
+
   it('uses the generated gradient when the game has no art', () => {
     const { container } = render(
       <GameBanner game={game({ coverUrl: null })} back={null} actions={null} />,

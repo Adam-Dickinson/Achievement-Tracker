@@ -26,6 +26,8 @@ export interface RemoteGame {
   readonly lastPlayed: Date | null
   readonly recentlyPlayed: boolean
   readonly storeUrl?: string | null
+  readonly portraitUrl?: string | null
+  readonly heroUrl?: string | null
 }
 
 export interface RemoteAchievement {

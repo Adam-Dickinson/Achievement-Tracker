@@ -29,7 +29,7 @@ import {
 } from './parse'
 import { readSteamSecret, requestSteamSession, type SteamSession } from './session'
 import { readLocalUnlocks, withLocalUnlocks } from './stats-file'
-import { fetchHeaderImages } from './store-assets'
+import { fetchStoreArt, type StoreArt } from './store-assets'
 
 const COVER_TTL_MS = 24 * 60 * 60_000
 const PLAYER_SUMMARIES = '/ISteamUser/GetPlayerSummaries/v2/'
@@ -62,7 +62,7 @@ export class SteamProvider implements AchievementProvider {
   readonly #now: () => Date
   readonly #familyTokens = new Map<string, Promise<SteamSession>>()
   readonly #hasAchievements = new Map<string, boolean>()
-  readonly #covers = new Map<string, { readonly url: string | null; readonly at: number }>()
+  readonly #covers = new Map<string, { readonly art: StoreArt; readonly at: number }>()
   #statsFolder: Promise<string | null> | undefined
 
   constructor(
@@ -173,18 +173,23 @@ export class SteamProvider implements AchievementProvider {
       })
     if (stale.length > 0) {
       try {
-        for (const [appid, url] of await fetchHeaderImages(stale, signal)) {
-          this.#covers.set(appid, { url, at: now })
+        for (const [appid, art] of await fetchStoreArt(stale, signal)) {
+          this.#covers.set(appid, { art, at: now })
         }
       } catch (error) {
         if (!(error instanceof ProviderError) || signal?.aborted) throw error
         console.warn(`Steam: kept the last covers this time (${error.message})`)
       }
     }
-    return games.map((game) => ({
-      ...game,
-      coverUrl: this.#covers.get(game.ref.externalId)?.url ?? null,
-    }))
+    return games.map((game) => {
+      const art = this.#covers.get(game.ref.externalId)?.art
+      return {
+        ...game,
+        coverUrl: art?.header ?? null,
+        portraitUrl: art?.portrait ?? null,
+        heroUrl: art?.hero ?? null,
+      }
+    })
   }
 
   async #familyGames(
