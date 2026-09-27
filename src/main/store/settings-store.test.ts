@@ -1,7 +1,13 @@
 import { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { DEFAULT_NOTIFICATION_SETTINGS } from '@shared/ipc'
 import { applyMigrations } from './migrate'
-import { readProfileName, saveProfileName } from './settings-store'
+import {
+  readNotificationSettings,
+  readProfileName,
+  saveProfileName,
+  updateNotificationSettings,
+} from './settings-store'
 
 describe('profile name setting', () => {
   let db: DatabaseSync
@@ -52,5 +58,67 @@ describe('profile name setting', () => {
     db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run('profile.name', value)
 
     expect(readProfileName(db)).toBeNull()
+  })
+})
+
+describe('notification settings', () => {
+  let db: DatabaseSync
+
+  beforeEach(() => {
+    db = new DatabaseSync(':memory:')
+    applyMigrations(db)
+  })
+
+  it('starts at the defaults until something is saved', () => {
+    expect(readNotificationSettings(db)).toEqual(DEFAULT_NOTIFICATION_SETTINGS)
+  })
+
+  it('merges a patch into the current settings and persists it', () => {
+    updateNotificationSettings(db, { corner: 'top-left', durationSec: 8 })
+
+    expect(readNotificationSettings(db)).toEqual({
+      ...DEFAULT_NOTIFICATION_SETTINGS,
+      corner: 'top-left',
+      durationSec: 8,
+    })
+  })
+
+  it('merges a platform patch without dropping the other platforms', () => {
+    updateNotificationSettings(db, { enabledPlatforms: { xbox: false } })
+
+    const settings = readNotificationSettings(db)
+    expect(settings.enabledPlatforms.xbox).toBe(false)
+    expect(settings.enabledPlatforms.steam).toBe(true)
+  })
+
+  it('merges a sound patch without dropping the volume', () => {
+    updateNotificationSettings(db, { sound: { enabled: false } })
+
+    expect(readNotificationSettings(db).sound).toEqual({ enabled: false, volume: 0.6 })
+  })
+
+  it('keeps the latest settings across separate updates', () => {
+    updateNotificationSettings(db, { corner: 'top-left' })
+    updateNotificationSettings(db, { size: 'large' })
+
+    expect(readNotificationSettings(db)).toMatchObject({ corner: 'top-left', size: 'large' })
+  })
+
+  it('falls back to the defaults when the stored value is not valid settings', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'notifications.settings',
+      JSON.stringify({ corner: 'somewhere' }),
+    )
+
+    expect(readNotificationSettings(db)).toEqual(DEFAULT_NOTIFICATION_SETTINGS)
+  })
+
+  it('falls back to the defaults when the stored value is not JSON', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'notifications.settings',
+      'not json',
+    )
+
+    expect(readNotificationSettings(db)).toEqual(DEFAULT_NOTIFICATION_SETTINGS)
   })
 })
