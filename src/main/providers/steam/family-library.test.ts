@@ -27,6 +27,7 @@ const DELISTED = ['43160', '553850', '596870']
 const NO_LOCAL: SteamLocalDeps = {
   readRegistry: () => Promise.resolve(null),
   watchFolder: () => () => undefined,
+  readFile: () => Promise.resolve(null),
 }
 
 function fixture(name: string): string {

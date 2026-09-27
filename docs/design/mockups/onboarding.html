@@ -1,226 +1,173 @@
-<!DOCTYPE html><html lang="en" class="dark"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="view-transition" content="same-origin">
-  <title>Achievement Tracker - Onboarding</title>
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/5b6a84ea-0715-41dd-a09c-2db27bc83791" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/4d4e0785-71b2-4354-9da8-d98c9f6f2ecd" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/3b7abd38-f288-40e1-8a11-0b651ab8e5ba" as="document">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Space Grotesk', 'sans-serif'],
-          },
-          colors: {
-            base: '#0B0D12',
-            surface1: '#12151C',
-            surface2: '#181C25',
-            surface3: '#1F2430',
-            border: '#262C3A',
-            text: '#E8EAF0',
-            muted: '#8B93A7',
-            subtle: '#5B6478',
-            primary: '#F5B942',
-            primaryHover: '#FFCB5C',
-            onPrimary: '#1A1300',
-            success: '#3FB984',
-            warning: '#F2A33A',
-            danger: '#F0616D',
-            info: '#4C9BFF',
-            platform: {
-              steam: '#66C0F4',
-              xbox: '#52B043',
-              playstation: '#0070D1',
-              epic: '#D4D4D8',
-              ubisoft: '#3D8BFF',
-              ea: '#FF5A5A',
-              emulator: '#A78BFA'
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    html { background-color: #0B0D12; }
-    body { font-variant-numeric: tabular-nums; background-color: #0B0D12; color: #E8EAF0; }
-    @view-transition { navigation: auto; }
-    ::view-transition { background-color: #0B0D12; }
-    ::view-transition-old(main-content) { animation: 0.25s ease-out both fade-out; }
-    ::view-transition-new(main-content) { animation: 0.25s ease-in 0.1s both fade-in; }
-    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
-    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-    ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-    input[type="checkbox"].sd-checkbox { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; border-radius: 4px; border: 1px solid #262C3A; background: #181C25; cursor: pointer; position: relative; flex-shrink: 0; }
-    input[type="checkbox"].sd-checkbox:checked { background: #F5B942; border-color: #F5B942; }
-    input[type="checkbox"].sd-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 4px; height: 8px; border: solid #1A1300; border-width: 0 2px 2px 0; transform: rotate(45deg); }
-    input[type="checkbox"].sd-checkbox:focus-visible { outline: 2px solid #F5B942; outline-offset: 2px; }
-  </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trophy Locker — Connect platforms</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: {
+  fontFamily: { display: ['Bricolage Grotesque','sans-serif'], sans: ['Figtree','sans-serif'] },
+  colors: { bg:'#080A10', s1:'#121620', s2:'#191E2B', s3:'#222839', fg:'#F3F5FA', muted:'#9AA3B8', subtle:'#626B82', lime:'#C4F542', gold:'#FFC94A', mint:'#4ADE9A', sky:'#5AB0FF', warn:'#FFB547', danger:'#FF6B6B' }
+} } }</script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&family=Cinzel:wght@700;900&family=Pixelify+Sans:wght@700&family=Rubik+Mono+One&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Cormorant+SC:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080A10;--s1:#121620;--s2:#191E2B;--s3:#222839;--fg:#F3F5FA;--muted:#9AA3B8;--subtle:#626B82;--lime:#C4F542;--gold:#FFC94A}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:'Figtree',sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.font-display{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+.aurora{background:radial-gradient(1100px 540px at 4% -10%,rgba(22,150,132,.36),transparent 62%),radial-gradient(900px 520px at 100% 0%,rgba(70,80,200,.26),transparent 62%),radial-gradient(1000px 600px at 55% 112%,rgba(160,215,40,.10),transparent 60%),#080A10}
+.island{background:rgba(16,20,30,.72);backdrop-filter:blur(22px) saturate(1.5);-webkit-backdrop-filter:blur(22px) saturate(1.5);border:1px solid rgba(255,255,255,.09);border-radius:30px;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 24px 48px -18px rgba(0,0,0,.75),0 8px 16px -8px rgba(0,0,0,.5)}
+.navpill{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted)}
+.navpill:hover{color:var(--fg);background:rgba(255,255,255,.06)}
+.navpill.on{background:var(--lime);color:#0B1000;box-shadow:0 10px 26px -8px rgba(196,245,66,.65)}
+.logo{display:inline-flex;align-items:center;justify-content:center;background:var(--lime);color:#0B1000;box-shadow:0 8px 20px -6px rgba(196,245,66,.55)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:#0B1000;background:linear-gradient(135deg,#C4F542,#3fd6c8)}
+.pulse{display:block;width:8px;height:8px;border-radius:99px;background:#4ADE9A;box-shadow:0 0 0 4px rgba(74,222,154,.18),0 0 12px rgba(74,222,154,.7)}
+.card{position:relative;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 10px 22px -10px rgba(0,0,0,.55)}
+.card.flat{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 14px 30px -16px rgba(0,0,0,.7)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:13px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--lime);border-color:var(--lime);color:#0B1000}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;border-radius:15px;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer}
+.btn-primary{background:var(--lime);color:#0B1000;box-shadow:0 12px 28px -10px rgba(196,245,66,.7)}
+.btn-primary:hover{background:#d6ff5c}
+.btn-secondary{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.11)}
+.btn-ghost{color:var(--muted);padding:0 12px}
+.btn-ghost:hover{color:var(--fg)}
+.btn-sm{height:34px;padding:0 14px;font-size:13px;border-radius:12px}
+.field{height:42px;width:100%;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--fg);font:500 14px 'Figtree',sans-serif;padding:0 14px;outline:none}
+.field::placeholder{color:var(--subtle)}
+.field:focus{border-color:var(--lime);box-shadow:0 0 0 4px rgba(196,245,66,.16)}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:10px;height:42px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);font-size:14px;font-weight:600;white-space:nowrap}
+.seg{display:inline-flex;padding:4px;gap:2px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07)}
+.seg span{display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg span.on{background:#fff;color:#0B1000;box-shadow:0 6px 16px -6px rgba(0,0,0,.6)}
+.tg{position:relative;display:inline-block;flex:none;width:46px;height:28px;border-radius:99px;background:rgba(255,255,255,.12)}
+.tg i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.tg.on{background:var(--lime);box-shadow:0 8px 20px -8px rgba(196,245,66,.8)}
+.tg.on i{left:21px;background:#0B1000}
+.cap{height:9px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+.cap i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7fd63a,#C4F542);box-shadow:0 0 18px rgba(196,245,66,.65)}
+.cap.thick{height:16px}
+.cap.gold i{background:linear-gradient(90deg,#ffb020,#ffe07a);box-shadow:0 0 18px rgba(255,201,74,.6)}
+.cap.thin{height:6px}
+.rchip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px 0 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.rchip.ultra{background:linear-gradient(90deg,rgba(255,201,74,.24),rgba(255,138,31,.14));box-shadow:0 0 18px -4px rgba(255,201,74,.55)}
+.pbadge{display:inline-flex;flex:none;align-items:center;justify-content:center;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,#0d1018);border:1.5px solid #121620;box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 34%,transparent)}
+.ptag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 8px;border-radius:99px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 26%,transparent)}
+.atile{display:inline-flex;flex:none;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 22px -10px var(--c,#000),0 1px 0 rgba(255,255,255,.35) inset}
+.atile.ultra{color:#3a1c00}
+.atile.uncommon{color:#04231a}
+.atile.locked{background:#1a1f2c;color:var(--subtle);box-shadow:0 1px 0 rgba(255,255,255,.05) inset;border:1px solid rgba(255,255,255,.06)}
+.art{position:relative;aspect-ratio:460/215;overflow:hidden;background:#0c0f16}
+.art svg{position:absolute;inset:0;width:100%;height:100%}
+.art .base{filter:saturate(.16) brightness(.62) contrast(1.05)}
+.art .edge{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#e8ff9a;box-shadow:0 0 14px 3px rgba(196,245,66,.85)}
+.gcard{position:relative;isolation:isolate;display:block;padding:8px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 26px 44px -22px rgba(0,0,0,.85),0 8px 18px -10px rgba(0,0,0,.6);transition:transform .2s}
+.gcard .glow{position:absolute;left:10%;right:10%;bottom:-16px;height:46%;border-radius:50%;background:var(--glow);filter:blur(30px);opacity:.34;z-index:-1}
+.gcard.hover{transform:translateY(-10px) scale(1.02);border-color:rgba(196,245,66,.55);box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px rgba(196,245,66,.10),0 40px 60px -24px rgba(0,0,0,.9)}
+.gcard.hover .glow{opacity:.6;bottom:-24px}
+.gcard.done{border-color:rgba(255,201,74,.4)}
+.gcard.stagger{margin-top:26px}
+.pctpill{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:99px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:#fff;background:rgba(8,10,16,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14)}
+.gcard.done .pctpill{color:#3a1c00;background:linear-gradient(90deg,#ffe07a,#ffb020);border-color:transparent}
+.hoverbar{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.hoverbar>*{display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:99px;background:rgba(8,10,16,.66);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18)}
+.toastwrap{position:relative}
+.toast{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;width:400px;height:92px;padding:0 16px 0 16px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01)),#121620;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);transform-origin:top left;box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px color-mix(in srgb,var(--c) 10%,transparent),0 26px 50px -16px rgba(0,0,0,.9),0 12px 44px -6px color-mix(in srgb,var(--c) 45%,transparent)}
+.toast.ultra{border-color:rgba(255,201,74,.75)}
+.toast .shine{position:absolute;top:0;bottom:0;left:120px;width:60px;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,224,122,.28),transparent)}
+.slider{position:relative;height:22px}
+.slider .trk{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:9px;background:rgba(255,255,255,.1)}
+.slider .fill{position:absolute;left:0;top:9px;height:4px;border-radius:9px;background:var(--lime);box-shadow:0 0 14px rgba(196,245,66,.6)}
+.slider .thumb{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:99px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+::selection{background:var(--lime);color:#0B1000}
+</style>
 </head>
 <body>
-  <div class="min-h-screen bg-base flex items-center justify-center p-6">
+<div id="app" class="min-h-screen text-fg aurora">
 
-    <main style="view-transition-name: main-content" class="w-full max-w-[720px] bg-surface1 border border-border rounded-2xl p-10 md:p-12">
+<header class="mx-auto flex h-[84px] w-[calc(100%-48px)] max-w-[1392px] items-center justify-between">
+    <div class="flex items-center gap-3"><span class="logo" style="width:38px;height:38px;border-radius:12px"><svg viewBox="296 224 432 608" fill="currentColor" width="16" aria-hidden="true"><path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216z"/><path d="M472 640h80v120h-80z"/><path d="M356 760h312v72H356z"/></svg></span><span class="font-display text-[18px] font-bold">Trophy Locker</span></div>
+    <a href="#skip-setup" id="link-skip-setup" class="flex items-center gap-1 rounded-full bg-white/[0.06] px-4 py-2 text-[13px] font-semibold text-muted hover:bg-white/10 hover:text-fg">Skip setup<iconify-icon icon="lucide:arrow-right" width="14" height="14" class=""></iconify-icon></a>
+  </header>
 
-      <!-- Step indicator -->
-      <div class="flex items-center justify-center mb-10">
-        <div class="flex items-center">
-          <!-- Step 1: done -->
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-success/14 border border-success flex items-center justify-center text-success flex-shrink-0">
-              <iconify-icon icon="lucide:check" class="text-sm"></iconify-icon>
-            </div>
-            <span class="text-[11px] font-semibold text-muted uppercase tracking-[0.06em] hidden sm:inline">Welcome</span>
-          </div>
-          <div class="w-10 sm:w-16 h-px bg-border mx-3"></div>
-          <!-- Step 2: active -->
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-primary border border-primary flex items-center justify-center text-onPrimary font-display font-semibold text-xs flex-shrink-0">2</div>
-            <span class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] hidden sm:inline">Connect platforms</span>
-          </div>
-          <div class="w-10 sm:w-16 h-px bg-border mx-3"></div>
-          <!-- Step 3: upcoming -->
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-surface2 border border-border flex items-center justify-center text-subtle font-display font-semibold text-xs flex-shrink-0">3</div>
-            <span class="text-[11px] font-semibold text-subtle uppercase tracking-[0.06em] hidden sm:inline">First sync</span>
-          </div>
-        </div>
+  <main class="mx-auto w-[calc(100%-48px)] max-w-[1120px] pb-44 pt-4">
+    <div class="flex items-center justify-center gap-3"><div class="flex items-center gap-3"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-lime text-[#0B1000]"><iconify-icon icon="lucide:check" width="16" height="16" class=""></iconify-icon></span><span class="text-[14px] font-semibold text-fg">Welcome</span></div><span class="h-[2px] w-14 rounded-full bg-lime"></span><div class="flex items-center gap-3"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[13px] font-extrabold text-[#0B1000]" style="box-shadow:0 0 0 5px rgba(255,255,255,.14)">2</span><span class="text-[14px] font-semibold text-fg">Platforms</span></div><span class="h-[2px] w-14 rounded-full bg-white/10"></span><div class="flex items-center gap-3"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.08] text-[13px] font-bold text-subtle">3</span><span class="text-[14px] font-semibold text-subtle">First sync</span></div><span class="h-[2px] w-14 rounded-full bg-white/10"></span><div class="flex items-center gap-3"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.08] text-[13px] font-bold text-subtle">4</span><span class="text-[14px] font-semibold text-subtle">Done</span></div></div>
+
+    <div class="mt-12 text-center">
+      <h1 class="font-display m-0 text-[68px] font-extrabold leading-[72px]">Connect your platforms</h1>
+      <p class="mx-auto mb-0 mt-4 max-w-[560px] text-[17px] leading-7 text-muted">Pick where you play. Everything stays on this machine. Keys go into the Windows Credential Manager.</p>
+    </div>
+
+    <section class="mt-12 grid grid-cols-4 items-start gap-5"><a href="#pick-stm" id="pick-stm" class="card relative block p-5 ">
+      <i class="pointer-events-none absolute inset-0" style="border-radius:26px;box-shadow:0 0 0 2px #C4F542,0 0 0 7px rgba(196,245,66,.13),0 22px 50px -14px rgba(196,245,66,.4)"></i>
+      <span class="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-lime text-[#0B1000]"><iconify-icon icon="lucide:check" width="16" height="16" class=""></iconify-icon></span>
+      <span class="flex h-14 w-14 items-center justify-center rounded-[18px]" style="color:#66C0F4;background:color-mix(in srgb,#66C0F4 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#66C0F4 32%,transparent),0 12px 26px -10px #66C0F488"><iconify-icon icon="simple-icons:steam" width="28" height="28" class=""></iconify-icon></span>
+      <div class="font-display mt-4 text-[24px] font-bold leading-7">Steam</div>
+      <div class="mt-0.5 text-[13px] text-muted">Web API key + Steam ID</div>
+      <div class="mt-4 flex items-center gap-1.5 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:shield-check" width="14" height="14" class=""></iconify-icon>Official API</div></a><a href="#pick-xbx" id="pick-xbx" class="card relative block p-5 ">
+      <i class="pointer-events-none absolute inset-0" style="border-radius:26px;box-shadow:0 0 0 2px #C4F542,0 0 0 7px rgba(196,245,66,.13),0 22px 50px -14px rgba(196,245,66,.4)"></i>
+      <span class="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-lime text-[#0B1000]"><iconify-icon icon="lucide:check" width="16" height="16" class=""></iconify-icon></span>
+      <span class="flex h-14 w-14 items-center justify-center rounded-[18px]" style="color:#5FD35A;background:color-mix(in srgb,#5FD35A 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#5FD35A 32%,transparent),0 12px 26px -10px #5FD35A88"><iconify-icon icon="simple-icons:xbox" width="28" height="28" class=""></iconify-icon></span>
+      <div class="font-display mt-4 text-[24px] font-bold leading-7">Xbox</div>
+      <div class="mt-0.5 text-[13px] text-muted">Sign in with Microsoft</div>
+      <div class="mt-4 flex items-center gap-1.5 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:shield-check" width="14" height="14" class=""></iconify-icon>Official API</div></a><a href="#pick-psn" id="pick-psn" class="card relative block p-5 ">
+      <i class="pointer-events-none absolute inset-0" style="border-radius:26px;box-shadow:0 0 0 2px #C4F542,0 0 0 7px rgba(196,245,66,.13),0 22px 50px -14px rgba(196,245,66,.4)"></i>
+      <span class="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-lime text-[#0B1000]"><iconify-icon icon="lucide:check" width="16" height="16" class=""></iconify-icon></span>
+      <span class="flex h-14 w-14 items-center justify-center rounded-[18px]" style="color:#4F8CFF;background:color-mix(in srgb,#4F8CFF 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#4F8CFF 32%,transparent),0 12px 26px -10px #4F8CFF88"><iconify-icon icon="simple-icons:playstation" width="28" height="28" class=""></iconify-icon></span>
+      <div class="font-display mt-4 text-[24px] font-bold leading-7">PlayStation</div>
+      <div class="mt-0.5 text-[13px] text-muted">NPSSO token</div>
+      <div class="mt-4 flex items-center gap-1.5 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</div></a><a href="#pick-epc" id="pick-epc" class="card relative block p-5 flat">
+      
+      <span class="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white/20"></span>
+      <span class="flex h-14 w-14 items-center justify-center rounded-[18px]" style="color:#E4E4E7;background:color-mix(in srgb,#E4E4E7 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#E4E4E7 32%,transparent),0 12px 26px -10px #E4E4E788"><iconify-icon icon="simple-icons:epicgames" width="28" height="28" class=""></iconify-icon></span>
+      <div class="font-display mt-4 text-[24px] font-bold leading-7">Epic</div>
+      <div class="mt-0.5 text-[13px] text-muted">Epic launcher data</div>
+      <div class="mt-4 flex items-center gap-1.5 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</div></a><a href="#pick-ubi" id="pick-ubi" class="card relative block p-5 flat">
+      
+      <span class="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white/20"></span>
+      <span class="flex h-14 w-14 items-center justify-center rounded-[18px]" style="color:#5AA0FF;background:color-mix(in srgb,#5AA0FF 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#5AA0FF 32%,transparent),0 12px 26px -10px #5AA0FF88"><iconify-icon icon="simple-icons:ubisoft" width="28" height="28" class=""></iconify-icon></span>
+      <div class="font-display mt-4 text-[24px] font-bold leading-7">Ubisoft</div>
+      <div class="mt-0.5 text-[13px] text-muted">Ubisoft Connect</div>
+      <div class="mt-4 flex items-center gap-1.5 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</div></a><a href="#pick-ea" id="pick-ea" class="card relative block p-5 flat">
+      
+      <span class="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white/20"></span>
+      <span class="flex h-14 w-14 items-center justify-center rounded-[18px]" style="color:#FF6B6B;background:color-mix(in srgb,#FF6B6B 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#FF6B6B 32%,transparent),0 12px 26px -10px #FF6B6B88"><iconify-icon icon="simple-icons:ea" width="28" height="28" class=""></iconify-icon></span>
+      <div class="font-display mt-4 text-[24px] font-bold leading-7">EA</div>
+      <div class="mt-0.5 text-[13px] text-muted">EA app</div>
+      <div class="mt-4 flex items-center gap-1.5 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</div></a><a href="#pick-emu" id="pick-emu" class="card relative block p-5 ">
+      <i class="pointer-events-none absolute inset-0" style="border-radius:26px;box-shadow:0 0 0 2px #C4F542,0 0 0 7px rgba(196,245,66,.13),0 22px 50px -14px rgba(196,245,66,.4)"></i>
+      <span class="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-lime text-[#0B1000]"><iconify-icon icon="lucide:check" width="16" height="16" class=""></iconify-icon></span>
+      <span class="flex h-14 w-14 items-center justify-center rounded-[18px]" style="color:#B79CFF;background:color-mix(in srgb,#B79CFF 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#B79CFF 32%,transparent),0 12px 26px -10px #B79CFF88"><iconify-icon icon="lucide:cpu" width="28" height="28" class=""></iconify-icon></span>
+      <div class="font-display mt-4 text-[24px] font-bold leading-7">Emulators</div>
+      <div class="mt-0.5 text-[13px] text-muted">RPCS3, Xenia, RetroAchievements</div>
+      <div class="mt-4 flex items-center gap-1.5 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:folder" width="14" height="14" class=""></iconify-icon>Local files</div></a>
+      <div class="flex min-h-[198px] flex-col items-center justify-center rounded-[26px] border-[1.5px] border-dashed border-white/[0.16] px-6 text-center"><span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] text-muted"><iconify-icon icon="lucide:clock" width="22" height="22" class=""></iconify-icon></span><div class="font-display mt-3 text-[19px] font-bold">Add more later</div><div class="mt-1 text-[13px] leading-5 text-muted">Every platform can be connected from Accounts at any time.</div></div>
+    </section>
+
+    <!-- Steam detail -->
+    <section class="card mt-8 p-7">
+      <div class="flex items-center gap-4"><span class="flex h-12 w-12 items-center justify-center rounded-2xl" style="color:#66C0F4;background:color-mix(in srgb,#66C0F4 15%,#0d1018)"><iconify-icon icon="simple-icons:steam" width="24" height="24" class=""></iconify-icon></span><div class="flex-1"><div class="font-display text-[21px] font-bold leading-6">Connect Steam</div><div class="text-[13px] text-muted">Your own Web API key, no shared servers</div></div><span class="inline-flex items-center gap-1.5 rounded-full bg-mint/15 px-3 py-1.5 text-[12px] font-bold text-mint"><iconify-icon icon="lucide:circle-check" width="14" height="14" class=""></iconify-icon>Key verified · 62 games found</span></div>
+      <div class="mt-6 grid grid-cols-2 gap-5">
+        <label class="block"><span class="mb-2 block text-[13px] font-semibold text-muted">Steam Web API key</span><input class="field" value="••••••••••••••••••••••••••••••••"></label>
+        <label class="block"><span class="mb-2 block text-[13px] font-semibold text-muted">Steam ID or profile URL</span><input class="field" value="steamcommunity.com/id/adam"></label>
       </div>
+      <div class="mt-4 flex items-center justify-between text-[13px]"><span class="text-muted"><a href="#steam-key-help" id="link-steam-key-help" class="font-semibold text-lime hover:underline">Where do I find these?</a></span></div>
+    </section>
 
-      <!-- Heading -->
-      <div class="text-center mb-8">
-        <h1 class="font-display font-semibold text-[28px] leading-[34px] text-text mb-2">Connect the platforms you play on</h1>
-        <p class="text-sm text-muted max-w-[480px] mx-auto">You can connect more later from Accounts. Each connection is read-only and only used to pull your achievement progress.</p>
-      </div>
+    <div class="card flat mt-6 flex items-center gap-4 px-6 py-5"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-lime/15 text-lime"><iconify-icon icon="lucide:volume-x" width="22" height="22" class=""></iconify-icon></span><div><div class="text-[15px] font-bold">The first sync is silent</div><div class="text-[13px] leading-5 text-muted">Achievements you already own are saved as a baseline. Only unlocks after that pop a toast, so you won’t get hundreds on day one.</div></div></div>
+  </main>
 
-      <!-- Platform rows -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-
-        <!-- Steam - Connected -->
-        <div class="bg-surface2 border border-border rounded-xl p-4 flex items-start gap-3">
-          <div class="w-9 h-9 rounded-lg bg-[#66C0F4]/14 flex items-center justify-center text-[#66C0F4] flex-shrink-0">
-            <iconify-icon icon="simple-icons:steam" class="text-lg"></iconify-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-semibold text-text mb-0.5">Steam</h3>
-            <p class="text-xs text-muted mb-3">Paste your Web API key</p>
-            <span class="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-success/14 text-success text-[11px] font-medium">
-              <div class="w-1.5 h-1.5 rounded-full bg-success"></div>
-              Connected
-            </span>
-          </div>
-        </div>
-
-        <!-- Xbox -->
-        <div class="bg-surface2 border border-border rounded-xl p-4 flex items-start gap-3">
-          <div class="w-9 h-9 rounded-lg bg-[#52B043]/14 flex items-center justify-center text-[#52B043] flex-shrink-0">
-            <iconify-icon icon="simple-icons:xbox" class="text-lg"></iconify-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-semibold text-text mb-0.5">Xbox</h3>
-            <p class="text-xs text-muted mb-3">Sign in with Microsoft</p>
-            <button id="btn-connect-xbox" class="h-8 px-3.5 bg-surface2 border border-border rounded-lg text-xs font-semibold text-text hover:bg-surface3 transition-colors">Connect</button>
-          </div>
-        </div>
-
-        <!-- PlayStation -->
-        <div class="bg-surface2 border border-border rounded-xl p-4 flex items-start gap-3">
-          <div class="w-9 h-9 rounded-lg bg-[#0070D1]/14 flex items-center justify-center text-[#0070D1] flex-shrink-0">
-            <iconify-icon icon="simple-icons:playstation" class="text-lg"></iconify-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-0.5">
-              <h3 class="text-sm font-semibold text-text">PlayStation</h3>
-              <span class="inline-flex h-[18px] px-1.5 items-center rounded-full bg-warning/14 text-warning text-[10px] font-medium uppercase">Unofficial</span>
-            </div>
-            <p class="text-xs text-muted mb-2">Paste your NPSSO token</p>
-            <label class="flex items-start gap-2 mb-3 cursor-pointer">
-              <input type="checkbox" class="sd-checkbox mt-0.5" id="chk-psn-understand">
-              <span class="text-[11px] text-subtle leading-[16px]">I understand this uses an unofficial method and my token stays on this device</span>
-            </label>
-            <button id="btn-connect-playstation" class="h-8 px-3.5 bg-surface2 border border-border rounded-lg text-xs font-semibold text-text hover:bg-surface3 transition-colors">Connect</button>
-          </div>
-        </div>
-
-        <!-- Epic -->
-        <div class="bg-surface2 border border-border rounded-xl p-4 flex items-start gap-3">
-          <div class="w-9 h-9 rounded-lg bg-[#D4D4D8]/14 flex items-center justify-center text-[#D4D4D8] flex-shrink-0">
-            <iconify-icon icon="simple-icons:epicgames" class="text-lg"></iconify-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-semibold text-text mb-0.5">Epic Games</h3>
-            <p class="text-xs text-muted mb-3">Sign in with your Epic account</p>
-            <button id="btn-connect-epic" class="h-8 px-3.5 bg-surface2 border border-border rounded-lg text-xs font-semibold text-text hover:bg-surface3 transition-colors">Connect</button>
-          </div>
-        </div>
-
-        <!-- Ubisoft -->
-        <div class="bg-surface2 border border-border rounded-xl p-4 flex items-start gap-3">
-          <div class="w-9 h-9 rounded-lg bg-[#3D8BFF]/14 flex items-center justify-center text-[#3D8BFF] flex-shrink-0">
-            <iconify-icon icon="simple-icons:ubisoft" class="text-lg"></iconify-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-semibold text-text mb-0.5">Ubisoft Connect</h3>
-            <p class="text-xs text-muted mb-3">Sign in with your Ubisoft account</p>
-            <button id="btn-connect-ubisoft" class="h-8 px-3.5 bg-surface2 border border-border rounded-lg text-xs font-semibold text-text hover:bg-surface3 transition-colors">Connect</button>
-          </div>
-        </div>
-
-        <!-- EA -->
-        <div class="bg-surface2 border border-border rounded-xl p-4 flex items-start gap-3">
-          <div class="w-9 h-9 rounded-lg bg-[#FF5A5A]/14 flex items-center justify-center text-[#FF5A5A] flex-shrink-0">
-            <iconify-icon icon="simple-icons:ea" class="text-lg"></iconify-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-semibold text-text mb-0.5">EA app</h3>
-            <p class="text-xs text-muted mb-3">Sign in with your EA account</p>
-            <button id="btn-connect-ea" class="h-8 px-3.5 bg-surface2 border border-border rounded-lg text-xs font-semibold text-text hover:bg-surface3 transition-colors">Connect</button>
-          </div>
-        </div>
-
-        <!-- RPCS3 - full width, auto-detected -->
-        <div class="bg-surface2 border border-border rounded-xl p-4 flex items-start gap-3 md:col-span-2">
-          <div class="w-9 h-9 rounded-lg bg-[#A78BFA]/14 flex items-center justify-center text-[#A78BFA] flex-shrink-0">
-            <iconify-icon icon="lucide:cpu" class="text-lg"></iconify-icon>
-          </div>
-          <div class="flex-1 min-w-0 flex items-center justify-between gap-4">
-            <div class="min-w-0">
-              <h3 class="text-sm font-semibold text-text mb-0.5">RPCS3</h3>
-              <p class="text-xs text-muted">Auto-detected at E:/Games/RPCS3</p>
-            </div>
-            <span class="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-success/14 text-success text-[11px] font-medium flex-shrink-0">
-              <div class="w-1.5 h-1.5 rounded-full bg-success"></div>
-              Connected
-            </span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Bottom actions -->
-      <div class="pt-6 border-t border-border">
-        <div class="flex items-center justify-between gap-4 mb-4">
-          <a href="#dashboard" id="btn-skip-onboarding" class="h-9 px-4 flex items-center rounded-lg text-sm font-medium text-muted hover:bg-surface3 hover:text-text transition-colors">Skip for now</a>
-          <a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="btn-continue-onboarding" class="h-9 px-5 flex items-center rounded-lg bg-primary hover:bg-primaryHover text-onPrimary text-sm font-semibold transition-colors">Continue</a>
-        </div>
-        <div class="flex items-center justify-center gap-2 text-xs text-subtle">
-          <iconify-icon icon="lucide:bell-off" class="text-sm"></iconify-icon>
-          <span>Your first sync is silent so you will not get hundreds of notifications.</span>
-        </div>
-      </div>
-
-    </main>
-
-  </div>
-</body></html>
+  <!-- floating action bar -->
+  <div class="fixed bottom-6 left-1/2 z-30 -translate-x-1/2"><div class="island flex items-center gap-6 py-2.5 pl-3 pr-3" style="border-radius:26px">
+    <a href="#back" id="btn-back" class="btn btn-secondary"><iconify-icon icon="lucide:arrow-left" width="16" height="16" class=""></iconify-icon>Back</a>
+    <span class="text-[14px] text-muted"><b class="text-fg">4</b> platforms selected</span>
+    <a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="btn-continue" class="btn btn-primary">Connect and sync<iconify-icon icon="lucide:arrow-right" width="16" height="16" class=""></iconify-icon></a>
+  </div></div>
+</div>
+</body>
+</html>
