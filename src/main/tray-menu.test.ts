@@ -9,6 +9,7 @@ function toggle(on = false): Toggle & { set: ReturnType<typeof vi.fn<(on: boolea
 function actions(overrides: Partial<TrayActions> = {}): TrayActions {
   return {
     open: vi.fn(),
+    syncNow: vi.fn(),
     sendTestNotification: vi.fn(),
     quit: vi.fn(),
     pauseNotifications: toggle(),
@@ -28,13 +29,14 @@ function click(entry: MenuItemConstructorOptions, checked = false): void {
 }
 
 describe('trayMenuTemplate', () => {
-  it('lists open, test notification, the two toggles and quit, in that order', () => {
+  it('lists open, sync now, test notification, the two toggles and quit, in that order', () => {
     const labels = trayMenuTemplate(actions())
       .filter((entry) => entry.type !== 'separator')
       .map((entry) => entry.label)
 
     expect(labels).toEqual([
       'Open Trophy Locker',
+      'Sync now',
       'Send test notification',
       'Pause notifications',
       'Start with Windows',
@@ -47,10 +49,12 @@ describe('trayMenuTemplate', () => {
     const template = trayMenuTemplate(tray)
 
     click(item(template, /^Open/))
+    click(item(template, /^Sync now/))
     click(item(template, /^Send test/))
     click(item(template, /^Quit/))
 
     expect(tray.open).toHaveBeenCalledOnce()
+    expect(tray.syncNow).toHaveBeenCalledOnce()
     expect(tray.sendTestNotification).toHaveBeenCalledOnce()
     expect(tray.quit).toHaveBeenCalledOnce()
   })

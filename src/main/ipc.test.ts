@@ -20,6 +20,9 @@ const ACCOUNT: AccountSummary = {
   displayName: 'Test',
   status: 'connected',
   gameCount: 0,
+  checkedGames: 0,
+  lastSyncAt: null,
+  syncing: false,
 }
 const CONNECTED: ConnectResult = { ok: true, account: ACCOUNT }
 const DASHBOARD: DashboardStats = {
@@ -40,6 +43,8 @@ const fakes = {
   getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
   listAccounts: vi.fn(() => [ACCOUNT]),
+  disconnectAccount: vi.fn(),
+  syncNow: vi.fn(() => Promise.resolve()),
   connectSteam: vi.fn(() => Promise.resolve(CONNECTED)),
   connectXbox: vi.fn(() => Promise.resolve(CONNECTED)),
   cancelXboxSignIn: vi.fn(),
@@ -88,6 +93,8 @@ describe('registerIpcHandlers', () => {
     IPC.getAppInfo,
     IPC.sendTestNotification,
     IPC.listAccounts,
+    IPC.disconnectAccount,
+    IPC.syncNow,
     IPC.connectSteam,
     IPC.connectXbox,
     IPC.cancelXboxSignIn,
@@ -433,6 +440,47 @@ describe('activity handler', () => {
   ])('answers %s as a limit with an empty page, without a query', (_label, limit) => {
     expect(call(IPC.listActivity, TRUSTED, limit)).toEqual({ unlocks: [], hasMore: false })
     expect(fakes.listActivity).not.toHaveBeenCalled()
+  })
+})
+
+describe('account and sync handlers', () => {
+  it.each([true, false])('disconnects an account, keeping its data: %s', (keepData) => {
+    call(IPC.disconnectAccount, TRUSTED, { accountId: 4, keepData })
+
+    expect(fakes.disconnectAccount).toHaveBeenCalledWith({ accountId: 4, keepData })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['no choice about the data', { accountId: 4 }],
+    ['the choice as text', { accountId: 4, keepData: 'yes' }],
+    ['a zero id', { accountId: 0, keepData: true }],
+    ['an id as text', { accountId: '4', keepData: true }],
+  ])('ignores a disconnect with %s', (_label, payload) => {
+    call(IPC.disconnectAccount, TRUSTED, payload)
+
+    expect(fakes.disconnectAccount).not.toHaveBeenCalled()
+  })
+
+  it.each([[{ kind: 'all' }], [{ kind: 'account', accountId: 2 }], [{ kind: 'game', gameId: 9 }]])(
+    'passes a sync of %o on',
+    async (scope) => {
+      await call(IPC.syncNow, TRUSTED, scope)
+
+      expect(fakes.syncNow).toHaveBeenCalledWith(scope)
+    },
+  )
+
+  it.each([
+    ['nothing', undefined],
+    ['an unknown kind', { kind: 'everything' }],
+    ['an account without an id', { kind: 'account' }],
+    ['a game id as text', { kind: 'game', gameId: '9' }],
+    ['a negative account id', { kind: 'account', accountId: -2 }],
+  ])('ignores a sync with %s', async (_label, payload) => {
+    await call(IPC.syncNow, TRUSTED, payload)
+
+    expect(fakes.syncNow).not.toHaveBeenCalled()
   })
 })
 

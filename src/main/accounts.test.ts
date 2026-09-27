@@ -72,6 +72,9 @@ describe('connectSteam', () => {
         displayName: 'Test Player',
         status: 'connected',
         gameCount: 0,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
     })
     expect(listAccountSummaries(db)).toHaveLength(1)
@@ -197,6 +200,9 @@ describe('connectXbox', () => {
         displayName: 'SampleGamer',
         status: 'connected',
         gameCount: 0,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
     })
     expect(listAccountSummaries(db)).toHaveLength(1)
@@ -309,6 +315,9 @@ describe('connectEpic', () => {
         displayName: 'EpicPlayer',
         status: 'connected',
         gameCount: 0,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
     })
     expect(listAccountSummaries(db)).toHaveLength(1)
@@ -436,6 +445,9 @@ describe('connectUbisoft', () => {
         displayName: 'TestPlayer',
         status: 'connected',
         gameCount: 0,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
     })
     expect(listAccountSummaries(db)).toHaveLength(1)
@@ -555,6 +567,9 @@ describe('connectEa', () => {
         displayName: 'TestPlayer',
         status: 'connected',
         gameCount: 0,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
     })
     expect(listAccountSummaries(db)).toHaveLength(1)
@@ -673,6 +688,9 @@ describe('connectPlayStation', () => {
         displayName: 'ExamplePlayer',
         status: 'connected',
         gameCount: 0,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
     })
     expect(listAccountSummaries(db)).toHaveLength(1)

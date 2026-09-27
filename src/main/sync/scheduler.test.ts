@@ -1208,3 +1208,268 @@ describe('Scheduler watches and syncGameNow', () => {
     expect(fetchGame).toHaveBeenCalledOnce()
   })
 })
+
+describe('Scheduler manual syncs and stopping one account', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  interface Manual {
+    readonly scheduler: Scheduler
+    readonly onSyncingChanged: ReturnType<typeof vi.fn<() => void>>
+    readonly stopWatch: ReturnType<typeof vi.fn<() => void>>
+  }
+
+  function manual(
+    db: DatabaseSync,
+    fetchGame: AchievementProvider['fetchGame'],
+    listGames: AchievementProvider['listGames'] = () =>
+      Promise.resolve([libraryGame('g1'), libraryGame('g2', false)]),
+  ): Manual {
+    const stopWatch = vi.fn<() => void>()
+    const watch = vi.fn<NonNullable<AchievementProvider['watch']>>(() => stopWatch)
+    const onSyncingChanged = vi.fn<() => void>()
+    const scheduler = new Scheduler({
+      db,
+      providers: {
+        steam: { ...fakeProvider(fetchGame, 'steam', listGames), watch },
+        xbox: fakeProvider(fetchGame, 'xbox', () => Promise.resolve([libraryGame('x1')])),
+      },
+      secrets: new InMemorySecretStore(),
+      onUnlocks: () => undefined,
+      onSyncingChanged,
+      random: () => 0,
+    })
+    return { scheduler, onSyncingChanged, stopWatch }
+  }
+
+  const syncedGames = (fetchGame: ReturnType<typeof vi.fn<AchievementProvider['fetchGame']>>) =>
+    fetchGame.mock.calls.map((call) => call[1].externalId)
+
+  function pending(): {
+    fetchGame: ReturnType<typeof vi.fn<AchievementProvider['fetchGame']>>
+    finish: () => void
+  } {
+    let resolveLatest: () => void = () => undefined
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(
+      () =>
+        new Promise((resolve) => {
+          resolveLatest = () => resolve(gameData([]))
+        }),
+    )
+    return { fetchGame, finish: () => resolveLatest() }
+  }
+
+  it('syncs every game of an account at once, even idle ones and ones backing off', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: ['g1', 'g2'] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const listGames = vi.fn<AchievementProvider['listGames']>(() =>
+      Promise.resolve([libraryGame('g1'), libraryGame('g2', false)]),
+    )
+    const { scheduler } = manual(db, fetchGame, listGames)
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    upsertSyncState(db, 1, 'game:g1', {
+      cursor: null,
+      lastOkAt: START,
+      lastError: 'offline',
+      nextDueAt: after(START, 30 * 60_000),
+    })
+    fetchGame.mockClear()
+
+    scheduler.syncAccountNow(1)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(listGames).toHaveBeenCalledTimes(2)
+    expect(syncedGames(fetchGame)).toEqual(['g1', 'g2'])
+    scheduler.stop()
+  })
+
+  it('goes back to the normal pace after a manual sync', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: ['g1', 'g2'] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const { scheduler } = manual(db, fetchGame)
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    scheduler.syncAccountNow(1)
+    await vi.advanceTimersByTimeAsync(0)
+    fetchGame.mockClear()
+
+    await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS)
+
+    expect(syncedGames(fetchGame)).toEqual(['g1'])
+    scheduler.stop()
+  })
+
+  it('asked during a round, runs exactly one more round straight after it', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: ['g1'] }])
+    const { fetchGame, finish } = pending()
+    const { scheduler } = manual(db, fetchGame, () => Promise.resolve([libraryGame('g1')]))
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchGame).toHaveBeenCalledOnce()
+
+    scheduler.syncAccountNow(1)
+    scheduler.syncAccountNow(1)
+    finish()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+
+    finish()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+    scheduler.stop()
+  })
+
+  it('syncs every connected account when asked to sync everything', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([
+      { id: 1, games: ['g1'] },
+      { id: 2, platform: 'xbox', games: ['x1'] },
+      { id: 3, status: 'needs_reauth', games: ['g3'] },
+    ])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const { scheduler } = manual(db, fetchGame, () => Promise.resolve([libraryGame('g1')]))
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    fetchGame.mockClear()
+
+    scheduler.syncAllNow()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(syncedGames(fetchGame).sort()).toEqual(['g1', 'x1'])
+    scheduler.stop()
+  })
+
+  it('ignores a manual sync while stopped, or for an account that is not connected', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([
+      { id: 1, games: ['g1'] },
+      { id: 2, status: 'disabled', games: ['g2'] },
+    ])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const { scheduler } = manual(db, fetchGame)
+
+    scheduler.syncAccountNow(1)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchGame).not.toHaveBeenCalled()
+
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    fetchGame.mockClear()
+    scheduler.syncAccountNow(2)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchGame).not.toHaveBeenCalled()
+    scheduler.stop()
+  })
+
+  it('says whether an account is syncing, and reports when that changes', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: ['g1'] }])
+    const { fetchGame, finish } = pending()
+    const { scheduler, onSyncingChanged } = manual(db, fetchGame, () =>
+      Promise.resolve([libraryGame('g1')]),
+    )
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(scheduler.isSyncing(1)).toBe(true)
+    expect(onSyncingChanged).toHaveBeenCalledOnce()
+
+    finish()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(scheduler.isSyncing(1)).toBe(false)
+    expect(onSyncingChanged).toHaveBeenCalledTimes(2)
+    scheduler.stop()
+  })
+
+  it('stopping one account aborts its fetch, stops its watch and schedules nothing more', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([
+      { id: 1, games: ['g1'] },
+      { id: 2, platform: 'xbox', games: ['x1'] },
+    ])
+    const signals = new Map<string, AbortSignal>()
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>((credentials, _game, signal) => {
+      if (signal) signals.set(credentials.externalId, signal)
+      return credentials.platform === 'steam'
+        ? new Promise(() => undefined)
+        : Promise.resolve(gameData([]))
+    })
+    const { scheduler, stopWatch } = manual(db, fetchGame, () =>
+      Promise.resolve([libraryGame('g1')]),
+    )
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+
+    scheduler.stopAccount(1)
+    await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS * 3)
+
+    expect(signals.get('acc1')?.aborted).toBe(true)
+    expect(signals.get('acc2')?.aborted).toBe(false)
+    expect(stopWatch).toHaveBeenCalledOnce()
+    expect(syncedGames(fetchGame).filter((id) => id === 'g1')).toHaveLength(1)
+    expect(syncedGames(fetchGame).filter((id) => id === 'x1').length).toBeGreaterThan(1)
+    scheduler.stop()
+  })
+
+  it('syncs a stopped account again once it is started again, as after reconnecting', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: ['g1'] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const { scheduler } = manual(db, fetchGame, () => Promise.resolve([libraryGame('g1')]))
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    scheduler.stopAccount(1)
+    upsertSyncState(db, 1, 'game:g1', {
+      cursor: null,
+      lastOkAt: START,
+      lastError: null,
+      nextDueAt: START,
+    })
+
+    scheduler.startAccount(1)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+    expect(fetchGame.mock.calls[1]?.[2]?.aborted).toBe(false)
+    scheduler.stop()
+  })
+
+  it('stops the loop of an account that was disconnected while it waited', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: ['g1'] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() => Promise.resolve(gameData([])))
+    const { scheduler } = manual(db, fetchGame, () => Promise.resolve([libraryGame('g1')]))
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+
+    db.prepare("UPDATE account SET status = 'disabled' WHERE id = 1").run()
+    await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS * 2)
+
+    expect(fetchGame).toHaveBeenCalledOnce()
+    scheduler.stop()
+  })
+
+  it('syncs one game on request even while it is backing off, when forced', async () => {
+    vi.useFakeTimers({ now: START })
+    const db = seedDb([{ id: 1, games: ['g1'] }])
+    const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() =>
+      Promise.reject(new ProviderError('rate_limited', 'slow down', { retryAfterMs: 60_000 })),
+    )
+    const { scheduler } = manual(db, fetchGame, () => Promise.resolve([libraryGame('g1')]))
+    scheduler.start()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchGame).toHaveBeenCalledOnce()
+
+    await scheduler.syncGameNow(1, 'g1')
+    expect(fetchGame).toHaveBeenCalledOnce()
+
+    await scheduler.syncGameNow(1, 'g1', true)
+    expect(fetchGame).toHaveBeenCalledTimes(2)
+    scheduler.stop()
+  })
+})

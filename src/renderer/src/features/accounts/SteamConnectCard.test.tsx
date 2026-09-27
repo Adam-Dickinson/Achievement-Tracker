@@ -8,7 +8,16 @@ import { fakeApi } from '@/test/fake-api'
 
 const CONNECTED: ConnectResult = {
   ok: true,
-  account: { id: 1, platform: 'steam', displayName: 'Tester', status: 'connected', gameCount: 0 },
+  account: {
+    id: 1,
+    platform: 'steam',
+    displayName: 'Tester',
+    status: 'connected',
+    gameCount: 0,
+    checkedGames: 0,
+    lastSyncAt: null,
+    syncing: false,
+  },
 }
 const CANCELLED: ConnectResult = {
   ok: false,

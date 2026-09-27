@@ -2,7 +2,7 @@ import type { AccountSummary } from '@shared/ipc'
 import { AccountStatus, RemoteAchievement, RemoteGame, RemoteUnlock } from '@shared/models'
 import { Platform } from '@shared/platform'
 import { DatabaseSync } from 'node:sqlite'
-import { gameForTitle } from './game-links'
+import { deleteEmptyGames, gameForTitle } from './game-links'
 
 export interface AccountRow {
   readonly id: number
@@ -203,19 +203,33 @@ export function getAccount(db: DatabaseSync, accountId: number): AccountRow {
   return { id: row.id, platform: row.platform, externalId: row.external_id }
 }
 
+export function getAccountStatus(db: DatabaseSync, accountId: number): AccountStatus | null {
+  const row = db.prepare('SELECT status FROM account WHERE id = ?').get(accountId) as
+    { status: AccountStatus } | undefined
+  return row?.status ?? null
+}
+
 export function setAccountStatus(db: DatabaseSync, accountId: number, status: AccountStatus): void {
   db.prepare('UPDATE account SET status = ? WHERE id = ?').run(status, accountId)
 }
 
-export function listAccountSummaries(db: DatabaseSync): AccountSummary[] {
+export function listAccountSummaries(
+  db: DatabaseSync,
+  isSyncing: (accountId: number) => boolean = () => false,
+): AccountSummary[] {
   const rows = db
     .prepare(
       `
     SELECT account.id, account.platform, account.display_name, account.status,
-           COUNT(platform_game.id) AS game_count
+           (SELECT COUNT(*) FROM platform_game WHERE platform_game.account_id = account.id)
+             AS game_count,
+           (SELECT COUNT(*) FROM platform_game
+            JOIN sync_state ON sync_state.account_id = platform_game.account_id
+                           AND sync_state.scope = 'game:' || platform_game.external_id
+            WHERE platform_game.account_id = account.id) AS checked_games,
+           (SELECT MAX(last_ok_at) FROM sync_state WHERE sync_state.account_id = account.id)
+             AS last_sync_at
     FROM account
-    LEFT JOIN platform_game ON platform_game.account_id = account.id
-    GROUP BY account.id
     ORDER BY account.id
   `,
     )
@@ -225,6 +239,8 @@ export function listAccountSummaries(db: DatabaseSync): AccountSummary[] {
     display_name: string
     status: AccountStatus
     game_count: number
+    checked_games: number
+    last_sync_at: string | null
   }[]
 
   return rows.map((row) => ({
@@ -233,7 +249,46 @@ export function listAccountSummaries(db: DatabaseSync): AccountSummary[] {
     displayName: row.display_name,
     status: row.status,
     gameCount: row.game_count,
+    checkedGames: row.checked_games,
+    lastSyncAt: row.last_sync_at === null ? null : new Date(row.last_sync_at),
+    syncing: isSyncing(row.id),
   }))
+}
+
+export function deleteAccountData(db: DatabaseSync, accountId: number): void {
+  const games = 'SELECT id FROM platform_game WHERE account_id = ?'
+  const achievements = `SELECT id FROM achievement WHERE platform_game_id IN (${games})`
+  db.exec('BEGIN')
+  try {
+    db.prepare(`DELETE FROM unlock WHERE achievement_id IN (${achievements})`).run(accountId)
+    db.prepare(`DELETE FROM achievement WHERE platform_game_id IN (${games})`).run(accountId)
+    db.prepare('DELETE FROM platform_game WHERE account_id = ?').run(accountId)
+    db.prepare('DELETE FROM sync_state WHERE account_id = ?').run(accountId)
+    db.prepare('DELETE FROM account WHERE id = ?').run(accountId)
+    deleteEmptyGames(db)
+    db.exec('COMMIT')
+  } catch (err) {
+    db.exec('ROLLBACK')
+    throw err
+  }
+}
+
+export interface GameEntryRef {
+  readonly accountId: number
+  readonly externalId: string
+}
+
+export function listConnectedEntries(db: DatabaseSync, gameId: number): GameEntryRef[] {
+  const rows = db
+    .prepare(
+      `SELECT platform_game.account_id, platform_game.external_id
+       FROM platform_game
+       JOIN account ON account.id = platform_game.account_id
+       WHERE platform_game.game_id = ? AND account.status = 'connected'
+       ORDER BY platform_game.id`,
+    )
+    .all(gameId) as { account_id: number; external_id: string }[]
+  return rows.map((row) => ({ accountId: row.account_id, externalId: row.external_id }))
 }
 
 export function listConnectedAccounts(db: DatabaseSync): AccountRow[] {

@@ -9,6 +9,7 @@ import {
   type ArtworkRun,
   type ArtworkSettings,
   type ConnectResult,
+  type DisconnectInput,
   type EaConnectInput,
   type EpicConnectInput,
   type MergeGamesInput,
@@ -16,6 +17,7 @@ import {
   type SteamConnectInput,
   type SteamGridDbKeyInput,
   type SteamSignInInput,
+  type SyncScope,
   type UnlinkGameInput,
   type UbisoftConnectInput,
   type XboxConnectInput,
@@ -31,6 +33,8 @@ export interface IpcHandlers {
   getAppInfo(): AppInfo
   sendTestNotification(): Promise<void>
   listAccounts(): AccountSummary[]
+  disconnectAccount(input: DisconnectInput): void
+  syncNow(scope: SyncScope): Promise<void>
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
   connectXbox(input: XboxConnectInput): Promise<ConnectResult>
   cancelXboxSignIn(): void
@@ -88,6 +92,14 @@ const steamGridDbKeySchema = z.object({
     .regex(/^[A-Za-z0-9]{16,64}$/),
 })
 
+const disconnectSchema = z.object({ accountId: gameIdSchema, keepData: z.boolean() })
+
+const syncScopeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('all') }),
+  z.object({ kind: z.literal('account'), accountId: gameIdSchema }),
+  z.object({ kind: z.literal('game'), gameId: gameIdSchema }),
+])
+
 const activityLimitSchema = z.number().int().min(1).max(MAX_ACTIVITY_LIMIT)
 
 function isTrustedSender(event: IpcMainInvokeEvent): boolean {
@@ -110,6 +122,18 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.listAccounts, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.listAccounts()
+  })
+
+  ipcMain.handle(IPC.disconnectAccount, (event, input: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = disconnectSchema.safeParse(input)
+    if (parsed.success) handlers.disconnectAccount(parsed.data)
+  })
+
+  ipcMain.handle(IPC.syncNow, (event, scope: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = syncScopeSchema.safeParse(scope)
+    return parsed.success ? handlers.syncNow(parsed.data) : Promise.resolve()
   })
 
   ipcMain.handle(IPC.connectSteam, (event, input: unknown): Promise<ConnectResult> => {

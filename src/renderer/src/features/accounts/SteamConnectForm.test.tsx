@@ -10,7 +10,16 @@ const STEAM_ID = '76561190000000001'
 const KEY = '0123456789ABCDEF0123456789ABCDEF'
 const CONNECTED: ConnectResult = {
   ok: true,
-  account: { id: 1, platform: 'steam', displayName: 'Player', status: 'connected', gameCount: 0 },
+  account: {
+    id: 1,
+    platform: 'steam',
+    displayName: 'Player',
+    status: 'connected',
+    gameCount: 0,
+    checkedGames: 0,
+    lastSyncAt: null,
+    syncing: false,
+  },
 }
 
 const connectSteam = vi.fn<(input: SteamConnectInput) => Promise<ConnectResult>>()

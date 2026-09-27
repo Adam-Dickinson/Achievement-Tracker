@@ -15,6 +15,9 @@ const CONNECTED: ConnectResult = {
     displayName: 'EpicPlayer',
     status: 'connected',
     gameCount: 0,
+    checkedGames: 0,
+    lastSyncAt: null,
+    syncing: false,
   },
 }
 const REJECTED: ConnectResult = {

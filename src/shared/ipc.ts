@@ -9,6 +9,8 @@ export const IPC = {
   sendTestNotification: 'notifications:send-test',
   setToasts: 'overlay:set-toasts',
   listAccounts: 'accounts:list',
+  disconnectAccount: 'accounts:disconnect',
+  syncNow: 'sync:now',
   connectSteam: 'accounts:connect-steam',
   connectXbox: 'accounts:connect-xbox',
   cancelXboxSignIn: 'accounts:cancel-xbox-sign-in',
@@ -60,6 +62,19 @@ export interface AccountSummary {
   readonly displayName: string
   readonly status: AccountStatus
   readonly gameCount: number
+  readonly checkedGames: number
+  readonly lastSyncAt: Date | null
+  readonly syncing: boolean
+}
+
+export type SyncScope =
+  | { readonly kind: 'all' }
+  | { readonly kind: 'account'; readonly accountId: number }
+  | { readonly kind: 'game'; readonly gameId: number }
+
+export interface DisconnectInput {
+  readonly accountId: number
+  readonly keepData: boolean
 }
 
 export interface SteamConnectInput {
@@ -138,6 +153,8 @@ export interface TrophyLockerApi {
   getAppInfo(): Promise<AppInfo>
   sendTestNotification(): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
+  disconnectAccount(input: DisconnectInput): Promise<void>
+  syncNow(scope: SyncScope): Promise<void>
   connectSteam(input: SteamConnectInput): Promise<ConnectResult>
   connectXbox(input: XboxConnectInput): Promise<ConnectResult>
   cancelXboxSignIn(): Promise<void>

@@ -380,3 +380,27 @@ describe('GameDetail', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong')
   })
 })
+
+describe('GameDetail: syncing', () => {
+  it('syncs this game on request, showing it is busy, then reloads it', async () => {
+    let finish: () => void = () => undefined
+    const syncNow = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        }),
+    )
+    window.api = fakeApi({ getGame, syncNow })
+    getGame.mockResolvedValue(DETAIL)
+    renderScrolled(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sync this game' }))
+
+    expect(syncNow).toHaveBeenCalledWith({ kind: 'game', gameId: 7 })
+    expect(screen.getByRole('button', { name: 'Syncing…' })).toBeDisabled()
+    act(() => finish())
+    expect(await screen.findByRole('button', { name: 'Sync this game' })).toBeEnabled()
+    expect(getGame).toHaveBeenCalledTimes(2)
+  })
+})

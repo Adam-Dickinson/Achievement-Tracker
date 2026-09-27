@@ -102,7 +102,7 @@ function entryCount(db: DatabaseSync, gameId: number): number {
   return row.count
 }
 
-function deleteEmptyGames(db: DatabaseSync): void {
+export function deleteEmptyGames(db: DatabaseSync): void {
   const empty = 'SELECT id FROM game WHERE id NOT IN (SELECT game_id FROM platform_game)'
   db.exec(`DELETE FROM game_alias WHERE game_id IN (${empty})`)
   db.exec(`DELETE FROM game WHERE id IN (${empty})`)

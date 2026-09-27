@@ -8,6 +8,7 @@ import {
   type AccountRow,
   addPlatformGames,
   getAccount,
+  getAccountStatus,
   getSyncState,
   listConnectedAccounts,
   listPlatformGameExternalIds,
@@ -32,6 +33,7 @@ export interface SchedulerDeps {
   readonly secrets: SecretStore
   readonly onUnlocks: (events: UnlockEvent[]) => void
   readonly onDataChanged?: () => void
+  readonly onSyncingChanged?: () => void
   readonly intervalMs?: number
   readonly now?: () => Date
   readonly random?: () => number
@@ -43,6 +45,7 @@ export class Scheduler {
   readonly #secrets: SecretStore
   readonly #onUnlocks: (events: UnlockEvent[]) => void
   readonly #onDataChanged: () => void
+  readonly #onSyncingChanged: () => void
   readonly #intervalMs: number
   readonly #now: () => Date
   readonly #random: () => number
@@ -54,7 +57,9 @@ export class Scheduler {
   readonly #watches = new Map<number, () => void>()
   readonly #urgent = new Map<string, boolean>()
   readonly #unlisted = new Map<number, Set<string>>()
-  #abort = new AbortController()
+  readonly #aborts = new Map<number, AbortController>()
+  readonly #forced = new Set<number>()
+  readonly #rerun = new Set<number>()
   #running = false
 
   constructor(deps: SchedulerDeps) {
@@ -63,6 +68,7 @@ export class Scheduler {
     this.#secrets = deps.secrets
     this.#onUnlocks = deps.onUnlocks
     this.#onDataChanged = deps.onDataChanged ?? (() => undefined)
+    this.#onSyncingChanged = deps.onSyncingChanged ?? (() => undefined)
     this.#intervalMs = deps.intervalMs ?? SYNC_INTERVAL_MS
     this.#now = deps.now ?? (() => new Date())
     this.#random = deps.random ?? Math.random
@@ -71,7 +77,7 @@ export class Scheduler {
   start(): void {
     if (this.#running) return
     this.#running = true
-    this.#abort = new AbortController()
+    this.#aborts.clear()
 
     for (const account of listConnectedAccounts(this.#db)) {
       if (!this.#providers[account.platform]) continue
@@ -82,7 +88,7 @@ export class Scheduler {
 
   stop(): void {
     this.#running = false
-    this.#abort.abort()
+    for (const controller of this.#aborts.values()) controller.abort()
     for (const timer of this.#timers.values()) clearTimeout(timer)
     this.#timers.clear()
     for (const accountId of [...this.#watches.keys()]) this.#unwatch(accountId)
@@ -90,11 +96,44 @@ export class Scheduler {
 
   startAccount(accountId: number): void {
     if (!this.#running) return
+    if (this.#aborts.get(accountId)?.signal.aborted) this.#aborts.delete(accountId)
     this.#watch(getAccount(this.#db, accountId))
     if (this.#inRound.has(accountId)) return
     clearTimeout(this.#timers.get(accountId))
     this.#timers.delete(accountId)
     void this.#runLoop(accountId)
+  }
+
+  stopAccount(accountId: number): void {
+    this.#aborts.get(accountId)?.abort()
+    clearTimeout(this.#timers.get(accountId))
+    this.#timers.delete(accountId)
+    this.#unwatch(accountId)
+    this.#forced.delete(accountId)
+    this.#rerun.delete(accountId)
+    this.#recent.delete(accountId)
+    this.#unlisted.delete(accountId)
+  }
+
+  syncAccountNow(accountId: number): void {
+    if (!this.#running || getAccountStatus(this.#db, accountId) !== 'connected') return
+    if (!this.#providers[getAccount(this.#db, accountId).platform]) return
+    this.#forced.add(accountId)
+    if (this.#inRound.has(accountId)) {
+      this.#rerun.add(accountId)
+      return
+    }
+    clearTimeout(this.#timers.get(accountId))
+    this.#timers.delete(accountId)
+    void this.#runLoop(accountId)
+  }
+
+  syncAllNow(): void {
+    for (const account of listConnectedAccounts(this.#db)) this.syncAccountNow(account.id)
+  }
+
+  isSyncing(accountId: number): boolean {
+    return this.#inRound.has(accountId)
   }
 
   lookForGamesNow(accountId: number): void {
@@ -104,7 +143,7 @@ export class Scheduler {
   }
 
   async refreshCredentials(accountId: number): Promise<typeof READY | Date | null> {
-    const signal = this.#abort.signal
+    const signal = this.#signal(accountId)
     const account = getAccount(this.#db, accountId)
     const provider = this.#providers[account.platform]
     if (!provider) return null
@@ -129,17 +168,17 @@ export class Scheduler {
     return READY
   }
 
-  async syncLibrary(accountId: number): Promise<Date | null> {
+  async syncLibrary(accountId: number, force = false): Promise<Date | null> {
     const account = getAccount(this.#db, accountId)
     const provider = this.#providers[account.platform]
     if (!provider) return null
 
     const state = getSyncState(this.#db, account.id, LIBRARY_SCOPE)
-    if (state?.nextDueAt && state.nextDueAt > this.#now()) return state.nextDueAt
+    if (!force && state?.nextDueAt && state.nextDueAt > this.#now()) return state.nextDueAt
     return this.#fetchLibrary(account, provider, state)
   }
 
-  async syncGameNow(accountId: number, gameId: string): Promise<void> {
+  async syncGameNow(accountId: number, gameId: string, force = false): Promise<void> {
     if (!this.#running) return
     const key = `${accountId}:${gameId}`
     if (this.#urgent.has(key)) {
@@ -150,7 +189,7 @@ export class Scheduler {
     try {
       do {
         this.#urgent.set(key, false)
-        await this.#syncGameNow(accountId, gameId)
+        await this.#syncGameNow(accountId, gameId, force)
       } while (this.#running && this.#urgent.get(key))
     } catch (err) {
       console.error(`Syncing game ${gameId} for account ${accountId} failed`, err)
@@ -159,7 +198,7 @@ export class Scheduler {
     }
   }
 
-  async #syncGameNow(accountId: number, gameId: string): Promise<void> {
+  async #syncGameNow(accountId: number, gameId: string, force: boolean): Promise<void> {
     const account = getAccount(this.#db, accountId)
     const provider = this.#providers[account.platform]
     if (!provider) return
@@ -167,14 +206,14 @@ export class Scheduler {
 
     const scope = `game:${gameId}`
     const state = getSyncState(this.#db, account.id, scope)
-    if (this.#isBackingOff(state)) return
+    if (!force && this.#isBackingOff(state)) return
     await this.#syncGame(
       account,
       gameId,
       provider,
       this.#credentials(account),
       state,
-      this.#abort.signal,
+      this.#signal(account.id),
     )
   }
 
@@ -209,7 +248,7 @@ export class Scheduler {
     provider: AchievementProvider,
     state: SyncStateRow | null,
   ): Promise<Date | null> {
-    const signal = this.#abort.signal
+    const signal = this.#signal(account.id)
     const attemptKey = `${account.id}:${LIBRARY_SCOPE}`
     let games: readonly RemoteGame[]
     try {
@@ -247,8 +286,8 @@ export class Scheduler {
     return nextDueAt
   }
 
-  async syncDueGames(accountId: number): Promise<Date | null> {
-    const signal = this.#abort.signal
+  async syncDueGames(accountId: number, force = false): Promise<Date | null> {
+    const signal = this.#signal(accountId)
     const account = getAccount(this.#db, accountId)
     const provider = this.#providers[account.platform]
     if (!provider) return null
@@ -265,7 +304,7 @@ export class Scheduler {
       const state = getSyncState(this.#db, account.id, scope)
       let dueAt = this.#dueAt(state, isRecent)
 
-      if (!dueAt || dueAt <= this.#now()) {
+      if (force || !dueAt || dueAt <= this.#now()) {
         const outcome = await this.#syncGame(account, gameId, provider, credentials, state, signal)
         if (outcome === 'stop') return null
         dueAt = this.#dueAt(getSyncState(this.#db, account.id, scope), isRecent) ?? outcome
@@ -275,6 +314,15 @@ export class Scheduler {
     }
 
     return earliest ?? this.#after(this.#intervalMs)
+  }
+
+  #signal(accountId: number): AbortSignal {
+    let controller = this.#aborts.get(accountId)
+    if (!controller) {
+      controller = new AbortController()
+      this.#aborts.set(accountId, controller)
+    }
+    return controller.signal
   }
 
   #watch(account: AccountRow): void {
@@ -380,8 +428,14 @@ export class Scheduler {
   }
 
   async #runLoop(accountId: number): Promise<void> {
+    if (getAccountStatus(this.#db, accountId) !== 'connected') {
+      this.#timers.delete(accountId)
+      return
+    }
+
     let next: Date | null
     this.#inRound.add(accountId)
+    this.#onSyncingChanged()
     try {
       next = await this.#runRound(accountId)
     } catch (err) {
@@ -389,13 +443,15 @@ export class Scheduler {
       next = this.#after(this.#intervalMs)
     } finally {
       this.#inRound.delete(accountId)
+      this.#onSyncingChanged()
     }
 
-    if (!this.#running || next === null) {
+    const again = this.#rerun.delete(accountId)
+    if (!this.#running || (next === null && !again)) {
       this.#timers.delete(accountId)
       return
     }
-    const delay = Math.max(0, next.getTime() - this.#now().getTime())
+    const delay = again || next === null ? 0 : Math.max(0, next.getTime() - this.#now().getTime())
     this.#timers.set(
       accountId,
       setTimeout(() => void this.#runLoop(accountId), delay),
@@ -403,11 +459,12 @@ export class Scheduler {
   }
 
   async #runRound(accountId: number): Promise<Date | null> {
+    const force = this.#forced.delete(accountId)
     const refreshed = await this.refreshCredentials(accountId)
     if (refreshed !== READY) return refreshed
-    const library = await this.syncLibrary(accountId)
+    const library = await this.syncLibrary(accountId, force)
     if (library === null) return null
-    const games = await this.syncDueGames(accountId)
+    const games = await this.syncDueGames(accountId, force)
     if (games === null) return null
     return games < library ? games : library
   }
