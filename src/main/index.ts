@@ -33,6 +33,7 @@ import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
+import { awardPlatinums } from './store/platinum'
 import { ArtworkService } from './artwork/artwork-service'
 import {
   getDashboardStats,
@@ -121,6 +122,7 @@ async function start(): Promise<void> {
 
   const { db, schemaVersion } = openDatabase(join(app.getPath('userData'), DATABASE_FILE))
   relinkGames(db)
+  awardPlatinums(db)
 
   const overlay = new OverlayService(createOverlayWindow())
   const notifications = new NotificationService({

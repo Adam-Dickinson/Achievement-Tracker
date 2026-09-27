@@ -6,6 +6,7 @@ import type {
   UnlockEvent,
 } from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
+import { appPlatinumAchievement, awardPlatinum } from '../store/platinum'
 import {
   type AccountRow,
   getPlatformGameByExternalId,
@@ -45,6 +46,16 @@ export async function runSyncPass(
         detectedAt,
       ),
     )
+    const platinum = awardPlatinum(db, platformGame.id, detectedAt)
+    if (platinum && events.length > 0) {
+      events.push({
+        platform: account.platform,
+        gameTitle: platformGame.title,
+        achievement: appPlatinumAchievement(platformGame.title),
+        unlockedAt: platinum.earnedAt,
+        detectedAt,
+      })
+    }
 
     if (!platformGame.baselineDone) setBaselineDone(db, platformGame.id)
 
