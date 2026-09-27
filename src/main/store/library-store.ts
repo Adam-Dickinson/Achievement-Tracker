@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite'
-import type { DashboardStats, PlatformProgress } from '@shared/dashboard'
+import type { DashboardStats, PlatformProgress, RarestUnlock } from '@shared/dashboard'
 import type {
   ActivityItem,
   ActivityPage,
@@ -13,14 +13,14 @@ import type {
   UnlockedAchievement,
 } from '@shared/library'
 import { PLATFORMS, type Platform } from '@shared/platform'
+import { type Rarity, rarityFromPercent } from '@shared/rarity'
 import { listArtworkUrls } from './artwork-store'
+import { dayStats } from './day-stats'
 import { matchKey } from './match-key'
 import { isPlatinumAchievement } from './platinum'
 
 const NEARLY_THERE_COUNT = 4
 const RECENT_UNLOCK_COUNT = 6
-const RAREST_UNLOCK_COUNT = 5
-const WEEK_MS = 7 * 24 * 60 * 60_000
 const TRAILING_TAG = /\(([^()]+)\)\s*$/
 
 interface EntryRecord {
@@ -102,22 +102,44 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
     .sort((a, b) => b.unlocked / b.total - a.unlocked / a.total || a.title.localeCompare(b.title))
     .slice(0, NEARLY_THERE_COUNT)
 
-  const { count: unlockedThisWeek } = db
-    .prepare('SELECT COUNT(*) AS count FROM unlock WHERE unlocked_at >= ?')
-    .get(new Date(now.getTime() - WEEK_MS).toISOString()) as { count: number }
+  const days = dayStats(listUnlockTimes(db), now)
 
   return {
     unlockedAchievements: sum(entries, (entry) => entry.unlocked),
     totalAchievements: sum(entries, (entry) => entry.total),
     gamesTracked: games.length,
     completedGames: games.filter((game) => game.total > 0 && game.unlocked === game.total).length,
-    unlockedThisWeek,
+    unlockedToday: days.today,
+    unlockedThisWeek: sum(days.week, (day) => day.count),
+    streakDays: days.streak,
+    week: days.week,
+    unlockedByRarity: countByRarity(db),
     platinums: countPlatinums(db),
     platforms: byPlatform(entries),
     nearlyThere,
     recentUnlocks: listRecentUnlocks(db, RECENT_UNLOCK_COUNT),
-    rarestUnlocks: listRarestUnlocks(db, RAREST_UNLOCK_COUNT),
+    rarestUnlock: findRarestUnlock(db, games),
   }
+}
+
+function listUnlockTimes(db: DatabaseSync): Date[] {
+  const rows = db
+    .prepare('SELECT unlocked_at FROM unlock WHERE unlocked_at IS NOT NULL')
+    .all() as unknown as { unlocked_at: string }[]
+  return rows.map((row) => new Date(row.unlocked_at))
+}
+
+function countByRarity(db: DatabaseSync): Record<Rarity, number> {
+  const rows = db
+    .prepare(
+      `SELECT a.global_percent FROM unlock u
+       JOIN achievement a ON a.id = u.achievement_id
+       WHERE a.global_percent IS NOT NULL`,
+    )
+    .all() as unknown as { global_percent: number }[]
+  const counts: Record<Rarity, number> = { ultra_rare: 0, rare: 0, uncommon: 0, common: 0 }
+  for (const row of rows) counts[rarityFromPercent(row.global_percent)]++
+  return counts
 }
 
 export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock[] {
@@ -136,16 +158,18 @@ export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock
   }))
 }
 
-function listRarestUnlocks(db: DatabaseSync, limit: number): UnlockedAchievement[] {
-  const rows = db
+function findRarestUnlock(db: DatabaseSync, games: readonly LibraryGame[]): RarestUnlock | null {
+  const row = db
     .prepare(
       `${UNLOCKS}
        WHERE a.global_percent IS NOT NULL
        ORDER BY a.global_percent, u.unlocked_at DESC, a.id DESC
-       LIMIT ?`,
+       LIMIT 1`,
     )
-    .all(limit) as unknown as UnlockRecord[]
-  return rows.map(toUnlock)
+    .get() as UnlockRecord | undefined
+  if (!row) return null
+  const coverUrl = games.find((game) => game.id === row.game_id)?.coverUrl ?? null
+  return { ...toUnlock(row), coverUrl }
 }
 
 export function listActivity(db: DatabaseSync, limit: number): ActivityPage {

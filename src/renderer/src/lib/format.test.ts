@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { formatDayHeading, formatPercent, formatTime, formatUnlockDate, plural } from './format'
+import {
+  formatDayHeading,
+  formatDayLabel,
+  formatPercent,
+  formatShare,
+  formatTime,
+  formatUnlockDate,
+  plural,
+} from './format'
 
 describe('formatPercent', () => {
   it('shows one decimal place, dropping a trailing zero', () => {
@@ -72,5 +80,33 @@ describe('plural', () => {
     expect(plural(1, 'game')).toBe('1 game')
     expect(plural(0, 'game')).toBe('0 games')
     expect(plural(2, 'achievement')).toBe('2 achievements')
+  })
+})
+
+describe('formatShare', () => {
+  it('shows a share with one decimal place, never rounding up to done', () => {
+    expect(formatShare(1284, 2910)).toBe('44.1%')
+    expect(formatShare(3482, 5120)).toBe('68.0%')
+    expect(formatShare(999, 1000)).toBe('99.9%')
+  })
+
+  it('shows 100% when everything is done and 0% when there is nothing', () => {
+    expect(formatShare(40, 40)).toBe('100%')
+    expect(formatShare(0, 0)).toBe('0%')
+  })
+})
+
+describe('formatDayLabel', () => {
+  const now = new Date(2026, 8, 26, 15, 0)
+
+  it('says Today and Yesterday, then the weekday within the week, then the date', () => {
+    expect(formatDayLabel(new Date(2026, 8, 26, 9, 0), now)).toBe('Today')
+    expect(formatDayLabel(new Date(2026, 8, 25, 23, 0), now)).toBe('Yesterday')
+    expect(formatDayLabel(new Date(2026, 8, 21, 10, 0), now)).toBe(
+      new Date(2026, 8, 21).toLocaleDateString(undefined, { weekday: 'short' }),
+    )
+    expect(formatDayLabel(new Date(2026, 8, 19, 10, 0), now)).toBe(
+      new Date(2026, 8, 19).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
+    )
   })
 })

@@ -2,7 +2,7 @@
 
 A lightweight desktop app that tracks your achievements and trophies across **PlayStation, Xbox, Steam, Epic Games, Ubisoft Connect** and **EA** in one place, with emulators planned after v1. It runs quietly in the system tray and pops up a notification the moment you unlock something, whichever platform it came from.
 
-> **Status:** Pre-alpha. The project scaffold, docs and UI mockups are in place, and the tray icon and animated, click-through unlock toast work; features start at [roadmap](docs/ROADMAP.md) milestone M1.
+> **Status:** Pre-alpha, not yet released. All six platforms connect and sync, unlocks pop up as animated toasts (Steam's within seconds), and the Dashboard, Library, Game detail, Activity and Accounts screens work on your synced data, with games linked across platforms and a platinum for every game. Milestones M0 to M4 are nearly done; polish, settings and an installer come next ([roadmap](docs/ROADMAP.md)).
 
 ## Goals
 
@@ -12,7 +12,7 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 - Local-first: your data lives in a local SQLite database, credentials in the OS keychain
 - Extensible: adding a platform or emulator is one self-contained adapter
 
-## Supported sources (planned)
+## Supported sources
 
 | Source | Method | Real-time | Confidence |
 |---|---|---|---|

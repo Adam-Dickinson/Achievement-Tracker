@@ -37,7 +37,7 @@ export function Activity({ onOpenGame }: ActivityProps) {
             </h2>
             <p className="text-sm text-fg-muted">{plural(day.unlocks.length, 'unlock')}</p>
           </div>
-          <ul className="flex flex-col divide-y divide-line rounded-panel border border-line bg-surface-1 shadow-float">
+          <ul className="flex flex-col rounded-panel border border-line bg-surface-1 p-2.5 shadow-float">
             {day.unlocks.map((item) =>
               item.kind === 'platinum' ? (
                 <PlatinumRow

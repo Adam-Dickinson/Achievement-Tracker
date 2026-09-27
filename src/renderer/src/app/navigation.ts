@@ -7,6 +7,7 @@ export interface NavItem {
   readonly label: string
   readonly description: string
   readonly icon: LucideIcon
+  readonly ownHeading?: boolean
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
@@ -15,6 +16,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Dashboard',
     description: 'Overall progress, platforms, closest to 100%, recent and rarest unlocks.',
     icon: LayoutDashboard,
+    ownHeading: true,
   },
   {
     id: 'library',

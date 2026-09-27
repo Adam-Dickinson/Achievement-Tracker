@@ -16,6 +16,21 @@ export function formatUnlockDate(date: Date, now = new Date()): string {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+export function formatShare(done: number, total: number): string {
+  if (total <= 0) return '0%'
+  if (done >= total) return '100%'
+  const tenths = Math.floor((done * 1000) / total) / 10
+  return `${tenths.toFixed(1)}%`
+}
+
+export function formatDayLabel(date: Date, now = new Date()): string {
+  const days = daysBefore(date, now)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return date.toLocaleDateString(undefined, { weekday: 'short' })
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
 export function formatDayHeading(date: Date, now = new Date()): string {
   const days = daysBefore(date, now)
   if (days === 0) return 'Today'

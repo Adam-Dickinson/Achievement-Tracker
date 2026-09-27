@@ -394,22 +394,13 @@ describe('getDashboardStats', () => {
     expect(getDashboardStats(db, NOW).platforms).toEqual([])
   })
 
-  it('lists the rarest unlocks first, newest first on a tie, with their game, up to five', () => {
+  it('features the rarest unlock, the newest on a tie, with its game and cover', () => {
     const at = new Date(NOW.getTime() - DAY)
     const { gameId, platformGameId } = seedGame('400', 'Portal', 4, [at, at, at, at])
     const earlier = new Date(NOW.getTime() - 3 * DAY)
     seedGame('500', 'Celeste', 3, [earlier, null, earlier])
 
-    const rarest = getDashboardStats(db, NOW).rarestUnlocks
-
-    expect(rarest.map((u) => [u.gameTitle, u.globalPercent])).toEqual([
-      ['Portal', 10],
-      ['Celeste', 10],
-      ['Portal', 20],
-      ['Celeste', 20],
-      ['Portal', 30],
-    ])
-    expect(rarest[0]).toEqual({
+    expect(getDashboardStats(db, NOW).rarestUnlock).toEqual({
       achievementId: expect.any(Number),
       gameId,
       platformGameId,
@@ -421,20 +412,101 @@ describe('getDashboardStats', () => {
       globalPercent: 10,
       platinum: false,
       unlockedAt: at,
+      coverUrl: 'https://cover/400.jpg',
     })
-    expect(rarest[3]?.unlockedAt).toBeNull()
   })
 
-  it('leaves locked achievements and ones with no rarity out of the rarest unlocks', () => {
+  it('features an undated rarest unlock too, and has none before anything is unlocked', () => {
+    expect(getDashboardStats(db, NOW).rarestUnlock).toBeNull()
+
+    seedGame('400', 'Portal', 2, [null])
+
+    expect(getDashboardStats(db, NOW).rarestUnlock).toMatchObject({
+      name: 'Achievement 400-0',
+      unlockedAt: null,
+    })
+  })
+
+  it('leaves locked achievements and ones with no rarity out of the rarest unlock', () => {
     seedGame('400', 'Portal', 3, [null])
     const { platformGameId } = seedGame('500', 'Unrated', 1, [null], 'ubisoft')
     db.prepare('UPDATE achievement SET global_percent = NULL WHERE platform_game_id = ?').run(
       platformGameId,
     )
 
-    expect(getDashboardStats(db, NOW).rarestUnlocks.map((u) => u.name)).toEqual([
-      'Achievement 400-0',
-    ])
+    db.prepare("UPDATE achievement SET global_percent = 1 WHERE external_id = '400-2'").run()
+
+    expect(getDashboardStats(db, NOW).rarestUnlock?.name).toBe('Achievement 400-0')
+  })
+
+  describe('days', () => {
+    const LOCAL_NOW = new Date(2026, 8, 23, 15, 0)
+    const at = (daysAgo: number, hour: number) => new Date(2026, 8, 23 - daysAgo, hour, 0)
+
+    it('counts unlocks today and on each of the last seven days, oldest first', () => {
+      seedGame('1', 'Portal', 8, [
+        at(0, 10),
+        at(0, 9),
+        at(1, 23),
+        at(2, 0),
+        at(4, 12),
+        at(7, 12),
+        null,
+      ])
+
+      const stats = getDashboardStats(db, LOCAL_NOW)
+
+      expect(stats.unlockedToday).toBe(2)
+      expect(stats.unlockedThisWeek).toBe(5)
+      expect(stats.week).toEqual([
+        { date: new Date(2026, 8, 17), count: 0 },
+        { date: new Date(2026, 8, 18), count: 0 },
+        { date: new Date(2026, 8, 19), count: 1 },
+        { date: new Date(2026, 8, 20), count: 0 },
+        { date: new Date(2026, 8, 21), count: 1 },
+        { date: new Date(2026, 8, 22), count: 1 },
+        { date: new Date(2026, 8, 23), count: 2 },
+      ])
+    })
+
+    it('counts the days in a row with an unlock, up to today', () => {
+      seedGame('1', 'Portal', 5, [at(0, 10), at(1, 10), at(2, 10), at(4, 10)])
+
+      expect(getDashboardStats(db, LOCAL_NOW).streakDays).toBe(3)
+    })
+
+    it('keeps the streak alive through today until the day ends', () => {
+      seedGame('1', 'Portal', 3, [at(1, 10), at(2, 10)])
+
+      expect(getDashboardStats(db, LOCAL_NOW).streakDays).toBe(2)
+    })
+
+    it('has no streak once a whole day passes without an unlock', () => {
+      seedGame('1', 'Portal', 2, [at(2, 10), at(3, 10)])
+
+      expect(getDashboardStats(db, LOCAL_NOW).streakDays).toBe(0)
+    })
+  })
+
+  it('counts the unlocks of each rarity, leaving out ones with no rarity', () => {
+    const { platformGameId } = seedGame('1', 'Portal', 6, [null, null, null, null, null])
+    const percents = [1.5, 5, 9.9, 25, 55, null]
+    percents.forEach((percent, i) =>
+      db
+        .prepare(
+          'UPDATE achievement SET global_percent = ? WHERE platform_game_id = ? AND external_id = ?',
+        )
+        .run(percent, platformGameId, `1-${i}`),
+    )
+    seedGame('2', 'Unrated', 1, [null], 'ubisoft')
+    db.prepare("UPDATE achievement SET global_percent = NULL WHERE external_id = '2-0'").run()
+
+    expect(getDashboardStats(db, NOW).unlockedByRarity).toEqual({
+      ultra_rare: 1,
+      rare: 2,
+      uncommon: 1,
+      common: 1,
+    })
   })
 })
 
@@ -476,7 +548,8 @@ describe('platinums', () => {
       ['achievement', 'Achievement 1-1', true],
       ['achievement', 'Achievement 1-0', false],
     ])
-    expect(getDashboardStats(db, NOW).rarestUnlocks.map((u) => u.platinum)).toEqual([false, true])
+    db.prepare("UPDATE achievement SET global_percent = 1 WHERE external_id = '1-1'").run()
+    expect(getDashboardStats(db, NOW).rarestUnlock?.platinum).toBe(true)
   })
 
   it('puts dated app-awarded Platinums in Activity, above the unlock that earned them', () => {

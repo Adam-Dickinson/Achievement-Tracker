@@ -58,13 +58,22 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 
 ## M5: Polish and notification depth
 
+- [ ] **Match the Afterglow designs** (the canvas and `docs/design/mockups/`; the owner wants the app to look like them). The style is in place; these layouts are not:
+  - [ ] Whole app: the aurora background behind every page; the island nav's search box, sync status ("Synced 2m ago"), notifications bell and avatar
+  - [x] Dashboard: rebuilt to the design (hero with the unlocked count, today / this week / streak chips, "By rarity" counts and fanned "Nearly there" covers; the rarest unlock as a spotlight card; "Recent unlocks" beside "Platforms" and a "This week" chart; platform logo badges). Exactly as designed at the owner's request, so the Completed games and Platinums tiles and the list of five rarest unlocks are gone. Checked in the built app on a copy of the owner's data
+  - [ ] Library: the profile card with totals per rarity, and the portrait and list views
+  - [ ] Game detail: "Open in Steam" (and the other stores)
+  - [ ] Activity: the header card (this week's count, streak, rarest unlock, rarity legend)
+  - [ ] Accounts: one card per platform with its status, stats, Resync and Disconnect, in place of the connect forms and the account list
+  - [ ] Toast: the platform badge
+  - Settings and Onboarding are designed too; they are built to their designs in the items below
 - [ ] Notification settings (corner, monitor, scale, rarity styling, per-platform toggles)
 - [ ] Toast sound per rarity tier, with volume and a mute (F-22)
 - [ ] Native toast fallback, Do Not Disturb schedule (manual pause is in the tray already)
 - [ ] Onboarding flow, empty/error states, provider health UI
 - [ ] Accessibility pass, reduced motion, high contrast
 - [ ] Data export, log viewer
-- [x] Platinums (F-35, [design](superpowers/specs/2026-09-27-platinum-design.md)): a game's own "unlock everything" achievement counts as its platinum (40 Steam and Xbox games in the owner's library, found from the description), and a game without one earns an app-awarded Platinum at 100%. Shown as a banner on each Game detail tab, a chip on platinum achievements and unlocks, Activity lines, a Dashboard count and platinum toasts. Checked in the built app on a copy of the owner's data: all 15 finished games got a platinum (10 their own, 5 app-awarded, silently at startup)
+- [x] Platinums (F-35, [design](superpowers/specs/2026-09-27-platinum-design.md)): a game's own "unlock everything" achievement counts as its platinum (40 Steam and Xbox games in the owner's library, found from the description), and a game without one earns an app-awarded Platinum at 100%. Shown as a banner on each Game detail tab, a chip on platinum achievements and unlocks, Activity lines and platinum toasts. Checked in the built app on a copy of the owner's data: all 15 finished games got a platinum (10 their own, 5 app-awarded, silently at startup)
 
 ## M6: Release engineering
 

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { LibraryGame } from '@shared/library'
 import { GameCard } from './GameCard'
@@ -26,7 +26,7 @@ describe('GameCard', () => {
 
     const card = screen.getByRole('button')
     expect(card).toHaveTextContent('Portal')
-    expect(card).toHaveTextContent('Steam')
+    expect(within(card).getByRole('img', { name: 'Steam' })).toBeInTheDocument()
     expect(card).toHaveTextContent('80%')
     expect(card).toHaveTextContent('34 / 42 achievements')
     expect(card).toHaveTextContent('8 left')
@@ -35,7 +35,11 @@ describe('GameCard', () => {
   it('names every platform a linked game is on', () => {
     render(<GameCard game={game({ platforms: ['playstation', 'steam', 'ea'] })} onOpen={vi.fn()} />)
 
-    expect(screen.getByRole('button')).toHaveTextContent('PlayStationSteamEA app')
+    expect(
+      within(screen.getByRole('button'))
+        .getAllByRole('img')
+        .map((badge) => badge.getAttribute('aria-label')),
+    ).toEqual(['PlayStation', 'Steam', 'EA app'])
   })
 
   it('marks a finished game as completed', () => {
@@ -46,13 +50,9 @@ describe('GameCard', () => {
   })
 
   it('says a game is still syncing before its achievements have been read', () => {
-    const { container } = render(
-      <GameCard game={game({ unlocked: 0, total: 0 })} onOpen={vi.fn()} />,
-    )
+    render(<GameCard game={game({ unlocked: 0, total: 0 })} onOpen={vi.fn()} />)
 
-    expect(container.querySelector('svg')).toBeNull()
-
-    expect(screen.getByText('Syncing…')).toBeInTheDocument()
+    expect(screen.getByText('Syncing…').querySelector('svg')).toBeNull()
     expect(screen.getByText('Achievements not read yet')).toBeInTheDocument()
     expect(screen.queryByText('Completed')).not.toBeInTheDocument()
   })

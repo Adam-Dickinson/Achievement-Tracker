@@ -47,6 +47,14 @@
   --color-platinum-dark: #7f8fc2;
   --color-on-platinum: #141a33;
 
+  --color-platform-steam: #66c0f4;
+  --color-platform-xbox: #5fd35a;
+  --color-platform-playstation: #4f8cff;
+  --color-platform-epic: #e4e4e7;
+  --color-platform-ubisoft: #5aa0ff;
+  --color-platform-ea: #ff6b6b;
+  --color-platform-emulator: #b79cff;
+
   --radius-control: 14px;
   --radius-card: 18px;
   --radius-panel: 26px;
@@ -66,6 +74,10 @@
     0 26px 50px -16px rgb(0 0 0 / 0.9),
     0 12px 44px -6px color-mix(in srgb, var(--rarity) 45%, transparent);
   --shadow-tile: 0 10px 22px -10px var(--rarity), inset 0 1px 0 rgb(255 255 255 / 0.35);
+  --shadow-spotlight:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 5px color-mix(in srgb, var(--rarity) 7%, transparent), 0 34px 60px -22px rgb(0 0 0 / 0.9),
+    0 20px 70px -10px color-mix(in srgb, var(--rarity) 40%, transparent);
 }
 
 @layer components {
@@ -102,6 +114,36 @@
     --rarity-light: var(--color-rarity-ultra-light);
     --rarity-dark: var(--color-rarity-ultra-dark);
     --rarity-on: var(--color-on-rarity-ultra);
+  }
+  [data-platform='steam'] {
+    --platform: var(--color-platform-steam);
+  }
+  [data-platform='xbox'] {
+    --platform: var(--color-platform-xbox);
+  }
+  [data-platform='playstation'] {
+    --platform: var(--color-platform-playstation);
+  }
+  [data-platform='epic'] {
+    --platform: var(--color-platform-epic);
+  }
+  [data-platform='ubisoft'] {
+    --platform: var(--color-platform-ubisoft);
+  }
+  [data-platform='ea'] {
+    --platform: var(--color-platform-ea);
+  }
+  [data-platform='retroachievements'] {
+    --platform: var(--color-platform-emulator);
+  }
+  [data-platform='rpcs3'] {
+    --platform: var(--color-platform-emulator);
+  }
+  [data-platform='xenia'] {
+    --platform: var(--color-platform-emulator);
+  }
+  [data-platform='local_file'] {
+    --platform: var(--color-platform-emulator);
   }
   [data-platinum] {
     --rarity: var(--color-platinum);

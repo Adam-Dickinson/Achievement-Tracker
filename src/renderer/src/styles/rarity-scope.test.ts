@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { PLATFORMS } from '@shared/platform'
 import { RARITY_LABEL, type Rarity } from '@shared/rarity'
 import css from './index.css?raw'
 
@@ -25,5 +26,14 @@ describe('the platinum scope in index.css', () => {
     expect(match, 'index.css has no [data-platinum] rule').not.toBeNull()
     for (const variable of VARIABLES) expect(match?.[1]).toContain(`${variable}:`)
     expect(match?.index).toBeGreaterThan(css.indexOf("[data-rarity='ultra_rare']"))
+  })
+})
+
+describe('the platform scope in index.css', () => {
+  it.each(PLATFORMS)('gives %s a colour', (platform) => {
+    const match = new RegExp(`\\[data-platform='${platform}'\\]\\s*\\{([^}]*)\\}`).exec(css)
+
+    expect(match, `index.css has no [data-platform='${platform}'] rule`).not.toBeNull()
+    expect(match?.[1]).toContain('--platform:')
   })
 })
