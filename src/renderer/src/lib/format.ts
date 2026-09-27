@@ -1,4 +1,6 @@
-const DAY_MS = 24 * 60 * 60_000
+const MINUTE_MS = 60_000
+const HOUR_MS = 60 * MINUTE_MS
+const DAY_MS = 24 * HOUR_MS
 
 export function formatPercent(percent: number): string {
   const scale = percent < 1 ? 100 : 10
@@ -14,6 +16,14 @@ export function formatUnlockDate(date: Date, now = new Date()): string {
   if (days === 0) return `Today, ${formatTime(date)}`
   if (days === 1) return `Yesterday, ${formatTime(date)}`
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+export function formatAgo(date: Date, now = new Date()): string {
+  const elapsed = now.getTime() - date.getTime()
+  if (elapsed < MINUTE_MS) return 'just now'
+  if (elapsed < HOUR_MS) return `${Math.floor(elapsed / MINUTE_MS)}m ago`
+  if (elapsed < DAY_MS) return `${Math.floor(elapsed / HOUR_MS)}h ago`
+  return `${Math.floor(elapsed / DAY_MS)}d ago`
 }
 
 export function formatShare(done: number, total: number): string {

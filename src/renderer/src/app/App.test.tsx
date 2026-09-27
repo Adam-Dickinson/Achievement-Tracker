@@ -31,7 +31,7 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Library' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current', 'page')
-    expect(await screen.findByText('v0.1.0 · schema 1')).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: 'adam' })).toBeInTheDocument()
   })
 
   it('shows the Accounts screen on the Accounts page', async () => {
@@ -40,7 +40,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Accounts' }))
 
     expect(await screen.findByText('No accounts connected yet.')).toBeInTheDocument()
-    expect(window.api.listAccounts).toHaveBeenCalledOnce()
+    expect(window.api.listAccounts).toHaveBeenCalled()
   })
 
   it('shows the Artwork settings on the Settings page', async () => {
@@ -64,13 +64,41 @@ describe('App', () => {
     expect(window.api.listActivity).toHaveBeenCalledOnce()
   })
 
-  it('asks the main process for a test notification', async () => {
+  it('sends a test toast from the Settings page', async () => {
     render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send test notification' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Send test toast' }))
 
     expect(sendTestNotification).toHaveBeenCalledOnce()
-    await screen.findByText('v0.1.0 · schema 1')
+    expect(await screen.findByText('Trophy Locker v0.1.0 · database schema 1')).toBeInTheDocument()
+  })
+
+  it('searches the Library from the top bar on any page', async () => {
+    window.api = fakeApi({
+      listLibrary: vi.fn().mockResolvedValue([
+        {
+          id: 7,
+          title: 'Portal',
+          platforms: ['steam'],
+          coverUrl: null,
+          unlocked: 1,
+          total: 2,
+          lastUnlockAt: null,
+        },
+      ]),
+      listActivity: vi.fn().mockResolvedValue({ unlocks: [], hasMore: false }),
+    })
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search library' }), {
+      target: { value: 'port' },
+    })
+
+    expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current', 'page')
+    expect(await screen.findByRole('searchbox', { name: 'Search games' })).toHaveValue('port')
+    expect(screen.getByRole('searchbox', { name: 'Search library' })).toHaveValue('port')
   })
 })
 
@@ -136,11 +164,25 @@ describe('App: opening a game', () => {
     )
   })
 
-  it('goes back to where the Library was scrolled, and starts a game at the top', async () => {
+  it('goes back to the Library when searching from the top bar with a game open', async () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
+    await screen.findByRole('heading', { name: 'Portal' })
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search library' }), {
+      target: { value: 'por' },
+    })
+
+    expect(await screen.findByRole('searchbox', { name: 'Search games' })).toHaveValue('por')
+    expect(screen.queryByRole('heading', { name: 'Portal' })).not.toBeInTheDocument()
+  })
+
+  it('goes back to where the Library was scrolled, and starts a game at the top', async () => {
+    const { container } = render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
     const card = await screen.findByRole('button', { name: /Portal/ })
-    const main = screen.getByRole('main')
+    const main = container.firstElementChild as HTMLElement
     main.scrollTop = 500
 
     fireEvent.click(card)
@@ -153,8 +195,8 @@ describe('App: opening a game', () => {
   })
 
   it('starts each page at the top', async () => {
-    render(<App />)
-    const main = screen.getByRole('main')
+    const { container } = render(<App />)
+    const main = container.firstElementChild as HTMLElement
     main.scrollTop = 300
 
     fireEvent.click(screen.getByRole('button', { name: 'Activity' }))

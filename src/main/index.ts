@@ -34,6 +34,7 @@ import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
 import { awardPlatinums } from './store/platinum'
+import { appInfo } from './app-info'
 import { ArtworkService } from './artwork/artwork-service'
 import {
   getDashboardStats,
@@ -44,7 +45,7 @@ import {
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
-import { createTray } from './tray'
+import { type AppTray, createTray } from './tray'
 import { UbisoftSignIn } from './ubisoft-sign-in'
 import { openUbisoftSignInWindow } from './ubisoft-sign-in-window'
 import { describeUnlockTiming } from './unlock-timing'
@@ -207,9 +208,20 @@ async function start(): Promise<void> {
     steamSignIn.cancel()
   })
 
+  let tray: AppTray | null = null
+  const setNotificationsPaused = (paused: boolean): void => {
+    notifications.paused = paused
+    tray?.refresh()
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IPC.notificationsPausedChanged, paused)
+    }
+  }
+
   registerIpcHandlers({
-    getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),
+    getAppInfo: () => appInfo(app.getVersion(), schemaVersion),
     sendTestNotification,
+    getNotificationsPaused: () => notifications.paused,
+    setNotificationsPaused,
     listAccounts: () => listAccountSummaries(db, (id) => scheduler.isSyncing(id)),
     disconnectAccount: (input) => {
       disconnectAccount({ db, secrets, scheduler }, input)
@@ -278,16 +290,14 @@ async function start(): Promise<void> {
     listActivity: (limit) => listActivity(db, limit),
   })
 
-  createTray({
+  tray = createTray({
     open: showMainWindow,
     syncNow: () => scheduler.syncAllNow(),
     sendTestNotification: () => void sendTestNotification(),
     quit: () => app.quit(),
     pauseNotifications: {
       get: () => notifications.paused,
-      set: (on) => {
-        notifications.paused = on
-      },
+      set: setNotificationsPaused,
     },
     startWithWindows: startWithWindows(app),
   })

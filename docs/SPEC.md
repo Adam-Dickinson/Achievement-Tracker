@@ -269,8 +269,11 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 **Implemented**
 | API (`window.api`) | Channel | Description |
 |---|---|---|
-| `getAppInfo()` | `app:get-info` | App version and database schema version |
-| `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers) |
+| `getAppInfo()` | `app:get-info` | App version, database schema version and the Windows user's name (`userName`, empty if the system can't say), whose initial the nav's avatar shows |
+| `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers). Shown even while notifications are paused |
+| `getNotificationsPaused()` | `notifications:get-paused` | Whether notifications are paused (the tray's Pause notifications, the nav's bell). Not kept across restarts |
+| `setNotificationsPaused(paused)` | `notifications:set-paused` | Pause or resume notifications; anything but a boolean is ignored. Updates the tray's checkbox and fires `onNotificationsPausedChanged` |
+| `onNotificationsPausedChanged(listener)` | `notifications:paused-changed` (main → main window) | Called with the new value whenever notifications are paused or resumed, from the app or the tray. Returns an unsubscribe function |
 | `listLibrary()` | `library:list` | Every game as a `LibraryGame`, linked platforms counted once: its id is the canonical **game** id; `platforms` (best first), the best entry's unlocked/total and cover (else any entry's), the shortest entry title, the latest unlock across entries; most recently unlocked first |
 | `getGame(id)` | `library:get-game` | One game (by game id) with its `entries`, best first: each platform entry's id, platform, `tag` (set when two entries share a platform, e.g. `PS4`), counts, achievements (each with `platinum`) and `appPlatinum` (`{ earnedAt }` when the entry was awarded one and has no platinum of its own, else `null`) (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
 | `mergeGames({ intoGameId, gameId })` | `library:merge-games` | Moves every entry of `gameId` into `intoGameId` (both then `manual`) and moves its cleaned titles too, so later entries with those titles join. Ids are positive integers and must differ, otherwise ignored. Fires `onDataChanged` |

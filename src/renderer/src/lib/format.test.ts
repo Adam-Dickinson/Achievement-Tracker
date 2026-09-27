@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatAgo,
   formatDayHeading,
   formatDayLabel,
   formatPercent,
@@ -108,5 +109,27 @@ describe('formatDayLabel', () => {
     expect(formatDayLabel(new Date(2026, 8, 19, 10, 0), now)).toBe(
       new Date(2026, 8, 19).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
     )
+  })
+})
+
+describe('formatAgo', () => {
+  const now = new Date(2026, 8, 27, 12, 0, 0)
+  const before = (ms: number) => new Date(now.getTime() - ms)
+
+  it.each([
+    [0, 'just now'],
+    [59_000, 'just now'],
+    [60_000, '1m ago'],
+    [59 * 60_000, '59m ago'],
+    [60 * 60_000, '1h ago'],
+    [23 * 60 * 60_000 + 59 * 60_000, '23h ago'],
+    [24 * 60 * 60_000, '1d ago'],
+    [3 * 24 * 60 * 60_000, '3d ago'],
+  ])('says %i ms ago is "%s"', (elapsed, label) => {
+    expect(formatAgo(before(elapsed), now)).toBe(label)
+  })
+
+  it('says "just now" for a time a little ahead of the clock', () => {
+    expect(formatAgo(before(-5_000), now)).toBe('just now')
   })
 })

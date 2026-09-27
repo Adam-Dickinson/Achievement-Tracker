@@ -258,7 +258,7 @@ In development the default menu is kept: press **Ctrl+Shift+I** (or Alt → View
 ## 9. Your first 30 minutes
 
 1. `npm install` (downloads Electron the first time, ~100 MB), then `npm run dev`. The window opens and a trophy icon appears in the tray.
-2. Click **Send test notification** and watch the toast slide in at the bottom-right. Click it repeatedly to cycle the four rarity tiers. Try clicking *through* it: it ignores the mouse.
+2. In Settings, click **Send test toast** and watch the toast slide in at the bottom-right. Click it repeatedly to cycle the four rarity tiers. Try clicking *through* it: it ignores the mouse.
 3. **Change something and watch hot reload.** In `app/navigation.ts`, change the description of Dashboard and save. The window updates without a restart.
 4. **Add a nav item.** Add `'reports'` to `PageId` and an entry to `NAV_ITEMS` (pick an icon from lucide). The compiler and the UI both pick it up.
 5. **Break something on purpose.** Add `'gog'` to `PLATFORMS` in `shared/platform.ts` and run `npm run typecheck`: it lists everything that must be updated. Undo with `git restore .`.
