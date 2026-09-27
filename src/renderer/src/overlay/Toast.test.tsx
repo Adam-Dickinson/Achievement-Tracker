@@ -18,6 +18,7 @@ describe('Toast', () => {
         game="Elden Ring"
         platform="Steam"
         percent={1.4}
+        platinum={false}
       />,
     )
 
@@ -39,6 +40,7 @@ describe('Toast', () => {
           game="Forza Horizon 5"
           platform="Xbox"
           percent={18.5}
+          platinum={false}
         />,
       )
       expect(screen.getByText(RARITY_LABEL[rarity])).toBeInTheDocument()
@@ -56,6 +58,7 @@ describe('Toast', () => {
         game="God of War"
         platform="PlayStation"
         percent={2.8}
+        platinum={false}
       />,
     )
 
@@ -73,6 +76,7 @@ describe('Toast', () => {
         game="Forza Horizon 5"
         platform="Xbox"
         percent={18.5}
+        platinum={false}
       />,
     )
 
@@ -89,6 +93,7 @@ describe('Toast', () => {
         game="God of War"
         platform="PlayStation"
         percent={2.8}
+        platinum={false}
       />,
     )
 
@@ -106,6 +111,7 @@ describe('Toast', () => {
         game="Hades"
         platform="Steam"
         percent={null}
+        platinum={false}
       />,
     )
 

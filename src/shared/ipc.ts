@@ -50,6 +50,7 @@ export interface ToastPayload {
   readonly game: string
   readonly platform: string
   readonly percent: number | null
+  readonly platinum: boolean
 }
 
 export interface VisibleToast extends ToastPayload {
