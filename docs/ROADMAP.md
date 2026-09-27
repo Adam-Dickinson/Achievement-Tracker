@@ -58,7 +58,7 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 
 ## M5: Polish and notification depth
 
-- [ ] **Match the Afterglow designs** (the canvas and `docs/design/mockups/`; the owner wants the app to look like them). The style is in place; these layouts are not:
+- [x] **Match the Afterglow designs** (the canvas and `docs/design/mockups/`; the owner wants the app to look like them). The style is in place; these layouts are not:
   - [x] Whole app: the aurora background behind every page, and the island nav in frosted glass with its search box (Ctrl+K; typing opens the Library filtered), sync status ("Synced 2m ago", click to sync everything; "Check accounts" when one is signed out), notifications bell (pauses notifications, in step with the tray) and avatar (the Windows user's initial). The version moved to Settings, beside "Send test toast". Below 1280px wide the page pills show only their icons. Checked in the built app on a copy of the owner's data. The design's "Overview" label stays "Dashboard"
   - [x] Dashboard: rebuilt to the design (hero with the unlocked count, today / this week / streak chips, "By rarity" counts and fanned "Nearly there" covers; the rarest unlock as a spotlight card; "Recent unlocks" beside "Platforms" and a "This week" chart; platform logo badges). Exactly as designed at the owner's request, so the Completed games and Platinums tiles and the list of five rarest unlocks are gone. Checked in the built app on a copy of the owner's data
   - [x] Dashboard counts each game once: the totals and "By rarity" use a game's best copy only, and the day chips count an achievement unlocked on several copies once (the owner plays one copy of a game, and Ubisoft Connect mirrors Steam unlocks)
