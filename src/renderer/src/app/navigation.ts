@@ -37,6 +37,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Accounts',
     description: 'Connect the platforms you play on.',
     icon: Plug,
+    ownHeading: true,
   },
   {
     id: 'settings',

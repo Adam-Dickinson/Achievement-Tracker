@@ -7,7 +7,10 @@ import type { AccountStatus } from '@shared/models'
 import { fakeApi } from '@/test/fake-api'
 import { AccountCard } from './AccountCard'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.useRealTimers()
+})
 
 function account(overrides: Partial<AccountSummary> = {}): AccountSummary {
   return {
@@ -17,51 +20,57 @@ function account(overrides: Partial<AccountSummary> = {}): AccountSummary {
     status: 'connected',
     gameCount: 12,
     checkedGames: 12,
+    unlockedCount: 340,
     lastSyncAt: null,
     syncing: false,
     ...overrides,
   }
 }
 
+const stat = (label: string) => screen.getByText(label, { selector: 'dt' }).nextElementSibling
+
 describe('AccountCard', () => {
-  it('shows the platform, the display name, the status and the game count', () => {
+  it('names the platform and the account, with its status and whether the source is official', () => {
     render(<AccountCard account={account()} />)
 
-    expect(screen.getByText('Steam')).toBeInTheDocument()
-    expect(screen.getByText('Test Player')).toBeInTheDocument()
-    expect(screen.getByText('Connected')).toBeInTheDocument()
-    expect(screen.getByText('12 games')).toBeInTheDocument()
+    const card = screen.getByRole('region', { name: 'Steam: Test Player' })
+    expect(within(card).getByRole('heading', { name: 'Steam' })).toBeInTheDocument()
+    expect(card).toHaveTextContent('Test Player')
+    expect(card).toHaveTextContent('Connected')
+    expect(card).toHaveTextContent('Official API')
   })
 
-  it('uses the platform name rather than its id', () => {
-    render(<AccountCard account={account({ platform: 'retroachievements' })} />)
+  it('labels the unofficial sources', () => {
+    render(<AccountCard account={account({ platform: 'ubisoft' })} />)
 
-    expect(screen.getByText('RetroAchievements')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ubisoft' })).toBeInTheDocument()
+    expect(screen.getByText('Unofficial · opt-in')).toBeInTheDocument()
+  })
+
+  it('shows the games, unlocks and when it last synced', () => {
+    vi.useFakeTimers({ now: new Date('2026-09-27T12:00:00Z'), toFake: ['Date'] })
+    render(
+      <AccountCard
+        account={account({ gameCount: 1234, lastSyncAt: new Date('2026-09-27T11:58:00Z') })}
+      />,
+    )
+
+    expect(stat('Games')?.textContent).toBe((1234).toLocaleString())
+    expect(stat('Unlocked')).toHaveTextContent('340')
+    expect(stat('Last sync')).toHaveTextContent('2m ago')
+  })
+
+  it('says it has not synced yet', () => {
+    render(<AccountCard account={account()} />)
+
+    expect(stat('Last sync')).toHaveTextContent('Not yet')
   })
 
   it.each([
-    [0, '0 games'],
-    [1, '1 game'],
-    [2, '2 games'],
-  ])('says %i game(s) correctly', (gameCount, text) => {
-    render(<AccountCard account={account({ gameCount })} />)
-
-    expect(screen.getByText(text)).toBeInTheDocument()
-  })
-
-  it('groups a large game count', () => {
-    render(<AccountCard account={account({ gameCount: 1204 })} />)
-
-    const expected = `${(1204).toLocaleString()} games`.replace(/\s/g, ' ')
-    expect(screen.getByText(expected)).toBeInTheDocument()
-  })
-
-  it.each<[AccountStatus, string]>([
-    ['connected', 'Connected'],
-    ['needs_reauth', 'Needs reconnecting'],
+    ['needs_reauth', 'Needs signing in'],
     ['error', 'Error'],
     ['disabled', 'Disconnected'],
-  ])('labels the %s status', (status, label) => {
+  ] as [AccountStatus, string][])('labels the %s status', (status, label) => {
     render(<AccountCard account={account({ status })} />)
 
     expect(screen.getByText(label)).toBeInTheDocument()
@@ -70,40 +79,42 @@ describe('AccountCard', () => {
 
 describe('AccountCard sync status', () => {
   it('shows how many games the first sync has read, with a progress bar', () => {
-    render(<AccountCard account={account({ syncing: true, checkedGames: 3, gameCount: 12 })} />)
+    render(<AccountCard account={account({ syncing: true, gameCount: 386, checkedGames: 120 })} />)
 
-    expect(screen.getByText('Syncing… 3 of 12 games read')).toBeInTheDocument()
+    expect(screen.getByText('Syncing… 120 of 386 games read')).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Steam sync progress' })).toHaveAttribute(
       'aria-valuenow',
-      '25',
+      '31',
     )
+    expect(stat('Last sync')).toHaveTextContent('Syncing…')
   })
 
   it('just says it is syncing once every game has been read', () => {
     render(<AccountCard account={account({ syncing: true })} />)
 
-    expect(screen.getByText('Syncing…', { selector: 'p' })).toBeInTheDocument()
+    expect(stat('Last sync')).toHaveTextContent('Syncing…')
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
   })
 
-  it('says when it last synced, or that it has not yet', () => {
-    const lastSyncAt = new Date(2026, 8, 20, 13, 42)
-    const { rerender } = render(<AccountCard account={account({ lastSyncAt })} />)
-    expect(
-      screen.getByText(
-        `Last synced: ${lastSyncAt.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`,
-      ),
-    ).toBeInTheDocument()
+  it('tells a signed-out account to reconnect, and offers Reconnect in place of Resync', () => {
+    const onReconnect = vi.fn()
+    render(<AccountCard account={account({ status: 'needs_reauth' })} onReconnect={onReconnect} />)
 
-    rerender(<AccountCard account={account()} />)
-    expect(screen.getByText('Not synced yet')).toBeInTheDocument()
+    expect(screen.getByText(/Steam signed this account out. Reconnect/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Resync' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reconnect' }))
+
+    expect(onReconnect).toHaveBeenCalledOnce()
   })
 
-  it('tells a signed-out account how to reconnect, and offers no sync', () => {
-    render(<AccountCard account={account({ status: 'needs_reauth' })} />)
+  it('offers to connect a disconnected account again', () => {
+    const onReconnect = vi.fn()
+    render(<AccountCard account={account({ status: 'disabled' })} onReconnect={onReconnect} />)
 
-    expect(screen.getByText(/Connect it again with the Steam card above/)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Sync now' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Connect again' }))
+
+    expect(onReconnect).toHaveBeenCalledOnce()
   })
 })
 
@@ -111,23 +122,20 @@ describe('AccountCard actions', () => {
   const onChanged = vi.fn()
 
   beforeEach(() => {
+    onChanged.mockReset()
     window.api = fakeApi()
-  })
-
-  afterEach(() => {
-    vi.resetAllMocks()
   })
 
   it('syncs the account on request, then asks for a reload', async () => {
     render(<AccountCard account={account()} onChanged={onChanged} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sync now' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Resync' }))
 
     expect(window.api.syncNow).toHaveBeenCalledWith({ kind: 'account', accountId: 1 })
     await vi.waitFor(() => expect(onChanged).toHaveBeenCalledOnce())
   })
 
-  it('disables Sync now while the account is syncing', () => {
+  it('disables Resync while the account is syncing', () => {
     render(<AccountCard account={account({ syncing: true })} />)
 
     expect(screen.getByRole('button', { name: 'Syncing…' })).toBeDisabled()
@@ -162,7 +170,7 @@ describe('AccountCard actions', () => {
     render(<AccountCard account={account({ status: 'disabled' })} />)
 
     expect(screen.getByText(/Not syncing. Its games stay in your library/)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Sync now' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Resync' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Remove…' }))
 
     const confirm = screen.getByRole('group', { name: 'Disconnect Test Player' })

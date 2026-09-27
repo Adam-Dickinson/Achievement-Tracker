@@ -10,6 +10,7 @@ function account(overrides: Partial<AccountSummary> = {}): AccountSummary {
     status: 'connected',
     gameCount: 10,
     checkedGames: 10,
+    unlockedCount: 0,
     lastSyncAt: new Date('2026-09-27T10:00:00Z'),
     syncing: false,
     ...overrides,

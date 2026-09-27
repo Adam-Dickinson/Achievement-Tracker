@@ -27,6 +27,7 @@ const ACCOUNT: AccountSummary = {
   status: 'connected',
   gameCount: 0,
   checkedGames: 0,
+  unlockedCount: 0,
   lastSyncAt: null,
   syncing: false,
 }
