@@ -47,6 +47,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | F-32 | Cross-platform game linking (auto + manual). Built: same cleaned title links automatically; merge and unlink on Game detail ([design](superpowers/specs/2026-09-26-game-linking-design.md)) | P1 |
 | F-33 | Global achievement rarity display where the platform provides it | P1 |
 | F-34 | JSON/CSV export | P2 |
+| F-35 | A platinum for every game: a game's own "unlock everything" achievement counts as its platinum, and a game without one earns an app-awarded Platinum at 100%, shown in Game detail, Activity, the Dashboard and toasts ([design](superpowers/specs/2026-09-27-platinum-design.md)) | P2 |
 
 ### Desktop integration
 | ID | Requirement | Pri |
@@ -165,6 +166,12 @@ CREATE TABLE sync_state (
 
 CREATE TABLE setting (key TEXT PRIMARY KEY, value TEXT NOT NULL);  -- JSON values
 
+CREATE TABLE platinum (                  -- app-awarded Platinums (migration 0006)
+  platform_game_id INTEGER PRIMARY KEY REFERENCES platform_game(id),
+  earned_at        TEXT,                 -- the entry's latest unlock (null if none is dated)
+  detected_at      TEXT NOT NULL         -- when the app awarded it
+);
+
 CREATE INDEX idx_unlock_detected ON unlock(detected_at DESC);
 CREATE INDEX idx_pgame_game ON platform_game(game_id);
 ```
@@ -246,6 +253,7 @@ Unlocks are keyed by `(achievement_id)` (unique), so retries and duplicate watch
 On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attempt counts live in memory only, so a restart starts them again.
 
 - **Watches (M2).** `start()` and `startAccount()` also start the provider's optional `watch()` for each connected account; `stop()` and an expired login stop it. A watch only reports "this game may have changed"; `syncGameNow(accountId, gameId)` then syncs that game at once, outside the loop, with the same pass, outcomes and baseline rule. It skips a game that is backing off after an error. A game not in the library yet (bought or first launched since the last look) triggers one library look first, unless the library is backing off; if the look doesn't list it either, it is not looked for again until the next regular library look. Reports that arrive while that game is syncing lead to exactly one more sync. Steam's watch reports a changed stats file and, every 30 s, the game Steam is running (F-12; PROVIDERS.md, Steam).
+- **Platinums (F-35).** `isPlatinumAchievement` (`store/platinum.ts`) says whether an achievement is its game's platinum: the platform's `platinum` tier, or, with no tier, a description of at most 90 characters saying "all"/"every" then up to four filler or game-title words then "achievements"/"trophies" (the full rule is in the design). It is applied wherever achievements are read, so nothing about it is stored. After storing a pass's unlocks, `awardPlatinum` adds a `platinum` row for an entry whose achievements are all unlocked and none of which is a platinum; the pass then appends a stand-in `UnlockEvent` (`externalId` `trophy-locker:platinum`, name "Platinum", tier `platinum`) only if it announced at least one unlock, so a first sync stays silent. At startup `awardPlatinums` awards every qualifying entry silently. The row stays if DLC later adds achievements; disconnecting and removing an account's games deletes its rows.
 - **Unlock timing.** Each `UnlockEvent` carries the platform's `unlockedAt` next to `detectedAt`, and `main/index.ts` logs both for every unlock (`unlock-timing.ts`).
 
 - **Manual syncs (F-14).** `syncAccountNow(accountId)` runs a round at once in which the library is read and every game is synced, ignoring the idle interval and any backoff; asked during a round, it runs exactly one more round straight after. `syncAllNow()` does that for every connected account, and `syncGameNow(accountId, gameId, true)` syncs one game past its backoff. Afterwards games go back to their normal pace.
@@ -264,15 +272,15 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `getAppInfo()` | `app:get-info` | App version and database schema version |
 | `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers) |
 | `listLibrary()` | `library:list` | Every game as a `LibraryGame`, linked platforms counted once: its id is the canonical **game** id; `platforms` (best first), the best entry's unlocked/total and cover (else any entry's), the shortest entry title, the latest unlock across entries; most recently unlocked first |
-| `getGame(id)` | `library:get-game` | One game (by game id) with its `entries`, best first: each platform entry's id, platform, `tag` (set when two entries share a platform, e.g. `PS4`), counts and achievements (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
+| `getGame(id)` | `library:get-game` | One game (by game id) with its `entries`, best first: each platform entry's id, platform, `tag` (set when two entries share a platform, e.g. `PS4`), counts, achievements (each with `platinum`) and `appPlatinum` (`{ earnedAt }` when the entry was awarded one and has no platinum of its own, else `null`) (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
 | `mergeGames({ intoGameId, gameId })` | `library:merge-games` | Moves every entry of `gameId` into `intoGameId` (both then `manual`) and moves its cleaned titles too, so later entries with those titles join. Ids are positive integers and must differ, otherwise ignored. Fires `onDataChanged` |
 | `unlinkGame({ platformGameId })` | `library:unlink-game` | Moves one entry to a game of its own (`manual`, no cleaned titles, so nothing joins it automatically). Ignored for a game's only entry or a bad id. Fires `onDataChanged` |
 | `getArtworkSettings()` | `artwork:get-settings` | `ArtworkSettings`: whether a SteamGridDB key is saved, how many games have no artwork, and the last run's problem (`key_refused`, `unreachable` or `null`). Never the key |
 | `saveSteamGridDbKey({ key })` | `artwork:save-steamgriddb-key` | Checks the key with SteamGridDB (one search), saves it in the `SecretStore` and looks for missing artwork (ADR-0013). The key is trimmed and must be 16-64 letters and digits, else `invalid_input`. Answers `ArtworkKeyResult`: `{ ok: true }` or `{ ok: false, reason: invalid_input | key_rejected | network | other, message }` |
 | `removeSteamGridDbKey()` | `artwork:remove-steamgriddb-key` | Deletes the key; found artwork stays |
 | `findMissingArtwork()` | `artwork:find-missing` | Looks up every game with no artwork now (one run at a time) and answers `ArtworkRun`: `{ found, checked }` |
-| `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, per-platform progress (games, unlocked and total for each platform with games, most unlocked first), "Nearly there", recent unlocks, and the five rarest unlocks (lowest global percentage first; achievements with no rarity left out; the date may be `null`) |
-| `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated unlocks across every platform (each a `RecentUnlock` with its description, its game id and its platform entry id), and `hasMore`. The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
+| `getDashboard()` | `dashboard:get` | `DashboardStats`: totals, completed games, unlocks this week, `platinums` (platform entries with an unlocked own platinum plus those with an app-awarded one), per-platform progress (games, unlocked and total for each platform with games, most unlocked first), "Nearly there", recent unlocks, and the five rarest unlocks (lowest global percentage first; achievements with no rarity left out; the date may be `null`) |
+| `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated items across every platform, and `hasMore`. An item is a `RecentUnlock` (`kind: 'achievement'`, with its description, `platinum`, its game id and its platform entry id) or a `RecentPlatinum` (`kind: 'platinum'`, a dated app-awarded Platinum, placed just above the unlock that earned it). The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
 | `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
 | `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
 | `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games, how many of them have been read (`checkedGames`), the last successful sync (`lastSyncAt`) and whether it is syncing now (`syncing`). Never the key |

@@ -262,6 +262,7 @@ export function deleteAccountData(db: DatabaseSync, accountId: number): void {
   try {
     db.prepare(`DELETE FROM unlock WHERE achievement_id IN (${achievements})`).run(accountId)
     db.prepare(`DELETE FROM achievement WHERE platform_game_id IN (${games})`).run(accountId)
+    db.prepare(`DELETE FROM platinum WHERE platform_game_id IN (${games})`).run(accountId)
     db.prepare('DELETE FROM platform_game WHERE account_id = ?').run(accountId)
     db.prepare('DELETE FROM sync_state WHERE account_id = ?').run(accountId)
     db.prepare('DELETE FROM account WHERE id = ?').run(accountId)

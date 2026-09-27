@@ -42,6 +42,11 @@
   --color-on-rarity-rare: #ffffff;
   --color-on-rarity-ultra: #3a1c00;
 
+  --color-platinum: #d9e2ff;
+  --color-platinum-light: #f4f6ff;
+  --color-platinum-dark: #7f8fc2;
+  --color-on-platinum: #141a33;
+
   --radius-control: 14px;
   --radius-card: 18px;
   --radius-panel: 26px;
@@ -51,6 +56,7 @@
     0 10px 22px -10px rgb(0 0 0 / 0.55);
   --shadow-glow-primary: 0 12px 28px -10px rgb(196 245 66 / 0.7);
   --shadow-chip-ultra: 0 0 18px -4px color-mix(in srgb, var(--color-rarity-ultra) 55%, transparent);
+  --shadow-chip-platinum: 0 0 18px -4px color-mix(in srgb, var(--color-platinum) 60%, transparent);
 }
 
 @theme inline {
@@ -96,6 +102,12 @@
     --rarity-light: var(--color-rarity-ultra-light);
     --rarity-dark: var(--color-rarity-ultra-dark);
     --rarity-on: var(--color-on-rarity-ultra);
+  }
+  [data-platinum] {
+    --rarity: var(--color-platinum);
+    --rarity-light: var(--color-platinum-light);
+    --rarity-dark: var(--color-platinum-dark);
+    --rarity-on: var(--color-on-platinum);
   }
 
   html,

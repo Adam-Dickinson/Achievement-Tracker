@@ -1,4 +1,6 @@
+import { Crown } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
+import { PlatinumChip } from '@/components/PlatinumChip'
 import { RarityChip } from '@/components/RarityChip'
 import { RarityGem } from '@/components/RarityGem'
 import { TrophyIcon } from '@/components/TrophyIcon'
@@ -22,13 +24,15 @@ export function Toast({
   game,
   platform,
   percent,
+  platinum,
 }: ToastProps) {
   const reduceMotion = useReducedMotion()
-  const isUltra = rarity === 'ultra_rare'
+  const isUltra = rarity === 'ultra_rare' || platinum
 
   return (
     <motion.div
       data-rarity={rarity}
+      data-platinum={platinum ? '' : undefined}
       role="status"
       aria-live="polite"
       layout="position"
@@ -47,7 +51,11 @@ export function Toast({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-widest text-(--rarity) uppercase">
-          <RarityGem rarity={rarity} className="size-3" />
+          {platinum ? (
+            <Crown aria-hidden="true" className="size-3" />
+          ) : (
+            <RarityGem rarity={rarity} className="size-3" />
+          )}
           {heading}
         </div>
         <div className="font-display truncate text-lg leading-6 font-bold">{title}</div>
@@ -65,7 +73,7 @@ export function Toast({
             {percent}%
           </span>
         )}
-        <RarityChip rarity={rarity} />
+        {platinum ? <PlatinumChip /> : <RarityChip rarity={rarity} />}
       </div>
 
       {isUltra && !reduceMotion && (

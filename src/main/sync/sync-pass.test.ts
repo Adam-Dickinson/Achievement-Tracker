@@ -9,6 +9,7 @@ import type {
 } from '@shared/models'
 import type { AchievementProvider } from '@shared/provider'
 import { applyMigrations } from '../store/migrate'
+import { APP_PLATINUM_ID } from '../store/platinum'
 import { getAccount } from '../store/sync-store'
 import { runSyncPass } from './sync-pass'
 
@@ -119,13 +120,134 @@ describe('runSyncPass', () => {
       CREDENTIALS,
     )
 
-    expect(events).toHaveLength(1)
+    expect(events.map((event) => event.achievement.externalId)).toEqual(['a2', APP_PLATINUM_ID])
     expect(events[0]).toMatchObject({
       platform: 'steam',
       gameTitle: 'Hades',
       achievement: { externalId: 'a2', name: 'Achievement a2' },
     })
     expect(events[0]?.detectedAt).toBeInstanceOf(Date)
+  })
+
+  describe('app-awarded Platinum', () => {
+    const at = (iso: string): RemoteUnlock => ({
+      achievementExternalId: iso.slice(0, 2),
+      unlockedAt: new Date(`2026-09-${iso.slice(3)}T10:00:00.000Z`),
+      progress: null,
+    })
+    const achievements = [achievement('a1'), achievement('a2')]
+
+    async function completeAfterBaseline(db: DatabaseSync) {
+      const account = getAccount(db, 1)
+      await runSyncPass(
+        db,
+        account,
+        'g1',
+        returning({ achievements, unlocks: [at('a1-20')] }),
+        CREDENTIALS,
+      )
+      return runSyncPass(
+        db,
+        account,
+        'g1',
+        returning({ achievements, unlocks: [at('a1-20'), at('a2-26')] }),
+        CREDENTIALS,
+      )
+    }
+
+    it('is awarded and announced after the unlock that completes the game', async () => {
+      const db = seedDb()
+
+      const events = await completeAfterBaseline(db)
+
+      expect(events[1]).toMatchObject({
+        platform: 'steam',
+        gameTitle: 'Hades',
+        unlockedAt: new Date('2026-09-26T10:00:00.000Z'),
+        achievement: {
+          externalId: APP_PLATINUM_ID,
+          name: 'Platinum',
+          description: 'Every achievement in Hades',
+          tier: 'platinum',
+        },
+      })
+      expect(events[1]?.detectedAt).toEqual(events[0]?.detectedAt)
+      expect(count(db, 'platinum')).toBe(1)
+    })
+
+    it('is awarded silently on a first sync of a complete game', async () => {
+      const db = seedDb()
+      const provider = returning({ achievements, unlocks: [at('a1-20'), at('a2-26')] })
+
+      expect(await runSyncPass(db, getAccount(db, 1), 'g1', provider, CREDENTIALS)).toEqual([])
+      expect(count(db, 'platinum')).toBe(1)
+    })
+
+    it('is awarded silently when the game completes without a new unlock', async () => {
+      const db = seedDb()
+      const account = getAccount(db, 1)
+      await runSyncPass(
+        db,
+        account,
+        'g1',
+        returning({ achievements, unlocks: [at('a1-20')] }),
+        CREDENTIALS,
+      )
+      db.exec("DELETE FROM achievement WHERE external_id = 'a2'")
+
+      const events = await runSyncPass(
+        db,
+        account,
+        'g1',
+        returning({ achievements: [achievement('a1')], unlocks: [at('a1-20')] }),
+        CREDENTIALS,
+      )
+
+      expect(events).toEqual([])
+      expect(count(db, 'platinum')).toBe(1)
+    })
+
+    it('is never awarded to a game with its own platinum', async () => {
+      const db = seedDb()
+      const account = getAccount(db, 1)
+      const own = [
+        achievement('a1'),
+        { ...achievement('a2'), description: 'Unlock all other achievements' },
+      ]
+      await runSyncPass(
+        db,
+        account,
+        'g1',
+        returning({ achievements: own, unlocks: [at('a1-20')] }),
+        CREDENTIALS,
+      )
+
+      const events = await runSyncPass(
+        db,
+        account,
+        'g1',
+        returning({ achievements: own, unlocks: [at('a1-20'), at('a2-26')] }),
+        CREDENTIALS,
+      )
+
+      expect(events.map((event) => event.achievement.externalId)).toEqual(['a2'])
+      expect(count(db, 'platinum')).toBe(0)
+    })
+
+    it('is announced only once', async () => {
+      const db = seedDb()
+      await completeAfterBaseline(db)
+
+      const again = await runSyncPass(
+        db,
+        getAccount(db, 1),
+        'g1',
+        returning({ achievements, unlocks: [at('a1-20'), at('a2-26')] }),
+        CREDENTIALS,
+      )
+
+      expect(again).toEqual([])
+    })
   })
 
   describe('first sync of a game found after the account was connected (baseline cutoff)', () => {
@@ -139,7 +261,12 @@ describe('runSyncPass', () => {
       const db = seedDb()
       db.exec(`UPDATE platform_game SET baseline_cutoff = '${CUTOFF}' WHERE id = 1`)
       const provider = returning({
-        achievements: [achievement('old'), achievement('new'), achievement('undated')],
+        achievements: [
+          achievement('old'),
+          achievement('new'),
+          achievement('undated'),
+          achievement('locked'),
+        ],
         unlocks: [
           datedUnlock('old', '2026-09-23T09:59:59.000Z'),
           datedUnlock('new', '2026-09-23T10:00:01.000Z'),

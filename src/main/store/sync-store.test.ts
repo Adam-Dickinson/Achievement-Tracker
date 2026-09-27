@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { applyMigrations } from './migrate'
+import { awardPlatinums } from './platinum'
 import type { RemoteGame } from '@shared/models'
 import {
   addPlatformGames,
@@ -757,13 +758,23 @@ describe('getAccountStatus', () => {
 })
 
 describe('deleteAccountData', () => {
-  it('removes the account with its games, achievements, unlocks and sync state', () => {
+  it('removes the account with its games, achievements, unlocks, platinums and sync state', () => {
     const db = freshDb()
     const account = seedWithUnlock(db, 'steam', 'Portal')
 
+    awardPlatinums(db)
+    expect(count(db, 'platinum')).toBe(1)
+
     deleteAccountData(db, account.id)
 
-    for (const table of ['account', 'platform_game', 'achievement', 'unlock', 'sync_state']) {
+    for (const table of [
+      'account',
+      'platform_game',
+      'achievement',
+      'unlock',
+      'sync_state',
+      'platinum',
+    ]) {
       expect(count(db, table)).toBe(0)
     }
     expect(count(db, 'game')).toBe(0)

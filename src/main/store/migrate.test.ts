@@ -147,6 +147,30 @@ describe('migrations', () => {
     ])
   })
 
+  it('add an empty platinum table, keeping existing games', () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 5))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 's', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'A', 'a');
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title)
+      VALUES (1, 1, 1, 'steam', '400', 'A');
+    `)
+
+    applyMigrations(db)
+
+    expect(tableNames(db)).toContain('platinum')
+    expect(db.prepare('SELECT COUNT(*) AS n FROM platinum').get()).toEqual({ n: 0 })
+    expect(db.prepare('SELECT COUNT(*) AS n FROM platform_game').get()).toEqual({ n: 1 })
+    db.exec(`INSERT INTO platinum (platform_game_id, earned_at, detected_at) VALUES (1, NULL, 'x')`)
+    expect(() =>
+      db.exec(
+        `INSERT INTO platinum (platform_game_id, earned_at, detected_at) VALUES (9, NULL, 'x')`,
+      ),
+    ).toThrow()
+  })
+
   it('are a no-op when applied twice', () => {
     const db = new DatabaseSync(':memory:')
     const first = applyMigrations(db)

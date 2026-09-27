@@ -18,8 +18,13 @@ export interface GameAchievement {
   readonly iconUrl: string | null
   readonly iconLockedUrl: string | null
   readonly globalPercent: number | null
+  readonly platinum: boolean
   readonly unlocked: boolean
   readonly unlockedAt: Date | null
+}
+
+export interface AppPlatinum {
+  readonly earnedAt: Date | null
 }
 
 export interface GameEntry {
@@ -30,6 +35,7 @@ export interface GameEntry {
   readonly unlocked: number
   readonly total: number
   readonly achievements: readonly GameAchievement[]
+  readonly appPlatinum: AppPlatinum | null
 }
 
 export interface GameDetail {
@@ -47,17 +53,30 @@ export interface UnlockedAchievement {
   readonly description: string | null
   readonly iconUrl: string | null
   readonly globalPercent: number | null
+  readonly platinum: boolean
   readonly unlockedAt: Date | null
 }
 
 export interface RecentUnlock extends UnlockedAchievement {
+  readonly kind: 'achievement'
   readonly unlockedAt: Date
 }
+
+export interface RecentPlatinum {
+  readonly kind: 'platinum'
+  readonly gameId: number
+  readonly platformGameId: number
+  readonly gameTitle: string
+  readonly platform: Platform
+  readonly unlockedAt: Date
+}
+
+export type ActivityItem = RecentUnlock | RecentPlatinum
 
 export const ACTIVITY_PAGE_SIZE = 50
 export const MAX_ACTIVITY_LIMIT = 1000
 
 export interface ActivityPage {
-  readonly unlocks: readonly RecentUnlock[]
+  readonly unlocks: readonly ActivityItem[]
   readonly hasMore: boolean
 }

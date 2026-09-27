@@ -1,5 +1,6 @@
 import { Check, EyeOff, Lock } from 'lucide-react'
 import { useState } from 'react'
+import { PlatinumChip } from '@/components/PlatinumChip'
 import { RarityChip } from '@/components/RarityChip'
 import { formatPercent, formatUnlockDate } from '@/lib/format'
 import type { GameAchievement } from '@shared/library'
@@ -13,11 +14,12 @@ export function AchievementRow({ achievement }: AchievementRowProps) {
   const { unlocked, globalPercent } = achievement
   const secret = achievement.hidden && !unlocked
   const rarity = globalPercent === null ? 'common' : rarityFromPercent(globalPercent)
-  const highlight = unlocked && rarity === 'ultra_rare'
+  const highlight = unlocked && (rarity === 'ultra_rare' || achievement.platinum)
 
   return (
     <div
       data-rarity={rarity}
+      data-platinum={achievement.platinum ? '' : undefined}
       className={`flex w-full items-center gap-4 rounded-panel border bg-surface-1 p-4 shadow-float ${
         highlight ? 'border-(--rarity)/60' : 'border-line'
       }`}
@@ -29,9 +31,12 @@ export function AchievementRow({ achievement }: AchievementRowProps) {
       />
 
       <div className="min-w-0 flex-1">
-        <p className={`truncate font-semibold ${unlocked ? '' : 'text-fg-muted'}`}>
-          {secret ? 'Hidden achievement' : achievement.name}
-        </p>
+        <div className="flex min-w-0 items-center gap-2">
+          <p className={`truncate font-semibold ${unlocked ? '' : 'text-fg-muted'}`}>
+            {secret ? 'Hidden achievement' : achievement.name}
+          </p>
+          {achievement.platinum && <PlatinumChip className="shrink-0" />}
+        </div>
         <p className="truncate text-sm text-fg-muted">
           {secret ? 'The description is revealed once you unlock it.' : achievement.description}
         </p>

@@ -64,6 +64,7 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 - [ ] Onboarding flow, empty/error states, provider health UI
 - [ ] Accessibility pass, reduced motion, high contrast
 - [ ] Data export, log viewer
+- [x] Platinums (F-35, [design](superpowers/specs/2026-09-27-platinum-design.md)): a game's own "unlock everything" achievement counts as its platinum (40 Steam and Xbox games in the owner's library, found from the description), and a game without one earns an app-awarded Platinum at 100%. Shown as a banner on each Game detail tab, a chip on platinum achievements and unlocks, Activity lines, a Dashboard count and platinum toasts. Checked in the built app on a copy of the owner's data: all 15 finished games got a platinum (10 their own, 5 app-awarded, silently at startup)
 
 ## M6: Release engineering
 

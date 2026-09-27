@@ -7,6 +7,7 @@ import {
   ACTIVITY_PAGE_SIZE,
   type ActivityPage,
   MAX_ACTIVITY_LIMIT,
+  type RecentPlatinum,
   type RecentUnlock,
 } from '@shared/library'
 import { fakeApi } from '@/test/fake-api'
@@ -29,6 +30,8 @@ function unlock(overrides: Partial<RecentUnlock> = {}): RecentUnlock {
     description: 'Achieve the "Age of the Stars" ending',
     iconUrl: null,
     globalPercent: 1.2,
+    platinum: false,
+    kind: 'achievement',
     unlockedAt: daysAgo(0, 0, 30),
     ...overrides,
   }
@@ -128,6 +131,39 @@ describe('Activity', () => {
     fireEvent.click(await screen.findByRole('button', { name: /First Win/ }))
 
     expect(onOpenGame).toHaveBeenCalledWith(4, 30)
+  })
+
+  it("marks a game's own platinum among the unlocks", async () => {
+    listActivity.mockResolvedValue({
+      unlocks: [unlock({ name: 'Elden Ring', platinum: true })],
+      hasMore: false,
+    })
+    render(<Activity onOpenGame={onOpenGame} />)
+
+    expect(await screen.findByRole('button', { name: /Elden Ring/ })).toHaveTextContent('Platinum')
+  })
+
+  it('shows an app-awarded Platinum as its own line that opens its game', async () => {
+    const platinum: RecentPlatinum = {
+      kind: 'platinum',
+      gameId: 8,
+      platformGameId: 80,
+      gameTitle: 'Portal',
+      platform: 'xbox',
+      unlockedAt: daysAgo(0, 0, 40),
+    }
+    listActivity.mockResolvedValue({ unlocks: [platinum, TODAY], hasMore: false })
+    render(<Activity onOpenGame={onOpenGame} />)
+
+    const today = await screen.findByRole('region', { name: 'Today' })
+    expect(today).toHaveTextContent('2 unlocks')
+    const row = within(today).getByRole('button', { name: /Every achievement in Portal/ })
+    expect(row).toHaveTextContent('Platinum')
+    expect(row).toHaveTextContent('Portal · Xbox')
+    expect(row).toHaveTextContent(formatTime(platinum.unlockedAt))
+
+    fireEvent.click(row)
+    expect(onOpenGame).toHaveBeenCalledWith(8, 80)
   })
 
   it('says when nothing has been unlocked yet', async () => {

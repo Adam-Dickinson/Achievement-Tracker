@@ -19,6 +19,7 @@ function toast(id: number, title: string): VisibleToast {
     game: 'God of War',
     platform: 'PlayStation',
     percent: 2.8,
+    platinum: false,
   }
 }
 

@@ -30,6 +30,8 @@ const UNLOCK: RecentUnlock = {
   description: 'Achieve the "Age of the Stars" ending',
   iconUrl: null,
   globalPercent: 1.2,
+  platinum: false,
+  kind: 'achievement',
   unlockedAt: new Date(2026, 2, 9, 12, 0),
 }
 
@@ -43,6 +45,7 @@ const RARE: UnlockedAchievement = {
   description: 'Complete the Zombies story',
   iconUrl: null,
   globalPercent: 0.1,
+  platinum: false,
   unlockedAt: null,
 }
 
@@ -52,6 +55,7 @@ const STATS: DashboardStats = {
   gamesTracked: 214,
   completedGames: 27,
   unlockedThisWeek: 41,
+  platinums: 9,
   platforms: [
     { platform: 'steam', games: 120, unlocked: 402, total: 536 },
     { platform: 'playstation', games: 1, unlocked: 0, total: 0 },
@@ -97,6 +101,14 @@ describe('Dashboard', () => {
     expect(screen.getByText((214).toLocaleString())).toBeInTheDocument()
     expect(screen.getByText('27')).toBeInTheDocument()
     expect(screen.getByText('41')).toBeInTheDocument()
+  })
+
+  it('counts the Platinums held', async () => {
+    getDashboard.mockResolvedValue(STATS)
+    render(<Dashboard onOpenGame={onOpenGame} />)
+
+    expect(await screen.findByText('Platinums')).toBeInTheDocument()
+    expect(screen.getByText('9')).toBeInTheDocument()
   })
 
   it('shows the games closest to 100%, and opens one when clicked', async () => {

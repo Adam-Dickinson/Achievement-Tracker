@@ -2,6 +2,7 @@ import type { ToastPayload, VisibleToast } from '@shared/ipc'
 import type { UnlockEvent } from '@shared/models'
 import { platformName } from '@shared/platform'
 import { rarityFromPercent } from '@shared/rarity'
+import { APP_PLATINUM_ID, isPlatinumAchievement } from './store/platinum'
 
 export const TOAST_DURATION_MS = 5000
 export const MAX_VISIBLE = 3
@@ -48,13 +49,14 @@ export class NotificationService {
     const fresh = events.filter((event) => !this.#has(unlockKey(event)))
     if (fresh.length === 0) return
 
-    if (fresh.length > BURST_SIZE) {
-      this.show(burstToast(fresh))
-      return
+    const platinums = fresh.filter(isPlatinum)
+    const others = fresh.filter((event) => !isPlatinum(event))
+    if (others.length > BURST_SIZE) {
+      this.#queue.push({ key: null, toast: burstToast(others) })
+    } else {
+      for (const event of others) this.#enqueue(event)
     }
-    for (const event of fresh) {
-      this.#queue.push({ key: unlockKey(event), toast: unlockToast(event) })
-    }
+    for (const event of platinums) this.#enqueue(event)
     this.#fill()
   }
 
@@ -67,6 +69,10 @@ export class NotificationService {
     for (const shown of this.#shown) clearTimeout(shown.timer)
     this.#shown = []
     this.#queue.length = 0
+  }
+
+  #enqueue(event: UnlockEvent): void {
+    this.#queue.push({ key: unlockKey(event), toast: unlockToast(event) })
   }
 
   #has(key: string): boolean {
@@ -97,20 +103,30 @@ export class NotificationService {
   }
 }
 
+function isPlatinum(event: UnlockEvent): boolean {
+  return isPlatinumAchievement(event.achievement, event.gameTitle)
+}
+
 function unlockKey(event: UnlockEvent): string {
   return `${event.platform}:${event.gameTitle}:${event.achievement.externalId}`
 }
 
 export function unlockToast(event: UnlockEvent): ToastPayload {
   const percent = event.achievement.globalPercent
+  const platinum = isPlatinum(event)
   return {
-    heading: 'Achievement unlocked',
+    heading: !platinum
+      ? 'Achievement unlocked'
+      : event.achievement.externalId === APP_PLATINUM_ID
+        ? 'Platinum earned'
+        : 'Platinum unlocked',
     rarity: percent === null ? 'common' : rarityFromPercent(percent),
     title: event.achievement.name,
     description: event.achievement.description,
     game: event.gameTitle,
     platform: platformName(event.platform),
     percent: percent === null ? null : roundPercent(percent),
+    platinum,
   }
 }
 
@@ -128,6 +144,7 @@ export function burstToast(events: readonly UnlockEvent[]): ToastPayload {
     description: `and ${rest.length} more`,
     game: games.size === 1 ? rarest.gameTitle : `${games.size} games`,
     platform: platforms.size === 1 ? platformName(rarest.platform) : 'Several platforms',
+    platinum: false,
   }
 }
 

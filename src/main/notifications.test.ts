@@ -9,6 +9,7 @@ import {
   TOAST_DURATION_MS,
   unlockToast,
 } from './notifications'
+import { appPlatinumAchievement } from './store/platinum'
 
 function unlock(
   externalId: string,
@@ -43,6 +44,7 @@ const SAMPLE: ToastPayload = {
   game: 'Game',
   platform: 'Steam',
   percent: 5,
+  platinum: false,
 }
 
 let frames: (readonly VisibleToast[])[]
@@ -71,6 +73,43 @@ describe('unlockToast', () => {
       game: 'Half-Life 2',
       platform: 'Steam',
       percent: 4.3,
+      platinum: false,
+    })
+  })
+
+  it("marks a game's own platinum with its own heading", () => {
+    const toast = unlockToast(
+      unlock('p', { name: 'Elden Ring', description: 'Obtained all achievements' }, 'ELDEN RING'),
+    )
+
+    expect(toast).toMatchObject({
+      heading: 'Platinum unlocked',
+      title: 'Elden Ring',
+      platinum: true,
+    })
+  })
+
+  it("marks a platform's platinum trophy the same way", () => {
+    const toast = unlockToast(unlock('p', { tier: 'platinum', description: 'Earn every trophy' }))
+
+    expect(toast).toMatchObject({ heading: 'Platinum unlocked', platinum: true })
+  })
+
+  it('announces the app-awarded Platinum as earned, with no rarity number', () => {
+    const toast = unlockToast({
+      ...unlock('x', {}, 'Portal'),
+      achievement: appPlatinumAchievement('Portal'),
+    })
+
+    expect(toast).toEqual({
+      heading: 'Platinum earned',
+      rarity: 'common',
+      title: 'Platinum',
+      description: 'Every achievement in Portal',
+      game: 'Portal',
+      platform: 'Steam',
+      percent: null,
+      platinum: true,
     })
   })
 
@@ -114,6 +153,10 @@ describe('burstToast', () => {
     const toast = burstToast([unlock('a', {}, 'Portal'), unlock('b', {}, 'Portal 2')])
 
     expect(toast.game).toBe('2 games')
+  })
+
+  it('is never a platinum', () => {
+    expect(burstToast([unlock('a'), unlock('b')]).platinum).toBe(false)
   })
 })
 
@@ -170,6 +213,26 @@ describe('NotificationService', () => {
 
     expect(frames).toHaveLength(1)
     expect(frames[0]?.[0]?.heading).toBe(`${BURST_SIZE + 1} achievements unlocked`)
+  })
+
+  it('keeps a platinum out of a burst and shows it on its own after the others', () => {
+    const platinum = { ...unlock('x'), achievement: appPlatinumAchievement('Half-Life 2') }
+    service.notify([
+      platinum,
+      ...Array.from({ length: BURST_SIZE + 1 }, (_, i) => unlock(String(i))),
+    ])
+
+    expect(frames.at(-1)?.map((toast) => toast.heading)).toEqual([
+      `${BURST_SIZE + 1} achievements unlocked`,
+      'Platinum earned',
+    ])
+  })
+
+  it('shows a platinum after the unlocks that came with it', () => {
+    const platinum = { ...unlock('x'), achievement: appPlatinumAchievement('Half-Life 2') }
+    service.notify([platinum, unlock('a')])
+
+    expect(onScreen()).toEqual(['Achievement a', 'Platinum'])
   })
 
   it('queues other toasts, such as the test notification, like any other', () => {

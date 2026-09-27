@@ -1,5 +1,6 @@
 import { Trophy } from 'lucide-react'
 import { useState } from 'react'
+import { PlatinumChip } from '@/components/PlatinumChip'
 import { RarityChip } from '@/components/RarityChip'
 import { formatPercent } from '@/lib/format'
 import type { UnlockedAchievement } from '@shared/library'
@@ -20,6 +21,7 @@ export function UnlockRow({ unlock, when, showDescription = false, onOpenGame }:
     <li>
       <button
         type="button"
+        data-platinum={unlock.platinum ? '' : undefined}
         onClick={() => onOpenGame(unlock.gameId, unlock.platformGameId)}
         className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors first:rounded-t-panel last:rounded-b-panel hover:bg-surface-2"
       >
@@ -33,6 +35,7 @@ export function UnlockRow({ unlock, when, showDescription = false, onOpenGame }:
             {unlock.gameTitle} · {platformName(unlock.platform)}
           </span>
         </span>
+        {unlock.platinum && <PlatinumChip />}
         {rarity && <RarityChip rarity={rarity} />}
         {unlock.globalPercent !== null && (
           <span className="w-16 text-right font-display text-lg font-bold">

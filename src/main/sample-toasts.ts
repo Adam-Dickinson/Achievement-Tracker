@@ -9,15 +9,17 @@ const SAMPLE_TOASTS: readonly ToastPayload[] = [
     game: 'Elden Ring',
     platform: 'Steam',
     percent: 1.4,
+    platinum: false,
   },
   {
-    heading: 'Achievement unlocked',
+    heading: 'Platinum unlocked',
     rarity: 'rare',
     title: 'Platinum Trophy',
     description: 'Earn all other trophies',
     game: 'God of War',
     platform: 'PlayStation',
     percent: 2.8,
+    platinum: true,
   },
   {
     heading: 'Achievement unlocked',
@@ -27,6 +29,7 @@ const SAMPLE_TOASTS: readonly ToastPayload[] = [
     game: 'Forza Horizon 5',
     platform: 'Xbox',
     percent: 18.5,
+    platinum: false,
   },
   {
     heading: 'Achievement unlocked',
@@ -36,6 +39,7 @@ const SAMPLE_TOASTS: readonly ToastPayload[] = [
     game: 'Hades',
     platform: 'Steam',
     percent: 42,
+    platinum: false,
   },
 ]
 

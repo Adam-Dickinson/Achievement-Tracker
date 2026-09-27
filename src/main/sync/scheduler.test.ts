@@ -40,7 +40,7 @@ function achievement(externalId: string): RemoteAchievement {
 
 function gameData(unlocked: string[]): RemoteGameAchievements {
   return {
-    achievements: [achievement('a1'), achievement('a2')],
+    achievements: [achievement('a1'), achievement('a2'), achievement('never')],
     unlocks: unlocked.map((id) => ({
       achievementExternalId: id,
       unlockedAt: null,
@@ -806,7 +806,11 @@ describe('Scheduler rounds: finding games and the baseline', () => {
       { achievementExternalId: 'a2', unlockedAt: after(lookedAt, 60 * SECONDS), progress: null },
     ]
     const provider = fakeProvider(
-      () => Promise.resolve({ achievements: [achievement('a1'), achievement('a2')], unlocks }),
+      () =>
+        Promise.resolve({
+          achievements: [achievement('a1'), achievement('a2'), achievement('never')],
+          unlocks,
+        }),
       'steam',
       () => Promise.resolve(games),
     )

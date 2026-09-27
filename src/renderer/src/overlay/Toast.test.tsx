@@ -18,6 +18,7 @@ describe('Toast', () => {
         game="Elden Ring"
         platform="Steam"
         percent={1.4}
+        platinum={false}
       />,
     )
 
@@ -39,6 +40,7 @@ describe('Toast', () => {
           game="Forza Horizon 5"
           platform="Xbox"
           percent={18.5}
+          platinum={false}
         />,
       )
       expect(screen.getByText(RARITY_LABEL[rarity])).toBeInTheDocument()
@@ -56,6 +58,7 @@ describe('Toast', () => {
         game="God of War"
         platform="PlayStation"
         percent={2.8}
+        platinum={false}
       />,
     )
 
@@ -73,10 +76,49 @@ describe('Toast', () => {
         game="Forza Horizon 5"
         platform="Xbox"
         percent={18.5}
+        platinum={false}
       />,
     )
 
     expect(screen.getByRole('status')).toHaveAttribute('data-rarity', 'uncommon')
+  })
+
+  it('gives a platinum the platinum colours and a Platinum chip instead of a rarity', () => {
+    render(
+      <Toast
+        heading="Platinum earned"
+        rarity="common"
+        title="Platinum"
+        description="Every achievement in Portal"
+        game="Portal"
+        platform="Steam"
+        percent={null}
+        platinum
+      />,
+    )
+
+    const card = screen.getByRole('status')
+    expect(card).toHaveAttribute('data-platinum')
+    expect(card).toHaveTextContent('Platinum earned')
+    expect(screen.getByText('Platinum', { selector: '[data-platinum] span' })).toBeInTheDocument()
+    expect(card).not.toHaveTextContent('Common')
+  })
+
+  it('keeps an ordinary unlock out of the platinum colours', () => {
+    render(
+      <Toast
+        heading="Achievement unlocked"
+        rarity="rare"
+        title="Fleet Footed"
+        description={null}
+        game="Forza Horizon 5"
+        platform="Xbox"
+        percent={5}
+        platinum={false}
+      />,
+    )
+
+    expect(screen.getByRole('status')).not.toHaveAttribute('data-platinum')
   })
 
   it('shows the heading it is given, such as a burst count', () => {
@@ -89,6 +131,7 @@ describe('Toast', () => {
         game="God of War"
         platform="PlayStation"
         percent={2.8}
+        platinum={false}
       />,
     )
 
@@ -106,6 +149,7 @@ describe('Toast', () => {
         game="Hades"
         platform="Steam"
         percent={null}
+        platinum={false}
       />,
     )
 

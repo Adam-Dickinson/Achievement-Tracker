@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
+import type { ActivityItem } from '@shared/library'
 import type { RemoteAchievement, RemoteGame } from '@shared/models'
 import type { Platform } from '@shared/platform'
 import {
@@ -10,6 +11,7 @@ import {
   listRecentUnlocks,
 } from './library-store'
 import { applyMigrations } from './migrate'
+import { awardPlatinums } from './platinum'
 import {
   addPlatformGames,
   getPlatformGameByExternalId,
@@ -94,6 +96,21 @@ beforeEach(() => {
   db = new DatabaseSync(':memory:')
   applyMigrations(db)
 })
+
+function itemName(item: ActivityItem): string {
+  return item.kind === 'achievement' ? item.name : `Platinum of ${item.gameTitle}`
+}
+
+function makePlatinum(
+  platformGameId: number,
+  index: number,
+  change: { description?: string; tier?: string },
+): void {
+  db.prepare(
+    `UPDATE achievement SET description = COALESCE(?, description), tier = ?
+     WHERE platform_game_id = ? AND external_id LIKE ?`,
+  ).run(change.description ?? null, change.tier ?? null, platformGameId, `%-${index}`)
+}
 
 describe('listLibraryGames', () => {
   it('lists each game with its cover, achievement counts and last unlock', () => {
@@ -277,7 +294,7 @@ describe('listActivity', () => {
 
     const page = listActivity(db, 2)
 
-    expect(page.unlocks.map((u) => u.name)).toEqual(['Achievement 400-2', 'Achievement 400-1'])
+    expect(page.unlocks.map(itemName)).toEqual(['Achievement 400-2', 'Achievement 400-1'])
     expect(page.hasMore).toBe(true)
   })
 
@@ -402,6 +419,7 @@ describe('getDashboardStats', () => {
       description: 'Do 400-0',
       iconUrl: 'https://icon/400-0.jpg',
       globalPercent: 10,
+      platinum: false,
       unlockedAt: at,
     })
     expect(rarest[3]?.unlockedAt).toBeNull()
@@ -417,5 +435,97 @@ describe('getDashboardStats', () => {
     expect(getDashboardStats(db, NOW).rarestUnlocks.map((u) => u.name)).toEqual([
       'Achievement 400-0',
     ])
+  })
+})
+
+describe('platinums', () => {
+  const T1 = new Date('2026-09-20T10:00:00Z')
+  const T2 = new Date('2026-09-24T10:00:00Z')
+  const T3 = new Date('2026-09-26T10:00:00Z')
+
+  it("marks a game's own platinum, found by its description or its tier", () => {
+    const steam = seedGame('1', 'ELDEN RING', 3, [T1])
+    makePlatinum(steam.platformGameId, 2, { description: 'Obtained all achievements' })
+    const psn = seedGame('trophy/NPWR1', 'Astro Bot', 2, [T1], 'playstation')
+    makePlatinum(psn.platformGameId, 1, { tier: 'platinum' })
+
+    const flags = (gameId: number) =>
+      getGameDetail(db, gameId)?.entries[0]?.achievements.map((a) => a.platinum)
+
+    expect(flags(steam.gameId)).toEqual([false, false, true])
+    expect(flags(psn.gameId)).toEqual([false, true])
+  })
+
+  it('gives an entry its app-awarded Platinum, unless it has its own', () => {
+    const done = seedGame('1', 'Portal', 2, [T1, T2])
+    const unfinished = seedGame('2', 'Half-Life', 2, [T1])
+    awardPlatinums(db)
+
+    expect(getGameDetail(db, done.gameId)?.entries[0]?.appPlatinum).toEqual({ earnedAt: T2 })
+    expect(getGameDetail(db, unfinished.gameId)?.entries[0]?.appPlatinum).toBeNull()
+
+    makePlatinum(done.platformGameId, 1, { description: 'Unlock all achievements' })
+    expect(getGameDetail(db, done.gameId)?.entries[0]?.appPlatinum).toBeNull()
+  })
+
+  it('marks platinums among recent and rarest unlocks', () => {
+    const { platformGameId } = seedGame('1', 'ELDEN RING', 2, [T1, T2])
+    makePlatinum(platformGameId, 1, { description: 'Obtained all achievements' })
+
+    expect(listRecentUnlocks(db, 6).map((u) => [u.kind, u.name, u.platinum])).toEqual([
+      ['achievement', 'Achievement 1-1', true],
+      ['achievement', 'Achievement 1-0', false],
+    ])
+    expect(getDashboardStats(db, NOW).rarestUnlocks.map((u) => u.platinum)).toEqual([false, true])
+  })
+
+  it('puts dated app-awarded Platinums in Activity, above the unlock that earned them', () => {
+    const portal = seedGame('1', 'Portal', 2, [T1, T2])
+    seedGame('2', 'Celeste', 2, [T3])
+    seedGame('3', 'Undated', 1, [null])
+    awardPlatinums(db)
+
+    const page = listActivity(db, 10)
+
+    expect(page.unlocks.map(itemName)).toEqual([
+      'Achievement 2-0',
+      'Platinum of Portal',
+      'Achievement 1-1',
+      'Achievement 1-0',
+    ])
+    expect(page.unlocks[1]).toEqual({
+      kind: 'platinum',
+      gameId: portal.gameId,
+      platformGameId: portal.platformGameId,
+      gameTitle: 'Portal',
+      platform: 'steam',
+      unlockedAt: T2,
+    })
+    expect(page.hasMore).toBe(false)
+  })
+
+  it('counts platinums within the Activity limit', () => {
+    seedGame('1', 'Portal', 2, [T1, T2])
+    seedGame('2', 'Celeste', 2, [T3])
+    awardPlatinums(db)
+
+    const page = listActivity(db, 2)
+
+    expect(page.unlocks.map(itemName)).toEqual(['Achievement 2-0', 'Platinum of Portal'])
+    expect(page.hasMore).toBe(true)
+  })
+
+  it('counts every platinum held on the Dashboard, one per entry', () => {
+    const own = seedGame('1', 'ELDEN RING', 2, [T1, T2])
+    makePlatinum(own.platformGameId, 1, { description: 'Obtained all achievements' })
+    const trophy = seedGame('trophy/NPWR1', 'Astro Bot', 2, [T1, T2], 'playstation')
+    makePlatinum(trophy.platformGameId, 1, { tier: 'platinum' })
+    const locked = seedGame('2', 'Sekiro', 2, [T1])
+    makePlatinum(locked.platformGameId, 1, { description: 'All achievements have been unlocked.' })
+    seedGame('3', 'Portal', 1, [T1])
+    seedGame('4', 'Half-Life', 2, [T1])
+    awardPlatinums(db)
+
+    expect(getDashboardStats(db, NOW).platinums).toBe(3)
   })
 })
