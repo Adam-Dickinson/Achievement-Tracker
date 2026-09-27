@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatUnlockDay,
   formatAgo,
   formatDayHeading,
   formatDayLabel,
@@ -18,6 +19,20 @@ describe('formatPercent', () => {
 
   it('shows two decimal places below 1%', () => {
     expect(formatPercent(0.456)).toBe('0.46%')
+  })
+})
+
+describe('formatUnlockDay', () => {
+  const now = new Date(2026, 8, 23, 18, 0)
+
+  it('says Today or Yesterday, else the date with its year, in the user’s locale', () => {
+    const older = new Date(2019, 9, 11, 9, 5)
+
+    expect(formatUnlockDay(new Date(2026, 8, 23, 9, 5), now)).toBe('Today')
+    expect(formatUnlockDay(new Date(2026, 8, 22, 23, 59), now)).toBe('Yesterday')
+    expect(formatUnlockDay(older, now)).toBe(
+      older.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }),
+    )
   })
 })
 
