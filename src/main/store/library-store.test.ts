@@ -101,6 +101,10 @@ function itemName(item: ActivityItem): string {
   return item.kind === 'achievement' ? item.name : `Platinum of ${item.gameTitle}`
 }
 
+function renameAchievement(externalId: string, name: string): void {
+  db.prepare('UPDATE achievement SET name = ? WHERE external_id = ?').run(name, externalId)
+}
+
 function makePlatinum(
   platformGameId: number,
   index: number,
@@ -364,18 +368,40 @@ describe('getDashboardStats', () => {
     expect(stats.recentUnlocks).toHaveLength(6)
   })
 
-  it('counts a linked game once but adds up the achievements of every platform', () => {
+  it('counts a linked game once, by its best copy, so other copies never inflate the totals', () => {
     seedGame('1', 'Apex Legends', 2, [null, null])
     seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
     seedGame('2', 'Portal', 4, [null, null, null])
 
     expect(getDashboardStats(db, NOW)).toMatchObject({
-      unlockedAchievements: 6,
-      totalAchievements: 10,
+      unlockedAchievements: 5,
+      totalAchievements: 6,
       gamesTracked: 2,
       completedGames: 1,
     })
     expect(getDashboardStats(db, NOW).nearlyThere.map((g) => g.title)).toEqual(['Portal'])
+  })
+
+  it('counts a mirrored copy once, however many platforms report it', () => {
+    seedGame('1', 'Rainbow Six Siege', 4, [null, null, null])
+    seedGame('2', 'Rainbow Six Siege', 4, [null, null, null], 'ubisoft')
+    seedGame('trophy/NPWR1', 'Rainbow Six Siege', 5, [null], 'playstation')
+
+    expect(getDashboardStats(db, NOW)).toMatchObject({
+      unlockedAchievements: 3,
+      totalAchievements: 4,
+      gamesTracked: 1,
+    })
+  })
+
+  it('keeps the per-platform breakdown for every copy', () => {
+    seedGame('1', 'Apex Legends', 2, [null, null])
+    seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
+
+    expect(getDashboardStats(db, NOW).platforms).toEqual([
+      { platform: 'steam', games: 1, unlocked: 2, total: 2 },
+      { platform: 'playstation', games: 1, unlocked: 1, total: 4 },
+    ])
   })
 
   it('adds up games and achievements per platform, most unlocked first', () => {
@@ -486,6 +512,29 @@ describe('getDashboardStats', () => {
 
       expect(getDashboardStats(db, LOCAL_NOW).streakDays).toBe(0)
     })
+
+    it('counts an achievement unlocked on two linked copies once, on the day it was first earned', () => {
+      seedGame('1', 'Stellar Blade', 3, [at(3, 10), at(0, 10)])
+      seedGame('trophy/NPWR1', 'Stellar Blade', 3, [at(0, 11), at(0, 12), at(0, 13)], 'playstation')
+      renameAchievement('1-0', 'Drone Hunter')
+      renameAchievement('trophy/NPWR1-0', ' drone hunter ')
+      renameAchievement('1-1', 'Eve')
+      renameAchievement('trophy/NPWR1-1', 'EVE')
+
+      const stats = getDashboardStats(db, LOCAL_NOW)
+
+      expect(stats.unlockedToday).toBe(2)
+      expect(stats.unlockedThisWeek).toBe(3)
+    })
+
+    it('counts same-named achievements of different games apart', () => {
+      seedGame('1', 'Portal', 1, [at(0, 10)])
+      seedGame('2', 'Celeste', 1, [at(0, 11)])
+      renameAchievement('1-0', 'Welcome')
+      renameAchievement('2-0', 'Welcome')
+
+      expect(getDashboardStats(db, LOCAL_NOW).unlockedToday).toBe(2)
+    })
   })
 
   it('counts the unlocks of each rarity, leaving out ones with no rarity', () => {
@@ -506,6 +555,18 @@ describe('getDashboardStats', () => {
       rare: 2,
       uncommon: 1,
       common: 1,
+    })
+  })
+
+  it('counts rarities from the copy each game is counted by', () => {
+    seedGame('1', 'Apex Legends', 3, [null, null, null])
+    seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
+
+    expect(getDashboardStats(db, NOW).unlockedByRarity).toEqual({
+      ultra_rare: 0,
+      rare: 0,
+      uncommon: 3,
+      common: 0,
     })
   })
 })

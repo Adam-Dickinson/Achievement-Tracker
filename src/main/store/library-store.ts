@@ -96,7 +96,9 @@ export function getGameDetail(db: DatabaseSync, gameId: number): GameDetail | nu
 export function getDashboardStats(db: DatabaseSync, now = new Date()): DashboardStats {
   const entries = listEntries(db)
   const artwork = listArtworkUrls(db)
-  const games = groupByGame(entries).map((game) => toLibraryGame(game, artwork))
+  const ranked = groupByGame(entries)
+  const games = ranked.map((game) => toLibraryGame(game, artwork))
+  const counted = ranked.map((game) => game.best)
   const nearlyThere = games
     .filter((game) => game.unlocked < game.total)
     .sort((a, b) => b.unlocked / b.total - a.unlocked / a.total || a.title.localeCompare(b.title))
@@ -105,15 +107,15 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
   const days = dayStats(listUnlockTimes(db), now)
 
   return {
-    unlockedAchievements: sum(entries, (entry) => entry.unlocked),
-    totalAchievements: sum(entries, (entry) => entry.total),
+    unlockedAchievements: sum(counted, (entry) => entry.unlocked),
+    totalAchievements: sum(counted, (entry) => entry.total),
     gamesTracked: games.length,
     completedGames: games.filter((game) => game.total > 0 && game.unlocked === game.total).length,
     unlockedToday: days.today,
     unlockedThisWeek: sum(days.week, (day) => day.count),
     streakDays: days.streak,
     week: days.week,
-    unlockedByRarity: countByRarity(db),
+    unlockedByRarity: countByRarity(db, new Set(counted.map((entry) => entry.id))),
     platinums: countPlatinums(db),
     platforms: byPlatform(entries),
     nearlyThere,
@@ -124,21 +126,32 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
 
 function listUnlockTimes(db: DatabaseSync): Date[] {
   const rows = db
-    .prepare('SELECT unlocked_at FROM unlock WHERE unlocked_at IS NOT NULL')
+    .prepare(
+      `SELECT MIN(u.unlocked_at) AS unlocked_at FROM unlock u
+       JOIN achievement a ON a.id = u.achievement_id
+       JOIN platform_game pg ON pg.id = a.platform_game_id
+       WHERE u.unlocked_at IS NOT NULL
+       GROUP BY pg.game_id, LOWER(TRIM(a.name))`,
+    )
     .all() as unknown as { unlocked_at: string }[]
   return rows.map((row) => new Date(row.unlocked_at))
 }
 
-function countByRarity(db: DatabaseSync): Record<Rarity, number> {
+function countByRarity(
+  db: DatabaseSync,
+  countedEntries: ReadonlySet<number>,
+): Record<Rarity, number> {
   const rows = db
     .prepare(
-      `SELECT a.global_percent FROM unlock u
+      `SELECT a.platform_game_id, a.global_percent FROM unlock u
        JOIN achievement a ON a.id = u.achievement_id
        WHERE a.global_percent IS NOT NULL`,
     )
-    .all() as unknown as { global_percent: number }[]
+    .all() as unknown as { platform_game_id: number; global_percent: number }[]
   const counts: Record<Rarity, number> = { ultra_rare: 0, rare: 0, uncommon: 0, common: 0 }
-  for (const row of rows) counts[rarityFromPercent(row.global_percent)]++
+  for (const row of rows) {
+    if (countedEntries.has(row.platform_game_id)) counts[rarityFromPercent(row.global_percent)]++
+  }
   return counts
 }
 
