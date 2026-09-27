@@ -4,7 +4,7 @@ Initial designs for every core screen, generated with [Superdesign](https://supe
 
 **Live canvas** (comment/iterate): https://superdesign.dev/teams/7cc1c153-6043-4e66-95ae-8dc30811ca1d/projects/4bd4cb42-4e16-4fb7-8ef0-f9cf56409448
 
-> **The canvas has moved on.** On 2026-09-21 the designs were reworked into the "Afterglow" direction (floating cards, colour-in game art, lime accent; see [DESIGN.md](../DESIGN.md) §7). The live canvas above is the source of truth. The HTML snapshots below still show the earlier gold-on-navy look until they are re-exported with the command at the bottom of this file. Activity is not designed yet.
+> On 2026-09-21 the designs were reworked into the "Afterglow" direction (floating cards, colour-in game art, lime accent; see [DESIGN.md](../DESIGN.md) §7). The live canvas above is the source of truth. The HTML snapshots below were re-exported from it on 2026-09-27, when Activity was added and every screen took the Trophy Locker name.
 
 Static HTML snapshots live in [`mockups/`](mockups/); open them directly in a browser. Sizes are 1440x900.
 
@@ -17,8 +17,9 @@ Static HTML snapshots live in [`mockups/`](mockups/); open them directly in a br
 | Accounts | [accounts.html](mockups/accounts.html) | `f60bd2ff-5180-436e-97a4-61e92c890a8e` | `features/accounts` |
 | Notification settings | [notification-settings.html](mockups/notification-settings.html) | `c9f50582-a106-431f-8aba-e265a2b2985a` | `features/settings` |
 | Onboarding | [onboarding.html](mockups/onboarding.html) | `3b7abd38-f288-40e1-8a11-0b651ab8e5ba` | `features/onboarding` |
+| Activity | [activity.html](mockups/activity.html) | `eb386cc4-faad-4445-a923-854824785ea1` | `features/activity` (built before the design: day sections of unlock rows and Show more; the header card with this week's count, streak and rarest, and the rarity legend, still to build) |
 
-Not yet designed: the tray menu. The Activity timeline (`features/activity`) was built without a mockup, in the style of the Dashboard's recent unlocks.
+Not designed: the tray menu, which is a native Electron menu. Activity was designed after it was built, keeping its day sections and rows and adding a header card.
 
 ## Notes for implementation
 

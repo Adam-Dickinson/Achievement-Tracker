@@ -1,476 +1,249 @@
-<!DOCTYPE html><html lang="en" class="dark"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Achievement Tracker - Dashboard</title>
-  <meta name="view-transition" content="same-origin">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/5b6a84ea-0715-41dd-a09c-2db27bc83791" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/4d4e0785-71b2-4354-9da8-d98c9f6f2ecd" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" as="document">
-  <link rel="prefetch" href="https://p.superdesign.dev/draft/3b7abd38-f288-40e1-8a11-0b651ab8e5ba" as="document">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Space Grotesk', 'sans-serif'],
-          },
-          colors: {
-            base: '#0B0D12',
-            surface1: '#12151C',
-            surface2: '#181C25',
-            surface3: '#1F2430',
-            border: '#262C3A',
-            text: '#E8EAF0',
-            muted: '#8B93A7',
-            subtle: '#5B6478',
-            primary: '#F5B942',
-            primaryHover: '#FFCB5C',
-            onPrimary: '#1A1300',
-            success: '#3FB984',
-            warning: '#F2A33A',
-            danger: '#F0616D',
-            info: '#4C9BFF',
-            platform: {
-              steam: '#66C0F4',
-              xbox: '#52B043',
-              playstation: '#0070D1',
-              epic: '#D4D4D8',
-              ubisoft: '#3D8BFF',
-              ea: '#FF5A5A',
-              emulator: '#A78BFA'
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body { font-variant-numeric: tabular-nums; background-color: #0B0D12; color: #E8EAF0; }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* Rarity Glow */
-    .glow-ur { box-shadow: 0 0 16px rgba(245, 185, 66, 0.2); }
-
-    /* View Transitions */
-    html { background-color: #0B0D12; }
-    @view-transition { navigation: auto; }
-    ::view-transition { background-color: #0B0D12; }
-    ::view-transition-old(sidebar),
-    ::view-transition-new(sidebar) {
-        animation: none;
-        mix-blend-mode: normal;
-    }
-    ::view-transition-old(main-content) {
-        animation: 0.25s ease-out both fade-out;
-    }
-    ::view-transition-new(main-content) {
-        animation: 0.25s ease-in 0.1s both fade-in;
-    }
-    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
-    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-    ::view-transition-old(root),
-    ::view-transition-new(root) {
-        animation: none;
-        mix-blend-mode: normal;
-    }
-  </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trophy Locker — Overview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: {
+  fontFamily: { display: ['Bricolage Grotesque','sans-serif'], sans: ['Figtree','sans-serif'] },
+  colors: { bg:'#080A10', s1:'#121620', s2:'#191E2B', s3:'#222839', fg:'#F3F5FA', muted:'#9AA3B8', subtle:'#626B82', lime:'#C4F542', gold:'#FFC94A', mint:'#4ADE9A', sky:'#5AB0FF', warn:'#FFB547', danger:'#FF6B6B' }
+} } }</script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&family=Cinzel:wght@700;900&family=Pixelify+Sans:wght@700&family=Rubik+Mono+One&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Cormorant+SC:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080A10;--s1:#121620;--s2:#191E2B;--s3:#222839;--fg:#F3F5FA;--muted:#9AA3B8;--subtle:#626B82;--lime:#C4F542;--gold:#FFC94A}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:'Figtree',sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.font-display{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+.aurora{background:radial-gradient(1100px 540px at 4% -10%,rgba(22,150,132,.36),transparent 62%),radial-gradient(900px 520px at 100% 0%,rgba(70,80,200,.26),transparent 62%),radial-gradient(1000px 600px at 55% 112%,rgba(160,215,40,.10),transparent 60%),#080A10}
+.island{background:rgba(16,20,30,.72);backdrop-filter:blur(22px) saturate(1.5);-webkit-backdrop-filter:blur(22px) saturate(1.5);border:1px solid rgba(255,255,255,.09);border-radius:30px;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 24px 48px -18px rgba(0,0,0,.75),0 8px 16px -8px rgba(0,0,0,.5)}
+.navpill{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted)}
+.navpill:hover{color:var(--fg);background:rgba(255,255,255,.06)}
+.navpill.on{background:var(--lime);color:#0B1000;box-shadow:0 10px 26px -8px rgba(196,245,66,.65)}
+.logo{display:inline-flex;align-items:center;justify-content:center;background:var(--lime);color:#0B1000;box-shadow:0 8px 20px -6px rgba(196,245,66,.55)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:#0B1000;background:linear-gradient(135deg,#C4F542,#3fd6c8)}
+.pulse{display:block;width:8px;height:8px;border-radius:99px;background:#4ADE9A;box-shadow:0 0 0 4px rgba(74,222,154,.18),0 0 12px rgba(74,222,154,.7)}
+.card{position:relative;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 10px 22px -10px rgba(0,0,0,.55)}
+.card.flat{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 14px 30px -16px rgba(0,0,0,.7)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:13px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--lime);border-color:var(--lime);color:#0B1000}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;border-radius:15px;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer}
+.btn-primary{background:var(--lime);color:#0B1000;box-shadow:0 12px 28px -10px rgba(196,245,66,.7)}
+.btn-primary:hover{background:#d6ff5c}
+.btn-secondary{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.11)}
+.btn-ghost{color:var(--muted);padding:0 12px}
+.btn-ghost:hover{color:var(--fg)}
+.btn-sm{height:34px;padding:0 14px;font-size:13px;border-radius:12px}
+.field{height:42px;width:100%;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--fg);font:500 14px 'Figtree',sans-serif;padding:0 14px;outline:none}
+.field::placeholder{color:var(--subtle)}
+.field:focus{border-color:var(--lime);box-shadow:0 0 0 4px rgba(196,245,66,.16)}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:10px;height:42px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);font-size:14px;font-weight:600;white-space:nowrap}
+.seg{display:inline-flex;padding:4px;gap:2px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07)}
+.seg span{display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg span.on{background:#fff;color:#0B1000;box-shadow:0 6px 16px -6px rgba(0,0,0,.6)}
+.tg{position:relative;display:inline-block;flex:none;width:46px;height:28px;border-radius:99px;background:rgba(255,255,255,.12)}
+.tg i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.tg.on{background:var(--lime);box-shadow:0 8px 20px -8px rgba(196,245,66,.8)}
+.tg.on i{left:21px;background:#0B1000}
+.cap{height:9px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+.cap i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7fd63a,#C4F542);box-shadow:0 0 18px rgba(196,245,66,.65)}
+.cap.thick{height:16px}
+.cap.gold i{background:linear-gradient(90deg,#ffb020,#ffe07a);box-shadow:0 0 18px rgba(255,201,74,.6)}
+.cap.thin{height:6px}
+.rchip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px 0 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.rchip.ultra{background:linear-gradient(90deg,rgba(255,201,74,.24),rgba(255,138,31,.14));box-shadow:0 0 18px -4px rgba(255,201,74,.55)}
+.pbadge{display:inline-flex;flex:none;align-items:center;justify-content:center;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,#0d1018);border:1.5px solid #121620;box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 34%,transparent)}
+.ptag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 8px;border-radius:99px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 26%,transparent)}
+.atile{display:inline-flex;flex:none;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 22px -10px var(--c,#000),0 1px 0 rgba(255,255,255,.35) inset}
+.atile.ultra{color:#3a1c00}
+.atile.uncommon{color:#04231a}
+.atile.locked{background:#1a1f2c;color:var(--subtle);box-shadow:0 1px 0 rgba(255,255,255,.05) inset;border:1px solid rgba(255,255,255,.06)}
+.art{position:relative;aspect-ratio:460/215;overflow:hidden;background:#0c0f16}
+.art svg{position:absolute;inset:0;width:100%;height:100%}
+.art .base{filter:saturate(.16) brightness(.62) contrast(1.05)}
+.art .edge{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#e8ff9a;box-shadow:0 0 14px 3px rgba(196,245,66,.85)}
+.gcard{position:relative;isolation:isolate;display:block;padding:8px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 26px 44px -22px rgba(0,0,0,.85),0 8px 18px -10px rgba(0,0,0,.6);transition:transform .2s}
+.gcard .glow{position:absolute;left:10%;right:10%;bottom:-16px;height:46%;border-radius:50%;background:var(--glow);filter:blur(30px);opacity:.34;z-index:-1}
+.gcard.hover{transform:translateY(-10px) scale(1.02);border-color:rgba(196,245,66,.55);box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px rgba(196,245,66,.10),0 40px 60px -24px rgba(0,0,0,.9)}
+.gcard.hover .glow{opacity:.6;bottom:-24px}
+.gcard.done{border-color:rgba(255,201,74,.4)}
+.gcard.stagger{margin-top:26px}
+.pctpill{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:99px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:#fff;background:rgba(8,10,16,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14)}
+.gcard.done .pctpill{color:#3a1c00;background:linear-gradient(90deg,#ffe07a,#ffb020);border-color:transparent}
+.hoverbar{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.hoverbar>*{display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:99px;background:rgba(8,10,16,.66);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18)}
+.toastwrap{position:relative}
+.toast{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;width:400px;height:92px;padding:0 16px 0 16px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01)),#121620;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);transform-origin:top left;box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px color-mix(in srgb,var(--c) 10%,transparent),0 26px 50px -16px rgba(0,0,0,.9),0 12px 44px -6px color-mix(in srgb,var(--c) 45%,transparent)}
+.toast.ultra{border-color:rgba(255,201,74,.75)}
+.toast .shine{position:absolute;top:0;bottom:0;left:120px;width:60px;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,224,122,.28),transparent)}
+.slider{position:relative;height:22px}
+.slider .trk{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:9px;background:rgba(255,255,255,.1)}
+.slider .fill{position:absolute;left:0;top:9px;height:4px;border-radius:9px;background:var(--lime);box-shadow:0 0 14px rgba(196,245,66,.6)}
+.slider .thumb{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:99px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+::selection{background:var(--lime);color:#0B1000}
+</style>
 </head>
 <body>
-  <div class="min-h-screen bg-base flex overflow-hidden" data-sd-id="1">
-    
-    <!-- Sidebar -->
-    <aside class="w-[240px] bg-surface1 border-r border-border flex flex-col flex-shrink-0" style="view-transition-name: sidebar;" data-sd-id="2">
-      <!-- Header -->
-      <a href="https://p.superdesign.dev/draft/3b7abd38-f288-40e1-8a11-0b651ab8e5ba" id="nav-brand-onboarding" class="h-16 px-6 flex items-center gap-3 hover:bg-surface2 transition-colors cursor-pointer" data-sd-id="3">
-        <div class="w-8 h-8 rounded-lg bg-surface2 border border-border flex items-center justify-center text-primary" data-sd-id="4">
-          <iconify-icon icon="lucide:trophy" class="text-xl"></iconify-icon>
-        </div>
-        <span class="font-display font-semibold text-text truncate" data-sd-id="5">Achievement Tracker</span>
-      </a>
+<div id="app" class="min-h-screen text-fg aurora">
 
-      <!-- Nav -->
-      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" data-sd-id="6">
-        <a href="#" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg bg-surface3 text-text relative group" data-sd-id="7">
-          <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full" data-sd-id="8"></div>
-          <iconify-icon icon="lucide:layout-dashboard" class="w-5 h-5 mr-3 text-primary"></iconify-icon>
-          <span class="font-medium" data-sd-id="9">Dashboard</span>
-        </a>
-        <a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="nav-library" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group" data-sd-id="10">
-          <iconify-icon icon="lucide:library" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium" data-sd-id="11">Library</span>
-        </a>
-        <a href="#" id="nav-activity" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group" data-sd-id="12">
-          <iconify-icon icon="lucide:activity" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium" data-sd-id="13">Activity</span>
-        </a>
-        <a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="nav-accounts" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group" data-sd-id="14">
-          <iconify-icon icon="lucide:plug" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium" data-sd-id="15">Accounts</span>
-        </a>
-        <a href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" id="nav-settings" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group" data-sd-id="16">
-          <iconify-icon icon="lucide:settings" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium" data-sd-id="17">Settings</span>
-        </a>
-      </nav>
-
-      <!-- Footer -->
-      <div class="p-4 border-t border-border space-y-4" data-sd-id="18">
-        <div class="flex items-center justify-between" data-sd-id="19">
-          <div class="flex items-center text-xs text-muted" data-sd-id="20">
-            <div class="w-2 h-2 rounded-full bg-success mr-2" data-sd-id="21"></div>
-            Synced 2 min ago
-          </div>
-          <button id="btn-dnd" class="text-muted hover:text-text w-6 h-6 flex items-center justify-center rounded transition-colors" data-sd-id="22">
-            <iconify-icon icon="lucide:bell-off" class="text-sm"></iconify-icon>
-          </button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="art-elden" viewBox="0 0 460 215"><defs><linearGradient id="eldens" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1c5a"/><stop offset="1" stop-color="#e0703a"/></linearGradient></defs><rect width="460" height="215" fill="url(#eldens)"/><circle cx="335" cy="92" r="76" fill="#ffd27a" opacity=".16"/><circle cx="335" cy="92" r="44" fill="#ffd27a"/><path d="M0 150l64-52 52 34 74-64 72 70 66-40 70 44 62-26v99H0z" fill="#4b2350"/><path d="M0 182l92-44 78 32 92-38 96 46 102-26v63H0z" fill="#1a0f1f"/><rect y="100" width="460" height="115" fill="#000" opacity=".16"/><text x="230" y="130" text-anchor="middle" font-family="'Cinzel',serif" font-size="38" font-weight="900" letter-spacing="5" fill="#ffe9b8">ELDEN RING</text></symbol><symbol id="artb-elden" viewBox="0 0 460 215"><defs><linearGradient id="eldenbs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1c5a"/><stop offset="1" stop-color="#e0703a"/></linearGradient></defs><rect width="460" height="215" fill="url(#eldenbs)"/><circle cx="335" cy="92" r="76" fill="#ffd27a" opacity=".16"/><circle cx="335" cy="92" r="44" fill="#ffd27a"/><path d="M0 150l64-52 52 34 74-64 72 70 66-40 70 44 62-26v99H0z" fill="#4b2350"/><path d="M0 182l92-44 78 32 92-38 96 46 102-26v63H0z" fill="#1a0f1f"/></symbol><symbol id="art-hollow" viewBox="0 0 460 215"><defs><linearGradient id="hollows" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050b18"/><stop offset="1" stop-color="#0f2f5a"/></linearGradient><radialGradient id="hollowg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8fd0ff" stop-opacity=".5"/><stop offset="1" stop-color="#8fd0ff" stop-opacity="0"/></radialGradient></defs><rect width="460" height="215" fill="url(#hollows)"/><circle cx="230" cy="108" r="150" fill="url(#hollowg)"/><ellipse cx="128" cy="108" rx="44" ry="76" fill="none" stroke="#e8f2ff" stroke-width="10"/><ellipse cx="128" cy="108" rx="28" ry="60" fill="#e8f2ff" opacity=".22"/><ellipse cx="332" cy="108" rx="44" ry="76" fill="none" stroke="#8fd0ff" stroke-width="10"/><ellipse cx="332" cy="108" rx="28" ry="60" fill="#8fd0ff" opacity=".22"/><rect y="100" width="460" height="115" fill="#000" opacity=".16"/><text x="230" y="194" text-anchor="middle" font-family="'Cormorant SC',serif" font-size="36" font-weight="700" letter-spacing="5" fill="#eaf3ff">HOLLOW KNIGHT</text></symbol><symbol id="artb-hollow" viewBox="0 0 460 215"><defs><linearGradient id="hollowbs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050b18"/><stop offset="1" stop-color="#0f2f5a"/></linearGradient><radialGradient id="hollowbg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8fd0ff" stop-opacity=".5"/><stop offset="1" stop-color="#8fd0ff" stop-opacity="0"/></radialGradient></defs><rect width="460" height="215" fill="url(#hollowbs)"/><circle cx="230" cy="108" r="150" fill="url(#hollowbg)"/><ellipse cx="128" cy="108" rx="44" ry="76" fill="none" stroke="#e8f2ff" stroke-width="10"/><ellipse cx="128" cy="108" rx="28" ry="60" fill="#e8f2ff" opacity=".22"/><ellipse cx="332" cy="108" rx="44" ry="76" fill="none" stroke="#8fd0ff" stroke-width="10"/><ellipse cx="332" cy="108" rx="28" ry="60" fill="#8fd0ff" opacity=".22"/></symbol><symbol id="art-stardew" viewBox="0 0 460 215"><defs><linearGradient id="stardews" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#fde68a"/></linearGradient></defs><rect width="460" height="215" fill="url(#stardews)"/><circle cx="120" cy="66" r="34" fill="#fff7c2"/><circle cx="120" cy="66" r="58" fill="#fff7c2" opacity=".16"/><path d="M-10 190l17 -32l17 32z" fill="#4a9e4a" opacity="0.6"/><path d="M24 190l17 -62l17 62z" fill="#4a9e4a" opacity="0.6"/><path d="M58 190l17 -66l17 66z" fill="#4a9e4a" opacity="0.6"/><path d="M92 190l17 -70l17 70z" fill="#4a9e4a" opacity="0.6"/><path d="M126 190l17 -74l17 74z" fill="#4a9e4a" opacity="0.6"/><path d="M160 190l17 -52l17 52z" fill="#4a9e4a" opacity="0.6"/><path d="M194 190l17 -56l17 56z" fill="#4a9e4a" opacity="0.6"/><path d="M228 190l17 -60l17 60z" fill="#4a9e4a" opacity="0.6"/><path d="M262 190l17 -64l17 64z" fill="#4a9e4a" opacity="0.6"/><path d="M296 190l17 -68l17 68z" fill="#4a9e4a" opacity="0.6"/><path d="M330 190l17 -72l17 72z" fill="#4a9e4a" opacity="0.6"/><path d="M364 190l17 -50l17 50z" fill="#4a9e4a" opacity="0.6"/><path d="M398 190l17 -54l17 54z" fill="#4a9e4a" opacity="0.6"/><path d="M432 190l17 -58l17 58z" fill="#4a9e4a" opacity="0.6"/><path d="M466 190l17 -62l17 62z" fill="#4a9e4a" opacity="0.6"/><path d="M4 200l15 -87l15 87z" fill="#4a9e4a" opacity="0.8"/><path d="M34 200l15 -89l15 89z" fill="#4a9e4a" opacity="0.8"/><path d="M64 200l15 -91l15 91z" fill="#4a9e4a" opacity="0.8"/><path d="M94 200l15 -93l15 93z" fill="#4a9e4a" opacity="0.8"/><path d="M124 200l15 -95l15 95z" fill="#4a9e4a" opacity="0.8"/><path d="M154 200l15 -97l15 97z" fill="#4a9e4a" opacity="0.8"/><path d="M184 200l15 -73l15 73z" fill="#4a9e4a" opacity="0.8"/><path d="M214 200l15 -75l15 75z" fill="#4a9e4a" opacity="0.8"/><path d="M244 200l15 -77l15 77z" fill="#4a9e4a" opacity="0.8"/><path d="M274 200l15 -79l15 79z" fill="#4a9e4a" opacity="0.8"/><path d="M304 200l15 -81l15 81z" fill="#4a9e4a" opacity="0.8"/><path d="M334 200l15 -83l15 83z" fill="#4a9e4a" opacity="0.8"/><path d="M364 200l15 -85l15 85z" fill="#4a9e4a" opacity="0.8"/><path d="M394 200l15 -87l15 87z" fill="#4a9e4a" opacity="0.8"/><path d="M424 200l15 -89l15 89z" fill="#4a9e4a" opacity="0.8"/><path d="M454 200l15 -91l15 91z" fill="#4a9e4a" opacity="0.8"/><path d="M18 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M44 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M70 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M96 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M122 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M148 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M174 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M200 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M226 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M252 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M278 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M304 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M330 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M356 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M382 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M408 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M434 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M460 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><rect y="200" width="460" height="15" fill="#2f7a34"/><rect y="100" width="460" height="115" fill="#000" opacity=".16"/><text x="230" y="112" text-anchor="middle" font-family="'Pixelify Sans',serif" font-size="34" font-weight="700" letter-spacing="2" fill="#fff" stroke="#2d5a1e" stroke-width="5" paint-order="stroke" stroke-linejoin="round">STARDEW VALLEY</text></symbol><symbol id="artb-stardew" viewBox="0 0 460 215"><defs><linearGradient id="stardewbs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#fde68a"/></linearGradient></defs><rect width="460" height="215" fill="url(#stardewbs)"/><circle cx="120" cy="66" r="34" fill="#fff7c2"/><circle cx="120" cy="66" r="58" fill="#fff7c2" opacity=".16"/><path d="M-10 190l17 -32l17 32z" fill="#4a9e4a" opacity="0.6"/><path d="M24 190l17 -62l17 62z" fill="#4a9e4a" opacity="0.6"/><path d="M58 190l17 -66l17 66z" fill="#4a9e4a" opacity="0.6"/><path d="M92 190l17 -70l17 70z" fill="#4a9e4a" opacity="0.6"/><path d="M126 190l17 -74l17 74z" fill="#4a9e4a" opacity="0.6"/><path d="M160 190l17 -52l17 52z" fill="#4a9e4a" opacity="0.6"/><path d="M194 190l17 -56l17 56z" fill="#4a9e4a" opacity="0.6"/><path d="M228 190l17 -60l17 60z" fill="#4a9e4a" opacity="0.6"/><path d="M262 190l17 -64l17 64z" fill="#4a9e4a" opacity="0.6"/><path d="M296 190l17 -68l17 68z" fill="#4a9e4a" opacity="0.6"/><path d="M330 190l17 -72l17 72z" fill="#4a9e4a" opacity="0.6"/><path d="M364 190l17 -50l17 50z" fill="#4a9e4a" opacity="0.6"/><path d="M398 190l17 -54l17 54z" fill="#4a9e4a" opacity="0.6"/><path d="M432 190l17 -58l17 58z" fill="#4a9e4a" opacity="0.6"/><path d="M466 190l17 -62l17 62z" fill="#4a9e4a" opacity="0.6"/><path d="M4 200l15 -87l15 87z" fill="#4a9e4a" opacity="0.8"/><path d="M34 200l15 -89l15 89z" fill="#4a9e4a" opacity="0.8"/><path d="M64 200l15 -91l15 91z" fill="#4a9e4a" opacity="0.8"/><path d="M94 200l15 -93l15 93z" fill="#4a9e4a" opacity="0.8"/><path d="M124 200l15 -95l15 95z" fill="#4a9e4a" opacity="0.8"/><path d="M154 200l15 -97l15 97z" fill="#4a9e4a" opacity="0.8"/><path d="M184 200l15 -73l15 73z" fill="#4a9e4a" opacity="0.8"/><path d="M214 200l15 -75l15 75z" fill="#4a9e4a" opacity="0.8"/><path d="M244 200l15 -77l15 77z" fill="#4a9e4a" opacity="0.8"/><path d="M274 200l15 -79l15 79z" fill="#4a9e4a" opacity="0.8"/><path d="M304 200l15 -81l15 81z" fill="#4a9e4a" opacity="0.8"/><path d="M334 200l15 -83l15 83z" fill="#4a9e4a" opacity="0.8"/><path d="M364 200l15 -85l15 85z" fill="#4a9e4a" opacity="0.8"/><path d="M394 200l15 -87l15 87z" fill="#4a9e4a" opacity="0.8"/><path d="M424 200l15 -89l15 89z" fill="#4a9e4a" opacity="0.8"/><path d="M454 200l15 -91l15 91z" fill="#4a9e4a" opacity="0.8"/><path d="M18 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M44 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M70 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M96 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M122 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M148 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M174 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M200 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M226 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M252 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M278 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M304 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M330 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M356 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M382 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M408 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M434 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><path d="M460 210l13 -116l13 116z" fill="#2f7a34" opacity="1"/><rect y="200" width="460" height="15" fill="#2f7a34"/></symbol><symbol id="art-celeste" viewBox="0 0 460 215"><defs><linearGradient id="celestes" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1a5e"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="460" height="215" fill="url(#celestes)"/><rect x="230" y="47" width="4" height="4" fill="#fff" opacity="0.66"/><rect x="265" y="76" width="4" height="4" fill="#fff" opacity="0.62"/><rect x="36" y="47" width="4" height="4" fill="#fff" opacity="0.66"/><rect x="202" y="43" width="4" height="4" fill="#fff" opacity="0.81"/><rect x="188" y="60" width="4" height="4" fill="#fff" opacity="0.71"/><rect x="72" y="16" width="4" height="4" fill="#fff" opacity="0.47"/><rect x="178" y="33" width="4" height="4" fill="#fff" opacity="0.65"/><rect x="57" y="53" width="4" height="4" fill="#fff" opacity="0.65"/><rect x="188" y="75" width="4" height="4" fill="#fff" opacity="0.78"/><rect x="345" y="28" width="4" height="4" fill="#fff" opacity="0.67"/><rect x="113" y="5" width="4" height="4" fill="#fff" opacity="0.74"/><rect x="439" y="26" width="4" height="4" fill="#fff" opacity="0.39"/><rect x="334" y="31" width="4" height="4" fill="#fff" opacity="0.63"/><rect x="259" y="76" width="4" height="4" fill="#fff" opacity="0.39"/><rect x="382" y="73" width="4" height="4" fill="#fff" opacity="0.53"/><rect x="11" y="6" width="4" height="4" fill="#fff" opacity="0.80"/><rect x="223" y="47" width="4" height="4" fill="#fff" opacity="0.46"/><rect x="225" y="66" width="4" height="4" fill="#fff" opacity="0.35"/><rect x="289" y="4" width="4" height="4" fill="#fff" opacity="0.57"/><rect x="285" y="88" width="4" height="4" fill="#fff" opacity="0.56"/><rect x="209" y="31" width="4" height="4" fill="#fff" opacity="0.33"/><rect x="330" y="37" width="4" height="4" fill="#fff" opacity="0.76"/><rect x="135" y="49" width="4" height="4" fill="#fff" opacity="0.51"/><rect x="379" y="14" width="4" height="4" fill="#fff" opacity="0.37"/><rect x="320" y="34" width="34" height="34" fill="#fff1a8"/><rect x="212" y="52" width="36" height="18" fill="#221a66"/><rect x="191" y="70" width="78" height="18" fill="#3d2f9a"/><rect x="170" y="88" width="120" height="18" fill="#221a66"/><rect x="149" y="106" width="162" height="18" fill="#3d2f9a"/><rect x="128" y="124" width="204" height="18" fill="#221a66"/><rect x="107" y="142" width="246" height="18" fill="#3d2f9a"/><rect x="86" y="160" width="288" height="18" fill="#221a66"/><rect x="65" y="178" width="330" height="18" fill="#3d2f9a"/><rect x="44" y="196" width="372" height="18" fill="#221a66"/><rect y="100" width="460" height="115" fill="#000" opacity=".16"/><text x="230" y="190" text-anchor="middle" font-family="'Pixelify Sans',serif" font-size="46" font-weight="700" letter-spacing="4" fill="#fff">CELESTE</text></symbol><symbol id="artb-celeste" viewBox="0 0 460 215"><defs><linearGradient id="celestebs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1a5e"/><stop offset="1" stop-color="#ff7ab8"/></linearGradient></defs><rect width="460" height="215" fill="url(#celestebs)"/><rect x="230" y="47" width="4" height="4" fill="#fff" opacity="0.66"/><rect x="265" y="76" width="4" height="4" fill="#fff" opacity="0.62"/><rect x="36" y="47" width="4" height="4" fill="#fff" opacity="0.66"/><rect x="202" y="43" width="4" height="4" fill="#fff" opacity="0.81"/><rect x="188" y="60" width="4" height="4" fill="#fff" opacity="0.71"/><rect x="72" y="16" width="4" height="4" fill="#fff" opacity="0.47"/><rect x="178" y="33" width="4" height="4" fill="#fff" opacity="0.65"/><rect x="57" y="53" width="4" height="4" fill="#fff" opacity="0.65"/><rect x="188" y="75" width="4" height="4" fill="#fff" opacity="0.78"/><rect x="345" y="28" width="4" height="4" fill="#fff" opacity="0.67"/><rect x="113" y="5" width="4" height="4" fill="#fff" opacity="0.74"/><rect x="439" y="26" width="4" height="4" fill="#fff" opacity="0.39"/><rect x="334" y="31" width="4" height="4" fill="#fff" opacity="0.63"/><rect x="259" y="76" width="4" height="4" fill="#fff" opacity="0.39"/><rect x="382" y="73" width="4" height="4" fill="#fff" opacity="0.53"/><rect x="11" y="6" width="4" height="4" fill="#fff" opacity="0.80"/><rect x="223" y="47" width="4" height="4" fill="#fff" opacity="0.46"/><rect x="225" y="66" width="4" height="4" fill="#fff" opacity="0.35"/><rect x="289" y="4" width="4" height="4" fill="#fff" opacity="0.57"/><rect x="285" y="88" width="4" height="4" fill="#fff" opacity="0.56"/><rect x="209" y="31" width="4" height="4" fill="#fff" opacity="0.33"/><rect x="330" y="37" width="4" height="4" fill="#fff" opacity="0.76"/><rect x="135" y="49" width="4" height="4" fill="#fff" opacity="0.51"/><rect x="379" y="14" width="4" height="4" fill="#fff" opacity="0.37"/><rect x="320" y="34" width="34" height="34" fill="#fff1a8"/><rect x="212" y="52" width="36" height="18" fill="#221a66"/><rect x="191" y="70" width="78" height="18" fill="#3d2f9a"/><rect x="170" y="88" width="120" height="18" fill="#221a66"/><rect x="149" y="106" width="162" height="18" fill="#3d2f9a"/><rect x="128" y="124" width="204" height="18" fill="#221a66"/><rect x="107" y="142" width="246" height="18" fill="#3d2f9a"/><rect x="86" y="160" width="288" height="18" fill="#221a66"/><rect x="65" y="178" width="330" height="18" fill="#3d2f9a"/><rect x="44" y="196" width="372" height="18" fill="#221a66"/></symbol><symbol id="art-gow" viewBox="0 0 460 215"><defs><linearGradient id="gows" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c1c38"/><stop offset="1" stop-color="#7fb2d8"/></linearGradient></defs><rect width="460" height="215" fill="url(#gows)"/><circle cx="120" cy="66" r="34" fill="#e9f4ff"/><circle cx="120" cy="66" r="58" fill="#e9f4ff" opacity=".16"/><path d="M-10 190l17 -32l17 32z" fill="#2d5c88" opacity="0.6"/><path d="M24 190l17 -62l17 62z" fill="#2d5c88" opacity="0.6"/><path d="M58 190l17 -66l17 66z" fill="#2d5c88" opacity="0.6"/><path d="M92 190l17 -70l17 70z" fill="#2d5c88" opacity="0.6"/><path d="M126 190l17 -74l17 74z" fill="#2d5c88" opacity="0.6"/><path d="M160 190l17 -52l17 52z" fill="#2d5c88" opacity="0.6"/><path d="M194 190l17 -56l17 56z" fill="#2d5c88" opacity="0.6"/><path d="M228 190l17 -60l17 60z" fill="#2d5c88" opacity="0.6"/><path d="M262 190l17 -64l17 64z" fill="#2d5c88" opacity="0.6"/><path d="M296 190l17 -68l17 68z" fill="#2d5c88" opacity="0.6"/><path d="M330 190l17 -72l17 72z" fill="#2d5c88" opacity="0.6"/><path d="M364 190l17 -50l17 50z" fill="#2d5c88" opacity="0.6"/><path d="M398 190l17 -54l17 54z" fill="#2d5c88" opacity="0.6"/><path d="M432 190l17 -58l17 58z" fill="#2d5c88" opacity="0.6"/><path d="M466 190l17 -62l17 62z" fill="#2d5c88" opacity="0.6"/><path d="M4 200l15 -87l15 87z" fill="#2d5c88" opacity="0.8"/><path d="M34 200l15 -89l15 89z" fill="#2d5c88" opacity="0.8"/><path d="M64 200l15 -91l15 91z" fill="#2d5c88" opacity="0.8"/><path d="M94 200l15 -93l15 93z" fill="#2d5c88" opacity="0.8"/><path d="M124 200l15 -95l15 95z" fill="#2d5c88" opacity="0.8"/><path d="M154 200l15 -97l15 97z" fill="#2d5c88" opacity="0.8"/><path d="M184 200l15 -73l15 73z" fill="#2d5c88" opacity="0.8"/><path d="M214 200l15 -75l15 75z" fill="#2d5c88" opacity="0.8"/><path d="M244 200l15 -77l15 77z" fill="#2d5c88" opacity="0.8"/><path d="M274 200l15 -79l15 79z" fill="#2d5c88" opacity="0.8"/><path d="M304 200l15 -81l15 81z" fill="#2d5c88" opacity="0.8"/><path d="M334 200l15 -83l15 83z" fill="#2d5c88" opacity="0.8"/><path d="M364 200l15 -85l15 85z" fill="#2d5c88" opacity="0.8"/><path d="M394 200l15 -87l15 87z" fill="#2d5c88" opacity="0.8"/><path d="M424 200l15 -89l15 89z" fill="#2d5c88" opacity="0.8"/><path d="M454 200l15 -91l15 91z" fill="#2d5c88" opacity="0.8"/><path d="M18 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M44 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M70 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M96 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M122 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M148 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M174 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M200 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M226 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M252 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M278 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M304 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M330 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M356 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M382 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M408 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M434 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M460 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><rect y="200" width="460" height="15" fill="#0d2340"/><rect y="100" width="460" height="115" fill="#000" opacity=".16"/><text x="230" y="122" text-anchor="middle" font-family="'Cinzel',serif" font-size="38" font-weight="900" letter-spacing="4" fill="#f2f8ff">GOD OF WAR</text></symbol><symbol id="artb-gow" viewBox="0 0 460 215"><defs><linearGradient id="gowbs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c1c38"/><stop offset="1" stop-color="#7fb2d8"/></linearGradient></defs><rect width="460" height="215" fill="url(#gowbs)"/><circle cx="120" cy="66" r="34" fill="#e9f4ff"/><circle cx="120" cy="66" r="58" fill="#e9f4ff" opacity=".16"/><path d="M-10 190l17 -32l17 32z" fill="#2d5c88" opacity="0.6"/><path d="M24 190l17 -62l17 62z" fill="#2d5c88" opacity="0.6"/><path d="M58 190l17 -66l17 66z" fill="#2d5c88" opacity="0.6"/><path d="M92 190l17 -70l17 70z" fill="#2d5c88" opacity="0.6"/><path d="M126 190l17 -74l17 74z" fill="#2d5c88" opacity="0.6"/><path d="M160 190l17 -52l17 52z" fill="#2d5c88" opacity="0.6"/><path d="M194 190l17 -56l17 56z" fill="#2d5c88" opacity="0.6"/><path d="M228 190l17 -60l17 60z" fill="#2d5c88" opacity="0.6"/><path d="M262 190l17 -64l17 64z" fill="#2d5c88" opacity="0.6"/><path d="M296 190l17 -68l17 68z" fill="#2d5c88" opacity="0.6"/><path d="M330 190l17 -72l17 72z" fill="#2d5c88" opacity="0.6"/><path d="M364 190l17 -50l17 50z" fill="#2d5c88" opacity="0.6"/><path d="M398 190l17 -54l17 54z" fill="#2d5c88" opacity="0.6"/><path d="M432 190l17 -58l17 58z" fill="#2d5c88" opacity="0.6"/><path d="M466 190l17 -62l17 62z" fill="#2d5c88" opacity="0.6"/><path d="M4 200l15 -87l15 87z" fill="#2d5c88" opacity="0.8"/><path d="M34 200l15 -89l15 89z" fill="#2d5c88" opacity="0.8"/><path d="M64 200l15 -91l15 91z" fill="#2d5c88" opacity="0.8"/><path d="M94 200l15 -93l15 93z" fill="#2d5c88" opacity="0.8"/><path d="M124 200l15 -95l15 95z" fill="#2d5c88" opacity="0.8"/><path d="M154 200l15 -97l15 97z" fill="#2d5c88" opacity="0.8"/><path d="M184 200l15 -73l15 73z" fill="#2d5c88" opacity="0.8"/><path d="M214 200l15 -75l15 75z" fill="#2d5c88" opacity="0.8"/><path d="M244 200l15 -77l15 77z" fill="#2d5c88" opacity="0.8"/><path d="M274 200l15 -79l15 79z" fill="#2d5c88" opacity="0.8"/><path d="M304 200l15 -81l15 81z" fill="#2d5c88" opacity="0.8"/><path d="M334 200l15 -83l15 83z" fill="#2d5c88" opacity="0.8"/><path d="M364 200l15 -85l15 85z" fill="#2d5c88" opacity="0.8"/><path d="M394 200l15 -87l15 87z" fill="#2d5c88" opacity="0.8"/><path d="M424 200l15 -89l15 89z" fill="#2d5c88" opacity="0.8"/><path d="M454 200l15 -91l15 91z" fill="#2d5c88" opacity="0.8"/><path d="M18 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M44 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M70 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M96 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M122 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M148 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M174 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M200 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M226 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M252 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M278 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M304 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M330 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M356 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M382 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M408 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M434 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><path d="M460 210l13 -116l13 116z" fill="#0d2340" opacity="1"/><rect y="200" width="460" height="15" fill="#0d2340"/></symbol></defs></svg>
+<header class="sticky top-4 z-30 mx-auto mt-4 w-[calc(100%-48px)] max-w-[1392px]">
+  <div class="island flex h-[60px] items-center gap-2 pl-3 pr-2.5">
+    <a href="https://p.superdesign.dev/draft/3b7abd38-f288-40e1-8a11-0b651ab8e5ba" id="nav-brand" class="flex items-center gap-2.5 pr-4"><span class="logo" style="width:36px;height:36px;border-radius:12px"><svg viewBox="296 224 432 608" fill="currentColor" width="15" aria-hidden="true"><path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216z"/><path d="M472 640h80v120h-80z"/><path d="M356 760h312v72H356z"/></svg></span><span class="font-display whitespace-nowrap text-[17px] font-bold">Trophy Locker</span></a>
+    <nav class="flex items-center gap-1" aria-label="Main"><a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="nav-overview" class="navpill on"><iconify-icon icon="lucide:layout-grid" width="17" height="17" class=""></iconify-icon>Overview</a><a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="nav-library" class="navpill"><iconify-icon icon="lucide:library" width="17" height="17" class=""></iconify-icon>Library</a><a href="https://p.superdesign.dev/draft/eb386cc4-faad-4445-a923-854824785ea1" id="nav-activity" class="navpill"><iconify-icon icon="lucide:activity" width="17" height="17" class=""></iconify-icon>Activity</a><a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="nav-accounts" class="navpill"><iconify-icon icon="lucide:plug" width="17" height="17" class=""></iconify-icon>Accounts</a><a href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" id="nav-settings" class="navpill"><iconify-icon icon="lucide:settings" width="17" height="17" class=""></iconify-icon>Settings</a></nav>
+    <div class="ml-auto flex items-center gap-2">
+      <label class="flex h-10 w-[200px] items-center gap-2 rounded-full bg-white/[0.06] px-4 text-muted"><iconify-icon icon="lucide:search" width="16" height="16" class=""></iconify-icon><input class="w-full bg-transparent text-[13px] text-fg outline-none placeholder:text-subtle" placeholder="Search library"><span class="whitespace-nowrap rounded-md bg-white/[0.08] px-1.5 text-[11px] font-semibold text-muted">Ctrl K</span></label>
+      <a href="#sync" id="btn-sync" class="flex h-10 items-center gap-2 whitespace-nowrap rounded-full bg-white/[0.06] px-4 text-[13px] font-semibold hover:bg-white/10"><i class="pulse"></i>Synced 2m ago<iconify-icon icon="lucide:refresh-cw" width="15" height="15" class="text-muted"></iconify-icon></a>
+      <a href="#dnd" id="btn-dnd" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-muted hover:bg-white/10"><iconify-icon icon="lucide:bell-off" width="17" height="17" class=""></iconify-icon></a>
+      <span class="avatar h-10 w-10 text-[15px]">A</span>
+    </div>
+  </div>
+</header>
+<main class="mx-auto w-[calc(100%-48px)] max-w-[1392px] pb-20">
+  <div class="mt-7 grid grid-cols-12 gap-6">
+    <!-- hero -->
+    <section class="card relative col-span-8 overflow-hidden p-9" style="min-height:452px">
+      <i class="pointer-events-none absolute -left-20 -top-28 h-72 w-[26rem] rounded-full bg-lime/[0.11] blur-3xl"></i>
+      <i class="pointer-events-none absolute -bottom-32 right-10 h-72 w-96 rounded-full bg-[#3fd6c8]/[0.12] blur-3xl"></i>
+      <div class="relative w-[56%]">
+        <div class="text-[15px] font-semibold text-muted">Good evening, Adam</div>
+        <div class="mt-5 text-[13px] font-bold uppercase tracking-[0.12em] text-lime">Achievements unlocked</div>
+        <div class="flex items-end gap-3"><span class="font-display text-[132px] font-extrabold leading-[0.95]">1,284</span><span class="pb-5 text-[16px] font-semibold text-muted">of 2,910</span></div>
+        <div class="mt-3 flex items-center gap-3"><div class="cap thick flex-1"><i style="width:44.1%"></i></div><span class="text-[14px] font-bold">44.1%</span></div>
+        <div class="mt-2 text-[13px] text-muted">1,626 still to go across 118 games</div>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="chip"><iconify-icon icon="lucide:plus" width="14" height="14" class="text-lime"></iconify-icon>3 today</span>
+          <span class="chip"><iconify-icon icon="lucide:calendar-days" width="14" height="14" class="text-lime"></iconify-icon>17 this week</span>
+          <span class="chip"><iconify-icon icon="lucide:flame" width="14" height="14" class="text-[#ff9a3d]"></iconify-icon>12-day streak</span>
         </div>
+        <div class="mt-7 border-t border-white/[0.07] pt-5"><div class="mb-3 text-[12px] font-bold uppercase tracking-[0.12em] text-muted">By rarity</div>
+          <div class="flex flex-wrap gap-2"><span class="inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.04] py-1.5 pl-3 pr-4 text-[13px] font-semibold" style="color:#FFC94A"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M8 .8l2 5.2 5.2 2-5.2 2-2 5.2-2-5.2-5.2-2 5.2-2z"/></svg><b class="font-display text-[17px] font-extrabold text-fg">9</b><span class="text-muted">Ultra Rare</span></span><span class="inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.04] py-1.5 pl-3 pr-4 text-[13px] font-semibold" style="color:#5AB0FF"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M8 1.4l5.6 3.2v6.8L8 14.6l-5.6-3.2V4.6z"/></svg><b class="font-display text-[17px] font-extrabold text-fg">142</b><span class="text-muted">Rare</span></span><span class="inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.04] py-1.5 pl-3 pr-4 text-[13px] font-semibold" style="color:#4ADE9A"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M8 1.8l6.2 6.2L8 14.2 1.8 8z"/></svg><b class="font-display text-[17px] font-extrabold text-fg">388</b><span class="text-muted">Uncommon</span></span><span class="inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.04] py-1.5 pl-3 pr-4 text-[13px] font-semibold" style="color:#9AA3B8"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/></svg><b class="font-display text-[17px] font-extrabold text-fg">745</b><span class="text-muted">Common</span></span></div></div>
       </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden" style="view-transition-name: main-content;" data-sd-id="23">
-      <!-- Topbar -->
-      <header class="h-16 px-8 flex items-center justify-between flex-shrink-0" data-sd-id="24">
-        <h1 class="font-display font-semibold text-[28px] leading-[34px] text-text" data-sd-id="25">Dashboard</h1>
-        
-        <div class="flex items-center gap-4" data-sd-id="26">
-          <div class="relative w-64" data-sd-id="27">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" data-sd-id="28">
-              <iconify-icon icon="lucide:search" class="text-muted"></iconify-icon>
-            </div>
-            <input type="text" placeholder="Search games or achievements..." class="w-full h-9 pl-9 pr-12 bg-surface2 border border-border rounded-lg text-sm text-text placeholder:text-subtle focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" data-sd-id="29">
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none" data-sd-id="30">
-              <span class="text-[10px] font-medium text-subtle px-1.5 py-0.5 rounded border border-border bg-surface1" data-sd-id="31">Ctrl+K</span>
-            </div>
-          </div>
-          <button id="btn-sync" class="h-9 px-4 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors flex items-center gap-2" data-sd-id="32">
-            <iconify-icon icon="lucide:refresh-cw" class="text-muted"></iconify-icon>
-            Sync now
-          </button>
-        </div>
-      </header>
-
-      <!-- Scrollable Area -->
-      <div class="flex-1 overflow-y-auto px-8 pb-12" data-sd-id="33">
-        <div class="max-w-[1280px] mx-auto space-y-8" data-sd-id="34">
-
-          <!-- Top Row: Hero Stats + Platform Breakdown -->
-          <div class="grid grid-cols-12 gap-8" data-sd-id="35">
-            <!-- Stats Hero -->
-            <div class="col-span-8 grid grid-cols-2 gap-4" data-sd-id="36">
-              <!-- Overall Progress -->
-              <div class="bg-surface1 border border-border rounded-xl p-6 flex items-center gap-6 col-span-2" data-sd-id="37">
-                <div class="relative w-[120px] h-[120px] flex-shrink-0" data-sd-id="38">
-                  <svg class="w-full h-full" viewBox="0 0 120 120" data-sd-id="39">
-                    <circle cx="60" cy="60" r="56" fill="none" stroke="#1F2430" stroke-width="8"></circle>
-                    <circle cx="60" cy="60" r="56" fill="none" stroke="#F5B942" stroke-width="8" stroke-dasharray="351.8" stroke-dashoffset="112.5" stroke-linecap="round" class="-rotate-90 origin-center"></circle>
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center" data-sd-id="40">
-                    <span class="font-display text-[28px] font-semibold text-text" data-sd-id="41">68%</span>
-                  </div>
-                </div>
-                <div class="space-y-1" data-sd-id="42">
-                  <div class="text-[11px] font-semibold text-muted uppercase tracking-[0.06em]" data-sd-id="43">Total Completion</div>
-                  <div class="font-display text-[40px] leading-[44px] font-semibold text-text" data-sd-id="44">3,482<span class="text-muted text-[28px]" data-sd-id="45"> / 5,120</span></div>
-                  <div class="text-sm text-subtle" data-sd-id="46">Achievements unlocked across all platforms</div>
-                </div>
-              </div>
-              <!-- Stat Tiles -->
-              <div class="bg-surface1 border border-border rounded-xl p-4" data-sd-id="47">
-                <div class="text-[11px] font-semibold text-muted uppercase tracking-[0.06em] mb-1" data-sd-id="48">Games Tracked</div>
-                <div class="font-display text-[28px] font-semibold text-text" data-sd-id="49">214</div>
-              </div>
-              <div class="bg-surface1 border border-border rounded-xl p-4" data-sd-id="50">
-                <div class="text-[11px] font-semibold text-muted uppercase tracking-[0.06em] mb-1" data-sd-id="51">Platinums / 100%</div>
-                <div class="font-display text-[28px] font-semibold text-primary" data-sd-id="52">27</div>
-              </div>
-              <div class="bg-surface1 border border-border rounded-xl p-4" data-sd-id="53">
-                <div class="text-[11px] font-semibold text-muted uppercase tracking-[0.06em] mb-1" data-sd-id="54">Unlocked This Week</div>
-                <div class="font-display text-[28px] font-semibold text-text" data-sd-id="55">41</div>
-              </div>
-            </div>
-
-            <!-- Platforms -->
-            <div class="col-span-4 bg-surface1 border border-border rounded-xl p-6 flex flex-col" data-sd-id="56">
-              <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em] mb-4" data-sd-id="57">Platforms</h2>
-              <div class="space-y-4 flex-1" data-sd-id="58">
-                <!-- Steam -->
-                <div data-sd-id="59">
-                  <div class="flex justify-between items-center mb-1" data-sd-id="60">
-                    <div class="flex items-center gap-2" data-sd-id="61">
-                      <span class="inline-flex items-center gap-1.5 h-5 px-2 rounded-full bg-[#66C0F4]/14 text-[#66C0F4] text-[11px] font-medium" data-sd-id="62">
-                        Steam
-                      </span>
-                    </div>
-                    <span class="text-sm font-medium text-text" data-sd-id="63">1,402 / 1,850</span>
-                  </div>
-                  <div class="h-1.5 w-full bg-surface3 rounded-full overflow-hidden" data-sd-id="64">
-                    <div class="h-full bg-primary rounded-full" style="width: 75%" data-sd-id="65"></div>
-                  </div>
-                </div>
-                <!-- Xbox -->
-                <div data-sd-id="66">
-                  <div class="flex justify-between items-center mb-1" data-sd-id="67">
-                    <div class="flex items-center gap-2" data-sd-id="68">
-                      <span class="inline-flex items-center gap-1.5 h-5 px-2 rounded-full bg-[#52B043]/14 text-[#52B043] text-[11px] font-medium" data-sd-id="69">
-                        Xbox
-                      </span>
-                    </div>
-                    <span class="text-sm font-medium text-text" data-sd-id="70">850 / 1,120</span>
-                  </div>
-                  <div class="h-1.5 w-full bg-surface3 rounded-full overflow-hidden" data-sd-id="71">
-                    <div class="h-full bg-primary rounded-full" style="width: 76%" data-sd-id="72"></div>
-                  </div>
-                </div>
-                 <!-- PlayStation -->
-                <div data-sd-id="73">
-                  <div class="flex justify-between items-center mb-1" data-sd-id="74">
-                    <div class="flex items-center gap-2" data-sd-id="75">
-                      <span class="inline-flex items-center gap-1.5 h-5 px-2 rounded-full bg-[#0070D1]/14 text-[#0070D1] text-[11px] font-medium" data-sd-id="76">
-                        PlayStation
-                      </span>
-                    </div>
-                    <span class="text-sm font-medium text-text" data-sd-id="77">620 / 950</span>
-                  </div>
-                  <div class="h-1.5 w-full bg-surface3 rounded-full overflow-hidden" data-sd-id="78">
-                    <div class="h-full bg-primary rounded-full" style="width: 65%" data-sd-id="79"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Two Columns: Recent Unlocks & Secondary content -->
-          <div class="grid grid-cols-12 gap-8" data-sd-id="80">
-            
-            <!-- Recent Unlocks -->
-            <div class="col-span-8 space-y-4" data-sd-id="81">
-              <div class="flex items-center justify-between" data-sd-id="82">
-                <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em]" data-sd-id="83">Recent Unlocks</h2>
-                <a href="#" id="link-all-recent" class="text-[11px] font-medium text-info hover:underline" data-sd-id="84">View all</a>
-              </div>
-              
-              <div class="bg-surface1 border border-border rounded-xl divide-y divide-border" data-sd-id="85">
-                <!-- Item 1: Ultra Rare -->
-                <a href="https://p.superdesign.dev/draft/4d4e0785-71b2-4354-9da8-d98c9f6f2ecd" id="link-toast-overlay" class="block p-4 flex items-center gap-4 hover:bg-surface2 transition-colors" data-sd-id="86">
-                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 relative glow-ur p-1" data-sd-id="87">
-                     <img src="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?auto=format&amp;fit=crop&amp;w=128&amp;q=80" class="w-full h-full object-cover rounded-md" alt="Icon" data-sd-id="88">
-                  </div>
-                  <div class="flex-1 min-w-0" data-sd-id="89">
-                    <div class="flex items-baseline justify-between mb-0.5" data-sd-id="90">
-                      <h3 class="text-base font-semibold text-text truncate" data-sd-id="91">Elden Lord</h3>
-                      <span class="text-xs text-subtle whitespace-nowrap ml-4" data-sd-id="92">12 min ago</span>
-                    </div>
-                    <p class="text-xs text-muted truncate mb-1" data-sd-id="93">Achieve the "Elden Lord" ending.</p>
-                    <div class="flex items-center gap-2" data-sd-id="94">
-                      <span class="text-xs text-subtle font-medium" data-sd-id="95">Elden Ring</span>
-                      <span class="inline-flex h-[18px] px-1.5 items-center rounded-full bg-[#66C0F4]/14 text-[#66C0F4] text-[10px] font-medium uppercase" data-sd-id="96">Steam</span>
-                    </div>
-                  </div>
-                  <div class="flex-shrink-0" data-sd-id="97">
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-[#F5A524]/30" data-sd-id="98">
-                      <div class="w-2 h-2 rounded-full bg-gradient-to-r from-[#FFD36B] to-[#F5A524]" data-sd-id="99"></div>
-                      <span class="text-[11px] font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#FFD36B] to-[#F5A524]" data-sd-id="100">Ultra Rare 1.4%</span>
-                    </div>
-                  </div>
-                </a>
-
-                 <!-- Item 2: Rare -->
-                 <div class="p-4 flex items-center gap-4 hover:bg-surface2 transition-colors" data-sd-id="101">
-                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 relative p-1" data-sd-id="102">
-                     <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&amp;fit=crop&amp;w=128&amp;q=80" class="w-full h-full object-cover rounded-md" alt="Icon" data-sd-id="103">
-                  </div>
-                  <div class="flex-1 min-w-0" data-sd-id="104">
-                    <div class="flex items-baseline justify-between mb-0.5" data-sd-id="105">
-                      <h3 class="text-base font-semibold text-text truncate" data-sd-id="106">Is There No Escape?</h3>
-                      <span class="text-xs text-subtle whitespace-nowrap ml-4" data-sd-id="107">2 hours ago</span>
-                    </div>
-                    <p class="text-xs text-muted truncate mb-1" data-sd-id="108">Successfully clear an escape attempt.</p>
-                    <div class="flex items-center gap-2" data-sd-id="109">
-                      <span class="text-xs text-subtle font-medium" data-sd-id="110">Hades</span>
-                      <span class="inline-flex h-[18px] px-1.5 items-center rounded-full bg-[#52B043]/14 text-[#52B043] text-[10px] font-medium uppercase" data-sd-id="111">Xbox</span>
-                    </div>
-                  </div>
-                  <div class="flex-shrink-0" data-sd-id="112">
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-[#4C9BFF]/20" data-sd-id="113">
-                      <div class="w-2 h-2 rounded-full bg-[#4C9BFF]" data-sd-id="114"></div>
-                      <span class="text-[11px] font-medium text-[#4C9BFF]" data-sd-id="115">Rare 8.2%</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Item 3: Uncommon -->
-                <div class="p-4 flex items-center gap-4 hover:bg-surface2 transition-colors" data-sd-id="116">
-                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 relative p-1" data-sd-id="117">
-                     <div class="w-full h-full bg-surface2 flex items-center justify-center rounded-md border border-border" data-sd-id="118">
-                       <iconify-icon icon="lucide:mountain" class="text-muted text-xl"></iconify-icon>
-                     </div>
-                  </div>
-                  <div class="flex-1 min-w-0" data-sd-id="119">
-                    <div class="flex items-baseline justify-between mb-0.5" data-sd-id="120">
-                      <h3 class="text-base font-semibold text-text truncate" data-sd-id="121">Say Goodbye</h3>
-                      <span class="text-xs text-subtle whitespace-nowrap ml-4" data-sd-id="122">Yesterday</span>
-                    </div>
-                    <p class="text-xs text-muted truncate mb-1" data-sd-id="123">Complete Chapter 9.</p>
-                    <div class="flex items-center gap-2" data-sd-id="124">
-                      <span class="text-xs text-subtle font-medium" data-sd-id="125">Celeste</span>
-                      <span class="inline-flex h-[18px] px-1.5 items-center rounded-full bg-[#66C0F4]/14 text-[#66C0F4] text-[10px] font-medium uppercase" data-sd-id="126">Steam</span>
-                    </div>
-                  </div>
-                  <div class="flex-shrink-0" data-sd-id="127">
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-[#3FB984]/20" data-sd-id="128">
-                      <div class="w-2 h-2 rounded-full bg-[#3FB984]" data-sd-id="129"></div>
-                      <span class="text-[11px] font-medium text-[#3FB984]" data-sd-id="130">Uncommon 22.1%</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Item 4: Common -->
-                <div class="p-4 flex items-center gap-4 hover:bg-surface2 transition-colors" data-sd-id="131">
-                  <div class="w-14 h-14 rounded-lg bg-surface3 overflow-hidden flex-shrink-0 relative p-1" data-sd-id="132">
-                     <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&amp;fit=crop&amp;w=128&amp;q=80" class="w-full h-full object-cover rounded-md" alt="Icon" data-sd-id="133">
-                  </div>
-                  <div class="flex-1 min-w-0" data-sd-id="134">
-                    <div class="flex items-baseline justify-between mb-0.5" data-sd-id="135">
-                      <h3 class="text-base font-semibold text-text truncate" data-sd-id="136">Welcome to Mexico</h3>
-                      <span class="text-xs text-subtle whitespace-nowrap ml-4" data-sd-id="137">2 days ago</span>
-                    </div>
-                    <p class="text-xs text-muted truncate mb-1" data-sd-id="138">Arrive at the Horizon Festival.</p>
-                    <div class="flex items-center gap-2" data-sd-id="139">
-                      <span class="text-xs text-subtle font-medium" data-sd-id="140">Forza Horizon 5</span>
-                      <span class="inline-flex h-[18px] px-1.5 items-center rounded-full bg-[#52B043]/14 text-[#52B043] text-[10px] font-medium uppercase" data-sd-id="141">Xbox</span>
-                    </div>
-                  </div>
-                  <div class="flex-shrink-0" data-sd-id="142">
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border" data-sd-id="143">
-                      <div class="w-2 h-2 rounded-full bg-[#9AA3B5]" data-sd-id="144"></div>
-                      <span class="text-[11px] font-medium text-[#9AA3B5]" data-sd-id="145">Common 89.5%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Column -->
-            <div class="col-span-4 space-y-8" data-sd-id="146">
-              
-              <!-- Closest to 100% -->
-              <div class="space-y-4" data-sd-id="147">
-                <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em]" data-sd-id="148">Closest to 100%</h2>
-                <div class="grid grid-cols-2 gap-4" data-sd-id="149">
-                  <!-- Card 1 -->
-                  <a href="https://p.superdesign.dev/draft/5b6a84ea-0715-41dd-a09c-2db27bc83791" id="link-game-detail-gow" class="block bg-surface1 border border-border rounded-xl p-3 hover:-translate-y-0.5 hover:border-surface3 transition-all cursor-pointer" data-sd-id="150">
-                    <div class="aspect-[2/3] w-full rounded-lg bg-surface3 mb-3 overflow-hidden relative" data-sd-id="151">
-                       <img src="https://images.unsplash.com/photo-1605901309584-818e25960b8f?auto=format&amp;fit=crop&amp;w=300&amp;q=80" class="w-full h-full object-cover opacity-80" alt="God of War" data-sd-id="152">
-                       <div class="absolute inset-0 bg-gradient-to-t from-base/80 to-transparent flex items-end p-2" data-sd-id="153">
-                         <span class="inline-flex h-5 px-1.5 items-center rounded-full bg-[#0070D1]/90 text-white text-[10px] font-medium uppercase" data-sd-id="154">
-                          PS5
-                        </span>
-                       </div>
-                    </div>
-                    <h3 class="text-sm font-semibold text-text truncate mb-2" data-sd-id="155">God of War</h3>
-                    <div class="flex items-center justify-between" data-sd-id="156">
-                       <div class="flex items-center gap-2" data-sd-id="157">
-                         <div class="relative w-8 h-8" data-sd-id="158">
-                            <svg class="w-full h-full" viewBox="0 0 32 32" data-sd-id="159">
-                              <circle cx="16" cy="16" r="14" fill="none" stroke="#1F2430" stroke-width="4"></circle>
-                              <circle cx="16" cy="16" r="14" fill="none" stroke="#F5B942" stroke-width="4" stroke-dasharray="87.9" stroke-dashoffset="8.7" stroke-linecap="round" class="-rotate-90 origin-center"></circle>
-                            </svg>
-                         </div>
-                         <div class="flex flex-col" data-sd-id="160">
-                           <span class="text-xs font-semibold text-text" data-sd-id="161">90%</span>
-                           <span class="text-[10px] text-muted" data-sd-id="162">34 / 37</span>
-                         </div>
-                       </div>
-                    </div>
-                  </a>
-                  <!-- Card 2 -->
-                  <div class="bg-surface1 border border-border rounded-xl p-3 hover:-translate-y-0.5 hover:border-surface3 transition-all cursor-pointer" data-sd-id="163">
-                    <div class="aspect-[2/3] w-full rounded-lg bg-surface3 mb-3 overflow-hidden relative" data-sd-id="164">
-                       <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&amp;fit=crop&amp;w=300&amp;q=80" class="w-full h-full object-cover opacity-80" alt="Persona 5" data-sd-id="165">
-                       <div class="absolute inset-0 bg-gradient-to-t from-base/80 to-transparent flex items-end p-2" data-sd-id="166">
-                         <span class="inline-flex h-5 px-1.5 items-center rounded-full bg-[#66C0F4]/90 text-white text-[10px] font-medium uppercase" data-sd-id="167">
-                          Steam
-                        </span>
-                       </div>
-                    </div>
-                    <h3 class="text-sm font-semibold text-text truncate mb-2" data-sd-id="168">Persona 5 Royal</h3>
-                    <div class="flex items-center justify-between" data-sd-id="169">
-                       <div class="flex items-center gap-2" data-sd-id="170">
-                         <div class="relative w-8 h-8" data-sd-id="171">
-                            <svg class="w-full h-full" viewBox="0 0 32 32" data-sd-id="172">
-                              <circle cx="16" cy="16" r="14" fill="none" stroke="#1F2430" stroke-width="4"></circle>
-                              <circle cx="16" cy="16" r="14" fill="none" stroke="#F5B942" stroke-width="4" stroke-dasharray="87.9" stroke-dashoffset="12.3" stroke-linecap="round" class="-rotate-90 origin-center"></circle>
-                            </svg>
-                         </div>
-                         <div class="flex flex-col" data-sd-id="173">
-                           <span class="text-xs font-semibold text-text" data-sd-id="174">86%</span>
-                           <span class="text-[10px] text-muted" data-sd-id="175">45 / 52</span>
-                         </div>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Rarest Unlocked -->
-              <div class="space-y-4" data-sd-id="176">
-                <h2 class="text-[11px] font-semibold text-text uppercase tracking-[0.06em]" data-sd-id="177">Rarest Unlocked</h2>
-                <div class="bg-surface1 border border-border rounded-xl p-2" data-sd-id="178">
-                  <!-- Item 1 -->
-                  <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface2 transition-colors" data-sd-id="179">
-                    <div class="w-10 h-10 rounded bg-surface3 flex-shrink-0 glow-ur p-0.5" data-sd-id="180">
-                       <img src="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?auto=format&amp;fit=crop&amp;w=64&amp;q=80" class="w-full h-full rounded-sm object-cover" alt="" data-sd-id="181">
-                    </div>
-                    <div class="flex-1 min-w-0" data-sd-id="182">
-                      <div class="text-sm font-semibold text-text truncate" data-sd-id="183">Elden Lord</div>
-                      <div class="text-[11px] text-subtle truncate" data-sd-id="184">Elden Ring</div>
-                    </div>
-                    <div class="text-[11px] font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#FFD36B] to-[#F5A524]" data-sd-id="185">0.8%</div>
-                  </div>
-                  <!-- Item 2 -->
-                  <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface2 transition-colors" data-sd-id="186">
-                    <div class="w-10 h-10 rounded bg-surface3 flex-shrink-0 p-0.5" data-sd-id="187">
-                       <div class="w-full h-full bg-surface2 rounded-sm border border-border flex items-center justify-center" data-sd-id="188">
-                         <iconify-icon icon="lucide:skull" class="text-muted text-sm"></iconify-icon>
-                       </div>
-                    </div>
-                    <div class="flex-1 min-w-0" data-sd-id="189">
-                      <div class="text-sm font-semibold text-text truncate" data-sd-id="190">Embrace the Void</div>
-                      <div class="text-[11px] text-subtle truncate" data-sd-id="191">Hollow Knight</div>
-                    </div>
-                    <div class="text-[11px] font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#FFD36B] to-[#F5A524]" data-sd-id="192">1.2%</div>
-                  </div>
-                   <!-- Item 3 -->
-                   <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface2 transition-colors" data-sd-id="193">
-                    <div class="w-10 h-10 rounded bg-surface3 flex-shrink-0 p-0.5" data-sd-id="194">
-                       <div class="w-full h-full bg-surface2 rounded-sm border border-border flex items-center justify-center" data-sd-id="195">
-                         <iconify-icon icon="lucide:shield" class="text-muted text-sm"></iconify-icon>
-                       </div>
-                    </div>
-                    <div class="flex-1 min-w-0" data-sd-id="196">
-                      <div class="text-sm font-semibold text-text truncate" data-sd-id="197">Skelly's Last Stand</div>
-                      <div class="text-[11px] text-subtle truncate" data-sd-id="198">Hades</div>
-                    </div>
-                    <div class="text-[11px] font-medium text-[#4C9BFF]" data-sd-id="199">3.1%</div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
+      <div class="absolute right-6 top-6 h-[420px] w-[380px]">
+        <div class="card absolute w-[252px] p-1.5" style="border-radius:22px;left:124px;top:8px;transform:rotate(6deg);z-index:1"><div class="art" style="border-radius:16px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-hollow" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 3% 0 0)" aria-hidden="true"><use href="#art-hollow" width="460" height="215"/></svg><i class="edge" style="left:97%"></i></div><span class="pctpill">97%</span></div>
+        <div class="card absolute w-[252px] p-1.5" style="border-radius:22px;left:10px;top:100px;transform:rotate(-5deg);z-index:2"><div class="art" style="border-radius:16px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-celeste" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 6% 0 0)" aria-hidden="true"><use href="#art-celeste" width="460" height="215"/></svg><i class="edge" style="left:94%"></i></div><span class="pctpill">94%</span></div>
+        <div class="card absolute w-[252px] p-1.5" style="border-radius:22px;left:126px;top:192px;transform:rotate(4deg);z-index:3"><div class="art" style="border-radius:16px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-gow" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 6% 0 0)" aria-hidden="true"><use href="#art-gow" width="460" height="215"/></svg><i class="edge" style="left:94%"></i></div><span class="pctpill">94%</span></div>
+        <div class="card absolute w-[252px] p-1.5" style="border-radius:22px;left:18px;top:284px;transform:rotate(-3deg);z-index:4"><div class="art" style="border-radius:16px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-stardew" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 5% 0 0)" aria-hidden="true"><use href="#art-stardew" width="460" height="215"/></svg><i class="edge" style="left:95%"></i></div><span class="pctpill">95%</span></div>
       </div>
-    </main>
+    </section>
+
+    <!-- spotlight -->
+    <section class="card col-span-4 p-3" style="border-color:rgba(255,201,74,.5);box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 5px rgba(255,201,74,.07),0 34px 60px -22px rgba(0,0,0,.9),0 20px 70px -10px rgba(255,160,40,.4)">
+      <div class="relative overflow-hidden" style="border-radius:20px">
+        <div class="art" style="border-radius:20px;aspect-ratio:460/300"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="" style="" aria-hidden="true"><use href="#art-elden" width="460" height="215"/></svg></div>
+        <span class="absolute left-3 top-3"><span class="rchip ultra" style="--c:#FFC94A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 .8l2 5.2 5.2 2-5.2 2-2 5.2-2-5.2-5.2-2 5.2-2z"/></svg>Ultra Rare</span></span>
+      </div>
+      <div class="px-4 pb-4 pt-4">
+        <div class="text-[12px] font-bold uppercase tracking-[0.12em] text-gold">Rarest unlock</div>
+        <div class="font-display mt-1 text-[30px] font-extrabold leading-8">Age of the Stars</div>
+        <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:20px;height:20px"><iconify-icon icon="simple-icons:steam" width="10" height="10" class=""></iconify-icon></span>Elden Ring · today, 13:42</div>
+        <div class="mt-4 flex items-center justify-between rounded-2xl bg-white/[0.05] px-4 py-3"><span class="text-[13px] text-muted">Global unlock rate</span><span class="font-display text-[26px] font-extrabold text-gold">1.2%</span></div>
+      </div>
+    </section>
   </div>
 
-</body></html>
+  <!-- nearly there -->
+  <section class="mt-14">
+    <div class="mb-4 flex items-end justify-between"><div><h2 class="font-display m-0 text-[24px] font-bold leading-7">Nearly there</h2><div class="mt-0.5 text-[13px] text-muted">The games closest to 100%</div></div><a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="link-nearly-there" class="flex items-center gap-1 rounded-full bg-white/[0.06] px-3.5 py-1.5 text-[13px] font-semibold text-muted hover:bg-white/10 hover:text-fg">Library<iconify-icon icon="lucide:arrow-right" width="14" height="14" class=""></iconify-icon></a></div>
+    <div class="grid grid-cols-4 items-start gap-6"><a href="#game-hollow" id="near-hollow" class="gcard" style="--glow:#4c8bff">
+    <i class="glow"></i>
+    <div class="relative">
+      <div class="art" style="border-radius:18px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-hollow" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 3% 0 0)" aria-hidden="true"><use href="#art-hollow" width="460" height="215"/></svg><i class="edge" style="left:97%"></i></div>
+      <span class="pctpill">97%</span>
+      
+    </div>
+    <div class="px-3 pb-3 pt-3">
+      <div class="flex items-center justify-between gap-2"><span class="truncate text-[14px] font-semibold">Hollow Knight</span><span class="flex shrink-0 -space-x-1"><span class="pbadge" style="--c:#66C0F4;width:22px;height:22px"><iconify-icon icon="simple-icons:steam" width="11" height="11" class=""></iconify-icon></span></span></div>
+      <div class="mt-1.5 flex items-center justify-between text-[12px] text-muted"><span><b class="font-semibold text-fg">61</b> / 63 achievements</span><span class="">2 left</span></div>
+    </div>
+  </a><a href="#game-stardew" id="near-stardew" class="gcard" style="--glow:#8bd45a">
+    <i class="glow"></i>
+    <div class="relative">
+      <div class="art" style="border-radius:18px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-stardew" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 5% 0 0)" aria-hidden="true"><use href="#art-stardew" width="460" height="215"/></svg><i class="edge" style="left:95%"></i></div>
+      <span class="pctpill">95%</span>
+      
+    </div>
+    <div class="px-3 pb-3 pt-3">
+      <div class="flex items-center justify-between gap-2"><span class="truncate text-[14px] font-semibold">Stardew Valley</span><span class="flex shrink-0 -space-x-1"><span class="pbadge" style="--c:#66C0F4;width:22px;height:22px"><iconify-icon icon="simple-icons:steam" width="11" height="11" class=""></iconify-icon></span></span></div>
+      <div class="mt-1.5 flex items-center justify-between text-[12px] text-muted"><span><b class="font-semibold text-fg">38</b> / 40 achievements</span><span class="">2 left</span></div>
+    </div>
+  </a><a href="#game-celeste" id="near-celeste" class="gcard" style="--glow:#ff7ab8">
+    <i class="glow"></i>
+    <div class="relative">
+      <div class="art" style="border-radius:18px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-celeste" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 6% 0 0)" aria-hidden="true"><use href="#art-celeste" width="460" height="215"/></svg><i class="edge" style="left:94%"></i></div>
+      <span class="pctpill">94%</span>
+      
+    </div>
+    <div class="px-3 pb-3 pt-3">
+      <div class="flex items-center justify-between gap-2"><span class="truncate text-[14px] font-semibold">Celeste</span><span class="flex shrink-0 -space-x-1"><span class="pbadge" style="--c:#66C0F4;width:22px;height:22px"><iconify-icon icon="simple-icons:steam" width="11" height="11" class=""></iconify-icon></span></span></div>
+      <div class="mt-1.5 flex items-center justify-between text-[12px] text-muted"><span><b class="font-semibold text-fg">31</b> / 33 achievements</span><span class="">2 left</span></div>
+    </div>
+  </a><a href="#game-gow" id="near-gow" class="gcard" style="--glow:#5ea3d6">
+    <i class="glow"></i>
+    <div class="relative">
+      <div class="art" style="border-radius:18px"><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="base" style="" aria-hidden="true"><use href="#art-gow" width="460" height="215"/></svg><svg viewBox="0 0 460 215" preserveAspectRatio="xMidYMid slice" class="colour" style="clip-path:inset(0 6% 0 0)" aria-hidden="true"><use href="#art-gow" width="460" height="215"/></svg><i class="edge" style="left:94%"></i></div>
+      <span class="pctpill">94%</span>
+      
+    </div>
+    <div class="px-3 pb-3 pt-3">
+      <div class="flex items-center justify-between gap-2"><span class="truncate text-[14px] font-semibold">God of War</span><span class="flex shrink-0 -space-x-1"><span class="pbadge" style="--c:#4F8CFF;width:22px;height:22px"><iconify-icon icon="simple-icons:playstation" width="11" height="11" class=""></iconify-icon></span></span></div>
+      <div class="mt-1.5 flex items-center justify-between text-[12px] text-muted"><span><b class="font-semibold text-fg">47</b> / 50 achievements</span><span class="">3 left</span></div>
+    </div>
+  </a></div>
+  </section>
+
+  <!-- feed + side cards -->
+  <div class="mt-14 grid grid-cols-12 items-start gap-6">
+    <section class="col-span-7">
+      <div class="mb-4 flex items-end justify-between"><div><h2 class="font-display m-0 text-[24px] font-bold leading-7">Recent unlocks</h2></div><a href="https://p.superdesign.dev/draft/eb386cc4-faad-4445-a923-854824785ea1" id="link-recent-unlocks" class="flex items-center gap-1 rounded-full bg-white/[0.06] px-3.5 py-1.5 text-[13px] font-semibold text-muted hover:bg-white/10 hover:text-fg">All activity<iconify-icon icon="lucide:arrow-right" width="14" height="14" class=""></iconify-icon></a></div>
+      <div class="card p-2.5"><a href="#unlock-0" id="row-unlock-0" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+      <span class="atile ultra" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#ffe07a,#ff8a1f);--c:#FFC94A"><iconify-icon icon="lucide:sparkles" width="24" height="24" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="truncate text-[15px] font-semibold">Age of the Stars</div><div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Elden Ring</span></div></div>
+      <span class="rchip ultra" style="--c:#FFC94A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 .8l2 5.2 5.2 2-5.2 2-2 5.2-2-5.2-5.2-2 5.2-2z"/></svg>Ultra Rare</span>
+      <span class="font-display w-[64px] text-right text-[20px] font-bold">1.2%</span>
+      <span class="w-[86px] text-right text-[13px] text-muted"><span class="block font-semibold text-lime">Today</span>13:42</span></a><a href="#unlock-1" id="row-unlock-1" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+      <span class="atile ultra" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#ffe07a,#ff8a1f);--c:#FFC94A"><iconify-icon icon="lucide:crown" width="24" height="24" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="truncate text-[15px] font-semibold">Valkyrie Queen</div><div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#4F8CFF;width:18px;height:18px"><iconify-icon icon="simple-icons:playstation" width="9" height="9" class=""></iconify-icon></span><span class="truncate">God of War</span></div></div>
+      <span class="rchip ultra" style="--c:#FFC94A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 .8l2 5.2 5.2 2-5.2 2-2 5.2-2-5.2-5.2-2 5.2-2z"/></svg>Ultra Rare</span>
+      <span class="font-display w-[64px] text-right text-[20px] font-bold">1.4%</span>
+      <span class="w-[86px] text-right text-[13px] text-muted"><span class="block font-semibold text-lime">Today</span>11:05</span></a><a href="#unlock-2" id="row-unlock-2" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+      <span class="atile rare" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#5ab0ff,#2a5fd6);--c:#5AB0FF"><iconify-icon icon="lucide:moon" width="24" height="24" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="truncate text-[15px] font-semibold">Embrace the Void</div><div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Hollow Knight</span></div></div>
+      <span class="rchip rare" style="--c:#5AB0FF"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.4l5.6 3.2v6.8L8 14.6l-5.6-3.2V4.6z"/></svg>Rare</span>
+      <span class="font-display w-[64px] text-right text-[20px] font-bold">5.1%</span>
+      <span class="w-[86px] text-right text-[13px] text-muted"><span class="block font-semibold text-lime">Today</span>09:16</span></a><a href="#unlock-3" id="row-unlock-3" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+      <span class="atile uncommon" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#37d493,#127a55);--c:#4ADE9A"><iconify-icon icon="lucide:flame" width="24" height="24" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="truncate text-[15px] font-semibold">Cold Blooded</div><div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Hades</span></div></div>
+      <span class="rchip uncommon" style="--c:#4ADE9A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.8l6.2 6.2L8 14.2 1.8 8z"/></svg>Uncommon</span>
+      <span class="font-display w-[64px] text-right text-[20px] font-bold">14.3%</span>
+      <span class="w-[86px] text-right text-[13px] text-muted"><span class="block font-semibold text-fg">Yesterday</span>20:31</span></a><a href="#unlock-4" id="row-unlock-4" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+      <span class="atile common" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#66708a,#3a4256);--c:#9AA3B8"><iconify-icon icon="lucide:flag" width="24" height="24" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="truncate text-[15px] font-semibold">Welcome to Mexico</div><div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#5FD35A;width:18px;height:18px"><iconify-icon icon="simple-icons:xbox" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Forza Horizon 5</span></div></div>
+      <span class="rchip common" style="--c:#9AA3B8"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/></svg>Common</span>
+      <span class="font-display w-[64px] text-right text-[20px] font-bold">31.8%</span>
+      <span class="w-[86px] text-right text-[13px] text-muted"><span class="block font-semibold text-fg">Yesterday</span>19:48</span></a><a href="#unlock-5" id="row-unlock-5" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+      <span class="atile rare" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#5ab0ff,#2a5fd6);--c:#5AB0FF"><iconify-icon icon="lucide:mountain" width="24" height="24" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="truncate text-[15px] font-semibold">Farewell</div><div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Celeste</span></div></div>
+      <span class="rchip rare" style="--c:#5AB0FF"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.4l5.6 3.2v6.8L8 14.6l-5.6-3.2V4.6z"/></svg>Rare</span>
+      <span class="font-display w-[64px] text-right text-[20px] font-bold">3.7%</span>
+      <span class="w-[86px] text-right text-[13px] text-muted"><span class="block font-semibold text-fg">Fri</span>22:09</span></a></div>
+    </section>
+    <section class="col-span-5 flex flex-col gap-6">
+      <div>
+        <div class="mb-4 flex items-end justify-between"><div><h2 class="font-display m-0 text-[24px] font-bold leading-7">Platforms</h2></div><a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="link-platforms" class="flex items-center gap-1 rounded-full bg-white/[0.06] px-3.5 py-1.5 text-[13px] font-semibold text-muted hover:bg-white/10 hover:text-fg">Accounts<iconify-icon icon="lucide:arrow-right" width="14" height="14" class=""></iconify-icon></a></div>
+        <div class="card flex flex-col gap-5 p-6"><div class="flex items-center gap-3"><span class="pbadge" style="--c:#66C0F4;width:30px;height:30px"><iconify-icon icon="simple-icons:steam" width="16" height="16" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="flex items-baseline justify-between text-[13px]"><span class="font-semibold">Steam</span><span class="text-muted"><b class="font-semibold text-fg">712</b> / 1,540</span></div><div class="cap thin mt-2"><i style="width:46.2%"></i></div></div><span class="w-[46px] text-right text-[13px] font-semibold">46.2%</span></div><div class="flex items-center gap-3"><span class="pbadge" style="--c:#5FD35A;width:30px;height:30px"><iconify-icon icon="simple-icons:xbox" width="16" height="16" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="flex items-baseline justify-between text-[13px]"><span class="font-semibold">Xbox</span><span class="text-muted"><b class="font-semibold text-fg">298</b> / 620</span></div><div class="cap thin mt-2"><i style="width:48.1%"></i></div></div><span class="w-[46px] text-right text-[13px] font-semibold">48.1%</span></div><div class="flex items-center gap-3"><span class="pbadge" style="--c:#4F8CFF;width:30px;height:30px"><iconify-icon icon="simple-icons:playstation" width="16" height="16" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="flex items-baseline justify-between text-[13px]"><span class="font-semibold">PlayStation</span><span class="text-muted"><b class="font-semibold text-fg">187</b> / 510</span></div><div class="cap thin mt-2"><i style="width:36.7%"></i></div></div><span class="w-[46px] text-right text-[13px] font-semibold">36.7%</span></div><div class="flex items-center gap-3"><span class="pbadge" style="--c:#B79CFF;width:30px;height:30px"><iconify-icon icon="lucide:cpu" width="16" height="16" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="flex items-baseline justify-between text-[13px]"><span class="font-semibold">Emulators</span><span class="text-muted"><b class="font-semibold text-fg">46</b> / 120</span></div><div class="cap thin mt-2"><i style="width:38.3%"></i></div></div><span class="w-[46px] text-right text-[13px] font-semibold">38.3%</span></div><div class="flex items-center gap-3"><span class="pbadge" style="--c:#E4E4E7;width:30px;height:30px"><iconify-icon icon="simple-icons:epicgames" width="16" height="16" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="flex items-baseline justify-between text-[13px]"><span class="font-semibold">Epic</span><span class="text-muted"><b class="font-semibold text-fg">41</b> / 120</span></div><div class="cap thin mt-2"><i style="width:34.2%"></i></div></div><span class="w-[46px] text-right text-[13px] font-semibold">34.2%</span></div></div>
+      </div>
+      <div>
+        <div class="mb-4 flex items-end justify-between"><div><h2 class="font-display m-0 text-[24px] font-bold leading-7">This week</h2></div></div>
+        <div class="card p-6"><div class="flex items-center gap-2"><div class="flex flex-1 flex-col items-center gap-2"><div class="flex h-[104px] w-full items-end justify-center"><span class="block w-[30px] rounded-full" style="height:50px;background:rgba(255,255,255,.14);"></span></div><span class="text-[12px] font-semibold text-muted">M</span></div><div class="flex flex-1 flex-col items-center gap-2"><div class="flex h-[104px] w-full items-end justify-center"><span class="block w-[30px] rounded-full" style="height:32px;background:rgba(255,255,255,.14);"></span></div><span class="text-[12px] font-semibold text-muted">T</span></div><div class="flex flex-1 flex-col items-center gap-2"><div class="flex h-[104px] w-full items-end justify-center"><span class="block w-[30px] rounded-full" style="height:104px;background:rgba(255,255,255,.14);"></span></div><span class="text-[12px] font-semibold text-muted">W</span></div><div class="flex flex-1 flex-col items-center gap-2"><div class="flex h-[104px] w-full items-end justify-center"><span class="block w-[30px] rounded-full" style="height:32px;background:rgba(255,255,255,.14);"></span></div><span class="text-[12px] font-semibold text-muted">T</span></div><div class="flex flex-1 flex-col items-center gap-2"><div class="flex h-[104px] w-full items-end justify-center"><span class="block w-[30px] rounded-full" style="height:68px;background:rgba(255,255,255,.14);"></span></div><span class="text-[12px] font-semibold text-muted">F</span></div><div class="flex flex-1 flex-col items-center gap-2"><div class="flex h-[104px] w-full items-end justify-center"><span class="block w-[30px] rounded-full" style="height:50px;background:rgba(255,255,255,.14);"></span></div><span class="text-[12px] font-semibold text-muted">S</span></div><div class="flex flex-1 flex-col items-center gap-2"><div class="flex h-[104px] w-full items-end justify-center"><span class="block w-[30px] rounded-full" style="height:68px;background:linear-gradient(180deg,#e8ff9a,#C4F542);box-shadow:0 0 22px rgba(196,245,66,.55)"></span></div><span class="text-[12px] font-semibold text-lime">S</span></div></div><div class="mt-4 flex items-center justify-between border-t border-white/[0.07] pt-4 text-[13px] text-muted"><span>Best day <b class="text-fg">Wednesday · 5</b></span><span>Daily avg <b class="text-fg">2.4</b></span></div></div>
+      </div>
+    </section>
+  </div>
+</main>
+</div>
+</body>
+</html>

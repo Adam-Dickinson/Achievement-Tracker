@@ -1,7 +1,10 @@
 import { execFile } from 'node:child_process'
 import { watch } from 'node:fs'
-import { join } from 'node:path'
+import { open } from 'node:fs/promises'
+import { basename, join } from 'node:path'
 import { promisify } from 'node:util'
+import { ProviderError } from '@shared/errors'
+import type { StatsFileReader } from './stats-file'
 
 export const STEAM_KEY = 'HKCU\\Software\\Valve\\Steam'
 export const ACTIVE_PROCESS_KEY = `${STEAM_KEY}\\ActiveProcess`
@@ -16,7 +19,7 @@ const REG_LINE = /^\s+(.+?)\s{4}(REG_[A-Z_]+)(?:\s{4}(.*))?$/
 
 export type RegistryValue = string | number | null
 
-export interface SteamLocalDeps {
+export interface SteamLocalDeps extends StatsFileReader {
   readonly readRegistry: (key: string, name: string) => Promise<RegistryValue>
   readonly watchFolder: (path: string, onFile: (name: string) => void) => () => void
 }
@@ -74,7 +77,32 @@ function watchFolder(path: string, onFile: (name: string) => void): () => void {
   }
 }
 
-export const STEAM_LOCAL: SteamLocalDeps = { readRegistry, watchFolder }
+export async function readFile(path: string, maxBytes: number): Promise<Buffer | null> {
+  let file
+  try {
+    file = await open(path, 'r')
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw err
+  }
+  try {
+    const { size } = await file.stat()
+    if (size > maxBytes) {
+      throw new ProviderError('parse', `Steam: ${basename(path)} is larger than ${maxBytes} bytes`)
+    }
+    return await file.readFile()
+  } finally {
+    await file.close()
+  }
+}
+
+export function statsFolder(steamPath: RegistryValue): string | null {
+  return typeof steamPath === 'string' && steamPath !== ''
+    ? join(steamPath, 'appcache', 'stats')
+    : null
+}
+
+export const STEAM_LOCAL: SteamLocalDeps = { readRegistry, watchFolder, readFile }
 
 export function watchSteamLocal(
   deps: SteamLocalDeps,
@@ -129,8 +157,9 @@ export function watchSteamLocal(
   }
 
   void deps.readRegistry(STEAM_KEY, 'SteamPath').then((steamPath) => {
-    if (stopped || typeof steamPath !== 'string' || steamPath === '') return
-    stopFolder = deps.watchFolder(join(steamPath, 'appcache', 'stats'), onStatsFile)
+    const folder = statsFolder(steamPath)
+    if (stopped || folder === null) return
+    stopFolder = deps.watchFolder(folder, onStatsFile)
   })
   const registryTimer = setInterval(() => void checkRunningGame(), REGISTRY_POLL_MS)
   void checkRunningGame()

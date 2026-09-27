@@ -1,347 +1,218 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="view-transition" content="same-origin">
-  <title>Achievement Tracker - Accounts</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Space Grotesk', 'sans-serif'],
-          },
-          colors: {
-            base: '#0B0D12',
-            surface1: '#12151C',
-            surface2: '#181C25',
-            surface3: '#1F2430',
-            border: '#262C3A',
-            text: '#E8EAF0',
-            muted: '#8B93A7',
-            subtle: '#5B6478',
-            primary: '#F5B942',
-            primaryHover: '#FFCB5C',
-            onPrimary: '#1A1300',
-            success: '#3FB984',
-            warning: '#F2A33A',
-            danger: '#F0616D',
-            info: '#4C9BFF',
-            platform: {
-              steam: '#66C0F4',
-              xbox: '#52B043',
-              playstation: '#0070D1',
-              epic: '#D4D4D8',
-              ubisoft: '#3D8BFF',
-              ea: '#FF5A5A',
-              emulator: '#A78BFA'
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body { font-variant-numeric: tabular-nums; background-color: #0B0D12; color: #E8EAF0; }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    html {
-        background-color: #0B0D12;
-    }
-    @view-transition { navigation: auto; }
-    ::view-transition { background-color: #0B0D12; }
-
-    ::view-transition-old(sidebar),
-    ::view-transition-new(sidebar),
-    ::view-transition-old(topbar),
-    ::view-transition-new(topbar) {
-        animation: none;
-        mix-blend-mode: normal;
-    }
-
-    ::view-transition-old(main-content) {
-        animation: 0.25s ease-out both fade-out;
-    }
-    ::view-transition-new(main-content) {
-        animation: 0.25s ease-in 0.1s both fade-in;
-    }
-
-    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
-    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-
-    ::view-transition-old(root),
-    ::view-transition-new(root) {
-        animation: none;
-        mix-blend-mode: normal;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trophy Locker — Accounts</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: {
+  fontFamily: { display: ['Bricolage Grotesque','sans-serif'], sans: ['Figtree','sans-serif'] },
+  colors: { bg:'#080A10', s1:'#121620', s2:'#191E2B', s3:'#222839', fg:'#F3F5FA', muted:'#9AA3B8', subtle:'#626B82', lime:'#C4F542', gold:'#FFC94A', mint:'#4ADE9A', sky:'#5AB0FF', warn:'#FFB547', danger:'#FF6B6B' }
+} } }</script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&family=Cinzel:wght@700;900&family=Pixelify+Sans:wght@700&family=Rubik+Mono+One&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Cormorant+SC:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080A10;--s1:#121620;--s2:#191E2B;--s3:#222839;--fg:#F3F5FA;--muted:#9AA3B8;--subtle:#626B82;--lime:#C4F542;--gold:#FFC94A}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:'Figtree',sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.font-display{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+.aurora{background:radial-gradient(1100px 540px at 4% -10%,rgba(22,150,132,.36),transparent 62%),radial-gradient(900px 520px at 100% 0%,rgba(70,80,200,.26),transparent 62%),radial-gradient(1000px 600px at 55% 112%,rgba(160,215,40,.10),transparent 60%),#080A10}
+.island{background:rgba(16,20,30,.72);backdrop-filter:blur(22px) saturate(1.5);-webkit-backdrop-filter:blur(22px) saturate(1.5);border:1px solid rgba(255,255,255,.09);border-radius:30px;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 24px 48px -18px rgba(0,0,0,.75),0 8px 16px -8px rgba(0,0,0,.5)}
+.navpill{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted)}
+.navpill:hover{color:var(--fg);background:rgba(255,255,255,.06)}
+.navpill.on{background:var(--lime);color:#0B1000;box-shadow:0 10px 26px -8px rgba(196,245,66,.65)}
+.logo{display:inline-flex;align-items:center;justify-content:center;background:var(--lime);color:#0B1000;box-shadow:0 8px 20px -6px rgba(196,245,66,.55)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:#0B1000;background:linear-gradient(135deg,#C4F542,#3fd6c8)}
+.pulse{display:block;width:8px;height:8px;border-radius:99px;background:#4ADE9A;box-shadow:0 0 0 4px rgba(74,222,154,.18),0 0 12px rgba(74,222,154,.7)}
+.card{position:relative;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 10px 22px -10px rgba(0,0,0,.55)}
+.card.flat{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 14px 30px -16px rgba(0,0,0,.7)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:13px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--lime);border-color:var(--lime);color:#0B1000}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;border-radius:15px;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer}
+.btn-primary{background:var(--lime);color:#0B1000;box-shadow:0 12px 28px -10px rgba(196,245,66,.7)}
+.btn-primary:hover{background:#d6ff5c}
+.btn-secondary{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.11)}
+.btn-ghost{color:var(--muted);padding:0 12px}
+.btn-ghost:hover{color:var(--fg)}
+.btn-sm{height:34px;padding:0 14px;font-size:13px;border-radius:12px}
+.field{height:42px;width:100%;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--fg);font:500 14px 'Figtree',sans-serif;padding:0 14px;outline:none}
+.field::placeholder{color:var(--subtle)}
+.field:focus{border-color:var(--lime);box-shadow:0 0 0 4px rgba(196,245,66,.16)}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:10px;height:42px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);font-size:14px;font-weight:600;white-space:nowrap}
+.seg{display:inline-flex;padding:4px;gap:2px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07)}
+.seg span{display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg span.on{background:#fff;color:#0B1000;box-shadow:0 6px 16px -6px rgba(0,0,0,.6)}
+.tg{position:relative;display:inline-block;flex:none;width:46px;height:28px;border-radius:99px;background:rgba(255,255,255,.12)}
+.tg i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.tg.on{background:var(--lime);box-shadow:0 8px 20px -8px rgba(196,245,66,.8)}
+.tg.on i{left:21px;background:#0B1000}
+.cap{height:9px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+.cap i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7fd63a,#C4F542);box-shadow:0 0 18px rgba(196,245,66,.65)}
+.cap.thick{height:16px}
+.cap.gold i{background:linear-gradient(90deg,#ffb020,#ffe07a);box-shadow:0 0 18px rgba(255,201,74,.6)}
+.cap.thin{height:6px}
+.rchip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px 0 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.rchip.ultra{background:linear-gradient(90deg,rgba(255,201,74,.24),rgba(255,138,31,.14));box-shadow:0 0 18px -4px rgba(255,201,74,.55)}
+.pbadge{display:inline-flex;flex:none;align-items:center;justify-content:center;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,#0d1018);border:1.5px solid #121620;box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 34%,transparent)}
+.ptag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 8px;border-radius:99px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 26%,transparent)}
+.atile{display:inline-flex;flex:none;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 22px -10px var(--c,#000),0 1px 0 rgba(255,255,255,.35) inset}
+.atile.ultra{color:#3a1c00}
+.atile.uncommon{color:#04231a}
+.atile.locked{background:#1a1f2c;color:var(--subtle);box-shadow:0 1px 0 rgba(255,255,255,.05) inset;border:1px solid rgba(255,255,255,.06)}
+.art{position:relative;aspect-ratio:460/215;overflow:hidden;background:#0c0f16}
+.art svg{position:absolute;inset:0;width:100%;height:100%}
+.art .base{filter:saturate(.16) brightness(.62) contrast(1.05)}
+.art .edge{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#e8ff9a;box-shadow:0 0 14px 3px rgba(196,245,66,.85)}
+.gcard{position:relative;isolation:isolate;display:block;padding:8px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 26px 44px -22px rgba(0,0,0,.85),0 8px 18px -10px rgba(0,0,0,.6);transition:transform .2s}
+.gcard .glow{position:absolute;left:10%;right:10%;bottom:-16px;height:46%;border-radius:50%;background:var(--glow);filter:blur(30px);opacity:.34;z-index:-1}
+.gcard.hover{transform:translateY(-10px) scale(1.02);border-color:rgba(196,245,66,.55);box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px rgba(196,245,66,.10),0 40px 60px -24px rgba(0,0,0,.9)}
+.gcard.hover .glow{opacity:.6;bottom:-24px}
+.gcard.done{border-color:rgba(255,201,74,.4)}
+.gcard.stagger{margin-top:26px}
+.pctpill{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:99px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:#fff;background:rgba(8,10,16,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14)}
+.gcard.done .pctpill{color:#3a1c00;background:linear-gradient(90deg,#ffe07a,#ffb020);border-color:transparent}
+.hoverbar{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.hoverbar>*{display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:99px;background:rgba(8,10,16,.66);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18)}
+.toastwrap{position:relative}
+.toast{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;width:400px;height:92px;padding:0 16px 0 16px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01)),#121620;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);transform-origin:top left;box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px color-mix(in srgb,var(--c) 10%,transparent),0 26px 50px -16px rgba(0,0,0,.9),0 12px 44px -6px color-mix(in srgb,var(--c) 45%,transparent)}
+.toast.ultra{border-color:rgba(255,201,74,.75)}
+.toast .shine{position:absolute;top:0;bottom:0;left:120px;width:60px;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,224,122,.28),transparent)}
+.slider{position:relative;height:22px}
+.slider .trk{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:9px;background:rgba(255,255,255,.1)}
+.slider .fill{position:absolute;left:0;top:9px;height:4px;border-radius:9px;background:var(--lime);box-shadow:0 0 14px rgba(196,245,66,.6)}
+.slider .thumb{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:99px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+::selection{background:var(--lime);color:#0B1000}
+</style>
 </head>
 <body>
-  <div class="min-h-screen bg-base flex overflow-hidden">
-    
-    <!-- Sidebar -->
-    <aside class="w-[240px] bg-surface1 border-r border-border flex flex-col flex-shrink-0" style="view-transition-name: sidebar">
-      <!-- Header -->
-      <div class="h-16 px-6 flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-surface2 border border-border flex items-center justify-center text-primary">
-          <iconify-icon icon="lucide:trophy" class="text-xl"></iconify-icon>
-        </div>
-        <span class="font-display font-semibold text-text truncate">Achievement Tracker</span>
-      </div>
+<div id="app" class="min-h-screen text-fg aurora">
 
-      <!-- Nav -->
-      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
-          <iconify-icon icon="lucide:layout-dashboard" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium">Dashboard</span>
-        </a>
-        <a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="nav-library" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
-          <iconify-icon icon="lucide:library" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium">Library</span>
-        </a>
-        <a href="#activity" id="nav-activity" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
-          <iconify-icon icon="lucide:activity" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium">Activity</span>
-        </a>
-        <a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="nav-accounts" class="flex items-center px-3 py-2.5 rounded-lg bg-surface3 text-text relative group">
-          <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full"></div>
-          <iconify-icon icon="lucide:plug" class="w-5 h-5 mr-3 text-primary"></iconify-icon>
-          <span class="font-medium">Accounts</span>
-        </a>
-        <a href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" id="nav-settings" class="flex items-center px-3 py-2.5 rounded-lg text-muted hover:bg-surface2 hover:text-text transition-colors group">
-          <iconify-icon icon="lucide:settings" class="w-5 h-5 mr-3 group-hover:text-text"></iconify-icon>
-          <span class="font-medium">Settings</span>
-        </a>
-      </nav>
-
-      <!-- Footer -->
-      <div class="p-4 border-t border-border space-y-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center text-xs text-muted">
-            <div class="w-2 h-2 rounded-full bg-success mr-2"></div>
-            Synced 2 min ago
-          </div>
-          <button id="btn-dnd" class="text-muted hover:text-text w-6 h-6 flex items-center justify-center rounded transition-colors">
-            <iconify-icon icon="lucide:bell-off" class="text-sm"></iconify-icon>
-          </button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden" style="view-transition-name: main-content">
-      <!-- Topbar -->
-      <header class="h-16 px-8 flex items-center justify-between flex-shrink-0" style="view-transition-name: topbar">
-        <h1 class="font-display font-semibold text-[28px] leading-[34px] text-text">Accounts</h1>
-        
-        <div class="flex items-center gap-4">
-          <div class="relative w-64">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <iconify-icon icon="lucide:search" class="text-muted"></iconify-icon>
-            </div>
-            <input type="text" placeholder="Search games or achievements..." class="w-full h-9 pl-9 pr-12 bg-surface2 border border-border rounded-lg text-sm text-text placeholder:text-subtle focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span class="text-[10px] font-medium text-subtle px-1.5 py-0.5 rounded border border-border bg-surface1">Ctrl+K</span>
-            </div>
-          </div>
-          <button id="btn-sync" class="h-9 px-4 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors flex items-center gap-2">
-            <iconify-icon icon="lucide:refresh-cw" class="text-muted"></iconify-icon>
-            Sync now
-          </button>
-        </div>
-      </header>
-
-      <!-- Scrollable Area -->
-      <div class="flex-1 overflow-y-auto px-8 pb-12">
-        <div class="max-w-[1280px] mx-auto space-y-8">
-
-          <!-- Helper Banner -->
-          <div class="bg-surface1 border border-border rounded-xl p-4 flex items-center gap-3">
-            <iconify-icon icon="lucide:info" class="text-info text-xl flex-shrink-0"></iconify-icon>
-            <p class="text-sm text-text">
-              Your credentials are stored in the Windows Credential Manager and never leave this device.
-            </p>
-          </div>
-
-          <!-- Accounts Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            <!-- Steam -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-[#66C0F4]/14 text-[#66C0F4] flex items-center justify-center">
-                  <iconify-icon icon="mdi:steam" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-success/30">
-                  <div class="w-2 h-2 rounded-full bg-success"></div>
-                  <span class="text-[11px] font-medium text-success">Connected</span>
-                </div>
-              </div>
-              <h3 class="text-lg font-semibold text-text mb-1">Steam</h3>
-              <p class="text-sm text-muted mb-4 flex-1">Synced 2 min ago &middot; Web API key</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
-                Manage
-              </button>
-            </div>
-
-            <!-- Xbox -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-[#52B043]/14 text-[#52B043] flex items-center justify-center">
-                  <iconify-icon icon="mdi:microsoft-xbox" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-success/30">
-                  <div class="w-2 h-2 rounded-full bg-success"></div>
-                  <span class="text-[11px] font-medium text-success">Connected</span>
-                </div>
-              </div>
-              <h3 class="text-lg font-semibold text-text mb-1">Xbox</h3>
-              <p class="text-sm text-muted mb-4 flex-1">Active session</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
-                Manage
-              </button>
-            </div>
-
-            <!-- PlayStation -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-[#0070D1]/14 text-[#0070D1] flex items-center justify-center">
-                  <iconify-icon icon="mdi:sony-playstation" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-warning/30">
-                  <div class="w-2 h-2 rounded-full bg-warning"></div>
-                  <span class="text-[11px] font-medium text-warning">Needs re-auth</span>
-                </div>
-              </div>
-              <h3 class="text-lg font-semibold text-text mb-1">PlayStation</h3>
-              <p class="text-sm text-warning mb-4 flex-1">NPSSO token expired</p>
-              <button class="w-full h-9 bg-primary text-onPrimary rounded-lg text-sm font-semibold hover:bg-primaryHover transition-colors">
-                Re-authenticate
-              </button>
-            </div>
-
-            <!-- RetroAchievements -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-platform-emulator/14 text-platform-emulator flex items-center justify-center">
-                  <iconify-icon icon="lucide:gamepad-2" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-success/30">
-                  <div class="w-2 h-2 rounded-full bg-success"></div>
-                  <span class="text-[11px] font-medium text-success">Connected</span>
-                </div>
-              </div>
-              <h3 class="text-lg font-semibold text-text mb-1">RetroAchievements</h3>
-              <p class="text-sm text-muted mb-4 flex-1">Active session</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
-                Manage
-              </button>
-            </div>
-
-            <!-- RPCS3 -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-platform-emulator/14 text-platform-emulator flex items-center justify-center">
-                  <iconify-icon icon="lucide:folder-open" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-info/30">
-                  <div class="w-2 h-2 rounded-full bg-info"></div>
-                  <span class="text-[11px] font-medium text-info">Watching</span>
-                </div>
-              </div>
-              <h3 class="text-lg font-semibold text-text mb-1">RPCS3</h3>
-              <p class="text-sm text-muted mb-4 flex-1 truncate" title="E:/Games/RPCS3/dev_hdd0">E:/Games/RPCS3/dev_hdd0</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
-                Manage
-              </button>
-            </div>
-
-            <!-- Xenia -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-platform-emulator/14 text-platform-emulator flex items-center justify-center">
-                  <iconify-icon icon="lucide:disc" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
-                  <div class="w-2 h-2 rounded-full bg-muted"></div>
-                  <span class="text-[11px] font-medium text-muted">Not connected</span>
-                </div>
-              </div>
-              <h3 class="text-lg font-semibold text-text mb-1">Xenia</h3>
-              <p class="text-sm text-muted mb-4 flex-1">Local save parsing</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
-                Connect
-              </button>
-            </div>
-
-            <!-- Epic Games -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-[#D4D4D8]/14 text-[#D4D4D8] flex items-center justify-center">
-                  <iconify-icon icon="simple-icons:epicgames" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
-                  <div class="w-2 h-2 rounded-full bg-muted"></div>
-                  <span class="text-[11px] font-medium text-muted">Not connected</span>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 mb-1">
-                <h3 class="text-lg font-semibold text-text">Epic Games</h3>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface3 text-muted uppercase tracking-wide">Unofficial</span>
-              </div>
-              <p class="text-sm text-muted mb-4 flex-1">Experimental support</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
-                Connect
-              </button>
-            </div>
-
-            <!-- Ubisoft Connect -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-[#3D8BFF]/14 text-[#3D8BFF] flex items-center justify-center">
-                  <iconify-icon icon="simple-icons:ubisoft" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface2 border border-border">
-                  <div class="w-2 h-2 rounded-full bg-muted"></div>
-                  <span class="text-[11px] font-medium text-muted">Not connected</span>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 mb-1">
-                <h3 class="text-lg font-semibold text-text">Ubisoft Connect</h3>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface3 text-muted uppercase tracking-wide">Unofficial</span>
-              </div>
-              <p class="text-sm text-muted mb-4 flex-1">Experimental support</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-text hover:bg-surface3 transition-colors">
-                Connect
-              </button>
-            </div>
-
-            <!-- EA app -->
-            <div class="bg-surface1 border border-border rounded-xl p-6 flex flex-col opacity-60">
-              <div class="flex items-start justify-between mb-6">
-                <div class="w-12 h-12 rounded-full bg-[#FF5A5A]/14 text-[#FF5A5A] flex items-center justify-center">
-                  <iconify-icon icon="simple-icons:ea" class="text-2xl"></iconify-icon>
-                </div>
-              </div>
-              <h3 class="text-lg font-semibold text-text mb-1">EA app</h3>
-              <p class="text-sm text-muted mb-4 flex-1">Not supported yet</p>
-              <button class="w-full h-9 bg-surface2 border border-border rounded-lg text-sm font-medium text-muted cursor-not-allowed" disabled>
-                Coming soon
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-    </main>
+<header class="sticky top-4 z-30 mx-auto mt-4 w-[calc(100%-48px)] max-w-[1392px]">
+  <div class="island flex h-[60px] items-center gap-2 pl-3 pr-2.5">
+    <a href="https://p.superdesign.dev/draft/3b7abd38-f288-40e1-8a11-0b651ab8e5ba" id="nav-brand" class="flex items-center gap-2.5 pr-4"><span class="logo" style="width:36px;height:36px;border-radius:12px"><svg viewBox="296 224 432 608" fill="currentColor" width="15" aria-hidden="true"><path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216z"/><path d="M472 640h80v120h-80z"/><path d="M356 760h312v72H356z"/></svg></span><span class="font-display whitespace-nowrap text-[17px] font-bold">Trophy Locker</span></a>
+    <nav class="flex items-center gap-1" aria-label="Main"><a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="nav-overview" class="navpill"><iconify-icon icon="lucide:layout-grid" width="17" height="17" class=""></iconify-icon>Overview</a><a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="nav-library" class="navpill"><iconify-icon icon="lucide:library" width="17" height="17" class=""></iconify-icon>Library</a><a href="https://p.superdesign.dev/draft/eb386cc4-faad-4445-a923-854824785ea1" id="nav-activity" class="navpill"><iconify-icon icon="lucide:activity" width="17" height="17" class=""></iconify-icon>Activity</a><a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="nav-accounts" class="navpill on"><iconify-icon icon="lucide:plug" width="17" height="17" class=""></iconify-icon>Accounts</a><a href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" id="nav-settings" class="navpill"><iconify-icon icon="lucide:settings" width="17" height="17" class=""></iconify-icon>Settings</a></nav>
+    <div class="ml-auto flex items-center gap-2">
+      <label class="flex h-10 w-[200px] items-center gap-2 rounded-full bg-white/[0.06] px-4 text-muted"><iconify-icon icon="lucide:search" width="16" height="16" class=""></iconify-icon><input class="w-full bg-transparent text-[13px] text-fg outline-none placeholder:text-subtle" placeholder="Search library"><span class="whitespace-nowrap rounded-md bg-white/[0.08] px-1.5 text-[11px] font-semibold text-muted">Ctrl K</span></label>
+      <a href="#sync" id="btn-sync" class="flex h-10 items-center gap-2 whitespace-nowrap rounded-full bg-white/[0.06] px-4 text-[13px] font-semibold hover:bg-white/10"><i class="pulse"></i>Synced 2m ago<iconify-icon icon="lucide:refresh-cw" width="15" height="15" class="text-muted"></iconify-icon></a>
+      <a href="#dnd" id="btn-dnd" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-muted hover:bg-white/10"><iconify-icon icon="lucide:bell-off" width="17" height="17" class=""></iconify-icon></a>
+      <span class="avatar h-10 w-10 text-[15px]">A</span>
+    </div>
   </div>
+</header>
+<main class="mx-auto w-[calc(100%-48px)] max-w-[1392px] pb-20">
+  <div class="mt-9 flex items-end justify-between">
+    <div><div class="text-[13px] font-semibold text-muted">Sources</div><h1 class="font-display m-0 text-[52px] font-extrabold leading-[56px]">Accounts</h1></div>
+    <a href="#add-source" id="btn-add-source" class="btn btn-primary"><iconify-icon icon="lucide:plus" width="17" height="17" class=""></iconify-icon>Add source</a>
+  </div>
+
+  <div class="mt-7 grid grid-cols-3 gap-6">
+    <div class="card flex items-center gap-4 p-5" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 26px 50px -22px rgba(0,0,0,.8),0 16px 50px -24px #4ADE9A66"><span class="flex h-12 w-12 items-center justify-center rounded-2xl" style="color:#4ADE9A;background:color-mix(in srgb,#4ADE9A 15%,transparent)"><iconify-icon icon="lucide:plug-zap" width="24" height="24" class=""></iconify-icon></span><div><div class="font-display text-[36px] font-extrabold leading-9">5</div><div class="text-[13px] text-muted">Connected sources</div></div></div>
+    <div class="card flex items-center gap-4 p-5" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 26px 50px -22px rgba(0,0,0,.8),0 16px 50px -24px #FFB54766"><span class="flex h-12 w-12 items-center justify-center rounded-2xl" style="color:#FFB547;background:color-mix(in srgb,#FFB547 15%,transparent)"><iconify-icon icon="lucide:triangle-alert" width="24" height="24" class=""></iconify-icon></span><div><div class="font-display text-[36px] font-extrabold leading-9">1</div><div class="text-[13px] text-muted">Needs re-authentication</div></div></div>
+    <div class="card flex items-center gap-4 p-5" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 26px 50px -22px rgba(0,0,0,.8),0 16px 50px -24px #C4F54255"><span class="flex h-12 w-12 items-center justify-center rounded-2xl" style="color:#C4F542;background:color-mix(in srgb,#C4F542 15%,transparent)"><iconify-icon icon="lucide:circle-plus" width="24" height="24" class=""></iconify-icon></span><div><div class="font-display text-[36px] font-extrabold leading-9">2</div><div class="text-[13px] text-muted">Available to connect</div></div></div>
+  </div>
+
+  <section class="mt-12">
+    <div class="mb-4 flex items-end justify-between"><div><h2 class="font-display m-0 text-[24px] font-bold leading-7">Online platforms</h2><div class="mt-0.5 text-[13px] text-muted">Achievements pulled straight from each platform</div></div></div>
+    <div class="grid grid-cols-3 items-start gap-6"><div class="card flex flex-col p-6" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 18px 60px -22px #66C0F455">
+    <div class="flex items-center gap-4">
+      <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]" style="color:#66C0F4;background:color-mix(in srgb,#66C0F4 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#66C0F4 32%,transparent),0 12px 26px -10px #66C0F488"><iconify-icon icon="simple-icons:steam" width="28" height="28" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="font-display text-[24px] font-bold leading-7">Steam</div><div class="truncate text-[13px] text-muted">Web API key + Steam ID · your own key</div></div>
+    </div>
+    <div class="mt-5 flex items-center justify-between"><span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold" style="color:#4ADE9A;background:color-mix(in srgb,#4ADE9A 14%,transparent)"><iconify-icon icon="lucide:circle-check" width="14" height="14" class=""></iconify-icon>Connected</span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:shield-check" width="14" height="14" class=""></iconify-icon>Official API</span></div>
+    <div class="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-white/[0.04] px-4 py-3">
+      <div><div class="text-[11px] font-semibold text-subtle">Games</div><div class="font-display text-[22px] font-bold leading-6">62</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Unlocked</div><div class="font-display text-[22px] font-bold leading-6">712</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Last sync</div><div class="text-[13px] font-semibold leading-6 ">2 min ago</div></div>
+    </div>
+    <div class="mt-5 flex items-center gap-2"><a href="#p-steam-resync" id="btn-resync-p-steam" class="btn btn-secondary btn-sm flex-1"><iconify-icon icon="lucide:refresh-cw" width="14" height="14" class=""></iconify-icon>Resync</a><a href="#p-steam-remove" id="btn-disconnect-p-steam" class="btn btn-ghost btn-sm">Disconnect</a></div>
+  </div><div class="card flex flex-col p-6" style="border-color:rgba(255,181,71,.5);box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 0 0 5px rgba(255,181,71,.07),0 28px 56px -22px rgba(0,0,0,.8),0 18px 60px -14px rgba(255,150,40,.35)">
+    <div class="flex items-center gap-4">
+      <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]" style="color:#5FD35A;background:color-mix(in srgb,#5FD35A 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#5FD35A 32%,transparent),0 12px 26px -10px #5FD35A88"><iconify-icon icon="simple-icons:xbox" width="28" height="28" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="font-display text-[24px] font-bold leading-7">Xbox</div><div class="truncate text-[13px] text-muted">Microsoft sign-in (OAuth)</div></div>
+    </div>
+    <div class="mt-5 flex items-center justify-between"><span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold" style="color:#FFB547;background:color-mix(in srgb,#FFB547 14%,transparent)"><iconify-icon icon="lucide:triangle-alert" width="14" height="14" class=""></iconify-icon>Needs re-auth</span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:shield-check" width="14" height="14" class=""></iconify-icon>Official API</span></div>
+    <div class="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-white/[0.04] px-4 py-3">
+      <div><div class="text-[11px] font-semibold text-subtle">Games</div><div class="font-display text-[22px] font-bold leading-6">24</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Unlocked</div><div class="font-display text-[22px] font-bold leading-6">298</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Last sync</div><div class="text-[13px] font-semibold leading-6 text-warn">6 days ago</div></div>
+    </div>
+    <div class="mt-5 flex items-center gap-2"><a href="#p-xbox" id="btn-reconnect-p-xbox" class="btn btn-primary flex-1"><iconify-icon icon="lucide:log-in" width="16" height="16" class=""></iconify-icon>Reconnect</a><a href="#p-xbox-remove" id="btn-disconnect-p-xbox" class="btn btn-ghost btn-sm">Disconnect</a></div>
+  </div><div class="card flex flex-col p-6" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 18px 60px -22px #4F8CFF55">
+    <div class="flex items-center gap-4">
+      <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]" style="color:#4F8CFF;background:color-mix(in srgb,#4F8CFF 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#4F8CFF 32%,transparent),0 12px 26px -10px #4F8CFF88"><iconify-icon icon="simple-icons:playstation" width="28" height="28" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="font-display text-[24px] font-bold leading-7">PlayStation</div><div class="truncate text-[13px] text-muted">NPSSO token from your browser</div></div>
+    </div>
+    <div class="mt-5 flex items-center justify-between"><span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold" style="color:#4ADE9A;background:color-mix(in srgb,#4ADE9A 14%,transparent)"><iconify-icon icon="lucide:circle-check" width="14" height="14" class=""></iconify-icon>Connected</span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</span></div>
+    <div class="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-white/[0.04] px-4 py-3">
+      <div><div class="text-[11px] font-semibold text-subtle">Games</div><div class="font-display text-[22px] font-bold leading-6">18</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Unlocked</div><div class="font-display text-[22px] font-bold leading-6">187</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Last sync</div><div class="text-[13px] font-semibold leading-6 ">14 min ago</div></div>
+    </div>
+    <div class="mt-5 flex items-center gap-2"><a href="#p-playstation-resync" id="btn-resync-p-playstation" class="btn btn-secondary btn-sm flex-1"><iconify-icon icon="lucide:refresh-cw" width="14" height="14" class=""></iconify-icon>Resync</a><a href="#p-playstation-remove" id="btn-disconnect-p-playstation" class="btn btn-ghost btn-sm">Disconnect</a></div>
+  </div><div class="card flex flex-col p-6" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 18px 60px -22px #E4E4E755">
+    <div class="flex items-center gap-4">
+      <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]" style="color:#E4E4E7;background:color-mix(in srgb,#E4E4E7 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#E4E4E7 32%,transparent),0 12px 26px -10px #E4E4E788"><iconify-icon icon="simple-icons:epicgames" width="28" height="28" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="font-display text-[24px] font-bold leading-7">Epic</div><div class="truncate text-[13px] text-muted">Sign-in via Epic launcher data</div></div>
+    </div>
+    <div class="mt-5 flex items-center justify-between"><span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold" style="color:#4ADE9A;background:color-mix(in srgb,#4ADE9A 14%,transparent)"><iconify-icon icon="lucide:circle-check" width="14" height="14" class=""></iconify-icon>Connected</span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</span></div>
+    <div class="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-white/[0.04] px-4 py-3">
+      <div><div class="text-[11px] font-semibold text-subtle">Games</div><div class="font-display text-[22px] font-bold leading-6">6</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Unlocked</div><div class="font-display text-[22px] font-bold leading-6">41</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Last sync</div><div class="text-[13px] font-semibold leading-6 ">1 hr ago</div></div>
+    </div>
+    <div class="mt-5 flex items-center gap-2"><a href="#p-epic-resync" id="btn-resync-p-epic" class="btn btn-secondary btn-sm flex-1"><iconify-icon icon="lucide:refresh-cw" width="14" height="14" class=""></iconify-icon>Resync</a><a href="#p-epic-remove" id="btn-disconnect-p-epic" class="btn btn-ghost btn-sm">Disconnect</a></div>
+  </div><div class="card flat flex flex-col p-6" style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(255,255,255,.16);box-shadow:none">
+      <div class="flex items-center gap-4"><span class="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white/[0.05] text-muted"><iconify-icon icon="simple-icons:ubisoft" width="26" height="26" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="font-display text-[22px] font-bold leading-6">Ubisoft</div><div class="mt-0.5 text-[13px] text-muted">Ubisoft Connect account</div></div></div>
+      <div class="mt-5 flex items-center gap-2 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</div>
+      <div class="mt-5"><a href="#p-ubisoft" id="btn-connect-p-ubisoft" class="btn btn-secondary w-full"><iconify-icon icon="lucide:plus" width="16" height="16" class=""></iconify-icon>Connect Ubisoft</a></div>
+    </div><div class="card flat flex flex-col p-6" style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(255,255,255,.16);box-shadow:none">
+      <div class="flex items-center gap-4"><span class="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white/[0.05] text-muted"><iconify-icon icon="simple-icons:ea" width="26" height="26" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="font-display text-[22px] font-bold leading-6">EA</div><div class="mt-0.5 text-[13px] text-muted">EA app account</div></div></div>
+      <div class="mt-5 flex items-center gap-2 text-[12px] font-semibold text-warn"><iconify-icon icon="lucide:shield-alert" width="14" height="14" class=""></iconify-icon>Unofficial · opt-in</div>
+      <div class="mt-5"><a href="#p-ea" id="btn-connect-p-ea" class="btn btn-secondary w-full"><iconify-icon icon="lucide:plus" width="16" height="16" class=""></iconify-icon>Connect EA</a></div>
+    </div></div>
+  </section>
+
+  <section class="mt-12">
+    <div class="mb-4 flex items-end justify-between"><div><h2 class="font-display m-0 text-[24px] font-bold leading-7">Emulators and local files</h2><div class="mt-0.5 text-[13px] text-muted">Read from files on this machine</div></div></div>
+    <div class="grid grid-cols-3 items-start gap-6"><div class="card flex flex-col p-6" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 18px 60px -22px #B79CFF55">
+    <div class="flex items-center gap-4">
+      <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]" style="color:#B79CFF;background:color-mix(in srgb,#B79CFF 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#B79CFF 32%,transparent),0 12px 26px -10px #B79CFF88"><iconify-icon icon="lucide:cpu" width="28" height="28" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="font-display text-[24px] font-bold leading-7">RPCS3</div><div class="truncate text-[13px] text-muted">Watching C:\emu\rpcs3\…\trophy</div></div>
+    </div>
+    <div class="mt-5 flex items-center justify-between"><span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold" style="color:#4ADE9A;background:color-mix(in srgb,#4ADE9A 14%,transparent)"><iconify-icon icon="lucide:circle-check" width="14" height="14" class=""></iconify-icon>Connected</span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:folder" width="14" height="14" class=""></iconify-icon>Local files</span></div>
+    <div class="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-white/[0.04] px-4 py-3">
+      <div><div class="text-[11px] font-semibold text-subtle">Games</div><div class="font-display text-[22px] font-bold leading-6">5</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Unlocked</div><div class="font-display text-[22px] font-bold leading-6">31</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Last sync</div><div class="text-[13px] font-semibold leading-6 ">Live</div></div>
+    </div>
+    <div class="mt-5 flex items-center gap-2"><a href="#e-rpcs3-resync" id="btn-resync-e-rpcs3" class="btn btn-secondary btn-sm flex-1"><iconify-icon icon="lucide:refresh-cw" width="14" height="14" class=""></iconify-icon>Resync</a><a href="#e-rpcs3-remove" id="btn-disconnect-e-rpcs3" class="btn btn-ghost btn-sm">Remove</a></div>
+  </div><div class="card flat flex flex-col p-6" style="background:rgba(255,255,255,.02);border:1.5px dashed rgba(255,255,255,.16);box-shadow:none">
+      <div class="flex items-center gap-4"><span class="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white/[0.05] text-muted"><iconify-icon icon="lucide:cpu" width="26" height="26" class=""></iconify-icon></span><div class="min-w-0 flex-1"><div class="font-display text-[22px] font-bold leading-6">Xenia</div><div class="mt-0.5 text-[13px] text-muted">No install found in the usual places</div></div></div>
+      <div class="mt-5 flex items-center gap-2 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:folder" width="14" height="14" class=""></iconify-icon>Local files</div>
+      <div class="mt-5"><a href="#e-xenia" id="btn-connect-e-xenia" class="btn btn-secondary w-full"><iconify-icon icon="lucide:plus" width="16" height="16" class=""></iconify-icon>Browse for folder</a></div>
+    </div><div class="card flex flex-col p-6" style="box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 18px 60px -22px #B79CFF55">
+    <div class="flex items-center gap-4">
+      <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]" style="color:#B79CFF;background:color-mix(in srgb,#B79CFF 15%,#0d1018);box-shadow:0 0 0 1px color-mix(in srgb,#B79CFF 32%,transparent),0 12px 26px -10px #B79CFF88"><iconify-icon icon="lucide:cpu" width="28" height="28" class=""></iconify-icon></span>
+      <div class="min-w-0 flex-1"><div class="font-display text-[24px] font-bold leading-7">RetroAchievements</div><div class="truncate text-[13px] text-muted">Web API key + username</div></div>
+    </div>
+    <div class="mt-5 flex items-center justify-between"><span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold" style="color:#4ADE9A;background:color-mix(in srgb,#4ADE9A 14%,transparent)"><iconify-icon icon="lucide:circle-check" width="14" height="14" class=""></iconify-icon>Connected</span><span class="flex items-center gap-1.5 text-[12px] font-semibold text-muted"><iconify-icon icon="lucide:shield-check" width="14" height="14" class=""></iconify-icon>Official API</span></div>
+    <div class="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-white/[0.04] px-4 py-3">
+      <div><div class="text-[11px] font-semibold text-subtle">Games</div><div class="font-display text-[22px] font-bold leading-6">3</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Unlocked</div><div class="font-display text-[22px] font-bold leading-6">15</div></div>
+      <div><div class="text-[11px] font-semibold text-subtle">Last sync</div><div class="text-[13px] font-semibold leading-6 ">22 min ago</div></div>
+    </div>
+    <div class="mt-5 flex items-center gap-2"><a href="#e-retroachievements-resync" id="btn-resync-e-retroachievements" class="btn btn-secondary btn-sm flex-1"><iconify-icon icon="lucide:refresh-cw" width="14" height="14" class=""></iconify-icon>Resync</a><a href="#e-retroachievements-remove" id="btn-disconnect-e-retroachievements" class="btn btn-ghost btn-sm">Disconnect</a></div>
+  </div></div>
+  </section>
+
+  <div class="mt-12 grid grid-cols-2 gap-6">
+    <div class="card flat flex gap-4 p-6"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-lime/15 text-lime"><iconify-icon icon="lucide:key-round" width="22" height="22" class=""></iconify-icon></span><div><div class="font-display text-[19px] font-bold">Where your keys live</div><p class="mb-0 mt-1 text-[14px] leading-[22px] text-muted">Tokens and API keys are kept in the Windows Credential Manager, never in the app database or logs. Every request goes straight from this machine to the platform.</p></div></div>
+    <div class="card flat flex gap-4 p-6"><span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-warn/15 text-warn"><iconify-icon icon="lucide:shield-alert" width="22" height="22" class=""></iconify-icon></span><div><div class="font-display text-[19px] font-bold">About “unofficial” sources</div><p class="mb-0 mt-1 text-[14px] leading-[22px] text-muted">These platforms have no public achievements API, so we read the endpoints their own apps use. They are off until you opt in, and can break without notice. Missed unlocks always appear in Activity.</p></div></div>
+  </div>
+</main>
+</div>
 </body>
 </html>

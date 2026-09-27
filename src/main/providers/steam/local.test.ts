@@ -1,3 +1,5 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -5,10 +7,12 @@ import {
   ACTIVE_PROCESS_KEY,
   DEBOUNCE_MS,
   parseRegQuery,
+  readFile,
   REGISTRY_POLL_MS,
   RUNNING_GAME_POLL_MS,
   type RegistryValue,
   statsFileAppId,
+  statsFolder,
   STEAM_KEY,
   type SteamLocalDeps,
   watchSteamLocal,
@@ -101,6 +105,7 @@ describe('watchSteamLocal', () => {
         onFile = listener
         return stopFolder
       },
+      readFile: () => Promise.resolve(null),
     }
   })
 
@@ -261,5 +266,43 @@ describe('watchSteamLocal', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(watchedPath).toBeUndefined()
+  })
+})
+
+describe('statsFolder', () => {
+  it("is the stats folder inside Steam's install folder", () => {
+    expect(statsFolder(STEAM_PATH)).toBe(join(STEAM_PATH, 'appcache', 'stats'))
+  })
+
+  it.each([null, '', 1])('is null without a Steam folder (%s)', (value) => {
+    expect(statsFolder(value)).toBeNull()
+  })
+})
+
+describe('readFile', () => {
+  let folder: string
+
+  beforeEach(() => {
+    folder = mkdtempSync(join(tmpdir(), 'steam-stats-'))
+  })
+
+  afterEach(() => {
+    rmSync(folder, { recursive: true, force: true })
+  })
+
+  it('reads a file up to the size limit', async () => {
+    writeFileSync(join(folder, 'stats.bin'), Buffer.of(1, 2, 3))
+
+    await expect(readFile(join(folder, 'stats.bin'), 3)).resolves.toEqual(Buffer.of(1, 2, 3))
+  })
+
+  it('gives null for a missing file', async () => {
+    await expect(readFile(join(folder, 'missing.bin'), 3)).resolves.toBeNull()
+  })
+
+  it('refuses a file larger than the limit as a parse error', async () => {
+    writeFileSync(join(folder, 'big.bin'), Buffer.alloc(4))
+
+    await expect(readFile(join(folder, 'big.bin'), 3)).rejects.toMatchObject({ kind: 'parse' })
   })
 })

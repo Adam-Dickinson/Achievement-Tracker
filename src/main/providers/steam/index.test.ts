@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProviderError } from '@shared/errors'
@@ -10,6 +10,7 @@ import { getAccount } from '../../store/sync-store'
 import { runSyncPass } from '../../sync/sync-pass'
 import { SteamProvider } from './index'
 import { DEBOUNCE_MS, type SteamLocalDeps } from './local'
+import { encode } from './test/encode-key-values'
 
 const KEY = '0123456789ABCDEF0123456789ABCDEF'
 const STEAM_ID = '76561190000000001'
@@ -84,7 +85,13 @@ async function errorFrom(request: Promise<unknown>): Promise<ProviderError> {
   return error
 }
 
-const provider = new SteamProvider()
+const NO_LOCAL: SteamLocalDeps = {
+  readRegistry: () => Promise.resolve(null),
+  watchFolder: () => () => undefined,
+  readFile: () => Promise.resolve(null),
+}
+
+const provider = new SteamProvider(NO_LOCAL)
 
 describe('SteamProvider', () => {
   it('declares an official, polled source with global rarity and a local watch', () => {
@@ -114,6 +121,7 @@ describe('SteamProvider', () => {
           onFile = listener
           return () => undefined
         },
+        readFile: () => Promise.resolve(null),
       }
       return { provider: new SteamProvider(local), changeFile: (name) => onFile(name) }
     }
@@ -137,6 +145,7 @@ describe('SteamProvider', () => {
       const local: SteamLocalDeps = {
         readRegistry: vi.fn<SteamLocalDeps['readRegistry']>(),
         watchFolder: vi.fn<SteamLocalDeps['watchFolder']>(),
+        readFile: vi.fn<SteamLocalDeps['readFile']>(),
       }
       const stop = new SteamProvider(local).watch({ ...CREDENTIALS, externalId: 'x' }, vi.fn())
 
@@ -247,7 +256,7 @@ describe('SteamProvider', () => {
       },
     })
     let now = new Date('2026-09-26T12:00:00Z')
-    const fresh = (): SteamProvider => new SteamProvider(undefined, { now: () => now })
+    const fresh = (): SteamProvider => new SteamProvider(NO_LOCAL, { now: () => now })
     const storeRequests = (): number =>
       requests.filter((url) => url.pathname === '/IStoreBrowseService/GetItems/v1/').length
 
@@ -324,6 +333,99 @@ describe('SteamProvider', () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(3)
       for (const call of fetchMock.mock.calls) expect(call[1]).toEqual({ signal })
+    })
+
+    describe('with Steam installed locally', () => {
+      const STATS = join('C:/Steam', 'appcache', 'stats')
+      const ACCOUNT_ID = '39734273'
+      const PLAYER = { ...CREDENTIALS, externalId: '76561198000000001' }
+      const SCHEMA_FILE = encode({
+        '883710': {
+          stats: {
+            '5': {
+              type: 'ACHIEVEMENTS',
+              bits: { '0': { name: 'NEW_ACHIEVEMENT_1_1' }, '1': { name: 'NEW_ACHIEVEMENT_1_9' } },
+            },
+          },
+        },
+      })
+      const STATS_FILE = encode({
+        cache: {
+          crc: 1,
+          '5': { data: 0b11, AchievementTimes: { '0': 1_600_000_000, '1': 1_790_418_489 } },
+        },
+      })
+
+      function localSteam(files: Record<string, Buffer>): SteamLocalDeps & {
+        readRegistry: ReturnType<typeof vi.fn<SteamLocalDeps['readRegistry']>>
+      } {
+        return {
+          readRegistry: vi.fn<SteamLocalDeps['readRegistry']>((_key, name) =>
+            Promise.resolve(name === 'SteamPath' ? 'C:/Steam' : null),
+          ),
+          watchFolder: () => () => undefined,
+          readFile: (path) => Promise.resolve(files[path] ?? null),
+        }
+      }
+
+      const GAME_FILES = {
+        [join(STATS, `UserGameStats_${ACCOUNT_ID}_883710.bin`)]: STATS_FILE,
+        [join(STATS, 'UserGameStatsSchema_883710.bin')]: SCHEMA_FILE,
+      }
+
+      it('adds an unlock Steam saved locally before the Web API reports it', async () => {
+        const result = await new SteamProvider(localSteam(GAME_FILES)).fetchGame(PLAYER, {
+          externalId: '883710',
+        })
+
+        expect(result.unlocks.map((unlock) => unlock.achievementExternalId)).toEqual([
+          'NEW_ACHIEVEMENT_1_1',
+          'NEW_ACHIEVEMENT_1_7',
+          'NEW_ACHIEVEMENT_1_9',
+        ])
+        expect(result.unlocks[2]?.unlockedAt).toEqual(new Date('2026-09-26T10:28:09Z'))
+      })
+
+      it("keeps the Web API's time for an unlock both sources have", async () => {
+        const result = await new SteamProvider(localSteam(GAME_FILES)).fetchGame(PLAYER, {
+          externalId: '883710',
+        })
+
+        const player = JSON.parse(fixtureText('player-achievements-883710.json')) as {
+          playerstats: { achievements: { apiname: string; unlocktime: number }[] }
+        }
+        const fromApi = player.playerstats.achievements.find(
+          (row) => row.apiname === 'NEW_ACHIEVEMENT_1_1',
+        )
+        expect(result.unlocks[0]?.unlockedAt).toEqual(new Date((fromApi?.unlocktime ?? 0) * 1000))
+      })
+
+      it("reads Steam's folder from the registry once", async () => {
+        const local = localSteam(GAME_FILES)
+        const steam = new SteamProvider(local)
+
+        await steam.fetchGame(PLAYER, { externalId: '883710' })
+        await steam.fetchGame(PLAYER, { externalId: '883710' })
+
+        expect(local.readRegistry).toHaveBeenCalledOnce()
+      })
+
+      it('uses only the Web API when a local file cannot be read', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+        const local: SteamLocalDeps = {
+          ...localSteam(GAME_FILES),
+          readFile: () => Promise.reject(new Error('EBUSY')),
+        }
+
+        const result = await new SteamProvider(local).fetchGame(PLAYER, { externalId: '883710' })
+
+        expect(result.unlocks.map((unlock) => unlock.achievementExternalId)).toEqual([
+          'NEW_ACHIEVEMENT_1_1',
+          'NEW_ACHIEVEMENT_1_7',
+        ])
+        expect(warn).toHaveBeenCalledOnce()
+        warn.mockRestore()
+      })
     })
 
     it('returns nothing for a game without stats', async () => {

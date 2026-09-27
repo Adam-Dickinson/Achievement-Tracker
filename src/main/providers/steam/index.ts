@@ -5,12 +5,20 @@ import type {
   RemoteGame,
   RemoteGameAchievements,
   RemoteGameRef,
+  RemoteUnlock,
 } from '@shared/models'
 import type { AchievementProvider, AuthInput, ProviderCapabilities } from '@shared/provider'
 import { Secret } from '@shared/secret'
 import { steamGet } from './api'
 import { fetchFamilyApps, fetchStoreAchievementFlags, toFamilyGame } from './family'
-import { accountIdOf, STEAM_LOCAL, type SteamLocalDeps, watchSteamLocal } from './local'
+import {
+  accountIdOf,
+  STEAM_KEY,
+  STEAM_LOCAL,
+  type SteamLocalDeps,
+  statsFolder,
+  watchSteamLocal,
+} from './local'
 import {
   parseGameSchema,
   parseGlobalPercentages,
@@ -20,6 +28,7 @@ import {
   toGameAchievements,
 } from './parse'
 import { readSteamSecret, requestSteamSession, type SteamSession } from './session'
+import { readLocalUnlocks, withLocalUnlocks } from './stats-file'
 import { fetchHeaderImages } from './store-assets'
 
 const COVER_TTL_MS = 24 * 60 * 60_000
@@ -54,6 +63,7 @@ export class SteamProvider implements AchievementProvider {
   readonly #familyTokens = new Map<string, Promise<SteamSession>>()
   readonly #hasAchievements = new Map<string, boolean>()
   readonly #covers = new Map<string, { readonly url: string | null; readonly at: number }>()
+  #statsFolder: Promise<string | null> | undefined
 
   constructor(
     local: SteamLocalDeps = STEAM_LOCAL,
@@ -118,7 +128,7 @@ export class SteamProvider implements AchievementProvider {
   ): Promise<RemoteGameAchievements> {
     const key = requireKey(credentials)
     const appid = game.externalId
-    const [schema, player, rarity] = await Promise.all([
+    const [schema, player, rarity, local] = await Promise.all([
       steamGet(GAME_SCHEMA, { appid, l: LANGUAGE }, { key, signal }),
       steamGet(
         PLAYER_ACHIEVEMENTS,
@@ -126,12 +136,28 @@ export class SteamProvider implements AchievementProvider {
         { key, signal },
       ),
       steamGet(GLOBAL_PERCENTAGES, { gameid: appid }, { signal }),
+      this.#localUnlocks(credentials.externalId, appid),
     ])
-    return toGameAchievements(
+    const remote = toGameAchievements(
       parseGameSchema(schema),
       parsePlayerAchievements(player),
       parseGlobalPercentages(rarity),
     )
+    return withLocalUnlocks(remote, local)
+  }
+
+  async #localUnlocks(steamId: string, appid: string): Promise<RemoteUnlock[]> {
+    const accountId = accountIdOf(steamId)
+    if (accountId === null) return []
+    try {
+      this.#statsFolder ??= this.#local.readRegistry(STEAM_KEY, 'SteamPath').then(statsFolder)
+      const folder = await this.#statsFolder
+      return folder === null ? [] : await readLocalUnlocks(this.#local, folder, accountId, appid)
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      console.warn(`Steam: used only the Web API for ${appid} this time (${reason})`)
+      return []
+    }
   }
 
   async #withCovers(

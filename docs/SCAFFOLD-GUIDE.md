@@ -278,7 +278,7 @@ In development the default menu is kept: press **Ctrl+Shift+I** (or Alt → View
 - **Memory:** measured on a production build in the tray: ~320 MB working set, ~170 MB private, 4 processes. Options to reduce (on-demand overlay, no GPU process) are in ADR-0003. Installer will be ~80-120 MB.
 - **`node:sqlite` is marked experimental in Node.** It works and is tested; a small interface (`SqlDatabase`) confines the impact if it ever changes.
 - **Not yet done:** toast queue/stacking, autostart, credential storage (`safeStorage`), the real screens, all providers and the sync engine (M1+).
-- **Overlay not yet verified over a real game** or across multiple monitors with different DPI (roadmap Spike A).
+- **Overlay not yet verified over a real game** or on monitors with different scaling; two monitors at the same scaling work (roadmap Spike A).
 - CI has not run on GitHub yet.
 - Vite is pinned to 7 and TypeScript to 6.0 until electron-vite and typescript-eslint support the newer majors.
 
