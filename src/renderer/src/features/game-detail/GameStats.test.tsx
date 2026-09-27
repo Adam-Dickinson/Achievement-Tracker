@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { GameAchievement, GameEntry } from '@shared/library'
+import { formatTime } from '@/lib/format'
 import { GameStats, latestUnlock } from './GameStats'
 
 afterEach(cleanup)
@@ -58,7 +59,7 @@ describe('GameStats', () => {
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50')
     expect(tile('Completion')).toHaveTextContent('50%2 achievements left')
     expect(tile('Rarest held')).toHaveTextContent('Rare one')
-    expect(tile('Last unlock')).toHaveTextContent(/^Last unlockToday\d\d:\d\d · Steam$/)
+    expect(tile('Last unlock')?.textContent).toBe(`Last unlockToday${formatTime(today)} · Steam`)
   })
 
   it('says None yet before anything is unlocked', () => {
@@ -75,13 +76,15 @@ describe('GameStats', () => {
   })
 
   it('shows an older last unlock as its date', () => {
-    render(
-      <GameStats
-        entry={entry([achievement(1, { unlocked: true, unlockedAt: new Date(2019, 9, 11, 9, 5) })])}
-      />,
-    )
+    const older = new Date(2019, 9, 11, 9, 5)
+    render(<GameStats entry={entry([achievement(1, { unlocked: true, unlockedAt: older })])} />)
 
-    expect(tile('Last unlock')).toHaveTextContent(/11 Oct 2019/)
+    const date = older.toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+    expect(tile('Last unlock')?.textContent).toBe(`Last unlock${date}${formatTime(older)} · Steam`)
   })
 })
 
