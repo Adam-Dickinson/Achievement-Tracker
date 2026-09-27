@@ -13,6 +13,9 @@ const STEAM: AccountSummary = {
   displayName: 'Steam Player',
   status: 'connected',
   gameCount: 3,
+  checkedGames: 0,
+  lastSyncAt: null,
+  syncing: false,
 }
 const XBOX: AccountSummary = {
   id: 2,
@@ -20,6 +23,9 @@ const XBOX: AccountSummary = {
   displayName: 'Xbox Player',
   status: 'needs_reauth',
   gameCount: 0,
+  checkedGames: 0,
+  lastSyncAt: null,
+  syncing: false,
 }
 
 const listAccounts = vi.fn<() => Promise<AccountSummary[]>>()
@@ -165,5 +171,34 @@ describe('Accounts', () => {
     unmount()
 
     expect(unsubscribe).toHaveBeenCalledOnce()
+  })
+})
+
+describe('Accounts: syncing', () => {
+  it('syncs every account from Sync all', async () => {
+    listAccounts.mockResolvedValue([STEAM, XBOX])
+    render(<Accounts />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sync all' }))
+
+    expect(window.api.syncNow).toHaveBeenCalledWith({ kind: 'all' })
+  })
+
+  it('offers no Sync all when no account is connected', async () => {
+    listAccounts.mockResolvedValue([XBOX])
+    render(<Accounts />)
+
+    await screen.findByText('Xbox Player')
+    expect(screen.queryByRole('button', { name: 'Sync all' })).not.toBeInTheDocument()
+  })
+
+  it('reloads the list after an account is disconnected', async () => {
+    listAccounts.mockResolvedValueOnce([STEAM]).mockResolvedValueOnce([])
+    render(<Accounts />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Disconnect…' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Remove its games' }))
+
+    expect(await screen.findByText('No accounts connected yet.')).toBeInTheDocument()
   })
 })

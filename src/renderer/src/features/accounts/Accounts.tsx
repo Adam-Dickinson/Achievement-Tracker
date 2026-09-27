@@ -1,3 +1,4 @@
+import { Button } from '@/components/Button'
 import type { AccountSummary } from '@shared/ipc'
 import { AccountCard } from './AccountCard'
 import { EaConnectCard } from './EaConnectCard'
@@ -21,12 +22,17 @@ export function Accounts() {
         <UbisoftConnectCard onConnected={reload} />
         <EaConnectCard onConnected={reload} />
       </div>
-      <AccountList accounts={accounts} />
+      <AccountList accounts={accounts} onChanged={reload} />
     </div>
   )
 }
 
-function AccountList({ accounts }: { accounts: AccountSummary[] | null }) {
+interface AccountListProps {
+  accounts: AccountSummary[] | null
+  onChanged: () => void
+}
+
+function AccountList({ accounts, onChanged }: AccountListProps) {
   if (!accounts) {
     return <p role="status">Loading...</p>
   }
@@ -39,13 +45,27 @@ function AccountList({ accounts }: { accounts: AccountSummary[] | null }) {
     )
   }
 
+  const anyConnected = accounts.some((account) => account.status === 'connected')
+
   return (
-    <ul className="flex flex-col gap-4">
-      {accounts.map((account) => (
-        <li key={account.id}>
-          <AccountCard account={account} />
-        </li>
-      ))}
-    </ul>
+    <section aria-labelledby="your-accounts" className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-4">
+        <h2 id="your-accounts" className="font-display text-2xl font-bold">
+          Your accounts
+        </h2>
+        {anyConnected && (
+          <Button variant="secondary" onClick={() => void window.api.syncNow({ kind: 'all' })}>
+            Sync all
+          </Button>
+        )}
+      </div>
+      <ul className="flex flex-col gap-4">
+        {accounts.map((account) => (
+          <li key={account.id}>
+            <AccountCard account={account} onChanged={onChanged} />
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

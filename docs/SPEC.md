@@ -248,7 +248,11 @@ On a failure `last_ok_at` and `cursor` keep their previous values. Backoff attem
 - **Watches (M2).** `start()` and `startAccount()` also start the provider's optional `watch()` for each connected account; `stop()` and an expired login stop it. A watch only reports "this game may have changed"; `syncGameNow(accountId, gameId)` then syncs that game at once, outside the loop, with the same pass, outcomes and baseline rule. It skips a game that is backing off after an error. A game not in the library yet (bought or first launched since the last look) triggers one library look first, unless the library is backing off; if the look doesn't list it either, it is not looked for again until the next regular library look. Reports that arrive while that game is syncing lead to exactly one more sync. Steam's watch reports a changed stats file and, every 30 s, the game Steam is running (F-12; PROVIDERS.md, Steam).
 - **Unlock timing.** Each `UnlockEvent` carries the platform's `unlockedAt` next to `detectedAt`, and `main/index.ts` logs both for every unlock (`unlock-timing.ts`).
 
-**Not built yet:** fast polling for platforms other than Steam (F-12), progress reporting (F-10), manual "Sync now" (F-14). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
+- **Manual syncs (F-14).** `syncAccountNow(accountId)` runs a round at once in which the library is read and every game is synced, ignoring the idle interval and any backoff; asked during a round, it runs exactly one more round straight after. `syncAllNow()` does that for every connected account, and `syncGameNow(accountId, gameId, true)` syncs one game past its backoff. Afterwards games go back to their normal pace.
+- **Stopping one account.** Each account has its own abort signal. `stopAccount(accountId)` (used by Disconnect) aborts its in-flight calls, cancels its timer and stops its watch; `startAccount` gives it a fresh signal when it is connected again. A loop also stops by itself once its account is no longer `connected`.
+- **Progress (F-10).** `isSyncing(accountId)` says whether a round is running, and `onSyncingChanged` fires when one starts or ends. An `AccountSummary` carries `checkedGames` (games with a `sync_state` row, so read at least once, successfully or not) and `lastSyncAt` (the latest `last_ok_at` of any scope).
+
+**Not built yet:** fast polling for platforms other than Steam (F-12). `UnlockEvent`s go to the notification service (`main/notifications.ts`, see ARCHITECTURE §3).
 
 ## 6. IPC contract (main process ⇄ UI)
 
@@ -271,7 +275,9 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `listActivity(limit)` | `activity:list` | `ActivityPage`: the newest `limit` dated unlocks across every platform (each a `RecentUnlock` with its description, its game id and its platform entry id), and `hasMore`. The limit is checked with zod (a whole number from 1 to `MAX_ACTIVITY_LIMIT`, 1,000); anything else answers an empty page. The screen asks for 50 more at a time rather than passing a cursor, so a refresh after a sync reloads everything it shows |
 | `onDataChanged(listener)` | `data:changed` (main → main window) | Called when synced data may have changed (a library look found games, a game synced, an account lost its login), at most once a second, so open screens reload. Returns an unsubscribe function |
 | `onToasts(listener)` | `overlay:set-toasts` (main → overlay) | Subscribe to the toasts on screen: the whole list (`VisibleToast[]`, oldest first, at most 3) each time it changes. Returns an unsubscribe function |
-| `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games. Never the key |
+| `listAccounts()` | `accounts:list` | Every account as an `AccountSummary`: platform, display name, status, number of games, how many of them have been read (`checkedGames`), the last successful sync (`lastSyncAt`) and whether it is syncing now (`syncing`). Never the key |
+| `disconnectAccount({ accountId, keepData })` | `accounts:disconnect` | Stops syncing the account (`stopAccount`) and deletes its secret. `keepData: true` marks it `disabled` and keeps its games, achievements and unlocks; `false` deletes them, the account, its sync state, and any canonical game left with no entry. Checked with zod (a positive id and a boolean), otherwise ignored. Fires `onDataChanged` |
+| `syncNow(scope)` | `sync:now` | `{ kind: 'all' }` or `{ kind: 'account', accountId }` starts a manual round (F-14) and answers at once; `{ kind: 'game', gameId }` syncs that canonical game's entries on connected accounts, forced, and answers when they are done. Checked with zod, otherwise ignored |
 | `connectSteam({ steamId, apiKey })` | `accounts:connect-steam` | Checks the key with Steam, saves the account (reconnecting keeps its id) and the key (`SecretStore`), and starts syncing it. Returns a `ConnectResult`: `{ ok: true, account }` or `{ ok: false, reason, message }` with `reason` `invalid_input`, `key_rejected`, `cancelled`, `network` or `other`. A result rather than a thrown error, because across IPC an error keeps only its message |
 | `connectXbox({ acceptedUnofficial: true })` | `accounts:connect-xbox` | Opens the Microsoft sign-in in the user's browser (PKCE, a one-shot loopback server on `127.0.0.1`), then signs in to Xbox Live, saves the account (keyed by XUID, named by gamertag) and the refresh token, and starts syncing it; the main window comes back to the front when it finishes. Refused with `invalid_input` unless `acceptedUnofficial` is exactly `true` (rule 5). A cancelled, timed-out (5 minutes) or declined sign-in answers `cancelled` |
 | `cancelXboxSignIn()` | `accounts:cancel-xbox-sign-in` | Stops a sign-in that is waiting for the browser; its `connectXbox` call answers `cancelled` |
@@ -289,8 +295,6 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 **Planned** (added in the milestones that need them)
 | API | Description |
 |---|---|
-| `disconnectAccount(id)` | Remove account (option: keep data) |
-| `syncNow(scope)` | Manual sync |
 | `getSettings()` / `updateSettings(patch)` | |
 | `exportData(format)` | |
 

@@ -14,6 +14,9 @@ const CONNECTED: ConnectResult = {
     displayName: 'TestPlayer',
     status: 'connected',
     gameCount: 0,
+    checkedGames: 0,
+    lastSyncAt: null,
+    syncing: false,
   },
 }
 const CANCELLED: ConnectResult = {

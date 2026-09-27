@@ -46,6 +46,7 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
   const [selected, setSelected] = useState(initialEntry)
   const [linking, setLinking] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
 
   async function change(run: () => Promise<void>) {
     setError(null)
@@ -54,6 +55,19 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
       reload()
     } catch {
       setError('Something went wrong while changing the link. Try again.')
+    }
+  }
+
+  async function syncThisGame() {
+    setError(null)
+    setSyncing(true)
+    try {
+      await window.api.syncNow({ kind: 'game', gameId: id })
+      reload()
+    } catch {
+      setError('Something went wrong while syncing. Try again.')
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -132,6 +146,9 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
       </section>
 
       <div className="flex flex-wrap items-center gap-3">
+        <Button variant="secondary" disabled={syncing} onClick={() => void syncThisGame()}>
+          {syncing ? 'Syncing…' : 'Sync this game'}
+        </Button>
         <Button variant="secondary" onClick={() => setLinking((open) => !open)}>
           Link another game…
         </Button>

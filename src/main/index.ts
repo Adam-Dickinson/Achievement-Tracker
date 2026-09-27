@@ -42,6 +42,7 @@ import {
 } from './store/library-store'
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
+import { disconnectAccount, syncNow } from './sync-now'
 import { createTray } from './tray'
 import { UbisoftSignIn } from './ubisoft-sign-in'
 import { openUbisoftSignInWindow } from './ubisoft-sign-in-window'
@@ -189,6 +190,7 @@ async function start(): Promise<void> {
       dataChanged()
       findArtworkSoon()
     },
+    onSyncingChanged: () => dataChanged(),
   })
   scheduler.start()
   findArtworkSoon()
@@ -206,7 +208,12 @@ async function start(): Promise<void> {
   registerIpcHandlers({
     getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),
     sendTestNotification,
-    listAccounts: () => listAccountSummaries(db),
+    listAccounts: () => listAccountSummaries(db, (id) => scheduler.isSyncing(id)),
+    disconnectAccount: (input) => {
+      disconnectAccount({ db, secrets, scheduler }, input)
+      dataChanged()
+    },
+    syncNow: (scope) => syncNow({ db, secrets, scheduler }, scope),
     connectSteam: (input) => connectSteam({ db, steam, secrets, scheduler }, input),
     connectXbox: async () => {
       const result = await connectXbox({
@@ -271,6 +278,7 @@ async function start(): Promise<void> {
 
   createTray({
     open: showMainWindow,
+    syncNow: () => scheduler.syncAllNow(),
     sendTestNotification: () => void sendTestNotification(),
     quit: () => app.quit(),
     pauseNotifications: {

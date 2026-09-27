@@ -47,7 +47,7 @@ One place to see every achievement and trophy you've ever earned, on any platfor
 | **Accounts** | Connected platforms, status (connected / needs re-auth / error), last sync, connect/disconnect |
 | **Notification settings** | Position, monitor, duration, size, sound, per-platform toggles, rarity thresholds, preview button |
 | **Settings** | Start with OS, minimize to tray, sync intervals, theme, data export, logs |
-| **Tray menu** | Open, Sync now, Pause notifications (do-not-disturb), Recent unlocks submenu, Quit |
+| **Tray menu** | Open, Sync now, Pause notifications (do-not-disturb), Recent unlocks submenu, Quit (Recent unlocks not built yet) |
 
 ## 6. Notification design
 

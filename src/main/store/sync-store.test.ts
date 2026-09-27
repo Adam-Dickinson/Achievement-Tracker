@@ -4,12 +4,15 @@ import { applyMigrations } from './migrate'
 import type { RemoteGame } from '@shared/models'
 import {
   addPlatformGames,
+  deleteAccountData,
   getAccount,
+  getAccountStatus,
   getPlatformGameByExternalId,
   getSyncState,
   insertNewUnlocks,
   listAccountSummaries,
   listConnectedAccounts,
+  listConnectedEntries,
   listPlatformGameExternalIds,
   setAccountStatus,
   setBaselineDone,
@@ -381,6 +384,9 @@ describe('listAccountSummaries', () => {
         displayName: 'Player One',
         status: 'connected',
         gameCount: 2,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
       {
         id: other.id,
@@ -388,6 +394,9 @@ describe('listAccountSummaries', () => {
         displayName: 'Player Two',
         status: 'needs_reauth',
         gameCount: 0,
+        checkedGames: 0,
+        lastSyncAt: null,
+        syncing: false,
       },
     ])
   })
@@ -645,5 +654,153 @@ describe('addPlatformGames', () => {
     expect(added).toBe(1)
     expect(listPlatformGameExternalIds(db, account.id)).toEqual(['400'])
     expect(listPlatformGameExternalIds(db, other.id)).toEqual(['400'])
+  })
+})
+
+function remoteGame(externalId: string, title: string): RemoteGame {
+  return {
+    ref: { externalId },
+    title,
+    iconUrl: null,
+    coverUrl: null,
+    lastPlayed: null,
+    recentlyPlayed: false,
+  }
+}
+
+function seedWithUnlock(db: DatabaseSync, platform: 'steam' | 'xbox', title: string) {
+  const account = upsertAccount(db, { platform, externalId: `${platform}-1`, displayName: 'P' })
+  addPlatformGames(db, account, [remoteGame(`${platform}-game`, title)])
+  const { id } = getPlatformGameByExternalId(db, account.id, `${platform}-game`)
+  upsertAchievements(db, id, [
+    {
+      externalId: 'a1',
+      name: 'First',
+      description: null,
+      iconUrl: null,
+      iconLockedUrl: null,
+      hidden: false,
+      points: null,
+      tier: null,
+      globalPercent: 10,
+    },
+  ])
+  insertNewUnlocks(db, id, [{ achievementExternalId: 'a1', unlockedAt: null, progress: null }])
+  upsertSyncState(db, account.id, `game:${platform}-game`, {
+    cursor: null,
+    lastOkAt: new Date('2026-09-26T08:00:00.000Z'),
+    lastError: null,
+    nextDueAt: null,
+  })
+  return account
+}
+
+function count(db: DatabaseSync, table: string): number {
+  return (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n
+}
+
+describe('listAccountSummaries sync progress', () => {
+  it('counts the games checked at least once, successfully or not, and the last success', () => {
+    const db = freshDb()
+    const account = upsertAccount(db, { platform: 'steam', externalId: 's', displayName: 'P' })
+    addPlatformGames(db, account, [
+      remoteGame('1', 'A'),
+      remoteGame('2', 'B'),
+      remoteGame('3', 'C'),
+    ])
+    upsertSyncState(db, account.id, 'game:1', {
+      cursor: null,
+      lastOkAt: new Date('2026-09-26T08:00:00.000Z'),
+      lastError: null,
+      nextDueAt: null,
+    })
+    upsertSyncState(db, account.id, 'game:2', {
+      cursor: null,
+      lastOkAt: null,
+      lastError: 'offline',
+      nextDueAt: null,
+    })
+    upsertSyncState(db, account.id, 'library', {
+      cursor: null,
+      lastOkAt: new Date('2026-09-26T09:00:00.000Z'),
+      lastError: null,
+      nextDueAt: null,
+    })
+
+    expect(listAccountSummaries(db)[0]).toMatchObject({
+      gameCount: 3,
+      checkedGames: 2,
+      lastSyncAt: new Date('2026-09-26T09:00:00.000Z'),
+    })
+  })
+
+  it('asks whether each account is syncing now', () => {
+    const db = freshDb()
+    const first = upsertAccount(db, { platform: 'steam', externalId: 's', displayName: 'P' })
+    upsertAccount(db, { platform: 'xbox', externalId: 'x', displayName: 'P' })
+
+    const summaries = listAccountSummaries(db, (id) => id === first.id)
+
+    expect(summaries.map((summary) => summary.syncing)).toEqual([true, false])
+  })
+})
+
+describe('getAccountStatus', () => {
+  it("returns an account's status, or null when there is no such account", () => {
+    const db = freshDb()
+    const account = upsertAccount(db, { platform: 'steam', externalId: 's', displayName: 'P' })
+    setAccountStatus(db, account.id, 'needs_reauth')
+
+    expect(getAccountStatus(db, account.id)).toBe('needs_reauth')
+    expect(getAccountStatus(db, 99)).toBeNull()
+  })
+})
+
+describe('deleteAccountData', () => {
+  it('removes the account with its games, achievements, unlocks and sync state', () => {
+    const db = freshDb()
+    const account = seedWithUnlock(db, 'steam', 'Portal')
+
+    deleteAccountData(db, account.id)
+
+    for (const table of ['account', 'platform_game', 'achievement', 'unlock', 'sync_state']) {
+      expect(count(db, table)).toBe(0)
+    }
+    expect(count(db, 'game')).toBe(0)
+    expect(count(db, 'game_alias')).toBe(0)
+  })
+
+  it('keeps a linked game, and its other platform, when one account goes', () => {
+    const db = freshDb()
+    const steam = seedWithUnlock(db, 'steam', 'Portal')
+    const xbox = seedWithUnlock(db, 'xbox', 'Portal')
+
+    deleteAccountData(db, steam.id)
+
+    expect(accountRows(db)).toHaveLength(1)
+    expect(count(db, 'game')).toBe(1)
+    expect(count(db, 'unlock')).toBe(1)
+    expect(listPlatformGameExternalIds(db, xbox.id)).toEqual(['xbox-game'])
+  })
+})
+
+describe('listConnectedEntries', () => {
+  it("lists a game's entries on connected accounts only", () => {
+    const db = freshDb()
+    const steam = seedWithUnlock(db, 'steam', 'Portal')
+    const xbox = seedWithUnlock(db, 'xbox', 'Portal')
+    const gameId = (
+      db.prepare('SELECT game_id FROM platform_game LIMIT 1').get() as { game_id: number }
+    ).game_id
+
+    expect(listConnectedEntries(db, gameId)).toEqual([
+      { accountId: steam.id, externalId: 'steam-game' },
+      { accountId: xbox.id, externalId: 'xbox-game' },
+    ])
+
+    setAccountStatus(db, xbox.id, 'disabled')
+    expect(listConnectedEntries(db, gameId)).toEqual([
+      { accountId: steam.id, externalId: 'steam-game' },
+    ])
   })
 })

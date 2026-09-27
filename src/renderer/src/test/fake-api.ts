@@ -6,6 +6,8 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     getAppInfo: vi.fn().mockResolvedValue({ version: '0.1.0', schemaVersion: 1 }),
     sendTestNotification: vi.fn().mockResolvedValue(undefined),
     listAccounts: vi.fn().mockResolvedValue([]),
+    disconnectAccount: vi.fn().mockResolvedValue(undefined),
+    syncNow: vi.fn().mockResolvedValue(undefined),
     connectSteam: vi.fn(),
     connectXbox: vi.fn(),
     cancelXboxSignIn: vi.fn().mockResolvedValue(undefined),
