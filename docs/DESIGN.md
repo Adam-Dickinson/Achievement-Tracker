@@ -55,6 +55,7 @@ One place to see every achievement and trophy you've ever earned, on any platfor
 - Transparent, frameless, always-on-top, **click-through and non-focus-stealing** window, pre-created hidden at startup for instant display
 - Slides in from a configurable corner, shows for N seconds (default 5), slides out
 - Queue with de-dup: multiple simultaneous unlocks stack or sequence (max 3 visible), and a burst of more than 5 collapses to "N achievements unlocked"
+- A platinum ("Platinum unlocked" for a game's own, "Platinum earned" for the app-awarded one) is never collapsed into a burst and comes after the unlocks that arrived with it
 - Content: achievement icon, title, description, game name, platform badge, rarity tier (with % of players), points (Gamerscore / trophy tier / Steam %)
 - Rarity styling: Common, Uncommon, Rare, Ultra Rare, each with its own accent and sound
 - Optional sound (custom file allowed), volume control
@@ -79,6 +80,7 @@ Designed on the Superdesign canvas (see [design/README.md](design/README.md)). T
 - **Dark-first**, with a light theme as a later option.
 - **The logo colours in too.** Trophy Locker's mark is a trophy with a keyhole through the cup, on a midnight aurora tile, filled with lime up to a glowing edge the way game art fills with completion ("Colour-in", chosen 2026-09-25 from four concepts on the canvas). Small sizes use simpler versions: no aurora or glow at 24–32px, and no keyhole at 16px. Files: `resources/` and `src/renderer/src/assets/logo.svg`.
 - **Rarity is always a gem icon + a text label + the %:** Common (slate circle), Uncommon (mint diamond), Rare (sky hexagon), Ultra Rare (gold sparkle with a glow). Never colour alone (see §10).
+- **Platinum is its own look:** icy silver-lilac (`--color-platinum`), a crown and a "Platinum" chip, used for a game's own platinum and the app-awarded one: the Game detail banner, platinum achievements and unlocks, Activity's Platinum lines and the toast. Always with the word "Platinum", never colour alone.
 - **Platform colours** appear only inside small circular platform badges (Steam blue, Xbox green, PlayStation blue, Epic grey, Ubisoft blue, EA red, emulator violet).
 - **Type:** Bricolage Grotesque for titles and big numerals, Figtree for UI text, tabular figures for every count and percentage.
 - **Shape:** generous radii (floating cards 26px, art 18px, buttons and inputs 14px, chips fully round).
