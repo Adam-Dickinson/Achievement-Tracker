@@ -61,7 +61,7 @@ export interface ToastPayload {
   readonly title: string
   readonly description: string | null
   readonly game: string
-  readonly platform: string
+  readonly platform: Platform | null
   readonly percent: number | null
   readonly platinum: boolean
 }

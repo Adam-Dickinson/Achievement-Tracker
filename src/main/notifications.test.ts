@@ -42,7 +42,7 @@ const SAMPLE: ToastPayload = {
   title: 'Sample',
   description: null,
   game: 'Game',
-  platform: 'Steam',
+  platform: 'steam',
   percent: 5,
   platinum: false,
 }
@@ -64,14 +64,14 @@ afterEach(() => {
 })
 
 describe('unlockToast', () => {
-  it('turns an unlock into a toast with the platform name and a rarity from the percentage', () => {
+  it('turns an unlock into a toast with its platform and a rarity from the percentage', () => {
     expect(unlockToast(unlock('a', { globalPercent: 4.25 }))).toEqual({
       heading: 'Achievement unlocked',
       rarity: 'rare',
       title: 'Achievement a',
       description: 'Do thing a',
       game: 'Half-Life 2',
-      platform: 'Steam',
+      platform: 'steam',
       percent: 4.3,
       platinum: false,
     })
@@ -107,7 +107,7 @@ describe('unlockToast', () => {
       title: 'Platinum',
       description: 'Every achievement in Portal',
       game: 'Portal',
-      platform: 'Steam',
+      platform: 'steam',
       percent: null,
       platinum: true,
     })
@@ -145,7 +145,7 @@ describe('burstToast', () => {
       rarity: 'ultra_rare',
       percent: 1.5,
       game: 'Half-Life 2',
-      platform: 'Steam',
+      platform: 'steam',
     })
   })
 

@@ -16,7 +16,7 @@ describe('Toast', () => {
         title="Lord of Frenzied Flame"
         description="Achieve the Lord of Frenzied Flame ending"
         game="Elden Ring"
-        platform="Steam"
+        platform="steam"
         percent={1.4}
         platinum={false}
       />,
@@ -24,9 +24,28 @@ describe('Toast', () => {
 
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.getByText('Lord of Frenzied Flame')).toBeInTheDocument()
-    expect(screen.getByText('Elden Ring · Steam')).toBeInTheDocument()
+    expect(screen.getByText('Elden Ring')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Steam' })).toBeInTheDocument()
     expect(screen.getByText('Ultra Rare')).toBeInTheDocument()
     expect(screen.getByText('1.4%')).toBeInTheDocument()
+  })
+
+  it('shows no platform badge for a burst across several platforms', () => {
+    render(
+      <Toast
+        heading="6 achievements unlocked"
+        rarity="rare"
+        title="Lord of Frenzied Flame"
+        description="and 5 more"
+        game="3 games"
+        platform={null}
+        percent={4}
+        platinum={false}
+      />,
+    )
+
+    expect(screen.getByText('3 games')).toBeInTheDocument()
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
   it('labels every rarity in words, never by colour alone', () => {
@@ -38,7 +57,7 @@ describe('Toast', () => {
           title="Fleet Footed"
           description="Win a race using only the starter car"
           game="Forza Horizon 5"
-          platform="Xbox"
+          platform="xbox"
           percent={18.5}
           platinum={false}
         />,
@@ -56,7 +75,7 @@ describe('Toast', () => {
         title="Platinum Trophy"
         description="Earn all other trophies"
         game="God of War"
-        platform="PlayStation"
+        platform="playstation"
         percent={2.8}
         platinum={false}
       />,
@@ -74,7 +93,7 @@ describe('Toast', () => {
         title="Fleet Footed"
         description="Win a race using only the starter car"
         game="Forza Horizon 5"
-        platform="Xbox"
+        platform="xbox"
         percent={18.5}
         platinum={false}
       />,
@@ -91,7 +110,7 @@ describe('Toast', () => {
         title="Platinum"
         description="Every achievement in Portal"
         game="Portal"
-        platform="Steam"
+        platform="steam"
         percent={null}
         platinum
       />,
@@ -112,7 +131,7 @@ describe('Toast', () => {
         title="Fleet Footed"
         description={null}
         game="Forza Horizon 5"
-        platform="Xbox"
+        platform="xbox"
         percent={5}
         platinum={false}
       />,
@@ -129,7 +148,7 @@ describe('Toast', () => {
         title="Platinum Trophy"
         description="and 6 more"
         game="God of War"
-        platform="PlayStation"
+        platform="playstation"
         percent={2.8}
         platinum={false}
       />,
@@ -147,7 +166,7 @@ describe('Toast', () => {
         title="Secret Ending"
         description={null}
         game="Hades"
-        platform="Steam"
+        platform="steam"
         percent={null}
         platinum={false}
       />,

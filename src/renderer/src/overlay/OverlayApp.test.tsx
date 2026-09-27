@@ -17,7 +17,7 @@ function toast(id: number, title: string): VisibleToast {
     title,
     description: 'Earn all other trophies',
     game: 'God of War',
-    platform: 'PlayStation',
+    platform: 'playstation',
     percent: 2.8,
     platinum: false,
   }
