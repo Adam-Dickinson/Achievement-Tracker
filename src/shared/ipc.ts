@@ -7,6 +7,8 @@ import type { Rarity } from './rarity'
 export const IPC = {
   getAppInfo: 'app:get-info',
   sendTestNotification: 'notifications:send-test',
+  getProfile: 'profile:get',
+  setProfileName: 'profile:set-name',
   getNotificationsPaused: 'notifications:get-paused',
   setNotificationsPaused: 'notifications:set-paused',
   notificationsPausedChanged: 'notifications:paused-changed',
@@ -43,8 +45,14 @@ export const IPC = {
 export interface AppInfo {
   readonly version: string
   readonly schemaVersion: number
-  readonly userName: string
 }
+
+export interface Profile {
+  readonly name: string | null
+  readonly windowsName: string
+}
+
+export const MAX_PROFILE_NAME = 40
 
 export interface ToastPayload {
   readonly heading: string
@@ -157,6 +165,8 @@ export type ConnectResult =
 export interface TrophyLockerApi {
   getAppInfo(): Promise<AppInfo>
   sendTestNotification(): Promise<void>
+  getProfile(): Promise<Profile>
+  setProfileName(name: string): Promise<Profile>
   getNotificationsPaused(): Promise<boolean>
   setNotificationsPaused(paused: boolean): Promise<void>
   listAccounts(): Promise<AccountSummary[]>

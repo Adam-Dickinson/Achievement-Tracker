@@ -10,7 +10,7 @@ interface VirtualGridProps<T> {
   gap: number
   estimateRowHeight: number
   getKey: (item: T) => Key
-  renderItem: (item: T) => ReactNode
+  renderItem: (item: T, column: number) => ReactNode
 }
 
 export function VirtualGrid<T>({
@@ -59,9 +59,9 @@ export function VirtualGrid<T>({
             transform: `translateY(${row.start - offset}px)`,
           }}
         >
-          {rows[row.index]?.map((item) => (
+          {rows[row.index]?.map((item, column) => (
             <div key={getKey(item)} role="listitem" className="flex">
-              {renderItem(item)}
+              {renderItem(item, column)}
             </div>
           ))}
         </div>

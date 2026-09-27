@@ -4,6 +4,8 @@ import { IPC, type TrophyLockerApi, type VisibleToast } from '@shared/ipc'
 const api: TrophyLockerApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC.getAppInfo),
   sendTestNotification: () => ipcRenderer.invoke(IPC.sendTestNotification),
+  getProfile: () => ipcRenderer.invoke(IPC.getProfile),
+  setProfileName: (name) => ipcRenderer.invoke(IPC.setProfileName, name),
   getNotificationsPaused: () => ipcRenderer.invoke(IPC.getNotificationsPaused),
   setNotificationsPaused: (paused) => ipcRenderer.invoke(IPC.setNotificationsPaused, paused),
   listAccounts: () => ipcRenderer.invoke(IPC.listAccounts),

@@ -23,6 +23,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Library',
     description: 'Every game across every platform.',
     icon: Library,
+    ownHeading: true,
   },
   {
     id: 'activity',

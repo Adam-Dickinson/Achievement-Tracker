@@ -5,12 +5,14 @@ import { PLATFORMS, type Platform } from '@shared/platform'
 export type SortId = 'recent' | 'completion' | 'title' | 'platform'
 export type StatusId = 'all' | 'in_progress' | 'not_started' | 'completed'
 export type PlatformFilter = Platform | 'all'
+export type LayoutId = 'landscape' | 'portrait' | 'list'
 
 export interface LibraryView {
   readonly query: string
   readonly platform: PlatformFilter
   readonly status: StatusId
   readonly sort: SortId
+  readonly layout: LayoutId
 }
 
 export const DEFAULT_VIEW: LibraryView = {
@@ -18,6 +20,7 @@ export const DEFAULT_VIEW: LibraryView = {
   platform: 'all',
   status: 'all',
   sort: 'recent',
+  layout: 'landscape',
 }
 
 export const SORTS: Record<
@@ -44,6 +47,17 @@ export const STATUSES: Record<StatusId, { label: string; keep: (game: LibraryGam
     label: 'Completed',
     keep: (game) => game.total > 0 && game.unlocked === game.total,
   },
+}
+
+export function clearFilters(view: LibraryView): LibraryView {
+  return { ...DEFAULT_VIEW, sort: view.sort, layout: view.layout }
+}
+
+export function averageCompletion(games: readonly LibraryGame[]): number {
+  const synced = games.filter((game) => game.total > 0)
+  if (synced.length === 0) return 0
+  const sum = synced.reduce((total, game) => total + game.unlocked / game.total, 0)
+  return Math.floor((sum / synced.length) * 100)
 }
 
 export function applyView(games: readonly LibraryGame[], view: LibraryView): LibraryGame[] {

@@ -269,7 +269,9 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 **Implemented**
 | API (`window.api`) | Channel | Description |
 |---|---|---|
-| `getAppInfo()` | `app:get-info` | App version, database schema version and the Windows user's name (`userName`, empty if the system can't say), whose initial the nav's avatar shows |
+| `getAppInfo()` | `app:get-info` | App version and database schema version |
+| `getProfile()` | `profile:get` | `Profile`: the saved name (`name`, or `null`) and the Windows user's name (`windowsName`, empty if the system can't say). The app shows the saved name, else the Windows name: in the nav's avatar and at the top of the Library |
+| `setProfileName(name)` | `profile:set-name` | Saves the name (trimmed, at most 40 characters; empty clears it, back to the Windows name) in the `setting` table under `profile.name`, and returns the new `Profile`. Anything else is ignored and the profile returned unchanged |
 | `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers). Shown even while notifications are paused |
 | `getNotificationsPaused()` | `notifications:get-paused` | Whether notifications are paused (the tray's Pause notifications, the nav's bell). Not kept across restarts |
 | `setNotificationsPaused(paused)` | `notifications:set-paused` | Pause or resume notifications; anything but a boolean is ignored. Updates the tray's checkbox and fires `onNotificationsPausedChanged` |

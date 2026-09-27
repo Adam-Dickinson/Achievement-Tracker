@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react'
-import type { AppInfo } from '@shared/ipc'
+import type { AppInfo, Profile } from '@shared/ipc'
 import { ArtworkCard } from './ArtworkCard'
 import { NotificationsCard } from './NotificationsCard'
+import { ProfileCard } from './ProfileCard'
 
-export function Settings() {
+interface SettingsProps {
+  profile: Profile | null
+  onRename: (name: string) => Promise<void>
+}
+
+export function Settings({ profile, onRename }: SettingsProps) {
   const [info, setInfo] = useState<AppInfo | null>(null)
 
   useEffect(() => {
@@ -18,6 +24,7 @@ export function Settings() {
 
   return (
     <div className="mt-8 flex max-w-3xl flex-col gap-6">
+      {profile && <ProfileCard profile={profile} onRename={onRename} />}
       <NotificationsCard />
       <ArtworkCard />
       {info && (

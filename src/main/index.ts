@@ -28,13 +28,13 @@ import { SteamProvider } from './providers/steam'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
 import { XboxProvider } from './providers/xbox'
+import { getProfile, windowsUserName } from './profile'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
 import { awardPlatinums } from './store/platinum'
-import { appInfo } from './app-info'
 import { ArtworkService } from './artwork/artwork-service'
 import {
   getDashboardStats,
@@ -42,6 +42,7 @@ import {
   listActivity,
   listLibraryGames,
 } from './store/library-store'
+import { saveProfileName } from './store/settings-store'
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
@@ -208,6 +209,7 @@ async function start(): Promise<void> {
     steamSignIn.cancel()
   })
 
+  const windowsName = windowsUserName()
   let tray: AppTray | null = null
   const setNotificationsPaused = (paused: boolean): void => {
     notifications.paused = paused
@@ -218,8 +220,13 @@ async function start(): Promise<void> {
   }
 
   registerIpcHandlers({
-    getAppInfo: () => appInfo(app.getVersion(), schemaVersion),
+    getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),
     sendTestNotification,
+    getProfile: () => getProfile(db, windowsName),
+    setProfileName: (name) => {
+      saveProfileName(db, name)
+      return getProfile(db, windowsName)
+    },
     getNotificationsPaused: () => notifications.paused,
     setNotificationsPaused,
     listAccounts: () => listAccountSummaries(db, (id) => scheduler.isSyncing(id)),
