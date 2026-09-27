@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trophy Locker — Activity</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: {
+  fontFamily: { display: ['Bricolage Grotesque','sans-serif'], sans: ['Figtree','sans-serif'] },
+  colors: { bg:'#080A10', s1:'#121620', s2:'#191E2B', s3:'#222839', fg:'#F3F5FA', muted:'#9AA3B8', subtle:'#626B82', lime:'#C4F542', gold:'#FFC94A', mint:'#4ADE9A', sky:'#5AB0FF', warn:'#FFB547', danger:'#FF6B6B' }
+} } }</script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&family=Cinzel:wght@700;900&family=Pixelify+Sans:wght@700&family=Rubik+Mono+One&family=Orbitron:wght@700;900&family=Oswald:wght@700&family=Cormorant+SC:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080A10;--s1:#121620;--s2:#191E2B;--s3:#222839;--fg:#F3F5FA;--muted:#9AA3B8;--subtle:#626B82;--lime:#C4F542;--gold:#FFC94A}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:'Figtree',sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.font-display{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+.aurora{background:radial-gradient(1100px 540px at 4% -10%,rgba(22,150,132,.36),transparent 62%),radial-gradient(900px 520px at 100% 0%,rgba(70,80,200,.26),transparent 62%),radial-gradient(1000px 600px at 55% 112%,rgba(160,215,40,.10),transparent 60%),#080A10}
+.island{background:rgba(16,20,30,.72);backdrop-filter:blur(22px) saturate(1.5);-webkit-backdrop-filter:blur(22px) saturate(1.5);border:1px solid rgba(255,255,255,.09);border-radius:30px;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 24px 48px -18px rgba(0,0,0,.75),0 8px 16px -8px rgba(0,0,0,.5)}
+.navpill{display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted)}
+.navpill:hover{color:var(--fg);background:rgba(255,255,255,.06)}
+.navpill.on{background:var(--lime);color:#0B1000;box-shadow:0 10px 26px -8px rgba(196,245,66,.65)}
+.logo{display:inline-flex;align-items:center;justify-content:center;background:var(--lime);color:#0B1000;box-shadow:0 8px 20px -6px rgba(196,245,66,.55)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:#0B1000;background:linear-gradient(135deg,#C4F542,#3fd6c8)}
+.pulse{display:block;width:8px;height:8px;border-radius:99px;background:#4ADE9A;box-shadow:0 0 0 4px rgba(74,222,154,.18),0 0 12px rgba(74,222,154,.7)}
+.card{position:relative;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 28px 56px -22px rgba(0,0,0,.8),0 10px 22px -10px rgba(0,0,0,.55)}
+.card.flat{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 14px 30px -16px rgba(0,0,0,.7)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:13px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--lime);border-color:var(--lime);color:#0B1000}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;border-radius:15px;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer}
+.btn-primary{background:var(--lime);color:#0B1000;box-shadow:0 12px 28px -10px rgba(196,245,66,.7)}
+.btn-primary:hover{background:#d6ff5c}
+.btn-secondary{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.11)}
+.btn-ghost{color:var(--muted);padding:0 12px}
+.btn-ghost:hover{color:var(--fg)}
+.btn-sm{height:34px;padding:0 14px;font-size:13px;border-radius:12px}
+.field{height:42px;width:100%;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--fg);font:500 14px 'Figtree',sans-serif;padding:0 14px;outline:none}
+.field::placeholder{color:var(--subtle)}
+.field:focus{border-color:var(--lime);box-shadow:0 0 0 4px rgba(196,245,66,.16)}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:10px;height:42px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);font-size:14px;font-weight:600;white-space:nowrap}
+.seg{display:inline-flex;padding:4px;gap:2px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07)}
+.seg span{display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg span.on{background:#fff;color:#0B1000;box-shadow:0 6px 16px -6px rgba(0,0,0,.6)}
+.tg{position:relative;display:inline-block;flex:none;width:46px;height:28px;border-radius:99px;background:rgba(255,255,255,.12)}
+.tg i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.tg.on{background:var(--lime);box-shadow:0 8px 20px -8px rgba(196,245,66,.8)}
+.tg.on i{left:21px;background:#0B1000}
+.cap{height:9px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+.cap i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7fd63a,#C4F542);box-shadow:0 0 18px rgba(196,245,66,.65)}
+.cap.thick{height:16px}
+.cap.gold i{background:linear-gradient(90deg,#ffb020,#ffe07a);box-shadow:0 0 18px rgba(255,201,74,.6)}
+.cap.thin{height:6px}
+.rchip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px 0 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.rchip.ultra{background:linear-gradient(90deg,rgba(255,201,74,.24),rgba(255,138,31,.14));box-shadow:0 0 18px -4px rgba(255,201,74,.55)}
+.pbadge{display:inline-flex;flex:none;align-items:center;justify-content:center;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,#0d1018);border:1.5px solid #121620;box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 34%,transparent)}
+.ptag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 8px;border-radius:99px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 26%,transparent)}
+.atile{display:inline-flex;flex:none;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 22px -10px var(--c,#000),0 1px 0 rgba(255,255,255,.35) inset}
+.atile.ultra{color:#3a1c00}
+.atile.uncommon{color:#04231a}
+.atile.locked{background:#1a1f2c;color:var(--subtle);box-shadow:0 1px 0 rgba(255,255,255,.05) inset;border:1px solid rgba(255,255,255,.06)}
+.art{position:relative;aspect-ratio:460/215;overflow:hidden;background:#0c0f16}
+.art svg{position:absolute;inset:0;width:100%;height:100%}
+.art .base{filter:saturate(.16) brightness(.62) contrast(1.05)}
+.art .edge{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#e8ff9a;box-shadow:0 0 14px 3px rgba(196,245,66,.85)}
+.gcard{position:relative;isolation:isolate;display:block;padding:8px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)),#121620;border:1px solid rgba(255,255,255,.075);box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 26px 44px -22px rgba(0,0,0,.85),0 8px 18px -10px rgba(0,0,0,.6);transition:transform .2s}
+.gcard .glow{position:absolute;left:10%;right:10%;bottom:-16px;height:46%;border-radius:50%;background:var(--glow);filter:blur(30px);opacity:.34;z-index:-1}
+.gcard.hover{transform:translateY(-10px) scale(1.02);border-color:rgba(196,245,66,.55);box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px rgba(196,245,66,.10),0 40px 60px -24px rgba(0,0,0,.9)}
+.gcard.hover .glow{opacity:.6;bottom:-24px}
+.gcard.done{border-color:rgba(255,201,74,.4)}
+.gcard.stagger{margin-top:26px}
+.pctpill{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:99px;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:#fff;background:rgba(8,10,16,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14)}
+.gcard.done .pctpill{color:#3a1c00;background:linear-gradient(90deg,#ffe07a,#ffb020);border-color:transparent}
+.hoverbar{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.hoverbar>*{display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:99px;background:rgba(8,10,16,.66);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18)}
+.toastwrap{position:relative}
+.toast{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;width:400px;height:92px;padding:0 16px 0 16px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01)),#121620;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);transform-origin:top left;box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 0 0 4px color-mix(in srgb,var(--c) 10%,transparent),0 26px 50px -16px rgba(0,0,0,.9),0 12px 44px -6px color-mix(in srgb,var(--c) 45%,transparent)}
+.toast.ultra{border-color:rgba(255,201,74,.75)}
+.toast .shine{position:absolute;top:0;bottom:0;left:120px;width:60px;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,224,122,.28),transparent)}
+.slider{position:relative;height:22px}
+.slider .trk{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:9px;background:rgba(255,255,255,.1)}
+.slider .fill{position:absolute;left:0;top:9px;height:4px;border-radius:9px;background:var(--lime);box-shadow:0 0 14px rgba(196,245,66,.6)}
+.slider .thumb{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:99px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+::selection{background:var(--lime);color:#0B1000}
+</style>
+</head>
+<body>
+<div id="app" class="min-h-screen text-fg aurora">
+
+<header class="sticky top-4 z-30 mx-auto mt-4 w-[calc(100%-48px)] max-w-[1392px]">
+  <div class="island flex h-[60px] items-center gap-2 pl-3 pr-2.5">
+    <a href="https://p.superdesign.dev/draft/3b7abd38-f288-40e1-8a11-0b651ab8e5ba" id="nav-brand" class="flex items-center gap-2.5 pr-4"><span class="logo" style="width:36px;height:36px;border-radius:12px"><svg viewBox="296 224 432 608" fill="currentColor" width="15" aria-hidden="true"><path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216z"/><path d="M472 640h80v120h-80z"/><path d="M356 760h312v72H356z"/></svg></span><span class="font-display whitespace-nowrap text-[17px] font-bold">Trophy Locker</span></a>
+    <nav class="flex items-center gap-1" aria-label="Main"><a href="https://p.superdesign.dev/draft/8204918a-4869-4cec-ba73-bfe098a3887f" id="nav-overview" class="navpill"><iconify-icon icon="lucide:layout-grid" width="17" height="17" class=""></iconify-icon>Overview</a><a href="https://p.superdesign.dev/draft/aacf7ec7-8501-4806-9cc6-f648f81879ca" id="nav-library" class="navpill"><iconify-icon icon="lucide:library" width="17" height="17" class=""></iconify-icon>Library</a><a href="https://p.superdesign.dev/draft/eb386cc4-faad-4445-a923-854824785ea1" id="nav-activity" class="navpill on"><iconify-icon icon="lucide:activity" width="17" height="17" class=""></iconify-icon>Activity</a><a href="https://p.superdesign.dev/draft/f60bd2ff-5180-436e-97a4-61e92c890a8e" id="nav-accounts" class="navpill"><iconify-icon icon="lucide:plug" width="17" height="17" class=""></iconify-icon>Accounts</a><a href="https://p.superdesign.dev/draft/c9f50582-a106-431f-8aba-e265a2b2985a" id="nav-settings" class="navpill"><iconify-icon icon="lucide:settings" width="17" height="17" class=""></iconify-icon>Settings</a></nav>
+    <div class="ml-auto flex items-center gap-2">
+      <label class="flex h-10 w-[200px] items-center gap-2 rounded-full bg-white/[0.06] px-4 text-muted"><iconify-icon icon="lucide:search" width="16" height="16" class=""></iconify-icon><input class="w-full bg-transparent text-[13px] text-fg outline-none placeholder:text-subtle" placeholder="Search library"><span class="whitespace-nowrap rounded-md bg-white/[0.08] px-1.5 text-[11px] font-semibold text-muted">Ctrl K</span></label>
+      <a href="#sync" id="btn-sync" class="flex h-10 items-center gap-2 whitespace-nowrap rounded-full bg-white/[0.06] px-4 text-[13px] font-semibold hover:bg-white/10"><i class="pulse"></i>Synced 2m ago<iconify-icon icon="lucide:refresh-cw" width="15" height="15" class="text-muted"></iconify-icon></a>
+      <a href="#dnd" id="btn-dnd" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-muted hover:bg-white/10"><iconify-icon icon="lucide:bell-off" width="17" height="17" class=""></iconify-icon></a>
+      <span class="avatar h-10 w-10 text-[15px]">A</span>
+    </div>
+  </div>
+</header>
+<main class="mx-auto w-[calc(100%-48px)] max-w-[1080px] pb-20">
+  <section class="card mt-7 overflow-hidden p-7">
+    <i class="pointer-events-none absolute -right-16 -top-24 h-64 w-96 rounded-full bg-lime/[0.10] blur-3xl"></i>
+    <div class="relative flex items-end justify-between gap-6">
+      <div>
+        <div class="text-[13px] font-semibold text-muted">Every platform, newest first</div>
+        <h1 class="font-display m-0 text-[46px] font-extrabold leading-[50px]">Activity</h1>
+        <div class="mt-3 flex flex-wrap items-center gap-2"><span class="chip"><iconify-icon icon="lucide:calendar-days" width="15" height="15" class="text-lime"></iconify-icon>23 this week</span><span class="chip"><iconify-icon icon="lucide:flame" width="15" height="15" class="text-lime"></iconify-icon>6-day streak</span><span class="chip"><iconify-icon icon="lucide:sparkles" width="15" height="15" class="text-lime"></iconify-icon>Rarest this week: 1.2%</span></div>
+      </div>
+      <div class="flex flex-col items-end gap-2"><span class="text-[12px] text-muted">Rarity</span><div class="flex items-center gap-3"><span class="flex items-center gap-1.5 text-[12px] font-semibold" style="color:#FFC94A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 .8l2 5.2 5.2 2-5.2 2-2 5.2-2-5.2-5.2-2 5.2-2z"/></svg>Ultra Rare</span><span class="flex items-center gap-1.5 text-[12px] font-semibold" style="color:#5AB0FF"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.4l5.6 3.2v6.8L8 14.6l-5.6-3.2V4.6z"/></svg>Rare</span><span class="flex items-center gap-1.5 text-[12px] font-semibold" style="color:#4ADE9A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.8l6.2 6.2L8 14.2 1.8 8z"/></svg>Uncommon</span><span class="flex items-center gap-1.5 text-[12px] font-semibold" style="color:#9AA3B8"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/></svg>Common</span></div></div>
+    </div>
+  </section>
+
+  <section class="mt-9" aria-labelledby="day-0">
+    <div class="mb-3 flex items-end justify-between px-1">
+      <h2 id="day-0" class="font-display m-0 text-[24px] font-bold leading-7">Today<span class="ml-3 text-[14px] font-semibold text-muted" style="font-family:Figtree">Saturday 26 September</span></h2>
+      <span class="text-[13px] text-muted">3 unlocks</span>
+    </div>
+    <div class="card p-2.5"><a href="https://p.superdesign.dev/draft/5b6a84ea-0715-41dd-a09c-2db27bc83791" id="row-0-0" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile ultra" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#ffe07a,#ff8a1f);--c:#FFC94A"><iconify-icon icon="lucide:sparkles" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Age of the Stars</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Achieve the "Age of the Stars" ending</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Elden Ring</span></div>
+    </div>
+    <span class="rchip ultra" style="--c:#FFC94A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 .8l2 5.2 5.2 2-5.2 2-2 5.2-2-5.2-5.2-2 5.2-2z"/></svg>Ultra Rare</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">1.2%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">13:42</span></a><a href="#game-0-1" id="row-0-1" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile ultra" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#ffe07a,#ff8a1f);--c:#FFC94A"><iconify-icon icon="lucide:crown" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Valkyrie Queen</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Defeat the Valkyrie Queen</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#4F8CFF;width:18px;height:18px"><iconify-icon icon="simple-icons:playstation" width="9" height="9" class=""></iconify-icon></span><span class="truncate">God of War</span></div>
+    </div>
+    <span class="rchip ultra" style="--c:#FFC94A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 .8l2 5.2 5.2 2-5.2 2-2 5.2-2-5.2-5.2-2 5.2-2z"/></svg>Ultra Rare</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">1.4%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">11:05</span></a><a href="#game-0-2" id="row-0-2" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile rare" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#5ab0ff,#2a5fd6);--c:#5AB0FF"><iconify-icon icon="lucide:moon" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Embrace the Void</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Complete the Pantheon of Hallownest</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Hollow Knight</span></div>
+    </div>
+    <span class="rchip rare" style="--c:#5AB0FF"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.4l5.6 3.2v6.8L8 14.6l-5.6-3.2V4.6z"/></svg>Rare</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">5.1%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">09:16</span></a></div>
+  </section><section class="mt-9" aria-labelledby="day-1">
+    <div class="mb-3 flex items-end justify-between px-1">
+      <h2 id="day-1" class="font-display m-0 text-[24px] font-bold leading-7">Yesterday<span class="ml-3 text-[14px] font-semibold text-muted" style="font-family:Figtree">Friday 25 September</span></h2>
+      <span class="text-[13px] text-muted">3 unlocks</span>
+    </div>
+    <div class="card p-2.5"><a href="#game-1-0" id="row-1-0" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile uncommon" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#37d493,#127a55);--c:#4ADE9A"><iconify-icon icon="lucide:flame" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Cold Blooded</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Escape with the Heat Gauge at 16 or higher</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Hades</span></div>
+    </div>
+    <span class="rchip uncommon" style="--c:#4ADE9A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.8l6.2 6.2L8 14.2 1.8 8z"/></svg>Uncommon</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">14.3%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">20:31</span></a><a href="#game-1-1" id="row-1-1" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile common" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#66708a,#3a4256);--c:#9AA3B8"><iconify-icon icon="lucide:flag" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Welcome to Mexico</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Arrive at the Horizon Festival</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#5FD35A;width:18px;height:18px"><iconify-icon icon="simple-icons:xbox" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Forza Horizon 5</span></div>
+    </div>
+    <span class="rchip common" style="--c:#9AA3B8"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/></svg>Common</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">31.8%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">19:48</span></a><a href="#game-1-2" id="row-1-2" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile common" style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.07);color:#9AA3B8"><iconify-icon icon="lucide:trophy" width="22" height="22" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Master of Arms</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Upgrade a weapon to its highest level</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#5AA0FF;width:18px;height:18px"><iconify-icon icon="simple-icons:ubisoft" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Assassin's Creed Valhalla</span></div>
+    </div>
+    <span class="text-[12px] text-subtle">No rarity from this platform</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold"></span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">18:02</span></a></div>
+  </section><section class="mt-9" aria-labelledby="day-2">
+    <div class="mb-3 flex items-end justify-between px-1">
+      <h2 id="day-2" class="font-display m-0 text-[24px] font-bold leading-7">Thursday<span class="ml-3 text-[14px] font-semibold text-muted" style="font-family:Figtree">24 September</span></h2>
+      <span class="text-[13px] text-muted">4 unlocks</span>
+    </div>
+    <div class="card p-2.5"><a href="#game-2-0" id="row-2-0" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile rare" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#5ab0ff,#2a5fd6);--c:#5AB0FF"><iconify-icon icon="lucide:mountain" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Farewell</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Complete Chapter 9</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#66C0F4;width:18px;height:18px"><iconify-icon icon="simple-icons:steam" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Celeste</span></div>
+    </div>
+    <span class="rchip rare" style="--c:#5AB0FF"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.4l5.6 3.2v6.8L8 14.6l-5.6-3.2V4.6z"/></svg>Rare</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">3.7%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">22:09</span></a><a href="#game-2-1" id="row-2-1" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile uncommon" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#37d493,#127a55);--c:#4ADE9A"><iconify-icon icon="lucide:zap" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Phantom Thief</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Steal a treasure without being spotted</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#4F8CFF;width:18px;height:18px"><iconify-icon icon="simple-icons:playstation" width="9" height="9" class=""></iconify-icon></span><span class="truncate">Persona 5 Royal</span></div>
+    </div>
+    <span class="rchip uncommon" style="--c:#4ADE9A"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.8l6.2 6.2L8 14.2 1.8 8z"/></svg>Uncommon</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">18.9%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">21:40</span></a><a href="#game-2-2" id="row-2-2" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile common" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#66708a,#3a4256);--c:#9AA3B8"><iconify-icon icon="lucide:rocket" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Leaving the Nest</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Leave your starting planet</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#E4E4E7;width:18px;height:18px"><iconify-icon icon="simple-icons:epicgames" width="9" height="9" class=""></iconify-icon></span><span class="truncate">No Man's Sky</span></div>
+    </div>
+    <span class="rchip common" style="--c:#9AA3B8"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/></svg>Common</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">62.4%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">17:12</span></a><a href="#game-2-3" id="row-2-3" class="flex items-center gap-4 rounded-[20px] p-3 hover:bg-white/[0.05]">
+    <span class="atile common" style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,#66708a,#3a4256);--c:#9AA3B8"><iconify-icon icon="lucide:trophy" width="24" height="24" class=""></iconify-icon></span>
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-[15px] font-semibold">Rookie Season</div>
+      <div class="mt-0.5 truncate text-[13px] text-fg/80">Play your first match</div>
+      <div class="mt-1 flex items-center gap-2 text-[13px] text-muted"><span class="pbadge" style="--c:#FF6B6B;width:18px;height:18px"><iconify-icon icon="simple-icons:ea" width="9" height="9" class=""></iconify-icon></span><span class="truncate">EA SPORTS FC 25</span></div>
+    </div>
+    <span class="rchip common" style="--c:#9AA3B8"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/></svg>Common</span>
+    <span class="font-display w-[64px] text-right text-[20px] font-bold">71.0%</span>
+    <span class="w-[64px] text-right text-[13px] font-semibold text-muted">16:55</span></a></div>
+  </section>
+
+  <div class="mt-12 flex flex-col items-center gap-3">
+    <span class="text-[13px] text-muted">Showing 50 of 1,284 unlocks</span>
+    <a href="#show-more" id="btn-show-more" class="btn btn-secondary">Show more<iconify-icon icon="lucide:arrow-down" width="16" height="16" class=""></iconify-icon></a>
+  </div>
+</main>
+</div>
+</body>
+</html>

@@ -84,7 +84,7 @@ Designed on the Superdesign canvas (see [design/README.md](design/README.md)). T
 - **Shape:** generous radii (floating cards 26px, art 18px, buttons and inputs 14px, chips fully round).
 - **Motion:** springy but quick. The colour-in edge sweeps in on load, the toast springs in and fades out, and everything respects the OS "reduce motion" setting.
 
-Design work (mockups for Dashboard, Library, Game detail, Toast, Accounts, Notification settings, Onboarding) is tracked in [ROADMAP](ROADMAP.md) M0 and produced with Superdesign. Activity and the tray menu are not on the canvas; Activity was built without a mockup (M2), reusing the Dashboard's unlock rows under day headings.
+Design work (mockups for Dashboard, Library, Game detail, Toast, Accounts, Notification settings, Onboarding and Activity) is tracked in [ROADMAP](ROADMAP.md) M0 and produced with Superdesign. The tray menu is a native menu and is not on the canvas. Activity was built first (M2), reusing the Dashboard's unlock rows under day headings, and designed afterwards around that.
 
 ## 8. Cross-platform game linking
 
