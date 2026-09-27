@@ -32,6 +32,8 @@ import {
 export interface IpcHandlers {
   getAppInfo(): AppInfo
   sendTestNotification(): Promise<void>
+  getNotificationsPaused(): boolean
+  setNotificationsPaused(paused: boolean): void
   listAccounts(): AccountSummary[]
   disconnectAccount(input: DisconnectInput): void
   syncNow(scope: SyncScope): Promise<void>
@@ -117,6 +119,16 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.sendTestNotification, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.sendTestNotification()
+  })
+
+  ipcMain.handle(IPC.getNotificationsPaused, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getNotificationsPaused()
+  })
+
+  ipcMain.handle(IPC.setNotificationsPaused, (event, paused: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    if (typeof paused === 'boolean') handlers.setNotificationsPaused(paused)
   })
 
   ipcMain.handle(IPC.listAccounts, (event) => {

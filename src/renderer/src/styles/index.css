@@ -17,6 +17,7 @@
 
   --color-primary: #c4f542;
   --color-primary-hover: #d6ff5c;
+  --color-aurora-teal: #3fd6c8;
   --color-on-primary: #0b1000;
 
   --color-success: #4ade9a;
@@ -58,10 +59,17 @@
   --radius-control: 14px;
   --radius-card: 18px;
   --radius-panel: 26px;
+  --radius-island: 30px;
 
   --shadow-float:
     inset 0 1px 0 rgb(255 255 255 / 0.07), 0 28px 56px -22px rgb(0 0 0 / 0.8),
     0 10px 22px -10px rgb(0 0 0 / 0.55);
+  --shadow-island:
+    inset 0 1px 0 rgb(255 255 255 / 0.08), 0 24px 48px -18px rgb(0 0 0 / 0.75),
+    0 8px 16px -8px rgb(0 0 0 / 0.5);
+  --shadow-pulse-success:
+    0 0 0 4px color-mix(in srgb, var(--color-success) 18%, transparent),
+    0 0 12px color-mix(in srgb, var(--color-success) 70%, transparent);
   --shadow-glow-primary: 0 12px 28px -10px rgb(196 245 66 / 0.7);
   --shadow-chip-ultra: 0 0 18px -4px color-mix(in srgb, var(--color-rarity-ultra) 55%, transparent);
   --shadow-chip-platinum: 0 0 18px -4px color-mix(in srgb, var(--color-platinum) 60%, transparent);

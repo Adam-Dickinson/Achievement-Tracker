@@ -58,7 +58,7 @@ npm run lint && npm run typecheck
 npm run build        # production build into ./out (run it with: npm start)
 ```
 
-In the app, use the **Send test notification** button (or the tray menu) to see an unlock toast.
+In the app, use **Settings → Send test toast** (or the tray menu) to see an unlock toast.
 
 > If the app fails to start with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`, the environment variable `ELECTRON_RUN_AS_NODE` is set (VS Code's extension host sets it). Unset it: `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell.
 

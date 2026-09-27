@@ -45,8 +45,10 @@ const DASHBOARD: DashboardStats = {
 const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
 
 const fakes = {
-  getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
+  getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2, userName: 'Test' })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
+  getNotificationsPaused: vi.fn(() => true),
+  setNotificationsPaused: vi.fn(),
   listAccounts: vi.fn(() => [ACCOUNT]),
   disconnectAccount: vi.fn(),
   syncNow: vi.fn(() => Promise.resolve()),
@@ -97,6 +99,8 @@ describe('registerIpcHandlers', () => {
   it.each([
     IPC.getAppInfo,
     IPC.sendTestNotification,
+    IPC.getNotificationsPaused,
+    IPC.setNotificationsPaused,
     IPC.listAccounts,
     IPC.disconnectAccount,
     IPC.syncNow,
@@ -486,6 +490,29 @@ describe('account and sync handlers', () => {
     await call(IPC.syncNow, TRUSTED, payload)
 
     expect(fakes.syncNow).not.toHaveBeenCalled()
+  })
+})
+
+describe('notification pause handlers', () => {
+  it('reports whether notifications are paused', () => {
+    expect(call(IPC.getNotificationsPaused, TRUSTED)).toBe(true)
+  })
+
+  it.each([true, false])('pauses or resumes notifications: %s', (paused) => {
+    call(IPC.setNotificationsPaused, TRUSTED, paused)
+
+    expect(fakes.setNotificationsPaused).toHaveBeenCalledExactlyOnceWith(paused)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['text', 'true'],
+    ['a number', 1],
+    ['an object', { paused: true }],
+  ])('ignores a pause request with %s', (_label, payload) => {
+    call(IPC.setNotificationsPaused, TRUSTED, payload)
+
+    expect(fakes.setNotificationsPaused).not.toHaveBeenCalled()
   })
 })
 

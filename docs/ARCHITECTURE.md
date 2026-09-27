@@ -121,7 +121,7 @@ trophy-locker/
 │   │   └── ipc.ts                   # channel names, payload types, the window.api interface
 │   ├── main/
 │   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC, sync wiring
-│   │   ├── windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  ipc.ts  accounts.ts  sample-toasts.ts
+│   │   ├── app-info.ts  windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  ipc.ts  accounts.ts  sample-toasts.ts
 │   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts,
 │   │   │                            #   sync-store.ts (the sync engine's SQL)
 │   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts
@@ -132,10 +132,10 @@ trophy-locker/
 │       ├── index.html  overlay.html # one entry per window
 │       └── src/
 │           ├── main.tsx  env.d.ts   # window entry; types for window.api
-│           ├── app/                 # App.tsx, IslandNav.tsx, navigation.ts
+│           ├── app/                 # App.tsx, IslandNav.tsx (+ NavSearch, SyncStatus, NotificationsToggle), navigation.ts
 │           ├── overlay/             # main.tsx, OverlayApp.tsx, Toast.tsx
 │           ├── components/          # Button.tsx, TrophyIcon.tsx, RarityChip.tsx... (shared UI)
-│           ├── lib/                 # format.ts: shared text formatting
+│           ├── lib/                 # format.ts: shared text formatting; search.ts; useNow.ts
 │           ├── test/                # fake-api.ts: the fake window.api for component tests
 │           ├── features/            # dashboard/ library/ game-detail/ activity/
 │           │                        #   accounts/ settings/ onboarding/   (dashboard, library, game-detail and accounts started)

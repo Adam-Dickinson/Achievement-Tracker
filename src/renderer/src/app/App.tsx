@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
-import { Button } from '@/components/Button'
 import { ScrollParentContext, setScrollTop } from '@/components/scroll-parent'
 import type { AppInfo } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
@@ -71,6 +70,10 @@ export function App() {
     setPage(next)
     setOpened(null)
   }
+  const searchLibrary = (query: string) => {
+    setLibraryView((view) => ({ ...view, query }))
+    if (page !== 'library' || opened !== null) selectPage('library')
+  }
   const openGame = (id: number, entry?: number) => {
     const fromLibrary = page === 'library' && opened === null
     setLibraryScrollTop(fromLibrary && scrollParent ? scrollParent.scrollTop : 0)
@@ -81,10 +84,16 @@ export function App() {
   const current = NAV_ITEMS.find((item) => item.id === page) ?? NAV_ITEMS[0]!
 
   return (
-    <div className="flex h-full flex-col">
-      <IslandNav selected={page} onSelect={selectPage} info={info} />
+    <div ref={setScrollParent} className="h-full overflow-y-auto bg-aurora">
+      <IslandNav
+        selected={page}
+        onSelect={selectPage}
+        info={info}
+        query={libraryView.query}
+        onSearch={searchLibrary}
+      />
 
-      <main ref={setScrollParent} className="flex-1 overflow-y-auto p-8">
+      <main className="mx-auto w-[calc(100%-48px)] max-w-348 pt-7 pb-20">
         <ScrollParentContext value={scrollParent}>
           {opened === null ? (
             <>
@@ -111,9 +120,6 @@ export function App() {
               onBack={() => setOpened(null)}
             />
           )}
-          <Button className="mt-4" onClick={() => void window.api.sendTestNotification()}>
-            Send test notification
-          </Button>
         </ScrollParentContext>
       </main>
     </div>

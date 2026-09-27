@@ -7,6 +7,9 @@ import type { Rarity } from './rarity'
 export const IPC = {
   getAppInfo: 'app:get-info',
   sendTestNotification: 'notifications:send-test',
+  getNotificationsPaused: 'notifications:get-paused',
+  setNotificationsPaused: 'notifications:set-paused',
+  notificationsPausedChanged: 'notifications:paused-changed',
   setToasts: 'overlay:set-toasts',
   listAccounts: 'accounts:list',
   disconnectAccount: 'accounts:disconnect',
@@ -40,6 +43,7 @@ export const IPC = {
 export interface AppInfo {
   readonly version: string
   readonly schemaVersion: number
+  readonly userName: string
 }
 
 export interface ToastPayload {
@@ -153,6 +157,8 @@ export type ConnectResult =
 export interface TrophyLockerApi {
   getAppInfo(): Promise<AppInfo>
   sendTestNotification(): Promise<void>
+  getNotificationsPaused(): Promise<boolean>
+  setNotificationsPaused(paused: boolean): Promise<void>
   listAccounts(): Promise<AccountSummary[]>
   disconnectAccount(input: DisconnectInput): Promise<void>
   syncNow(scope: SyncScope): Promise<void>
@@ -181,4 +187,5 @@ export interface TrophyLockerApi {
   listActivity(limit: number): Promise<ActivityPage>
   onDataChanged(listener: () => void): () => void
   onToasts(listener: (toasts: readonly VisibleToast[]) => void): () => void
+  onNotificationsPausedChanged(listener: (paused: boolean) => void): () => void
 }

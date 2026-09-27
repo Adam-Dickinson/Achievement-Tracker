@@ -4,6 +4,8 @@ import { IPC, type TrophyLockerApi, type VisibleToast } from '@shared/ipc'
 const api: TrophyLockerApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC.getAppInfo),
   sendTestNotification: () => ipcRenderer.invoke(IPC.sendTestNotification),
+  getNotificationsPaused: () => ipcRenderer.invoke(IPC.getNotificationsPaused),
+  setNotificationsPaused: (paused) => ipcRenderer.invoke(IPC.setNotificationsPaused, paused),
   listAccounts: () => ipcRenderer.invoke(IPC.listAccounts),
   disconnectAccount: (input) => ipcRenderer.invoke(IPC.disconnectAccount, input),
   syncNow: (scope) => ipcRenderer.invoke(IPC.syncNow, scope),
@@ -40,6 +42,11 @@ const api: TrophyLockerApi = {
       listener(toasts)
     ipcRenderer.on(IPC.setToasts, handler)
     return () => ipcRenderer.removeListener(IPC.setToasts, handler)
+  },
+  onNotificationsPausedChanged: (listener) => {
+    const handler = (_event: IpcRendererEvent, paused: boolean): void => listener(paused)
+    ipcRenderer.on(IPC.notificationsPausedChanged, handler)
+    return () => ipcRenderer.removeListener(IPC.notificationsPausedChanged, handler)
   },
 }
 
