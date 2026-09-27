@@ -516,6 +516,25 @@ describe('addPlatformGames', () => {
     ])
   })
 
+  it('stores a store link, keeping the old one when a later sync has none', () => {
+    const { db, account } = setup()
+    const storeUrl = () =>
+      db.prepare('SELECT store_url FROM platform_game WHERE external_id = ?').get('400')
+
+    addPlatformGames(db, account, [
+      remoteGame('400', { storeUrl: 'steam://nav/games/details/400' }),
+    ])
+    expect(storeUrl()).toEqual({ store_url: 'steam://nav/games/details/400' })
+
+    addPlatformGames(db, account, [remoteGame('400')])
+    expect(storeUrl()).toEqual({ store_url: 'steam://nav/games/details/400' })
+
+    addPlatformGames(db, account, [
+      remoteGame('400', { storeUrl: 'steam://nav/games/details/401' }),
+    ])
+    expect(storeUrl()).toEqual({ store_url: 'steam://nav/games/details/401' })
+  })
+
   it('stores the baseline cutoff on new games only, leaving it null by default', () => {
     const { db, account } = setup()
     const cutoff = new Date('2026-09-23T10:00:00Z')

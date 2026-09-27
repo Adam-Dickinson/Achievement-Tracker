@@ -1,4 +1,4 @@
-import { completionPercent } from '@shared/dashboard'
+import { PlatformBadge } from '@/components/PlatformBadge'
 import type { GameEntry } from '@shared/library'
 import { entryLabel } from './entry-label'
 
@@ -10,10 +10,13 @@ interface EntryTabsProps {
 
 export function EntryTabs({ entries, selected, onSelect }: EntryTabsProps) {
   return (
-    <div role="tablist" aria-label="Platforms" className="flex flex-wrap gap-3">
+    <div
+      role="tablist"
+      aria-label="Platforms"
+      className="flex flex-wrap gap-0.5 rounded-2xl border border-white/7 bg-white/6 p-1"
+    >
       {entries.map((entry) => {
         const active = entry.platformGameId === selected
-        const percent = completionPercent(entry.unlocked, entry.total)
         return (
           <button
             key={entry.platformGameId}
@@ -23,21 +26,18 @@ export function EntryTabs({ entries, selected, onSelect }: EntryTabsProps) {
             aria-selected={active}
             aria-controls="entry-panel"
             onClick={() => onSelect(entry.platformGameId)}
-            className={`flex min-w-44 flex-col gap-2 rounded-panel border px-4 py-3 text-left transition-colors ${
+            className={`flex h-8.5 items-center gap-1.5 rounded-xl px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
               active
-                ? 'border-primary bg-surface-2'
-                : 'border-line bg-surface-1 text-fg-muted hover:text-fg'
+                ? 'bg-fg text-canvas shadow-[0_6px_16px_-6px_rgb(0_0_0/0.6)]'
+                : 'text-fg-muted hover:text-fg'
             }`}
           >
-            <span className="text-sm font-semibold">{entryLabel(entry)}</span>
-            <span className="text-xs">
-              <b className="text-fg">{entry.unlocked}</b> / {entry.total}
+            <span aria-hidden="true" className="flex">
+              <PlatformBadge platform={entry.platform} size={20} />
             </span>
-            <span aria-hidden="true" className="h-1 overflow-hidden rounded-full bg-surface-3">
-              <span
-                className="block h-full rounded-full bg-primary"
-                style={{ width: `${percent}%` }}
-              />
+            {entryLabel(entry)}{' '}
+            <span className="tabular-nums opacity-60">
+              {entry.unlocked}/{entry.total}
             </span>
           </button>
         )

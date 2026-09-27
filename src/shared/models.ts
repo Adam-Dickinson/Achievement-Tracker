@@ -25,6 +25,7 @@ export interface RemoteGame {
   readonly coverUrl: string | null
   readonly lastPlayed: Date | null
   readonly recentlyPlayed: boolean
+  readonly storeUrl?: string | null
 }
 
 export interface RemoteAchievement {

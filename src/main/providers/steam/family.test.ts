@@ -140,6 +140,7 @@ describe('toFamilyGame', () => {
       coverUrl: null,
       lastPlayed: null,
       recentlyPlayed: false,
+      storeUrl: 'steam://nav/games/details/220',
     })
   })
 

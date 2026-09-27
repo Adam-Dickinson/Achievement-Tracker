@@ -30,6 +30,7 @@ import { UbisoftProvider } from './providers/ubisoft'
 import { XboxProvider } from './providers/xbox'
 import { getProfile, windowsUserName } from './profile'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
+import { openStorePage } from './store-page'
 import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
@@ -41,6 +42,7 @@ import {
   getGameDetail,
   listActivity,
   listLibraryGames,
+  storePageUrl,
 } from './store/library-store'
 import { saveProfileName } from './store/settings-store'
 import { listAccountSummaries } from './store/sync-store'
@@ -284,6 +286,9 @@ async function start(): Promise<void> {
     },
     unlinkGame: ({ platformGameId }) => {
       if (unlinkPlatformGame(db, platformGameId)) dataChanged()
+    },
+    openStorePage: async (platformGameId) => {
+      await openStorePage(storePageUrl(db, platformGameId), (url) => shell.openExternal(url))
     },
     getArtworkSettings: () => ({
       hasKey: artwork.hasKey(),

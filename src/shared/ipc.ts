@@ -33,6 +33,7 @@ export const IPC = {
   getGame: 'library:get-game',
   mergeGames: 'library:merge-games',
   unlinkGame: 'library:unlink-game',
+  openStorePage: 'library:open-store-page',
   getArtworkSettings: 'artwork:get-settings',
   saveSteamGridDbKey: 'artwork:save-steamgriddb-key',
   removeSteamGridDbKey: 'artwork:remove-steamgriddb-key',
@@ -189,6 +190,7 @@ export interface TrophyLockerApi {
   getGame(id: number): Promise<GameDetail | null>
   mergeGames(input: MergeGamesInput): Promise<void>
   unlinkGame(input: UnlinkGameInput): Promise<void>
+  openStorePage(platformGameId: number): Promise<void>
   getArtworkSettings(): Promise<ArtworkSettings>
   saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
   removeSteamGridDbKey(): Promise<void>

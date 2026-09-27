@@ -58,6 +58,7 @@ export interface IpcHandlers {
   getGame(id: number): GameDetail | null
   mergeGames(input: MergeGamesInput): void
   unlinkGame(input: UnlinkGameInput): void
+  openStorePage(platformGameId: number): Promise<void>
   getArtworkSettings(): ArtworkSettings
   saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
   removeSteamGridDbKey(): void
@@ -312,6 +313,12 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     const parsed = unlinkGameSchema.safeParse(input)
     if (parsed.success) handlers.unlinkGame(parsed.data)
+  })
+
+  ipcMain.handle(IPC.openStorePage, (event, platformGameId: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = gameIdSchema.safeParse(platformGameId)
+    return parsed.success ? handlers.openStorePage(parsed.data) : Promise.resolve()
   })
 
   ipcMain.handle(IPC.getArtworkSettings, (event) => {

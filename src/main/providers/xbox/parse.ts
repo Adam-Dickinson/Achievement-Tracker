@@ -14,6 +14,8 @@ const ICON = 'Icon'
 const RECENT_MS = 14 * 24 * 60 * 60 * 1000
 const COVER_TYPES = ['TitledHeroArt', 'SuperHeroArt', 'BoxArt'] as const
 const STORE_IMAGES_HOST = 'store-images.s-microsoft.com'
+const XBOX_STORE_PAGE = 'https://www.xbox.com/games/store/_'
+const PRODUCT_ID = /^[0-9A-Z]{12}$/
 
 interface ImageSize {
   readonly w: number
@@ -35,6 +37,11 @@ const titleSchema = z.object({
   images: z.array(titleImageSchema).nullish(),
   titleHistory: z.object({ lastTimePlayed: z.iso.datetime() }).nullish(),
   achievement: z.object({ sourceVersion: z.number().int() }).nullish(),
+  detail: z
+    .object({
+      availabilities: z.array(z.object({ ProductId: z.string().nullish() })).nullish(),
+    })
+    .nullish(),
 })
 
 const titleHistorySchema = z.object({
@@ -150,7 +157,15 @@ function toRemoteGame(title: XboxTitle, now: Date): RemoteGame {
     coverUrl: imageUrl(coverImage(title) ?? title.displayImage, COVER_SIZE),
     lastPlayed,
     recentlyPlayed: lastPlayed !== null && now.getTime() - lastPlayed.getTime() <= RECENT_MS,
+    storeUrl: storeUrl(title),
   }
+}
+
+function storeUrl(title: XboxTitle): string | null {
+  const productId = title.detail?.availabilities
+    ?.map((availability) => availability.ProductId?.trim().toUpperCase())
+    .find((id) => id !== undefined && PRODUCT_ID.test(id))
+  return productId ? `${XBOX_STORE_PAGE}/${productId}` : null
 }
 
 function coverImage(title: XboxTitle): string | undefined {

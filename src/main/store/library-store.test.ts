@@ -9,6 +9,7 @@ import {
   listActivity,
   listLibraryGames,
   listRecentUnlocks,
+  storePageUrl,
 } from './library-store'
 import { applyMigrations } from './migrate'
 import { awardPlatinums } from './platinum'
@@ -179,6 +180,28 @@ describe('listLibraryGames', () => {
       unlocked: 2,
       total: 4,
     })
+  })
+})
+
+describe('store pages', () => {
+  it("says whether each entry has a store page, and gives its link by the entry's id", () => {
+    const steam = seedGame('400', 'Portal', 1)
+    const xbox = seedGame('2079757188', 'Portal', 1, [], 'xbox')
+    db.prepare('UPDATE platform_game SET store_url = ? WHERE id = ?').run(
+      'steam://nav/games/details/400',
+      steam.platformGameId,
+    )
+    db.prepare('UPDATE platform_game SET store_url = NULL WHERE id = ?').run(xbox.platformGameId)
+
+    const entries = getGameDetail(db, steam.gameId)?.entries ?? []
+
+    expect(entries.map((entry) => [entry.platform, entry.hasStorePage])).toEqual([
+      ['steam', true],
+      ['xbox', false],
+    ])
+    expect(storePageUrl(db, steam.platformGameId)).toBe('steam://nav/games/details/400')
+    expect(storePageUrl(db, xbox.platformGameId)).toBeNull()
+    expect(storePageUrl(db, 999)).toBeNull()
   })
 })
 

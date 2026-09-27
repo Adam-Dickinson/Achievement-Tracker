@@ -31,6 +31,7 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     getGame: vi.fn().mockResolvedValue(null),
     mergeGames: vi.fn().mockResolvedValue(undefined),
     unlinkGame: vi.fn().mockResolvedValue(undefined),
+    openStorePage: vi.fn().mockResolvedValue(undefined),
     getArtworkSettings: vi.fn().mockResolvedValue({ hasKey: false, missing: 0, problem: null }),
     saveSteamGridDbKey: vi.fn(),
     removeSteamGridDbKey: vi.fn().mockResolvedValue(undefined),

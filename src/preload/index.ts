@@ -28,6 +28,7 @@ const api: TrophyLockerApi = {
   getGame: (id) => ipcRenderer.invoke(IPC.getGame, id),
   mergeGames: (input) => ipcRenderer.invoke(IPC.mergeGames, input),
   unlinkGame: (input) => ipcRenderer.invoke(IPC.unlinkGame, input),
+  openStorePage: (platformGameId) => ipcRenderer.invoke(IPC.openStorePage, platformGameId),
   getArtworkSettings: () => ipcRenderer.invoke(IPC.getArtworkSettings),
   saveSteamGridDbKey: (input) => ipcRenderer.invoke(IPC.saveSteamGridDbKey, input),
   removeSteamGridDbKey: () => ipcRenderer.invoke(IPC.removeSteamGridDbKey),

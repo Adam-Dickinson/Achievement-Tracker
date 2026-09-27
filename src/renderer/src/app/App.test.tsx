@@ -243,6 +243,7 @@ describe('App: opening a game', () => {
           total: 2,
           achievements: [],
           appPlatinum: null,
+          hasStorePage: false,
         },
         {
           platformGameId: 71,
@@ -253,6 +254,7 @@ describe('App: opening a game', () => {
           total: 2,
           achievements: [],
           appPlatinum: null,
+          hasStorePage: false,
         },
       ],
     })

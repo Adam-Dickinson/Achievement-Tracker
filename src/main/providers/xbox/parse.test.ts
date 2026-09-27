@@ -62,6 +62,7 @@ describe('parseTitleHistory', () => {
       coverUrl: `${STORE}/apps.50642.13758467164481545.c998f207-34a5-4a78-8843-178e2acdf371.0073ed41-4cdf-4fbf-81f2-ba27e79fb5ab?w=920`,
       lastPlayed: FORZA_LAST_PLAYED,
       recentlyPlayed: true,
+      storeUrl: 'https://www.xbox.com/games/store/_/9NR1R1XWLCNB',
     })
   })
 
@@ -132,8 +133,25 @@ describe('parseTitleHistory', () => {
         coverUrl: null,
         lastPlayed: null,
         recentlyPlayed: false,
+        storeUrl: null,
       },
     ])
+  })
+
+  it('links the Xbox store page of the first well-formed product id', () => {
+    const store = (availabilities: unknown): string | null | undefined =>
+      parseTitleHistory(history([title({ detail: { availabilities } })]), now)[0]?.storeUrl
+
+    expect(store([{ ProductId: '9n3cjz3hfhtf' }])).toBe(
+      'https://www.xbox.com/games/store/_/9N3CJZ3HFHTF',
+    )
+    expect(store([{ ProductId: null }, { ProductId: 'BRRC2BP0G9P0' }])).toBe(
+      'https://www.xbox.com/games/store/_/BRRC2BP0G9P0',
+    )
+    expect(store([{ ProductId: '../../evil' }])).toBeNull()
+    expect(store([{ ProductId: '' }])).toBeNull()
+    expect(store([])).toBeNull()
+    expect(store(null)).toBeNull()
   })
 
   it('skips titles with no achievement summary', () => {

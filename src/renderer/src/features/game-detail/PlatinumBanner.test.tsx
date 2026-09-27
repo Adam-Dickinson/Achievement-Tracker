@@ -39,6 +39,7 @@ function entry(
     total: achievements.length,
     achievements,
     appPlatinum: null,
+    hasStorePage: false,
     ...overrides,
   }
 }
