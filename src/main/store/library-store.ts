@@ -128,7 +128,19 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
     nearlyThere,
     recentUnlocks: listRecentUnlocks(db, RECENT_UNLOCK_COUNT),
     rarestUnlock: findRarestUnlock(db, games),
+    rarestThisWeek: rarestSince(db, days.week[0]?.date ?? now),
   }
+}
+
+function rarestSince(db: DatabaseSync, since: Date): number | null {
+  const row = db
+    .prepare(
+      `SELECT MIN(a.global_percent) AS percent FROM unlock u
+       JOIN achievement a ON a.id = u.achievement_id
+       WHERE u.unlocked_at >= ? AND a.global_percent IS NOT NULL`,
+    )
+    .get(since.toISOString()) as { percent: number | null }
+  return row.percent
 }
 
 function listUnlockTimes(db: DatabaseSync): Date[] {

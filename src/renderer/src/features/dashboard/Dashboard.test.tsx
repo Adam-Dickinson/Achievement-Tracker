@@ -73,6 +73,7 @@ const STATS: DashboardStats = {
   nearlyThere: [game(1, 'Hollow Knight', 61, 63), game(2, 'Celeste', 31, 33)],
   recentUnlocks: [UNLOCK],
   rarestUnlock: RAREST,
+  rarestThisWeek: 1.2,
 }
 
 const getDashboard = vi.fn<() => Promise<DashboardStats>>()

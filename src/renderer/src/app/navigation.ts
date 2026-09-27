@@ -30,6 +30,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Activity',
     description: 'A timeline of everything you have unlocked.',
     icon: Activity,
+    ownHeading: true,
   },
   {
     id: 'accounts',

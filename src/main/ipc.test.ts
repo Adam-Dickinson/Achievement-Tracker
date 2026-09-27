@@ -46,6 +46,7 @@ const DASHBOARD: DashboardStats = {
   nearlyThere: [],
   recentUnlocks: [],
   rarestUnlock: null,
+  rarestThisWeek: null,
 }
 
 const PROFILE: Profile = { name: null, windowsName: 'tester' }
