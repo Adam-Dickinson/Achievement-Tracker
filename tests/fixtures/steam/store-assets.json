@@ -61,7 +61,10 @@
           "asset_url_format": "steam/apps/2584270/${FILENAME}?t=1788251111",
           "header": "0a4c23b70ced29fac344186ea564dae67c80cfd6/header.jpg",
           "main_capsule": "5b6a6b59c4f857165987b15fc116e5b3a06427dc/capsule_616x353.jpg",
-          "hero_capsule": "188a0c5dd6cd6fff9b7219a77752fbed2611f8e8/hero_capsule.jpg"
+          "hero_capsule": "188a0c5dd6cd6fff9b7219a77752fbed2611f8e8/hero_capsule.jpg",
+          "library_capsule": "e92804cbd8a37fbf08e19c55ab6a0ce7f0f25bf5/library_capsule.jpg",
+          "library_capsule_2x": "e92804cbd8a37fbf08e19c55ab6a0ce7f0f25bf5/library_capsule_2x.jpg",
+          "library_hero": "6797ef35ca25b0f2876c8a16bc5f8deffa19dbe1/library_hero.jpg"
         },
         "best_purchase_option": {
           "packageid": 1648783,
@@ -119,7 +122,10 @@
           "asset_url_format": "steam/apps/236850/${FILENAME}?t=1778249292",
           "header": "header.jpg",
           "main_capsule": "23cbb7b306087b17601b7bd7d5eeec38722d38e6/capsule_616x353.jpg",
-          "hero_capsule": "259efee8b0b7fbd007f0c600073d6ccd4920e7a4/hero_capsule.jpg"
+          "hero_capsule": "259efee8b0b7fbd007f0c600073d6ccd4920e7a4/hero_capsule.jpg",
+          "library_capsule": "262929c03990b786390232599f3af566ae36eac7/library_600x900.jpg",
+          "library_capsule_2x": "262929c03990b786390232599f3af566ae36eac7/library_600x900_2x.jpg",
+          "library_hero": "e9ca126009c5fecf7df6e2782c69a4d3336fcc32/library_hero.jpg"
         },
         "best_purchase_option": {
           "packageid": 977591,

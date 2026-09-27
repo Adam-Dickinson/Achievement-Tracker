@@ -201,6 +201,34 @@ describe('migrations', () => {
     ])
   })
 
+  it('add empty tall and hero art columns, keeping existing games', () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 7))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 's', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'A', 'a');
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title, cover_url, store_url)
+      VALUES (1, 1, 1, 'steam', '400', 'A', 'https://cover/a.jpg', 'steam://nav/games/details/400');
+    `)
+
+    applyMigrations(db)
+
+    expect(
+      db
+        .prepare('SELECT title, cover_url, store_url, portrait_url, hero_url FROM platform_game')
+        .all(),
+    ).toEqual([
+      {
+        title: 'A',
+        cover_url: 'https://cover/a.jpg',
+        store_url: 'steam://nav/games/details/400',
+        portrait_url: null,
+        hero_url: null,
+      },
+    ])
+  })
+
   it('are a no-op when applied twice', () => {
     const db = new DatabaseSync(':memory:')
     const first = applyMigrations(db)

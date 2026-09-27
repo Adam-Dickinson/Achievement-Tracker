@@ -235,7 +235,12 @@ describe('parseCatalog', () => {
   })
 
   it('gives no title or cover for an empty catalog reply', () => {
-    expect(parseCatalog(fixture('catalog-empty.json'))).toEqual({ title: null, coverUrl: null })
+    expect(parseCatalog(fixture('catalog-empty.json'))).toEqual({
+      title: null,
+      coverUrl: null,
+      portraitUrl: null,
+      heroUrl: null,
+    })
   })
 
   it('prefers the item that is a game, and falls back to the wide then the tall image', () => {
@@ -251,6 +256,18 @@ describe('parseCatalog', () => {
       },
     })
 
-    expect(details).toEqual({ title: 'The Game', coverUrl: 'https://example.com/wide.jpg' })
+    expect(details).toEqual({
+      title: 'The Game',
+      coverUrl: 'https://example.com/wide.jpg',
+      portraitUrl: 'https://cdn1.epicgames.com/tall.jpg?resize=1&w=600',
+      heroUrl: null,
+    })
+  })
+
+  it('takes the tall box art for the portrait and the wide box art for the hero', () => {
+    const details = parseCatalog(fixture('catalog-048550a9623d4824894430a2c2823e02.json'))
+
+    expect(details.portraitUrl).toMatch(/^https:\/\/cdn1\.epicgames\.com\/.+\?resize=1&w=600$/)
+    expect(details.heroUrl).toMatch(/^https:\/\/cdn1\.epicgames\.com\/.+\?resize=1&w=1920$/)
   })
 })

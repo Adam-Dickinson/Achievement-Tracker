@@ -55,6 +55,7 @@ describe('parseOwned', () => {
       slug: 'skate',
       title: 'skate.™',
       coverUrl: expect.stringMatching(/^https:\/\/app-images\.ea\.com\/.+\?w=920$/),
+      portraitUrl: expect.stringMatching(/^https:\/\/app-images\.ea\.com\/.+\?w=600$/),
     })
   })
 
@@ -155,8 +156,20 @@ describe('parseLibrary', () => {
     }
     const games = parseLibrary(
       [
-        { offerId: 'a', slug: 'old', title: 'First', coverUrl: 'https://x/a.jpg' },
-        { offerId: 'b', slug: 'new', title: 'Second', coverUrl: 'https://x/b.jpg' },
+        {
+          offerId: 'a',
+          slug: 'old',
+          title: 'First',
+          coverUrl: 'https://x/a.jpg',
+          portraitUrl: null,
+        },
+        {
+          offerId: 'b',
+          slug: 'new',
+          title: 'Second',
+          coverUrl: 'https://x/b.jpg',
+          portraitUrl: 'https://x/b-tall.jpg',
+        },
       ],
       offers,
       NOW,
@@ -168,6 +181,7 @@ describe('parseLibrary', () => {
         title: 'First',
         iconUrl: null,
         coverUrl: 'https://x/a.jpg',
+        portraitUrl: 'https://x/b-tall.jpg',
         lastPlayed: new Date('2026-09-20T00:00:00.000Z'),
         recentlyPlayed: true,
       },

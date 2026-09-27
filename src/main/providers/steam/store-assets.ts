@@ -19,6 +19,9 @@ const assetsSchema = z.object({
             .object({
               asset_url_format: z.string().optional(),
               header: z.string().optional(),
+              library_capsule: z.string().optional(),
+              library_capsule_2x: z.string().optional(),
+              library_hero: z.string().optional(),
             })
             .optional(),
         }),
@@ -27,11 +30,19 @@ const assetsSchema = z.object({
   }),
 })
 
-export async function fetchHeaderImages(
+export interface StoreArt {
+  readonly header: string | null
+  readonly portrait: string | null
+  readonly hero: string | null
+}
+
+const NO_ART: StoreArt = { header: null, portrait: null, hero: null }
+
+export async function fetchStoreArt(
   appids: readonly string[],
   signal?: AbortSignal,
-): Promise<Map<string, string | null>> {
-  const headers = new Map<string, string | null>(appids.map((appid) => [appid, null]))
+): Promise<Map<string, StoreArt>> {
+  const art = new Map<string, StoreArt>(appids.map((appid) => [appid, NO_ART]))
   for (let start = 0; start < appids.length; start += BATCH) {
     const input = {
       ids: appids.slice(start, start + BATCH).map((appid) => ({ appid: Number(appid) })),
@@ -45,11 +56,19 @@ export async function fetchHeaderImages(
     )
     for (const item of reply.response.store_items ?? []) {
       const appid = String(item.id)
-      if (item.success !== FOUND || !headers.has(appid)) continue
-      headers.set(appid, headerUrl(item.assets?.asset_url_format, item.assets?.header))
+      if (item.success !== FOUND || !art.has(appid)) continue
+      const format = item.assets?.asset_url_format
+      art.set(appid, {
+        header: headerUrl(format, item.assets?.header),
+        portrait: headerUrl(
+          format,
+          item.assets?.library_capsule_2x ?? item.assets?.library_capsule,
+        ),
+        hero: headerUrl(format, item.assets?.library_hero),
+      })
     }
   }
-  return headers
+  return art
 }
 
 export function headerUrl(format: string | undefined, file: string | undefined): string | null {

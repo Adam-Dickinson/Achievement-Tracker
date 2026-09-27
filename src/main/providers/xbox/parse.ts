@@ -23,6 +23,8 @@ interface ImageSize {
 }
 
 const COVER_SIZE: ImageSize = { w: 920 }
+const PORTRAIT_SIZE: ImageSize = { w: 600 }
+const HERO_SIZE: ImageSize = { w: 1920 }
 const ICON_SIZE: ImageSize = { w: 128, h: 128 }
 
 const titleImageSchema = z.object({
@@ -158,7 +160,13 @@ function toRemoteGame(title: XboxTitle, now: Date): RemoteGame {
     lastPlayed,
     recentlyPlayed: lastPlayed !== null && now.getTime() - lastPlayed.getTime() <= RECENT_MS,
     storeUrl: storeUrl(title),
+    portraitUrl: imageUrl(imageOfType(title, 'Poster'), PORTRAIT_SIZE),
+    heroUrl: imageUrl(imageOfType(title, 'SuperHeroArt'), HERO_SIZE),
   }
+}
+
+function imageOfType(title: XboxTitle, type: string): string | undefined {
+  return title.images?.find((image) => image.type === type)?.url
 }
 
 function storeUrl(title: XboxTitle): string | null {

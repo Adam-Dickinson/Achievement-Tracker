@@ -9,6 +9,7 @@ import type {
 
 const RECENT_MS = 14 * 24 * 60 * 60 * 1000
 const COVER_WIDTH = 920
+const PORTRAIT_WIDTH = 600
 const ICON_SIZES = ['208', '416', '40'] as const
 const NEVER_PLAYED_BEFORE = Date.UTC(2000, 0, 1)
 
@@ -29,6 +30,7 @@ const ownedSchema = z.object({
                   gameType: z.string().nullish(),
                   title: z.string().nullish(),
                   keyArt: imageSchema,
+                  packArt: imageSchema,
                 })
                 .nullish(),
             })
@@ -92,6 +94,7 @@ export interface OwnedGame {
   readonly slug: string | null
   readonly title: string
   readonly coverUrl: string | null
+  readonly portraitUrl: string | null
 }
 
 export function check<Schema extends z.ZodType>(
@@ -128,6 +131,7 @@ export function parseOwned(json: unknown): readonly OwnedGame[] {
       title:
         item.product?.baseItem?.title?.trim() || item.product?.name?.trim() || item.originOfferId,
       coverUrl: coverUrl(item.product?.baseItem?.keyArt?.largestImage?.path),
+      portraitUrl: coverUrl(item.product?.baseItem?.packArt?.largestImage?.path, PORTRAIT_WIDTH),
     }))
 }
 
@@ -156,6 +160,7 @@ export function parseLibrary(
       title: known?.title ?? game.title,
       iconUrl: null,
       coverUrl: known?.coverUrl ?? game.coverUrl,
+      portraitUrl: known?.portraitUrl ?? game.portraitUrl,
       lastPlayed,
       recentlyPlayed: lastPlayed !== null && now.getTime() - lastPlayed.getTime() <= RECENT_MS,
     })
@@ -236,10 +241,10 @@ function iconUrl(icons: Readonly<Record<string, string>> | null | undefined): st
   return null
 }
 
-function coverUrl(raw: string | null | undefined): string | null {
+function coverUrl(raw: string | null | undefined, width = COVER_WIDTH): string | null {
   const url = raw ? httpsUrl(raw) : null
   if (!url) return null
-  url.searchParams.set('w', String(COVER_WIDTH))
+  url.searchParams.set('w', String(width))
   return url.toString()
 }
 

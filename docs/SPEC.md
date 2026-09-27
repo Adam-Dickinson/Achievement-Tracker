@@ -114,6 +114,8 @@ CREATE TABLE platform_game (             -- a game as it exists on one platform/
   baseline_cutoff TEXT,                 -- first sync toasts only unlocks after this; NULL = fully silent (0002)
   cover_url     TEXT,                   -- this entry's cover (0003; game.cover_url is no longer read)
   linked        TEXT NOT NULL DEFAULT 'auto', -- auto | manual: manual entries are never regrouped (0003)
+  portrait_url  TEXT,                   -- tall (2:3-ish) art for the Library's Portrait view, when the platform has some (0008)
+  hero_url      TEXT,                   -- wide banner art for Game detail, when the platform has some (0008)
   store_url     TEXT,                   -- the game's store page, when its platform has one (0007): steam://nav/games/details/<appid> or https://www.xbox.com/games/store/_/<ProductId>
   UNIQUE (account_id, external_id)
 );
@@ -277,7 +279,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `getNotificationsPaused()` | `notifications:get-paused` | Whether notifications are paused (the tray's Pause notifications, the nav's bell). Not kept across restarts |
 | `setNotificationsPaused(paused)` | `notifications:set-paused` | Pause or resume notifications; anything but a boolean is ignored. Updates the tray's checkbox and fires `onNotificationsPausedChanged` |
 | `onNotificationsPausedChanged(listener)` | `notifications:paused-changed` (main → main window) | Called with the new value whenever notifications are paused or resumed, from the app or the tray. Returns an unsubscribe function |
-| `listLibrary()` | `library:list` | Every game as a `LibraryGame`, linked platforms counted once: its id is the canonical **game** id; `platforms` (best first), the best entry's unlocked/total and cover (else any entry's), the shortest entry title, the latest unlock across entries; most recently unlocked first |
+| `listLibrary()` | `library:list` | Every game as a `LibraryGame`, linked platforms counted once: its id is the canonical **game** id; `platforms` (best first), the best entry's unlocked/total and cover (else any entry's), `portraitUrl` and `heroUrl` (the best entry's, else any entry's that has one), the shortest entry title, the latest unlock across entries; most recently unlocked first |
 | `getGame(id)` | `library:get-game` | One game (by game id) with its `entries`, best first: each platform entry's id, platform, `tag` (set when two entries share a platform, e.g. `PS4`), counts, achievements (each with `platinum`) `appPlatinum` (`{ earnedAt }` when the entry was awarded one and has no platinum of its own, else `null`) and `hasStorePage` (`GameDetail`), or `null`. The id is checked with zod (a positive integer) |
 | `mergeGames({ intoGameId, gameId })` | `library:merge-games` | Moves every entry of `gameId` into `intoGameId` (both then `manual`) and moves its cleaned titles too, so later entries with those titles join. Ids are positive integers and must differ, otherwise ignored. Fires `onDataChanged` |
 | `openStorePage(platformGameId)` | `library:open-store-page` | Opens the entry's store page with the system (Steam's client, or the browser for xbox.com). The UI sends only the entry id; the main process reads the stored link and opens it only if it matches an allowed pattern (`main/store-page.ts`). Anything else is ignored |

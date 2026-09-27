@@ -5,6 +5,8 @@ import type { RemoteAchievement, RemoteGameAchievements, RemoteUnlock } from '@s
 const COVER_TYPES = ['DieselGameBox', 'DieselGameBoxWide', 'DieselGameBoxTall'] as const
 const RESIZABLE_HOST = 'cdn1.epicgames.com'
 const COVER_WIDTH = 920
+const PORTRAIT_WIDTH = 600
+const HERO_WIDTH = 1920
 const GAMES_CATEGORY = 'games'
 
 const libraryRecordSchema = z.object({
@@ -94,6 +96,15 @@ const catalogSchema = z.record(
 export interface EpicCatalogDetails {
   readonly title: string | null
   readonly coverUrl: string | null
+  readonly portraitUrl: string | null
+  readonly heroUrl: string | null
+}
+
+export const NO_CATALOG: EpicCatalogDetails = {
+  title: null,
+  coverUrl: null,
+  portraitUrl: null,
+  heroUrl: null,
 }
 
 export function check<Schema extends z.ZodType>(
@@ -151,13 +162,19 @@ export function parseCatalog(json: unknown): EpicCatalogDetails {
   const items = Object.values(check(catalogSchema, json, 'catalog'))
   const item =
     items.find((i) => i.categories?.some((c) => c.path === GAMES_CATEGORY)) ?? items[0] ?? null
-  if (!item) return { title: null, coverUrl: null }
+  if (!item) return NO_CATALOG
 
   const images = item.keyImages ?? []
   const cover = COVER_TYPES.map((type) => images.find((image) => image.type === type)).find(
     (image) => image !== undefined,
   )
-  return { title: item.title?.trim() || null, coverUrl: cover ? coverUrl(cover.url) : null }
+  const ofType = (type: string) => images.find((image) => image.type === type)?.url
+  return {
+    title: item.title?.trim() || null,
+    coverUrl: cover ? coverUrl(cover.url) : null,
+    portraitUrl: imageUrl(ofType('DieselGameBoxTall'), PORTRAIT_WIDTH),
+    heroUrl: imageUrl(ofType('DieselGameBox'), HERO_WIDTH),
+  }
 }
 
 export function toGameAchievements(
@@ -190,11 +207,15 @@ function toRemoteAchievement(achievement: EpicAchievement): RemoteAchievement {
 }
 
 function coverUrl(raw: string): string | null {
-  const url = httpsUrl(raw)
+  return imageUrl(raw, COVER_WIDTH)
+}
+
+function imageUrl(raw: string | undefined, width: number): string | null {
+  const url = raw ? httpsUrl(raw) : null
   if (!url) return null
   if (url.host === RESIZABLE_HOST) {
     url.searchParams.set('resize', '1')
-    url.searchParams.set('w', String(COVER_WIDTH))
+    url.searchParams.set('w', String(width))
   }
   return url.toString()
 }

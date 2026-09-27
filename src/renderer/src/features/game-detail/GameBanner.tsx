@@ -14,13 +14,15 @@ interface GameBannerProps {
 }
 
 export function GameBanner({ game, back, actions }: GameBannerProps) {
+  const art = game.heroUrl ?? game.coverUrl
+
   return (
     <section
       aria-labelledby="game-title"
       className="relative h-95 overflow-hidden rounded-panel border border-line bg-surface-1 shadow-float"
     >
-      {game.coverUrl ? (
-        <img src={game.coverUrl} alt="" className="absolute inset-0 size-full object-cover" />
+      {art ? (
+        <img src={art} alt="" className="absolute inset-0 size-full object-cover" />
       ) : (
         <div
           aria-hidden="true"

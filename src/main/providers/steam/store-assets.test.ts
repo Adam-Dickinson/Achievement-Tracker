@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchHeaderImages, headerUrl } from './store-assets'
+import { fetchStoreArt, headerUrl } from './store-assets'
 
 const fetchMock = vi.fn<typeof fetch>()
 const JSON_REPLY = { headers: { 'content-type': 'application/json' } }
@@ -25,23 +25,35 @@ function requestedInputs(): { ids: { appid: number }[]; data_request: unknown }[
   )
 }
 
-describe('fetchHeaderImages', () => {
-  it("builds each game's current header image from Steam's store assets", async () => {
+describe('fetchStoreArt', () => {
+  it("builds each game's header, tall library capsule and library hero from Steam's store assets", async () => {
     fetchMock.mockResolvedValueOnce(new Response(fixture(), JSON_REPLY))
 
-    const headers = await fetchHeaderImages(['2584270', '236850', '700580'])
+    const art = await fetchStoreArt(['2584270', '236850', '700580'])
 
-    expect(headers).toEqual(
+    expect(art).toEqual(
       new Map([
         [
           '2584270',
-          'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2584270/0a4c23b70ced29fac344186ea564dae67c80cfd6/header.jpg?t=1788251111',
+          {
+            header:
+              'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2584270/0a4c23b70ced29fac344186ea564dae67c80cfd6/header.jpg?t=1788251111',
+            portrait:
+              'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2584270/e92804cbd8a37fbf08e19c55ab6a0ce7f0f25bf5/library_capsule_2x.jpg?t=1788251111',
+            hero: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2584270/6797ef35ca25b0f2876c8a16bc5f8deffa19dbe1/library_hero.jpg?t=1788251111',
+          },
         ],
         [
           '236850',
-          'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/236850/header.jpg?t=1778249292',
+          {
+            header:
+              'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/236850/header.jpg?t=1778249292',
+            portrait:
+              'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/236850/262929c03990b786390232599f3af566ae36eac7/library_600x900_2x.jpg?t=1778249292',
+            hero: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/236850/e9ca126009c5fecf7df6e2782c69a4d3336fcc32/library_hero.jpg?t=1778249292',
+          },
         ],
-        ['700580', null],
+        ['700580', { header: null, portrait: null, hero: null }],
       ]),
     )
     const [input] = requestedInputs()
@@ -57,15 +69,36 @@ describe('fetchHeaderImages', () => {
     )
     const appids = Array.from({ length: 120 }, (_, i) => String(i + 1))
 
-    const headers = await fetchHeaderImages(appids)
+    const art = await fetchStoreArt(appids)
 
     expect(requestedInputs().map((input) => input.ids.length)).toEqual([50, 50, 20])
-    expect(headers.size).toBe(120)
+    expect(art.size).toBe(120)
   })
 
   it('makes no request for an empty list', async () => {
-    expect(await fetchHeaderImages([])).toEqual(new Map())
+    expect(await fetchStoreArt([])).toEqual(new Map())
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('falls back to the 1x library capsule when there is no 2x one', async () => {
+    const reply = {
+      response: {
+        store_items: [
+          {
+            id: 1,
+            success: 1,
+            assets: { asset_url_format: 'steam/apps/1/${FILENAME}', library_capsule: 'cap.jpg' },
+          },
+        ],
+      },
+    }
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(reply), JSON_REPLY))
+
+    expect((await fetchStoreArt(['1'])).get('1')).toEqual({
+      header: null,
+      portrait: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1/cap.jpg',
+      hero: null,
+    })
   })
 })
 
