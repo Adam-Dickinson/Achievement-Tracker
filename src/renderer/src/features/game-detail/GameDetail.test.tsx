@@ -17,6 +17,7 @@ function achievement(id: number, overrides: Partial<GameAchievement> = {}): Game
     iconUrl: `https://icon/${id}.jpg`,
     iconLockedUrl: `https://icon/${id}-grey.jpg`,
     globalPercent: 50,
+    platinum: false,
     unlocked: false,
     unlockedAt: null,
     ...overrides,
@@ -38,6 +39,7 @@ function entry(overrides: Partial<GameEntry> = {}): GameEntry {
     unlocked: achievements.filter((a) => a.unlocked).length,
     total: achievements.length,
     achievements,
+    appPlatinum: null,
     ...overrides,
   }
 }
@@ -145,6 +147,15 @@ describe('GameDetail', () => {
     expect(screen.getByText('2 achievements left')).toBeInTheDocument()
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50')
     expect(screen.getAllByText('Achievement 2')).toHaveLength(2)
+  })
+
+  it("shows the selected platform's Platinum above its achievements", async () => {
+    getGame.mockResolvedValue({ ...DETAIL, entries: [entry()] })
+    renderScrolled(<GameDetail id={7} onBack={onBack} />)
+
+    const platinum = await screen.findByRole('region', { name: 'Platinum' })
+    expect(platinum).toHaveTextContent("Unlock all 4 achievements to earn this game's Platinum")
+    expect(platinum).toHaveTextContent('2 achievements to go')
   })
 
   it('lists achievements rarest first, and filters unlocked and locked ones', async () => {

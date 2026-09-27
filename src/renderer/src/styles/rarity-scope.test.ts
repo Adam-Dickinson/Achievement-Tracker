@@ -17,3 +17,13 @@ describe('the rarity scope in index.css', () => {
     for (const variable of VARIABLES) expect(rule).toContain(`${variable}:`)
   })
 })
+
+describe('the platinum scope in index.css', () => {
+  it('defines every rarity variable, after the rarity scopes so it wins', () => {
+    const match = /\[data-platinum\]\s*\{([^}]*)\}/.exec(css)
+
+    expect(match, 'index.css has no [data-platinum] rule').not.toBeNull()
+    for (const variable of VARIABLES) expect(match?.[1]).toContain(`${variable}:`)
+    expect(match?.index).toBeGreaterThan(css.indexOf("[data-rarity='ultra_rare']"))
+  })
+})

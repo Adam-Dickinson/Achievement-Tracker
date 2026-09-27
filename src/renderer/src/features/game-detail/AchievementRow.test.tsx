@@ -16,6 +16,7 @@ function achievement(overrides: Partial<GameAchievement> = {}): GameAchievement 
     iconUrl: 'https://icon/colour.jpg',
     iconLockedUrl: 'https://icon/grey.jpg',
     globalPercent: 1.2,
+    platinum: false,
     unlocked: true,
     unlockedAt: new Date(2026, 2, 9, 12, 0),
     ...overrides,
@@ -45,6 +46,20 @@ describe('AchievementRow', () => {
     )
     expect(container.querySelector('img')).toHaveAttribute('src', 'https://icon/colour.jpg')
     expect(row()).toHaveAttribute('data-rarity', 'ultra_rare')
+  })
+
+  it('marks a platinum with a Platinum chip and the platinum colours', () => {
+    renderRow({ platinum: true })
+
+    expect(row()).toHaveTextContent('Platinum')
+    expect(row()).toHaveAttribute('data-platinum')
+  })
+
+  it('gives other achievements no Platinum chip', () => {
+    renderRow()
+
+    expect(row()).not.toHaveTextContent('Platinum')
+    expect(row()).not.toHaveAttribute('data-platinum')
   })
 
   it('shows a locked achievement with its grey icon', () => {

@@ -25,6 +25,7 @@ import {
 import { entryLabel } from './entry-label'
 import { EntryTabs } from './EntryTabs'
 import { LinkGame } from './LinkGame'
+import { PlatinumBanner } from './PlatinumBanner'
 import { useGame } from './useGame'
 
 function latestUnlock(achievements: readonly GameAchievement[]): Date | null {
@@ -182,6 +183,8 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
         aria-labelledby={entries.length > 1 ? `entry-tab-${entry.platformGameId}` : undefined}
         className="flex flex-col gap-6"
       >
+        <PlatinumBanner entry={entry} />
+
         <div className="grid grid-cols-4 gap-4">
           <Tile label="Unlocked">
             <span className="font-display text-3xl font-bold">

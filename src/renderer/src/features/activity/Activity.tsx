@@ -2,6 +2,7 @@ import { Button } from '@/components/Button'
 import { UnlockRow } from '@/components/UnlockRow'
 import { formatDayHeading, formatTime, plural } from '@/lib/format'
 import { groupByDay } from './groupByDay'
+import { PlatinumRow } from './PlatinumRow'
 import { useActivity } from './useActivity'
 
 interface ActivityProps {
@@ -37,15 +38,24 @@ export function Activity({ onOpenGame }: ActivityProps) {
             <p className="text-sm text-fg-muted">{plural(day.unlocks.length, 'unlock')}</p>
           </div>
           <ul className="flex flex-col divide-y divide-line rounded-panel border border-line bg-surface-1 shadow-float">
-            {day.unlocks.map((unlock) => (
-              <UnlockRow
-                key={unlock.achievementId}
-                unlock={unlock}
-                when={formatTime(unlock.unlockedAt)}
-                showDescription
-                onOpenGame={onOpenGame}
-              />
-            ))}
+            {day.unlocks.map((item) =>
+              item.kind === 'platinum' ? (
+                <PlatinumRow
+                  key={`platinum-${item.platformGameId}`}
+                  platinum={item}
+                  when={formatTime(item.unlockedAt)}
+                  onOpenGame={onOpenGame}
+                />
+              ) : (
+                <UnlockRow
+                  key={item.achievementId}
+                  unlock={item}
+                  when={formatTime(item.unlockedAt)}
+                  showDescription
+                  onOpenGame={onOpenGame}
+                />
+              ),
+            )}
           </ul>
         </section>
       ))}

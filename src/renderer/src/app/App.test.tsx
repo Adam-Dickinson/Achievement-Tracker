@@ -177,6 +177,8 @@ describe('App: opening a game', () => {
             description: null,
             iconUrl: null,
             globalPercent: null,
+            platinum: false,
+            kind: 'achievement',
             unlockedAt: new Date(),
           },
         ],
@@ -194,6 +196,7 @@ describe('App: opening a game', () => {
           unlocked: 1,
           total: 2,
           achievements: [],
+          appPlatinum: null,
         },
         {
           platformGameId: 71,
@@ -203,6 +206,7 @@ describe('App: opening a game', () => {
           unlocked: 0,
           total: 2,
           achievements: [],
+          appPlatinum: null,
         },
       ],
     })
