@@ -48,6 +48,29 @@ describe('VirtualGrid', () => {
     expect(items).not.toContain('Item 99')
   })
 
+  it('tells each item which column it is in', () => {
+    renderScrolled(
+      <VirtualGrid
+        items={ITEMS.slice(0, 6)}
+        label="Things"
+        minColumnWidth={240}
+        gap={20}
+        estimateRowHeight={100}
+        getKey={(item) => item}
+        renderItem={(item, column) => <span>{`${item} in ${column}`}</span>}
+      />,
+    )
+
+    expect(shown()).toEqual([
+      'Item 0 in 0',
+      'Item 1 in 1',
+      'Item 2 in 2',
+      'Item 3 in 3',
+      'Item 4 in 0',
+      'Item 5 in 1',
+    ])
+  })
+
   it('lays the items out in as many columns as fit', () => {
     renderGrid()
 

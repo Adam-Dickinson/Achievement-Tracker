@@ -1,6 +1,5 @@
-import { User } from 'lucide-react'
 import logo from '@/assets/logo.svg'
-import type { AppInfo } from '@shared/ipc'
+import { Avatar } from '@/components/Avatar'
 import { NAV_ITEMS, type PageId } from './navigation'
 import { NavSearch } from './NavSearch'
 import { NotificationsToggle } from './NotificationsToggle'
@@ -9,12 +8,12 @@ import { SyncStatus } from './SyncStatus'
 interface IslandNavProps {
   selected: PageId
   onSelect: (page: PageId) => void
-  info: AppInfo | null
+  name: string
   query: string
   onSearch: (query: string) => void
 }
 
-export function IslandNav({ selected, onSelect, info, query, onSearch }: IslandNavProps) {
+export function IslandNav({ selected, onSelect, name, query, onSearch }: IslandNavProps) {
   return (
     <header className="sticky top-4 z-30 mx-auto mt-4 w-[calc(100%-48px)] max-w-348">
       <div className="flex h-15 items-center gap-2 rounded-island border border-white/9 bg-surface-1/72 pr-2.5 pl-3 shadow-island backdrop-blur-[22px] backdrop-saturate-150">
@@ -53,25 +52,9 @@ export function IslandNav({ selected, onSelect, info, query, onSearch }: IslandN
           <NavSearch value={query} onChange={onSearch} />
           <SyncStatus onOpenAccounts={() => onSelect('accounts')} />
           <NotificationsToggle />
-          <Avatar name={info?.userName ?? ''} />
+          <Avatar name={name} />
         </div>
       </div>
     </header>
-  )
-}
-
-function Avatar({ name }: { name: string }) {
-  const initial = Array.from(name)[0]?.toUpperCase()
-
-  return (
-    <span
-      role={initial ? 'img' : undefined}
-      aria-label={initial ? name : undefined}
-      aria-hidden={initial ? undefined : true}
-      title={name || undefined}
-      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-linear-135 from-primary to-aurora-teal font-display text-[15px] font-extrabold text-on-primary"
-    >
-      {initial ?? <User size={17} strokeWidth={2} aria-hidden="true" />}
-    </span>
   )
 }

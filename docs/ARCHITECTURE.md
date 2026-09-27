@@ -121,7 +121,7 @@ trophy-locker/
 │   │   └── ipc.ts                   # channel names, payload types, the window.api interface
 │   ├── main/
 │   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC, sync wiring
-│   │   ├── app-info.ts  windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  ipc.ts  accounts.ts  sample-toasts.ts
+│   │   ├── profile.ts  windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  ipc.ts  accounts.ts  sample-toasts.ts
 │   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts,
 │   │   │                            #   sync-store.ts (the sync engine's SQL)
 │   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts

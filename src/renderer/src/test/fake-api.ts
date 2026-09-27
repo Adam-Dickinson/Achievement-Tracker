@@ -3,8 +3,12 @@ import type { TrophyLockerApi } from '@shared/ipc'
 
 export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerApi {
   return {
-    getAppInfo: vi.fn().mockResolvedValue({ version: '0.1.0', schemaVersion: 1, userName: 'adam' }),
+    getAppInfo: vi.fn().mockResolvedValue({ version: '0.1.0', schemaVersion: 1 }),
     sendTestNotification: vi.fn().mockResolvedValue(undefined),
+    getProfile: vi.fn().mockResolvedValue({ name: null, windowsName: 'adam' }),
+    setProfileName: vi.fn((name: string) =>
+      Promise.resolve({ name: name.trim() === '' ? null : name.trim(), windowsName: 'adam' }),
+    ),
     getNotificationsPaused: vi.fn().mockResolvedValue(false),
     setNotificationsPaused: vi.fn().mockResolvedValue(undefined),
     listAccounts: vi.fn().mockResolvedValue([]),

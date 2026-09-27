@@ -2,12 +2,9 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { AppInfo } from '@shared/ipc'
 import { fakeApi } from '@/test/fake-api'
 import { NAV_ITEMS, type PageId } from './navigation'
 import { IslandNav } from './IslandNav'
-
-const INFO: AppInfo = { version: '0.1.0', schemaVersion: 1, userName: 'adam' }
 
 beforeEach(() => {
   window.api = fakeApi()
@@ -18,7 +15,7 @@ afterEach(cleanup)
 interface Options {
   selected?: PageId
   onSelect?: (page: PageId) => void
-  info?: AppInfo | null
+  name?: string
   query?: string
   onSearch?: (query: string) => void
 }
@@ -26,7 +23,7 @@ interface Options {
 function renderNav({
   selected = 'dashboard',
   onSelect = () => {},
-  info = INFO,
+  name = 'Adam',
   query = '',
   onSearch = () => {},
 }: Options = {}) {
@@ -34,7 +31,7 @@ function renderNav({
     <IslandNav
       selected={selected}
       onSelect={onSelect}
-      info={info}
+      name={name}
       query={query}
       onSearch={onSearch}
     />,
@@ -78,20 +75,17 @@ describe('IslandNav', () => {
   })
 
   it("shows the user's initial in the avatar, named after them", () => {
-    renderNav()
+    renderNav({ name: 'ada' })
 
-    const avatar = screen.getByRole('img', { name: 'adam' })
+    const avatar = screen.getByRole('img', { name: 'ada' })
     expect(avatar).toHaveTextContent('A')
-    expect(avatar).toHaveAttribute('title', 'adam')
+    expect(avatar).toHaveAttribute('title', 'ada')
   })
 
-  it.each([
-    ['before the app info arrives', null],
-    ['when the user name is unknown', { ...INFO, userName: '' }],
-  ])('shows a plain avatar %s', (_label, info) => {
-    renderNav({ info })
+  it('shows a plain avatar while the name is unknown', () => {
+    renderNav({ name: '' })
 
-    expect(screen.queryByRole('img', { name: 'adam' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /./ })).not.toBeInTheDocument()
     expect(screen.queryByText('A')).not.toBeInTheDocument()
   })
 

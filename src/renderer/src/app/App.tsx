@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { ScrollParentContext, setScrollTop } from '@/components/scroll-parent'
-import type { AppInfo } from '@shared/ipc'
+import type { Profile } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
 import { IslandNav } from './IslandNav'
+import { displayName, useProfile } from './useProfile'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { Accounts } from '@/features/accounts/Accounts'
 import { Activity } from '@/features/activity/Activity'
@@ -13,6 +14,8 @@ import { Settings } from '@/features/settings/Settings'
 
 interface PageContentProps {
   page: PageId
+  profile: Profile | null
+  onRename: (name: string) => Promise<void>
   libraryView: LibraryView
   onLibraryViewChange: (view: LibraryView) => void
   libraryScrollTop: number
@@ -22,6 +25,8 @@ interface PageContentProps {
 
 function PageContent({
   page,
+  profile,
+  onRename,
   libraryView,
   onLibraryViewChange,
   libraryScrollTop,
@@ -34,6 +39,7 @@ function PageContent({
     case 'library':
       return (
         <Library
+          name={displayName(profile)}
           view={libraryView}
           onViewChange={onLibraryViewChange}
           restoreScrollTop={libraryScrollTop}
@@ -45,21 +51,17 @@ function PageContent({
     case 'accounts':
       return <Accounts />
     case 'settings':
-      return <Settings />
+      return <Settings profile={profile} onRename={onRename} />
   }
 }
 
 export function App() {
   const [page, setPage] = useState<PageId>('dashboard')
   const [opened, setOpened] = useState<{ id: number; entry?: number } | null>(null)
-  const [info, setInfo] = useState<AppInfo | null>(null)
+  const { profile, rename } = useProfile()
   const [libraryView, setLibraryView] = useState<LibraryView>(DEFAULT_VIEW)
   const [libraryScrollTop, setLibraryScrollTop] = useState(0)
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null)
-
-  useEffect(() => {
-    void window.api.getAppInfo().then(setInfo)
-  }, [])
 
   useLayoutEffect(() => {
     if (scrollParent) setScrollTop(scrollParent, 0)
@@ -88,7 +90,7 @@ export function App() {
       <IslandNav
         selected={page}
         onSelect={selectPage}
-        info={info}
+        name={displayName(profile)}
         query={libraryView.query}
         onSearch={searchLibrary}
       />
@@ -105,6 +107,8 @@ export function App() {
               )}
               <PageContent
                 page={page}
+                profile={profile}
+                onRename={rename}
                 libraryView={libraryView}
                 onLibraryViewChange={setLibraryView}
                 libraryScrollTop={libraryScrollTop}
