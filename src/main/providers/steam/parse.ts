@@ -8,6 +8,10 @@ import type {
   RemoteUnlock,
 } from '@shared/models'
 
+export function steamStoreUrl(appid: string | number): string {
+  return `steam://nav/games/details/${appid}`
+}
+
 export const STEAM_APP_IMAGES = 'https://media.steampowered.com/steamcommunity/public/images/apps'
 
 const percentSchema = z
@@ -177,6 +181,7 @@ function toRemoteGame(game: SteamLibraryGame, recentlyPlayed: boolean): RemoteGa
     coverUrl: null,
     lastPlayed: fromUnixSeconds(game.rtime_last_played ?? 0),
     recentlyPlayed,
+    storeUrl: steamStoreUrl(game.appid),
   }
 }
 

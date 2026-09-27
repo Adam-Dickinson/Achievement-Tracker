@@ -335,14 +335,14 @@ export function addPlatformGames(
   const updateGame = db.prepare(`
     UPDATE platform_game
     SET title = ?, icon_url = ?, cover_url = COALESCE(?, cover_url),
-        last_played = COALESCE(?, last_played)
+        last_played = COALESCE(?, last_played), store_url = COALESCE(?, store_url)
     WHERE id = ?
   `)
   const insertPlatformGame = db.prepare(`
     INSERT INTO platform_game
       (game_id, account_id, platform, external_id, title, icon_url, cover_url, last_played,
-       baseline_done, baseline_cutoff)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+       store_url, baseline_done, baseline_cutoff)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
   `)
 
   let added = 0
@@ -351,7 +351,14 @@ export function addPlatformGames(
     const existing = findGame.get(account.id, game.ref.externalId) as { id: number } | undefined
 
     if (existing) {
-      updateGame.run(game.title, game.iconUrl, game.coverUrl, lastPlayed, existing.id)
+      updateGame.run(
+        game.title,
+        game.iconUrl,
+        game.coverUrl,
+        lastPlayed,
+        game.storeUrl ?? null,
+        existing.id,
+      )
       continue
     }
 
@@ -364,6 +371,7 @@ export function addPlatformGames(
       game.iconUrl,
       game.coverUrl,
       lastPlayed,
+      game.storeUrl ?? null,
       baselineCutoff?.toISOString() ?? null,
     )
     added++

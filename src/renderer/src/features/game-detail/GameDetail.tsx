@@ -1,20 +1,14 @@
-import { ArrowLeft } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
-import { Button } from '@/components/Button'
-import { RarityChip } from '@/components/RarityChip'
+import { ArrowDownUp, ArrowLeft, ExternalLink, Link2, RefreshCw, Unlink } from 'lucide-react'
+import { useState } from 'react'
 import { SearchBox } from '@/components/SearchBox'
+import { Select } from '@/components/Select'
 import { ToggleGroup } from '@/components/ToggleGroup'
 import { VirtualGrid } from '@/components/VirtualGrid'
-import { formatUnlockDate } from '@/lib/format'
-import { completionPercent } from '@shared/dashboard'
-import type { GameAchievement } from '@shared/library'
-import { platformName } from '@shared/platform'
-import { rarityFromPercent } from '@shared/rarity'
+import { type Platform, platformName } from '@shared/platform'
 import { AchievementRow } from './AchievementRow'
 import {
   ACHIEVEMENT_SORTS,
   applyAchievementView,
-  byRarity,
   countAchievements,
   DEFAULT_ACHIEVEMENT_VIEW,
   FILTERS,
@@ -24,15 +18,14 @@ import {
 } from './achievement-view'
 import { entryLabel } from './entry-label'
 import { EntryTabs } from './EntryTabs'
+import { GameBanner, GLASS_BUTTON } from './GameBanner'
+import { GameStats } from './GameStats'
 import { LinkGame } from './LinkGame'
 import { PlatinumBanner } from './PlatinumBanner'
 import { useGame } from './useGame'
 
-function latestUnlock(achievements: readonly GameAchievement[]): Date | null {
-  return achievements.reduce<Date | null>(
-    (latest, a) => (a.unlockedAt && (!latest || a.unlockedAt > latest) ? a.unlockedAt : latest),
-    null,
-  )
+export function storeLabel(platform: Platform): string {
+  return platform === 'xbox' ? 'View on Xbox.com' : `Open in ${platformName(platform)}`
 }
 
 interface GameDetailProps {
@@ -73,11 +66,7 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
   }
 
   const back = (
-    <button
-      type="button"
-      onClick={onBack}
-      className="flex items-center gap-2 self-start rounded-control bg-canvas/70 px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-surface-2"
-    >
+    <button type="button" onClick={onBack} className={`${GLASS_BUTTON} self-start`}>
       <ArrowLeft aria-hidden="true" className="size-4" />
       Library
     </button>
@@ -98,8 +87,6 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
 
   const { game, entries } = detail
   const { achievements } = entry
-  const percent = completionPercent(entry.unlocked, entry.total)
-  const lastUnlockAt = latestUnlock(achievements)
 
   const link = (otherGameId: number) =>
     change(async () => {
@@ -111,125 +98,79 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
       await window.api.unlinkGame({ platformGameId: entry.platformGameId })
       setSelected(undefined)
     })
-  const unlocked = achievements.filter((a) => a.unlocked)
-  const rarest = unlocked.filter((a) => a.globalPercent !== null).sort(byRarity)[0]
   const shown = applyAchievementView(achievements, view)
   const update = (change: Partial<AchievementView>) => setView({ ...view, ...change })
 
-  return (
-    <div className="flex flex-col gap-6">
-      <section className="relative overflow-hidden rounded-panel border border-line bg-surface-1 shadow-float">
-        {game.coverUrl && (
-          <img
-            src={game.coverUrl}
-            alt=""
-            className="absolute inset-0 size-full scale-110 object-cover opacity-30 blur-2xl"
-          />
-        )}
-        <div className="relative flex items-end justify-between gap-8 p-8">
-          <div className="flex flex-col gap-6">
-            {back}
-            <div>
-              <p className="text-sm text-fg-muted">
-                {game.platforms.map(platformName).join(' · ')}
-              </p>
-              <h1 className="font-display text-5xl font-bold">{game.title}</h1>
-            </div>
-          </div>
-          {game.coverUrl && (
-            <img
-              src={game.coverUrl}
-              alt=""
-              className="hidden w-80 rounded-card shadow-float lg:block"
-            />
-          )}
-        </div>
-      </section>
+  const actions = (
+    <>
+      <button
+        type="button"
+        disabled={syncing}
+        onClick={() => void syncThisGame()}
+        className={GLASS_BUTTON}
+      >
+        <RefreshCw
+          aria-hidden="true"
+          className={`size-3.5 ${syncing ? 'motion-safe:animate-spin' : ''}`}
+        />
+        {syncing ? 'Syncing…' : 'Sync this game'}
+      </button>
+      <button
+        type="button"
+        aria-expanded={linking}
+        onClick={() => setLinking((open) => !open)}
+        className={GLASS_BUTTON}
+      >
+        <Link2 aria-hidden="true" className="size-3.5" />
+        Link another game…
+      </button>
+      {entries.length > 1 && (
+        <button type="button" onClick={() => void unlink()} className={GLASS_BUTTON}>
+          <Unlink aria-hidden="true" className="size-3.5" />
+          Unlink {entryLabel(entry)}
+        </button>
+      )}
+      {entry.hasStorePage && (
+        <button
+          type="button"
+          onClick={() => void window.api.openStorePage(entry.platformGameId)}
+          className={GLASS_BUTTON}
+        >
+          {storeLabel(entry.platform)}
+          <ExternalLink aria-hidden="true" className="size-3.5" />
+        </button>
+      )}
+    </>
+  )
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="secondary" disabled={syncing} onClick={() => void syncThisGame()}>
-          {syncing ? 'Syncing…' : 'Sync this game'}
-        </Button>
-        <Button variant="secondary" onClick={() => setLinking((open) => !open)}>
-          Link another game…
-        </Button>
-        {entries.length > 1 && (
-          <Button variant="secondary" onClick={() => void unlink()}>
-            Unlink {entryLabel(entry)}
-          </Button>
-        )}
-        {error && (
-          <p role="alert" className="text-sm text-danger">
-            {error}
-          </p>
-        )}
-      </div>
+  return (
+    <div className="flex flex-col">
+      <GameBanner game={game} back={back} actions={actions} />
+      <GameStats entry={entry} />
+
+      {error && (
+        <p role="alert" className="mt-5 text-sm text-danger">
+          {error}
+        </p>
+      )}
 
       {linking && (
-        <LinkGame
-          gameId={game.id}
-          onPick={(otherGameId) => void link(otherGameId)}
-          onClose={() => setLinking(false)}
-        />
-      )}
-
-      {entries.length > 1 && (
-        <EntryTabs entries={entries} selected={entry.platformGameId} onSelect={setSelected} />
-      )}
-
-      <div
-        id="entry-panel"
-        role={entries.length > 1 ? 'tabpanel' : undefined}
-        aria-labelledby={entries.length > 1 ? `entry-tab-${entry.platformGameId}` : undefined}
-        className="flex flex-col gap-6"
-      >
-        <PlatinumBanner entry={entry} />
-
-        <div className="grid grid-cols-4 gap-4">
-          <Tile label="Unlocked">
-            <span className="font-display text-3xl font-bold">
-              {entry.unlocked} / {entry.total}
-            </span>
-            <div
-              role="progressbar"
-              aria-label="Achievements unlocked"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={percent}
-              className="h-1.5 overflow-hidden rounded-full bg-surface-3"
-            >
-              <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
-            </div>
-          </Tile>
-          <Tile label="Completion">
-            <span className="font-display text-3xl font-bold text-primary">{percent}%</span>
-            <span className="text-xs text-fg-muted">
-              {entry.total - entry.unlocked === 0
-                ? 'All done'
-                : `${entry.total - entry.unlocked} achievements left`}
-            </span>
-          </Tile>
-          <Tile label="Rarest held">
-            {rarest ? (
-              <>
-                <span className="truncate font-display text-lg font-bold">{rarest.name}</span>
-                <RarityChip
-                  rarity={rarityFromPercent(rarest.globalPercent ?? 100)}
-                  className="self-start"
-                />
-              </>
-            ) : (
-              <span className="text-fg-muted">None yet</span>
-            )}
-          </Tile>
-          <Tile label="Last unlock">
-            <span className="font-display text-lg font-bold">
-              {lastUnlockAt ? formatUnlockDate(lastUnlockAt) : 'None yet'}
-            </span>
-          </Tile>
+        <div className="mt-6">
+          <LinkGame
+            gameId={game.id}
+            onPick={(otherGameId) => void link(otherGameId)}
+            onClose={() => setLinking(false)}
+          />
         </div>
+      )}
 
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="mt-9 flex flex-wrap items-center justify-between gap-4">
+        {entries.length > 1 ? (
+          <EntryTabs entries={entries} selected={entry.platformGameId} onSelect={setSelected} />
+        ) : (
+          <span />
+        )}
+        <div className="flex flex-wrap items-center gap-2">
           <ToggleGroup
             label="Show"
             options={(Object.keys(FILTERS) as FilterId[]).map((filter) => ({
@@ -240,23 +181,34 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
             selected={view.filter}
             onSelect={(filter) => update({ filter })}
           />
-          <SearchBox
-            label="Search achievements"
-            placeholder="Search achievements"
-            value={view.query}
-            onChange={(query) => update({ query })}
-          />
-          <ToggleGroup
+          <div className="w-60">
+            <SearchBox
+              label="Search achievements"
+              placeholder="Search achievements"
+              value={view.query}
+              onChange={(query) => update({ query })}
+            />
+          </div>
+          <Select
             label="Sort by"
-            variant="segmented"
+            icon={ArrowDownUp}
             options={(Object.keys(ACHIEVEMENT_SORTS) as AchievementSortId[]).map((sort) => ({
               id: sort,
               label: ACHIEVEMENT_SORTS[sort].label,
             }))}
-            selected={view.sort}
-            onSelect={(sort) => update({ sort })}
+            value={view.sort}
+            onChange={(sort) => update({ sort })}
           />
         </div>
+      </div>
+
+      <div
+        id="entry-panel"
+        role={entries.length > 1 ? 'tabpanel' : undefined}
+        aria-labelledby={entries.length > 1 ? `entry-tab-${entry.platformGameId}` : undefined}
+        className="mt-6 flex flex-col gap-6"
+      >
+        <PlatinumBanner entry={entry} />
 
         {achievements.length === 0 ? (
           <p role="status" className="text-fg-muted">
@@ -282,17 +234,6 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
           />
         )}
       </div>
-    </div>
-  )
-}
-
-function Tile({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-panel border border-line bg-surface-1 p-5 shadow-float">
-      <span className="text-[11px] font-bold tracking-widest text-fg-subtle uppercase">
-        {label}
-      </span>
-      {children}
     </div>
   )
 }

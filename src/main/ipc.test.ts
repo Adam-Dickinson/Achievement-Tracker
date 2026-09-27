@@ -79,6 +79,7 @@ const fakes = {
   getGame: vi.fn(() => null),
   mergeGames: vi.fn(),
   unlinkGame: vi.fn(),
+  openStorePage: vi.fn(() => Promise.resolve()),
   getArtworkSettings: vi.fn(() => ({ hasKey: false, missing: 3, problem: null })),
   saveSteamGridDbKey: vi.fn(() => Promise.resolve({ ok: true as const })),
   removeSteamGridDbKey: vi.fn(),
@@ -133,6 +134,7 @@ describe('registerIpcHandlers', () => {
     IPC.getGame,
     IPC.mergeGames,
     IPC.unlinkGame,
+    IPC.openStorePage,
     IPC.getArtworkSettings,
     IPC.saveSteamGridDbKey,
     IPC.removeSteamGridDbKey,
@@ -594,6 +596,25 @@ describe('game linking handlers', () => {
     call(IPC.unlinkGame, TRUSTED, payload)
 
     expect(fakes.unlinkGame).not.toHaveBeenCalled()
+  })
+})
+
+describe('store page handler', () => {
+  it('opens the store page of a platform game', async () => {
+    await call(IPC.openStorePage, TRUSTED, 70)
+
+    expect(fakes.openStorePage).toHaveBeenCalledExactlyOnceWith(70)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a zero id', 0],
+    ['an id as text', '70'],
+    ['a URL', 'steam://run/620'],
+  ])('ignores %s', async (_label, payload) => {
+    await call(IPC.openStorePage, TRUSTED, payload)
+
+    expect(fakes.openStorePage).not.toHaveBeenCalled()
   })
 })
 

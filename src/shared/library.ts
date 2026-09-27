@@ -36,6 +36,7 @@ export interface GameEntry {
   readonly total: number
   readonly achievements: readonly GameAchievement[]
   readonly appPlatinum: AppPlatinum | null
+  readonly hasStorePage: boolean
 }
 
 export interface GameDetail {

@@ -20,7 +20,7 @@ export function AchievementRow({ achievement }: AchievementRowProps) {
     <div
       data-rarity={rarity}
       data-platinum={achievement.platinum ? '' : undefined}
-      className={`flex w-full items-center gap-4 rounded-panel border bg-surface-1 p-4 shadow-float ${
+      className={`flex w-full items-center gap-4 rounded-panel border bg-surface-1 p-4 shadow-float ${unlocked ? '' : 'opacity-82'} ${
         highlight ? 'border-(--rarity)/60' : 'border-line'
       }`}
     >

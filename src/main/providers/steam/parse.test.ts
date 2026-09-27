@@ -334,6 +334,7 @@ const PORTAL = {
   coverUrl: null,
   lastPlayed: new Date(1621685363 * 1000),
   recentlyPlayed: false,
+  storeUrl: 'steam://nav/games/details/400',
 }
 
 const RESIDENT_EVIL_2 = {
@@ -343,6 +344,7 @@ const RESIDENT_EVIL_2 = {
   coverUrl: null,
   lastPlayed: new Date(1790160642 * 1000),
   recentlyPlayed: false,
+  storeUrl: 'steam://nav/games/details/883710',
 }
 
 const SPIDER_MAN = {
@@ -352,6 +354,7 @@ const SPIDER_MAN = {
   coverUrl: null,
   lastPlayed: null,
   recentlyPlayed: true,
+  storeUrl: 'steam://nav/games/details/1817070',
 }
 
 describe('parseLibrary', () => {
@@ -386,6 +389,7 @@ describe('parseLibrary', () => {
       coverUrl: null,
       lastPlayed: null,
       recentlyPlayed: true,
+      storeUrl: 'steam://nav/games/details/20',
     })
   })
 

@@ -29,6 +29,7 @@ interface EntryRecord {
   title: string
   platform: Platform
   cover_url: string | null
+  store_url: string | null
   total: number
   unlocked: number
   last_unlock: string | null
@@ -62,11 +63,17 @@ const UNLOCKS = `
   JOIN platform_game pg ON pg.id = a.platform_game_id`
 
 const ENTRIES = `
-  SELECT pg.id, pg.game_id, pg.title, pg.platform, pg.cover_url,
+  SELECT pg.id, pg.game_id, pg.title, pg.platform, pg.cover_url, pg.store_url,
          COUNT(a.id) AS total, COUNT(u.id) AS unlocked, MAX(u.unlocked_at) AS last_unlock
   FROM platform_game pg
   LEFT JOIN achievement a ON a.platform_game_id = pg.id
   LEFT JOIN unlock u ON u.achievement_id = a.id`
+
+export function storePageUrl(db: DatabaseSync, platformGameId: number): string | null {
+  const row = db.prepare('SELECT store_url FROM platform_game WHERE id = ?').get(platformGameId) as
+    { store_url: string | null } | undefined
+  return row?.store_url ?? null
+}
 
 export function listLibraryGames(db: DatabaseSync): LibraryGame[] {
   const artwork = listArtworkUrls(db)
@@ -382,6 +389,7 @@ function toGameEntry(
     total: entry.total,
     achievements: listAchievements(db, entry.id, entry.title),
     appPlatinum: appPlatinum && { earnedAt: appPlatinum.earnedAt },
+    hasStorePage: entry.store_url !== null,
   }
 }
 

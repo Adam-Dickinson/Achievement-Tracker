@@ -171,6 +171,36 @@ describe('migrations', () => {
     ).toThrow()
   })
 
+  it("add a store link column, filling in each Steam game's page and nothing else", () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 6))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 's', 'Test', 'connected', '2026-01-01'),
+             (2, 'xbox', 'x', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'A', 'a');
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title, cover_url)
+      VALUES (1, 1, 1, 'steam', '400', 'A', 'https://cover/a.jpg'),
+             (2, 1, 1, 'steam', 'not-an-appid', 'B', NULL),
+             (3, 1, 2, 'xbox', '2079757188', 'C', NULL);
+    `)
+
+    applyMigrations(db)
+
+    expect(
+      db.prepare('SELECT id, title, cover_url, store_url FROM platform_game ORDER BY id').all(),
+    ).toEqual([
+      {
+        id: 1,
+        title: 'A',
+        cover_url: 'https://cover/a.jpg',
+        store_url: 'steam://nav/games/details/400',
+      },
+      { id: 2, title: 'B', cover_url: null, store_url: null },
+      { id: 3, title: 'C', cover_url: null, store_url: null },
+    ])
+  })
+
   it('are a no-op when applied twice', () => {
     const db = new DatabaseSync(':memory:')
     const first = applyMigrations(db)

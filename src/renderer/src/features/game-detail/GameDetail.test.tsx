@@ -40,6 +40,7 @@ function entry(overrides: Partial<GameEntry> = {}): GameEntry {
     total: achievements.length,
     achievements,
     appPlatinum: null,
+    hasStorePage: false,
     ...overrides,
   }
 }
@@ -114,6 +115,8 @@ afterEach(() => {
   vi.resetAllMocks()
 })
 
+const unlockedTile = () => screen.getByText('Unlocked', { selector: 'span' }).parentElement
+
 const names = () =>
   within(screen.getByRole('list', { name: 'Achievements' }))
     .getAllByRole('listitem')
@@ -142,7 +145,7 @@ describe('GameDetail', () => {
     renderScrolled(<GameDetail id={7} onBack={onBack} />)
 
     expect(await screen.findByRole('heading', { name: 'Elden Ring' })).toBeInTheDocument()
-    expect(screen.getByText('2 / 4')).toBeInTheDocument()
+    expect(unlockedTile()).toHaveTextContent('2 / 4')
     expect(screen.getByText('50%')).toBeInTheDocument()
     expect(screen.getByText('2 achievements left')).toBeInTheDocument()
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50')
@@ -231,10 +234,10 @@ describe('GameDetail', () => {
     })
     renderScrolled(<GameDetail id={7} onBack={onBack} />)
     await screen.findByRole('heading', { name: 'Elden Ring' })
-    const sortBy = within(screen.getByRole('group', { name: 'Sort by' }))
-    expect(sortBy.getByRole('button', { name: 'Rarest' })).toHaveAttribute('aria-pressed', 'true')
+    const sortBy = screen.getByRole('combobox', { name: 'Sort by' })
+    expect(sortBy).toHaveValue('rarity')
 
-    fireEvent.click(sortBy.getByRole('button', { name: 'Latest unlocked' }))
+    fireEvent.change(sortBy, { target: { value: 'recent' } })
     expect(names()).toEqual([
       'Zeta',
       'Achievement 1',
@@ -243,7 +246,7 @@ describe('GameDetail', () => {
       'Hidden achievement',
     ])
 
-    fireEvent.click(sortBy.getByRole('button', { name: 'Name' }))
+    fireEvent.change(sortBy, { target: { value: 'name' } })
     expect(names()).toEqual([
       'Achievement 1',
       'Achievement 2',
@@ -259,11 +262,12 @@ describe('GameDetail', () => {
       .mockResolvedValueOnce(DETAIL)
       .mockResolvedValueOnce({ ...DETAIL, entries: [entry({ achievements: three, unlocked: 3 })] })
     renderScrolled(<GameDetail id={7} onBack={onBack} />)
-    await screen.findByText('2 / 4')
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+    expect(unlockedTile()).toHaveTextContent('2 / 4')
 
     act(() => dataChanged())
 
-    expect(await screen.findByText('3 / 4')).toBeInTheDocument()
+    await vi.waitFor(() => expect(unlockedTile()).toHaveTextContent('3 / 4'))
   })
 
   it('says when the achievements have not been read yet', async () => {
@@ -293,9 +297,9 @@ describe('GameDetail', () => {
     expect(screen.getByText('PlayStation · Steam')).toBeInTheDocument()
     const tabs = screen.getAllByRole('tab')
     expect(tabs.map((tab) => tab.textContent)).toEqual([
-      'PlayStation · PS51 / 1',
-      'Steam2 / 4',
-      'PlayStation · PS40 / 2',
+      'PlayStation · PS5 1/1',
+      'Steam 2/4',
+      'PlayStation · PS4 0/2',
     ])
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Elden Lord')
@@ -311,7 +315,7 @@ describe('GameDetail', () => {
     expect(screen.getByRole('tab', { name: /PS4/ })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Roundtable Hold')
     expect(screen.getByRole('tabpanel')).not.toHaveTextContent('Elden Lord')
-    expect(within(screen.getByRole('tabpanel')).getByText('0 / 2')).toBeInTheDocument()
+    expect(unlockedTile()).toHaveTextContent('0 / 2')
   })
 
   it('opens on the entry it was asked to, such as the platform of a clicked unlock', async () => {
@@ -360,7 +364,7 @@ describe('GameDetail', () => {
         screen.queryByRole('searchbox', { name: /Find the same game/ }),
       ).not.toBeInTheDocument(),
     )
-    expect(getGame).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => expect(getGame).toHaveBeenCalledTimes(2))
   })
 
   it('says when no other game matches, and closes the search on Cancel', async () => {
@@ -412,6 +416,31 @@ describe('GameDetail: syncing', () => {
     expect(screen.getByRole('button', { name: 'Syncing…' })).toBeDisabled()
     act(() => finish())
     expect(await screen.findByRole('button', { name: 'Sync this game' })).toBeEnabled()
-    expect(getGame).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => expect(getGame).toHaveBeenCalledTimes(2))
+  })
+})
+
+describe('GameDetail store page', () => {
+  it.each([
+    ['steam', 'Open in Steam'],
+    ['xbox', 'View on Xbox.com'],
+  ] as const)('opens the %s store page of the entry on show', async (platform, label) => {
+    getGame.mockResolvedValue({
+      ...DETAIL,
+      entries: [entry({ platform, platformGameId: 71, hasStorePage: true })],
+    })
+    renderScrolled(<GameDetail id={7} onBack={onBack} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: label }))
+
+    expect(window.api.openStorePage).toHaveBeenCalledExactlyOnceWith(71)
+  })
+
+  it('offers no store button for an entry without a store page', async () => {
+    getGame.mockResolvedValue({ ...DETAIL, entries: [entry({ hasStorePage: false })] })
+    renderScrolled(<GameDetail id={7} onBack={onBack} />)
+    await screen.findByRole('heading', { name: 'Elden Ring' })
+
+    expect(screen.queryByRole('button', { name: /^Open in|^View on/ })).not.toBeInTheDocument()
   })
 })
