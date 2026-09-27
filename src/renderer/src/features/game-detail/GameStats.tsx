@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { RarityChip } from '@/components/RarityChip'
-import { formatTime, formatUnlockDate } from '@/lib/format'
+import { formatTime, formatUnlockDay } from '@/lib/format'
 import { completionPercent } from '@shared/dashboard'
 import type { GameAchievement, GameEntry } from '@shared/library'
 import { rarityFromPercent } from '@shared/rarity'
@@ -21,7 +21,6 @@ export function GameStats({ entry }: { entry: GameEntry }) {
     .filter((a) => a.unlocked && a.globalPercent !== null)
     .sort(byRarity)[0]
   const lastUnlockAt = latestUnlock(entry.achievements)
-  const [day] = lastUnlockAt ? formatUnlockDate(lastUnlockAt).split(', ') : []
 
   return (
     <div className="relative z-10 -mt-12 grid grid-cols-2 gap-5 px-8 lg:grid-cols-4">
@@ -75,7 +74,9 @@ export function GameStats({ entry }: { entry: GameEntry }) {
       <Tile label="Last unlock">
         {lastUnlockAt ? (
           <>
-            <span className="font-display text-[34px] leading-9 font-extrabold">{day}</span>
+            <span className="font-display text-[34px] leading-9 font-extrabold">
+              {formatUnlockDay(lastUnlockAt)}
+            </span>
             <span className="text-xs text-fg-muted">
               {formatTime(lastUnlockAt)} · {entryLabel(entry)}
             </span>

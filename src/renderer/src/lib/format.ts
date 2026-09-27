@@ -11,11 +11,16 @@ export function formatTime(date: Date): string {
   return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
 }
 
-export function formatUnlockDate(date: Date, now = new Date()): string {
+export function formatUnlockDay(date: Date, now = new Date()): string {
   const days = daysBefore(date, now)
-  if (days === 0) return `Today, ${formatTime(date)}`
-  if (days === 1) return `Yesterday, ${formatTime(date)}`
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+export function formatUnlockDate(date: Date, now = new Date()): string {
+  const day = formatUnlockDay(date, now)
+  return daysBefore(date, now) < 2 ? `${day}, ${formatTime(date)}` : day
 }
 
 export function formatAgo(date: Date, now = new Date()): string {
