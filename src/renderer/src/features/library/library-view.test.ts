@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { LibraryGame } from '@shared/library'
-import { applyView, DEFAULT_VIEW, isFiltered, platformsIn } from './library-view'
+import {
+  applyView,
+  averageCompletion,
+  clearFilters,
+  DEFAULT_VIEW,
+  isFiltered,
+  platformsIn,
+} from './library-view'
 
 function game(id: number, title: string, platforms: LibraryGame['platforms']): LibraryGame {
   return { id, title, platforms, coverUrl: null, unlocked: 0, total: 0, lastUnlockAt: null }
@@ -35,5 +42,40 @@ describe('applyView', () => {
     applyView(games, { ...DEFAULT_VIEW, sort: 'title' })
 
     expect(games.map((g) => g.title)).toEqual(['Portal', 'Celeste'])
+  })
+})
+
+describe('clearFilters', () => {
+  it('drops the search and filters but keeps the sort and the layout', () => {
+    const view = {
+      query: 'portal',
+      platform: 'steam' as const,
+      status: 'completed' as const,
+      sort: 'title' as const,
+      layout: 'list' as const,
+    }
+
+    expect(clearFilters(view)).toEqual({ ...DEFAULT_VIEW, sort: 'title', layout: 'list' })
+  })
+})
+
+describe('averageCompletion', () => {
+  const played = (unlocked: number, total: number): LibraryGame => ({
+    ...game(1, 'Game', ['steam']),
+    unlocked,
+    total,
+  })
+
+  it("averages each game's completion, rounding down", () => {
+    expect(averageCompletion([played(1, 2), played(1, 3), played(3, 3)])).toBe(61)
+  })
+
+  it('leaves out games whose achievements are not read yet', () => {
+    expect(averageCompletion([played(1, 2), played(0, 0)])).toBe(50)
+  })
+
+  it('is 0 without any read game', () => {
+    expect(averageCompletion([])).toBe(0)
+    expect(averageCompletion([played(0, 0)])).toBe(0)
   })
 })

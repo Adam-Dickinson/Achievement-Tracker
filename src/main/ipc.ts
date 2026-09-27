@@ -12,8 +12,10 @@ import {
   type DisconnectInput,
   type EaConnectInput,
   type EpicConnectInput,
+  MAX_PROFILE_NAME,
   type MergeGamesInput,
   type PlayStationConnectInput,
+  type Profile,
   type SteamConnectInput,
   type SteamGridDbKeyInput,
   type SteamSignInInput,
@@ -32,6 +34,8 @@ import {
 export interface IpcHandlers {
   getAppInfo(): AppInfo
   sendTestNotification(): Promise<void>
+  getProfile(): Profile
+  setProfileName(name: string | null): Profile
   getNotificationsPaused(): boolean
   setNotificationsPaused(paused: boolean): void
   listAccounts(): AccountSummary[]
@@ -102,6 +106,8 @@ const syncScopeSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('game'), gameId: gameIdSchema }),
 ])
 
+const profileNameSchema = z.string().trim().max(MAX_PROFILE_NAME)
+
 const activityLimitSchema = z.number().int().min(1).max(MAX_ACTIVITY_LIMIT)
 
 function isTrustedSender(event: IpcMainInvokeEvent): boolean {
@@ -119,6 +125,18 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.sendTestNotification, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.sendTestNotification()
+  })
+
+  ipcMain.handle(IPC.getProfile, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getProfile()
+  })
+
+  ipcMain.handle(IPC.setProfileName, (event, name: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = profileNameSchema.safeParse(name)
+    if (!parsed.success) return handlers.getProfile()
+    return handlers.setProfileName(parsed.data === '' ? null : parsed.data)
   })
 
   ipcMain.handle(IPC.getNotificationsPaused, (event) => {

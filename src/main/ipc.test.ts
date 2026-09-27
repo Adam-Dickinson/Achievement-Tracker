@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DashboardStats } from '@shared/dashboard'
-import { IPC, type AccountSummary, type ConnectResult } from '@shared/ipc'
+import {
+  IPC,
+  MAX_PROFILE_NAME,
+  type AccountSummary,
+  type ConnectResult,
+  type Profile,
+} from '@shared/ipc'
 import { type ActivityPage, MAX_ACTIVITY_LIMIT } from '@shared/library'
 
 type Handler = (event: unknown, ...args: unknown[]) => unknown
@@ -42,11 +48,15 @@ const DASHBOARD: DashboardStats = {
   rarestUnlock: null,
 }
 
+const PROFILE: Profile = { name: null, windowsName: 'tester' }
+
 const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
 
 const fakes = {
-  getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2, userName: 'Test' })),
+  getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
+  getProfile: vi.fn(() => PROFILE),
+  setProfileName: vi.fn((name: string | null) => ({ ...PROFILE, name })),
   getNotificationsPaused: vi.fn(() => true),
   setNotificationsPaused: vi.fn(),
   listAccounts: vi.fn(() => [ACCOUNT]),
@@ -99,6 +109,8 @@ describe('registerIpcHandlers', () => {
   it.each([
     IPC.getAppInfo,
     IPC.sendTestNotification,
+    IPC.getProfile,
+    IPC.setProfileName,
     IPC.getNotificationsPaused,
     IPC.setNotificationsPaused,
     IPC.listAccounts,
@@ -490,6 +502,38 @@ describe('account and sync handlers', () => {
     await call(IPC.syncNow, TRUSTED, payload)
 
     expect(fakes.syncNow).not.toHaveBeenCalled()
+  })
+})
+
+describe('profile handlers', () => {
+  it('returns the profile', () => {
+    expect(call(IPC.getProfile, TRUSTED)).toEqual(PROFILE)
+  })
+
+  it('saves a trimmed name and returns the new profile', () => {
+    expect(call(IPC.setProfileName, TRUSTED, '  Adam ')).toEqual({ ...PROFILE, name: 'Adam' })
+    expect(fakes.setProfileName).toHaveBeenCalledExactlyOnceWith('Adam')
+  })
+
+  it.each(['', '   '])('clears the name when given %j', (name) => {
+    call(IPC.setProfileName, TRUSTED, name)
+
+    expect(fakes.setProfileName).toHaveBeenCalledExactlyOnceWith(null)
+  })
+
+  it('accepts the longest name', () => {
+    call(IPC.setProfileName, TRUSTED, 'a'.repeat(MAX_PROFILE_NAME))
+
+    expect(fakes.setProfileName).toHaveBeenCalledExactlyOnceWith('a'.repeat(MAX_PROFILE_NAME))
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a number', 42],
+    ['a name too long', 'a'.repeat(MAX_PROFILE_NAME + 1)],
+  ])('ignores %s and returns the profile unchanged', (_label, name) => {
+    expect(call(IPC.setProfileName, TRUSTED, name)).toEqual(PROFILE)
+    expect(fakes.setProfileName).not.toHaveBeenCalled()
   })
 })
 

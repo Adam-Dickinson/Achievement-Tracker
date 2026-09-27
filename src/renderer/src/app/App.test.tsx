@@ -97,7 +97,7 @@ describe('App', () => {
     })
 
     expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current', 'page')
-    expect(await screen.findByRole('searchbox', { name: 'Search games' })).toHaveValue('port')
+    expect(await screen.findByText('Showing 1 of 1 game')).toBeInTheDocument()
     expect(screen.getByRole('searchbox', { name: 'Search library' })).toHaveValue('port')
   })
 })
@@ -145,23 +145,26 @@ describe('App: opening a game', () => {
     expect(await screen.findByRole('heading', { name: 'Library' })).toBeInTheDocument()
   })
 
-  it('keeps the Library search and filters after going back from a game', async () => {
+  it('keeps the Library search, sort and view after going back from a game', async () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Library' }))
-    fireEvent.change(await screen.findByRole('searchbox', { name: 'Search games' }), {
+    await screen.findByRole('list', { name: 'Games' })
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search library' }), {
       target: { value: 'port' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Completion' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Sort by' }), {
+      target: { value: 'completion' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'List' }))
 
     fireEvent.click(screen.getByRole('button', { name: /Portal/ }))
     await screen.findByRole('heading', { name: 'Portal' })
     fireEvent.click(screen.getByRole('button', { name: 'Library', current: false }))
 
-    expect(await screen.findByRole('searchbox', { name: 'Search games' })).toHaveValue('port')
-    expect(screen.getByRole('button', { name: 'Completion' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    await screen.findByRole('list', { name: 'Games' })
+    expect(screen.getByRole('searchbox', { name: 'Search library' })).toHaveValue('port')
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('completion')
+    expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('goes back to the Library when searching from the top bar with a game open', async () => {
@@ -174,7 +177,8 @@ describe('App: opening a game', () => {
       target: { value: 'por' },
     })
 
-    expect(await screen.findByRole('searchbox', { name: 'Search games' })).toHaveValue('por')
+    expect(await screen.findByRole('list', { name: 'Games' })).toBeInTheDocument()
+    expect(screen.getByText('Showing 1 of 1 game')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Portal' })).not.toBeInTheDocument()
   })
 
