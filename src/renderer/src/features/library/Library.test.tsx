@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DashboardStats } from '@shared/dashboard'
@@ -58,6 +58,7 @@ const listLibrary = vi.fn<() => Promise<LibraryGame[]>>()
 let listeners: (() => void)[] = []
 const dataChanged = () => listeners.forEach((listener) => listener())
 const onOpenGame = vi.fn()
+const onOpenAccounts = vi.fn()
 const onViewChange = vi.fn<(view: LibraryView) => void>()
 let restoreLayout: () => void
 
@@ -96,6 +97,7 @@ function Harness({ initial = {}, restoreScrollTop }: HarnessProps) {
       }}
       restoreScrollTop={restoreScrollTop}
       onOpenGame={onOpenGame}
+      onOpenAccounts={onOpenAccounts}
     />
   )
 }
@@ -139,7 +141,9 @@ describe('Library', () => {
     listLibrary.mockResolvedValue([])
     renderScrolled(<Harness />)
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Connect an account')
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Connect an account'))
+    fireEvent.click(screen.getByRole('button', { name: 'Go to Accounts' }))
+    expect(onOpenAccounts).toHaveBeenCalledOnce()
   })
 
   it('shows every game in the order it arrives, with the count', async () => {

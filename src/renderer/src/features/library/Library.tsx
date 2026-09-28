@@ -1,6 +1,7 @@
-import { ArrowDownUp, LayoutGrid, List, ListFilter, RectangleVertical } from 'lucide-react'
+import { ArrowDownUp, LayoutGrid, List, ListFilter, Plug, RectangleVertical } from 'lucide-react'
 import { useLayoutEffect, type ReactNode } from 'react'
 import { Button } from '@/components/Button'
+import { EmptyState } from '@/components/EmptyState'
 import { GameCard } from '@/components/GameCard'
 import { GamePoster } from '@/components/GamePoster'
 import { GameRow } from '@/components/GameRow'
@@ -36,6 +37,7 @@ interface LibraryProps {
   onViewChange: (view: LibraryView) => void
   restoreScrollTop?: number
   onOpenGame: (id: number) => void
+  onOpenAccounts: () => void
 }
 
 interface LayoutSpec {
@@ -85,7 +87,14 @@ export function Library(props: LibraryProps) {
   )
 }
 
-function LibraryBody({ name, view, onViewChange, restoreScrollTop = 0, onOpenGame }: LibraryProps) {
+function LibraryBody({
+  name,
+  view,
+  onViewChange,
+  restoreScrollTop = 0,
+  onOpenGame,
+  onOpenAccounts,
+}: LibraryProps) {
   const games = useLibrary()
   const stats = useDashboardStats()
   const scrollParent = useScrollParent()
@@ -101,9 +110,13 @@ function LibraryBody({ name, view, onViewChange, restoreScrollTop = 0, onOpenGam
 
   if (games.length === 0) {
     return (
-      <p role="status" className="text-fg-muted">
-        No games yet. Connect an account on the Accounts screen and its games appear here.
-      </p>
+      <EmptyState
+        icon={<Plug aria-hidden="true" className="size-6" />}
+        heading="No games yet"
+        body="Connect an account on the Accounts screen and its games appear here."
+        cta="Go to Accounts"
+        onAction={onOpenAccounts}
+      />
     )
   }
 

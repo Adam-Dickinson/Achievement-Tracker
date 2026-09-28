@@ -44,6 +44,7 @@ function PageContent({
           onViewChange={onLibraryViewChange}
           restoreScrollTop={libraryScrollTop}
           onOpenGame={onOpenGame}
+          onOpenAccounts={() => onNavigate('accounts')}
         />
       )
     case 'activity':
