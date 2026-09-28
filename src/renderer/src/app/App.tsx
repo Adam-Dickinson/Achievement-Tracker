@@ -4,6 +4,7 @@ import type { Profile } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
 import { IslandNav } from './IslandNav'
 import { displayName, useProfile } from './useProfile'
+import { useOnboarding } from './useOnboarding'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { Accounts } from '@/features/accounts/Accounts'
 import { Activity } from '@/features/activity/Activity'
@@ -11,6 +12,8 @@ import { Library } from '@/features/library/Library'
 import { DEFAULT_VIEW, type LibraryView } from '@/features/library/library-view'
 import { GameDetail } from '@/features/game-detail/GameDetail'
 import { Settings } from '@/features/settings/Settings'
+import { useAccounts } from '@/features/accounts/useAccounts'
+import { Onboarding } from '@/features/onboarding/Onboarding'
 
 interface PageContentProps {
   page: PageId
@@ -60,6 +63,8 @@ export function App() {
   const [page, setPage] = useState<PageId>('dashboard')
   const [opened, setOpened] = useState<{ id: number; entry?: number } | null>(null)
   const { profile, rename } = useProfile()
+  const { accounts } = useAccounts()
+  const { completed, complete } = useOnboarding()
   const [libraryView, setLibraryView] = useState<LibraryView>(DEFAULT_VIEW)
   const [libraryScrollTop, setLibraryScrollTop] = useState(0)
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null)
@@ -85,6 +90,10 @@ export function App() {
   }
 
   const current = NAV_ITEMS.find((item) => item.id === page) ?? NAV_ITEMS[0]!
+
+  if (completed === false && accounts !== null && accounts.length === 0) {
+    return <Onboarding onDone={complete} />
+  }
 
   return (
     <div ref={setScrollParent} className="h-full overflow-y-auto bg-aurora">

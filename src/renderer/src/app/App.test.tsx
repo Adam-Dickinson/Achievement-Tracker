@@ -102,6 +102,60 @@ describe('App', () => {
   })
 })
 
+describe('App: onboarding', () => {
+  it('shows onboarding when it has not been completed and no account is connected', async () => {
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockResolvedValue(false),
+      listAccounts: vi.fn().mockResolvedValue([]),
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome to Trophy Locker' }),
+    ).toBeInTheDocument()
+  })
+
+  it('skips onboarding once an account exists, even if it was never completed', async () => {
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockResolvedValue(false),
+      listAccounts: vi.fn().mockResolvedValue([
+        {
+          id: 1,
+          platform: 'steam',
+          displayName: 'Steam Player',
+          status: 'connected',
+          gameCount: 3,
+          checkedGames: 0,
+          unlockedCount: 0,
+          lastSyncAt: null,
+          syncing: false,
+        },
+      ]),
+    })
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Welcome to Trophy Locker' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('finishing onboarding marks it complete and shows the normal app', async () => {
+    const completeOnboarding = vi.fn().mockResolvedValue(undefined)
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockResolvedValue(false),
+      completeOnboarding,
+      listAccounts: vi.fn().mockResolvedValue([]),
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Skip setup' }))
+
+    expect(completeOnboarding).toHaveBeenCalledOnce()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
+  })
+})
+
 describe('App: opening a game', () => {
   const PORTAL = {
     id: 7,
