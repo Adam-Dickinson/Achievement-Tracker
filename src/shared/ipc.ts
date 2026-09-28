@@ -1,7 +1,7 @@
 import type { DashboardStats } from './dashboard'
 import type { ActivityPage, GameDetail, LibraryGame } from './library'
 import type { AccountStatus } from './models'
-import type { Platform } from './platform'
+import { PLATFORMS, type Platform } from './platform'
 import type { Rarity } from './rarity'
 
 export const IPC = {
@@ -40,6 +40,10 @@ export const IPC = {
   findMissingArtwork: 'artwork:find-missing',
   getDashboard: 'dashboard:get',
   listActivity: 'activity:list',
+  getNotificationSettings: 'notifications:get-settings',
+  updateNotificationSettings: 'notifications:update-settings',
+  notificationSettingsChanged: 'notifications:settings-changed',
+  listDisplays: 'overlay:list-displays',
   dataChanged: 'data:changed',
 } as const
 
@@ -68,6 +72,70 @@ export interface ToastPayload {
 
 export interface VisibleToast extends ToastPayload {
   readonly id: number
+}
+
+export const TOAST_CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const
+export type ToastCorner = (typeof TOAST_CORNERS)[number]
+
+export const TOAST_SIZES = ['small', 'medium', 'large'] as const
+export type ToastSize = (typeof TOAST_SIZES)[number]
+
+export const TOAST_SCALE: Readonly<Record<ToastSize, number>> = {
+  small: 0.85,
+  medium: 1,
+  large: 1.15,
+}
+
+export interface NotificationSettings {
+  readonly corner: ToastCorner
+  readonly monitor: 'primary' | number
+  readonly size: ToastSize
+  readonly durationSec: number
+  readonly minRarity: Rarity
+  readonly enabledPlatforms: Readonly<Record<Platform, boolean>>
+  readonly sound: {
+    readonly enabled: boolean
+    readonly volume: number
+  }
+}
+
+export interface NotificationSettingsPatch {
+  readonly corner?: ToastCorner
+  readonly monitor?: 'primary' | number
+  readonly size?: ToastSize
+  readonly durationSec?: number
+  readonly minRarity?: Rarity
+  readonly enabledPlatforms?: Partial<Record<Platform, boolean>>
+  readonly sound?: {
+    readonly enabled?: boolean
+    readonly volume?: number
+  }
+}
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  corner: 'bottom-right',
+  monitor: 'primary',
+  size: 'medium',
+  durationSec: 5,
+  minRarity: 'common',
+  enabledPlatforms: Object.fromEntries(PLATFORMS.map((platform) => [platform, true])) as Record<
+    Platform,
+    boolean
+  >,
+  sound: { enabled: true, volume: 0.6 },
+}
+
+export interface DisplayInfo {
+  readonly id: number
+  readonly label: string
+  readonly primary: boolean
+}
+
+export interface OverlayFrame {
+  readonly toasts: readonly VisibleToast[]
+  readonly corner: ToastCorner
+  readonly scale: number
+  readonly sound: { readonly enabled: boolean; readonly volume: number }
 }
 
 export interface AccountSummary {
@@ -198,7 +266,11 @@ export interface TrophyLockerApi {
   findMissingArtwork(): Promise<ArtworkRun>
   getDashboard(): Promise<DashboardStats>
   listActivity(limit: number): Promise<ActivityPage>
+  getNotificationSettings(): Promise<NotificationSettings>
+  updateNotificationSettings(patch: NotificationSettingsPatch): Promise<NotificationSettings>
+  listDisplays(): Promise<DisplayInfo[]>
   onDataChanged(listener: () => void): () => void
-  onToasts(listener: (toasts: readonly VisibleToast[]) => void): () => void
+  onToasts(listener: (frame: OverlayFrame) => void): () => void
   onNotificationsPausedChanged(listener: (paused: boolean) => void): () => void
+  onNotificationSettingsChanged(listener: (settings: NotificationSettings) => void): () => void
 }

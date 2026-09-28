@@ -1,6 +1,6 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, dialog, Menu, safeStorage, shell } from 'electron'
-import { IPC } from '@shared/ipc'
+import { app, BrowserWindow, dialog, Menu, safeStorage, screen, shell } from 'electron'
+import { IPC, type NotificationSettings } from '@shared/ipc'
 import {
   connectEa,
   connectEpic,
@@ -13,7 +13,7 @@ import {
 import { coalesce } from './coalesce'
 import { CookieSignIn, isBackHome } from './cookie-sign-in'
 import { type CookieSignInPage, openCookieSignInWindow } from './cookie-sign-in-window'
-import { registerIpcHandlers } from './ipc'
+import { registerIpcHandlers, type IpcHandlers } from './ipc'
 import { DATABASE_FILE, moveLegacyData } from './legacy-data'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
@@ -44,7 +44,11 @@ import {
   listLibraryGames,
   storePageUrl,
 } from './store/library-store'
-import { saveProfileName } from './store/settings-store'
+import {
+  readNotificationSettings,
+  saveProfileName,
+  updateNotificationSettings,
+} from './store/settings-store'
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
@@ -137,6 +141,14 @@ async function start(): Promise<void> {
     return Promise.resolve()
   }
 
+  const applyNotificationSettings = (settings: NotificationSettings): void => {
+    notifications.durationMs = settings.durationSec * 1000
+    notifications.minRarity = settings.minRarity
+    notifications.enabledPlatforms = settings.enabledPlatforms
+    overlay.settings = settings
+  }
+  applyNotificationSettings(readNotificationSettings(db))
+
   const steam = new SteamProvider()
   const xbox = new XboxProvider()
   const epic = new EpicProvider()
@@ -220,6 +232,14 @@ async function start(): Promise<void> {
       mainWindow.webContents.send(IPC.notificationsPausedChanged, paused)
     }
   }
+  const updateAndApplyNotificationSettings: IpcHandlers['updateNotificationSettings'] = (patch) => {
+    const settings = updateNotificationSettings(db, patch)
+    applyNotificationSettings(settings)
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IPC.notificationSettingsChanged, settings)
+    }
+    return settings
+  }
 
   registerIpcHandlers({
     getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),
@@ -300,6 +320,16 @@ async function start(): Promise<void> {
     findMissingArtwork: () => artwork.run(),
     getDashboard: () => getDashboardStats(db),
     listActivity: (limit) => listActivity(db, limit),
+    getNotificationSettings: () => readNotificationSettings(db),
+    updateNotificationSettings: updateAndApplyNotificationSettings,
+    listDisplays: () => {
+      const primaryId = screen.getPrimaryDisplay().id
+      return screen.getAllDisplays().map((display, index) => ({
+        id: display.id,
+        label: display.label.trim() !== '' ? display.label : `Display ${index + 1}`,
+        primary: display.id === primaryId,
+      }))
+    },
   })
 
   tray = createTray({

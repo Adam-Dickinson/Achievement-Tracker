@@ -3,6 +3,8 @@ import { z } from 'zod'
 import type { DashboardStats } from '@shared/dashboard'
 import {
   IPC,
+  TOAST_CORNERS,
+  TOAST_SIZES,
   type AccountSummary,
   type AppInfo,
   type ArtworkKeyResult,
@@ -10,10 +12,13 @@ import {
   type ArtworkSettings,
   type ConnectResult,
   type DisconnectInput,
+  type DisplayInfo,
   type EaConnectInput,
   type EpicConnectInput,
   MAX_PROFILE_NAME,
   type MergeGamesInput,
+  type NotificationSettings,
+  type NotificationSettingsPatch,
   type PlayStationConnectInput,
   type Profile,
   type SteamConnectInput,
@@ -30,6 +35,8 @@ import {
   type LibraryGame,
   MAX_ACTIVITY_LIMIT,
 } from '@shared/library'
+import { PLATFORMS } from '@shared/platform'
+import { RARITIES } from '@shared/rarity'
 
 export interface IpcHandlers {
   getAppInfo(): AppInfo
@@ -65,6 +72,9 @@ export interface IpcHandlers {
   findMissingArtwork(): Promise<ArtworkRun>
   getDashboard(): DashboardStats
   listActivity(limit: number): ActivityPage
+  getNotificationSettings(): NotificationSettings
+  updateNotificationSettings(patch: NotificationSettingsPatch): NotificationSettings
+  listDisplays(): DisplayInfo[]
 }
 
 const steamConnectInputSchema = z.object({
@@ -110,6 +120,22 @@ const syncScopeSchema = z.discriminatedUnion('kind', [
 const profileNameSchema = z.string().trim().max(MAX_PROFILE_NAME)
 
 const activityLimitSchema = z.number().int().min(1).max(MAX_ACTIVITY_LIMIT)
+
+const enabledPlatformsPatchSchema = z
+  .object(Object.fromEntries(PLATFORMS.map((platform) => [platform, z.boolean().optional()])))
+  .strict()
+
+const notificationSettingsPatchSchema = z.object({
+  corner: z.enum(TOAST_CORNERS).optional(),
+  monitor: z.union([z.literal('primary'), z.number().int().nonnegative()]).optional(),
+  size: z.enum(TOAST_SIZES).optional(),
+  durationSec: z.number().min(1).max(30).optional(),
+  minRarity: z.enum(RARITIES).optional(),
+  enabledPlatforms: enabledPlatformsPatchSchema.optional(),
+  sound: z
+    .object({ enabled: z.boolean().optional(), volume: z.number().min(0).max(1).optional() })
+    .optional(),
+})
 
 function isTrustedSender(event: IpcMainInvokeEvent): boolean {
   const url = event.senderFrame?.url ?? ''
@@ -358,6 +384,22 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     const parsed = activityLimitSchema.safeParse(limit)
     return parsed.success ? handlers.listActivity(parsed.data) : { unlocks: [], hasMore: false }
+  })
+
+  ipcMain.handle(IPC.getNotificationSettings, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getNotificationSettings()
+  })
+
+  ipcMain.handle(IPC.updateNotificationSettings, (event, patch: unknown): NotificationSettings => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = notificationSettingsPatchSchema.safeParse(patch)
+    return handlers.updateNotificationSettings(parsed.success ? parsed.data : {})
+  })
+
+  ipcMain.handle(IPC.listDisplays, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.listDisplays()
   })
 }
 

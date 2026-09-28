@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DashboardStats } from '@shared/dashboard'
 import {
+  DEFAULT_NOTIFICATION_SETTINGS,
   IPC,
   MAX_PROFILE_NAME,
   type AccountSummary,
   type ConnectResult,
+  type DisplayInfo,
+  type NotificationSettings,
   type Profile,
 } from '@shared/ipc'
 import { type ActivityPage, MAX_ACTIVITY_LIMIT } from '@shared/library'
@@ -54,6 +57,8 @@ const PROFILE: Profile = { name: null, windowsName: 'tester' }
 
 const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
 
+const DISPLAYS: DisplayInfo[] = [{ id: 1, label: 'Display 1 · Primary', primary: true }]
+
 const fakes = {
   getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
@@ -88,6 +93,14 @@ const fakes = {
   findMissingArtwork: vi.fn(() => Promise.resolve({ found: 2, checked: 3 })),
   getDashboard: vi.fn(() => DASHBOARD),
   listActivity: vi.fn(() => ACTIVITY),
+  getNotificationSettings: vi.fn(() => DEFAULT_NOTIFICATION_SETTINGS),
+  updateNotificationSettings: vi.fn(
+    (patch: Partial<NotificationSettings>): NotificationSettings => ({
+      ...DEFAULT_NOTIFICATION_SETTINGS,
+      ...patch,
+    }),
+  ),
+  listDisplays: vi.fn(() => DISPLAYS),
 }
 
 function call(channel: string, event: unknown, ...args: unknown[]): unknown {
@@ -143,6 +156,9 @@ describe('registerIpcHandlers', () => {
     IPC.findMissingArtwork,
     IPC.getDashboard,
     IPC.listActivity,
+    IPC.getNotificationSettings,
+    IPC.updateNotificationSettings,
+    IPC.listDisplays,
   ])('refuses %s from a page we did not ship', (channel) => {
     expect(() => call(channel, UNTRUSTED, { steamId: 'x', apiKey: 'y' })).toThrow(
       'Untrusted sender',
@@ -659,5 +675,47 @@ describe('artwork handlers', () => {
     call(IPC.removeSteamGridDbKey, TRUSTED)
 
     expect(fakes.removeSteamGridDbKey).toHaveBeenCalledOnce()
+  })
+})
+
+describe('notification settings handlers', () => {
+  it('reports the current settings', () => {
+    expect(call(IPC.getNotificationSettings, TRUSTED)).toEqual(DEFAULT_NOTIFICATION_SETTINGS)
+  })
+
+  it('lists the displays', () => {
+    expect(call(IPC.listDisplays, TRUSTED)).toEqual(DISPLAYS)
+  })
+
+  it('passes a valid patch straight through', () => {
+    const result = call(IPC.updateNotificationSettings, TRUSTED, {
+      corner: 'top-left',
+      durationSec: 8,
+    })
+
+    expect(result).toEqual({ ...DEFAULT_NOTIFICATION_SETTINGS, corner: 'top-left', durationSec: 8 })
+    expect(fakes.updateNotificationSettings).toHaveBeenCalledWith({
+      corner: 'top-left',
+      durationSec: 8,
+    })
+  })
+
+  it('passes through a single platform toggle without the others', () => {
+    call(IPC.updateNotificationSettings, TRUSTED, { enabledPlatforms: { xbox: false } })
+
+    expect(fakes.updateNotificationSettings).toHaveBeenCalledWith({
+      enabledPlatforms: { xbox: false },
+    })
+  })
+
+  it.each([
+    ['an unknown corner', { corner: 'somewhere' }],
+    ['a duration out of range', { durationSec: 999 }],
+    ['a volume out of range', { sound: { volume: 4 } }],
+    ['an unknown platform key', { enabledPlatforms: { switch: true } }],
+  ])('ignores a patch with %s', (_label, payload) => {
+    call(IPC.updateNotificationSettings, TRUSTED, payload)
+
+    expect(fakes.updateNotificationSettings).toHaveBeenCalledWith({})
   })
 })

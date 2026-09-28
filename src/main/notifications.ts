@@ -1,6 +1,7 @@
-import type { ToastPayload, VisibleToast } from '@shared/ipc'
+import { DEFAULT_NOTIFICATION_SETTINGS, type ToastPayload, type VisibleToast } from '@shared/ipc'
 import type { UnlockEvent } from '@shared/models'
-import { rarityFromPercent } from '@shared/rarity'
+import type { Platform } from '@shared/platform'
+import { rarityAtLeast, rarityFromPercent, type Rarity } from '@shared/rarity'
 import { APP_PLATINUM_ID, isPlatinumAchievement } from './store/platinum'
 
 export const TOAST_DURATION_MS = 5000
@@ -24,7 +25,10 @@ interface Shown extends Pending {
 
 export class NotificationService {
   readonly #display: (toasts: readonly VisibleToast[]) => void
-  readonly #durationMs: number
+  #durationMs: number
+  #minRarity: Rarity = DEFAULT_NOTIFICATION_SETTINGS.minRarity
+  #enabledPlatforms: Readonly<Record<Platform, boolean>> =
+    DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms
   readonly #queue: Pending[] = []
   #shown: Shown[] = []
   #nextId = 1
@@ -43,9 +47,22 @@ export class NotificationService {
     this.#paused = paused
   }
 
+  set durationMs(durationMs: number) {
+    this.#durationMs = durationMs
+  }
+
+  set minRarity(minRarity: Rarity) {
+    this.#minRarity = minRarity
+  }
+
+  set enabledPlatforms(enabledPlatforms: Readonly<Record<Platform, boolean>>) {
+    this.#enabledPlatforms = enabledPlatforms
+  }
+
   notify(events: readonly UnlockEvent[]): void {
     if (this.#paused) return
-    const fresh = events.filter((event) => !this.#has(unlockKey(event)))
+    const allowed = events.filter((event) => this.#allows(event))
+    const fresh = allowed.filter((event) => !this.#has(unlockKey(event)))
     if (fresh.length === 0) return
 
     const platinums = fresh.filter(isPlatinum)
@@ -78,6 +95,11 @@ export class NotificationService {
     return [...this.#shown, ...this.#queue].some((item) => item.key === key)
   }
 
+  #allows(event: UnlockEvent): boolean {
+    if (!this.#enabledPlatforms[event.platform]) return false
+    return isPlatinum(event) || rarityAtLeast(eventRarity(event), this.#minRarity)
+  }
+
   #fill(): void {
     let changed = false
     while (this.#shown.length < MAX_VISIBLE) {
@@ -106,6 +128,11 @@ function isPlatinum(event: UnlockEvent): boolean {
   return isPlatinumAchievement(event.achievement, event.gameTitle)
 }
 
+function eventRarity(event: UnlockEvent): Rarity {
+  const percent = event.achievement.globalPercent
+  return percent === null ? 'common' : rarityFromPercent(percent)
+}
+
 function unlockKey(event: UnlockEvent): string {
   return `${event.platform}:${event.gameTitle}:${event.achievement.externalId}`
 }
@@ -119,7 +146,7 @@ export function unlockToast(event: UnlockEvent): ToastPayload {
       : event.achievement.externalId === APP_PLATINUM_ID
         ? 'Platinum earned'
         : 'Platinum unlocked',
-    rarity: percent === null ? 'common' : rarityFromPercent(percent),
+    rarity: eventRarity(event),
     title: event.achievement.name,
     description: event.achievement.description,
     game: event.gameTitle,
