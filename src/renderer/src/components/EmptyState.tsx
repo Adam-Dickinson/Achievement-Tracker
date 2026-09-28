@@ -15,8 +15,8 @@ export function EmptyState({ icon, heading, body, cta, onAction }: EmptyStatePro
       <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
         {icon}
       </span>
-      <div role="status" className="flex flex-col gap-1">
-        <p className="font-display text-xl font-bold">{heading}</p>
+      <div className="flex flex-col gap-1">
+        <h2 className="font-display text-xl font-bold">{heading}</h2>
         <p className="text-fg-muted">{body}</p>
       </div>
       <Button onClick={onAction}>{cta}</Button>
