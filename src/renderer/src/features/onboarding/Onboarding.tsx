@@ -43,15 +43,22 @@ export function Onboarding({ onDone, onFirstConnect }: OnboardingProps) {
         {STEPS.map((s, i) => (
           <li key={s.id} className="flex items-center gap-3">
             <span
-              aria-current={s.id === step ? 'step' : undefined}
+              aria-hidden="true"
               className={`flex size-8 items-center justify-center rounded-full text-sm font-bold ${
                 i <= stepIndex ? 'bg-primary text-on-primary' : 'bg-white/8 text-fg-subtle'
               }`}
             >
               {i < stepIndex ? '✓' : i + 1}
             </span>
-            <span className={i <= stepIndex ? 'text-fg' : 'text-fg-subtle'}>{s.label}</span>
-            {i < STEPS.length - 1 && <span className="h-0.5 w-10 rounded-full bg-white/10" />}
+            <span
+              aria-current={s.id === step ? 'step' : undefined}
+              className={i <= stepIndex ? 'text-fg' : 'text-fg-subtle'}
+            >
+              {s.label}
+            </span>
+            {i < STEPS.length - 1 && (
+              <span aria-hidden="true" className="h-0.5 w-10 rounded-full bg-white/10" />
+            )}
           </li>
         ))}
       </ol>

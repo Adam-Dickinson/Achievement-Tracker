@@ -193,4 +193,13 @@ describe('Onboarding', () => {
 
     expect(onDone).toHaveBeenCalledOnce()
   })
+
+  it("hides the step indicator's decorative glyph and connector from the accessibility tree", () => {
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
+
+    const progress = screen.getByRole('list', { name: 'Setup progress' })
+    const hiddenWithinProgress = progress.querySelectorAll('[aria-hidden="true"]')
+    expect(hiddenWithinProgress).toHaveLength(5)
+    expect(screen.getByText('Welcome')).toHaveAttribute('aria-current', 'step')
+  })
 })
