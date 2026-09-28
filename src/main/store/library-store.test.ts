@@ -60,6 +60,10 @@ interface Seeded {
   readonly platformGameId: number
 }
 
+function sumOf<K extends string>(rows: readonly Record<K, number>[], key: K): number {
+  return rows.reduce((total, row) => total + row[key], 0)
+}
+
 function seedGame(
   externalId: string,
   title: string,
@@ -434,14 +438,35 @@ describe('getDashboardStats', () => {
     })
   })
 
-  it('keeps the per-platform breakdown for every copy', () => {
+  it('counts a linked game only on the platform of its best copy', () => {
     seedGame('1', 'Apex Legends', 2, [null, null])
     seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
+    seedGame('trophy/NPWR2', 'Astro Bot', 2, [null], 'playstation')
 
     expect(getDashboardStats(db, NOW).platforms).toEqual([
       { platform: 'steam', games: 1, unlocked: 2, total: 2 },
-      { platform: 'playstation', games: 1, unlocked: 1, total: 4 },
+      { platform: 'playstation', games: 1, unlocked: 1, total: 2 },
     ])
+  })
+
+  it('leaves out a platform whose games are all played further elsewhere', () => {
+    seedGame('1', 'Rainbow Six Siege', 4, [null, null, null])
+    seedGame('2', 'Rainbow Six Siege', 4, [null], 'ubisoft')
+
+    expect(getDashboardStats(db, NOW).platforms.map((row) => row.platform)).toEqual(['steam'])
+  })
+
+  it('makes the platform rows add up to the overall totals', () => {
+    seedGame('1', 'Apex Legends', 2, [null, null])
+    seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
+    seedGame('2', 'Portal', 4, [null])
+    seedGame('trophy/NPWR2', 'Astro Bot', 3, [null, null], 'playstation')
+
+    const stats = getDashboardStats(db, NOW)
+
+    expect(sumOf(stats.platforms, 'unlocked')).toBe(stats.unlockedAchievements)
+    expect(sumOf(stats.platforms, 'total')).toBe(stats.totalAchievements)
+    expect(sumOf(stats.platforms, 'games')).toBe(stats.gamesTracked)
   })
 
   it('adds up games and achievements per platform, most unlocked first', () => {
@@ -701,7 +726,7 @@ describe('platinums', () => {
     expect(page.hasMore).toBe(true)
   })
 
-  it('counts every platinum held on the Dashboard, one per entry', () => {
+  it('counts every platinum held on the Dashboard', () => {
     const own = seedGame('1', 'ELDEN RING', 2, [T1, T2])
     makePlatinum(own.platformGameId, 1, { description: 'Obtained all achievements' })
     const trophy = seedGame('trophy/NPWR1', 'Astro Bot', 2, [T1, T2], 'playstation')
@@ -713,5 +738,17 @@ describe('platinums', () => {
     awardPlatinums(db)
 
     expect(getDashboardStats(db, NOW).platinums).toBe(3)
+  })
+
+  it('counts a platinum once per game, however many copies hold one', () => {
+    const steam = seedGame('1', 'Astro Bot', 2, [T1, T2])
+    makePlatinum(steam.platformGameId, 1, { description: 'Obtained all achievements' })
+    const ps = seedGame('trophy/NPWR1', 'Astro Bot', 2, [T1, T2], 'playstation')
+    makePlatinum(ps.platformGameId, 1, { tier: 'platinum' })
+    seedGame('2', 'Portal', 1, [T1])
+    seedGame('3', 'Portal', 1, [T1], 'epic')
+    awardPlatinums(db)
+
+    expect(getDashboardStats(db, NOW).platinums).toBe(2)
   })
 })

@@ -126,8 +126,8 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
     streakDays: days.streak,
     week: days.week,
     unlockedByRarity: countByRarity(db, new Set(counted.map((entry) => entry.id))),
-    platinums: countPlatinums(db),
-    platforms: byPlatform(entries),
+    platinums: countPlatinums(db, entries),
+    platforms: byPlatform(counted),
     nearlyThere,
     recentUnlocks: listRecentUnlocks(db, RECENT_UNLOCK_COUNT),
     rarestUnlock: findRarestUnlock(db, games),
@@ -290,8 +290,14 @@ function entriesWithOwnPlatinum(db: DatabaseSync, among: 'unlocked' | 'awarded')
   )
 }
 
-function countPlatinums(db: DatabaseSync): number {
-  return entriesWithOwnPlatinum(db, 'unlocked').size + listAppPlatinums(db).length
+function countPlatinums(db: DatabaseSync, entries: readonly EntryRecord[]): number {
+  const gameOf = new Map(entries.map((entry) => [entry.id, entry.game_id]))
+  const games = new Set(listAppPlatinums(db).map((platinum) => platinum.gameId))
+  for (const entryId of entriesWithOwnPlatinum(db, 'unlocked')) {
+    const gameId = gameOf.get(entryId)
+    if (gameId !== undefined) games.add(gameId)
+  }
+  return games.size
 }
 
 function toUnlock(row: UnlockRecord): UnlockedAchievement {
