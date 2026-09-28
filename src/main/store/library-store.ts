@@ -18,8 +18,11 @@ import { listArtworkUrls } from './artwork-store'
 import { dayStats } from './day-stats'
 import { matchKey } from './match-key'
 import { isPlatinumAchievement } from './platinum'
+import { dayKey, seededPick } from './seeded-pick'
 
 const NEARLY_THERE_COUNT = 4
+const NEARLY_THERE_POOL = 10
+const RAREST_UNLOCK_POOL = 10
 const RECENT_UNLOCK_COUNT = 6
 const TRAILING_TAG = /\(([^()]+)\)\s*$/
 
@@ -109,10 +112,15 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
   const ranked = groupByGame(entries)
   const games = ranked.map((game) => toLibraryGame(game, artwork))
   const counted = ranked.map((game) => game.best)
-  const nearlyThere = games
+  const nearlyThereCandidates = games
     .filter((game) => game.unlocked < game.total)
     .sort((a, b) => b.unlocked / b.total - a.unlocked / a.total || a.title.localeCompare(b.title))
-    .slice(0, NEARLY_THERE_COUNT)
+    .slice(0, NEARLY_THERE_POOL)
+  const nearlyThere = seededPick(
+    nearlyThereCandidates,
+    NEARLY_THERE_COUNT,
+    `${dayKey(now)}:nearly-there`,
+  )
 
   const days = dayStats(listUnlockTimes(db), now)
 
@@ -130,7 +138,7 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
     platforms: byPlatform(counted),
     nearlyThere,
     recentUnlocks: listRecentUnlocks(db, RECENT_UNLOCK_COUNT),
-    rarestUnlock: findRarestUnlock(db, games),
+    rarestUnlock: findRarestUnlock(db, games, now),
     rarestThisWeek: rarestSince(db, days.week[0]?.date ?? now),
   }
 }
@@ -193,18 +201,23 @@ export function listRecentUnlocks(db: DatabaseSync, limit: number): RecentUnlock
   }))
 }
 
-function findRarestUnlock(db: DatabaseSync, games: readonly LibraryGame[]): RarestUnlock | null {
-  const row = db
+function findRarestUnlock(
+  db: DatabaseSync,
+  games: readonly LibraryGame[],
+  now: Date,
+): RarestUnlock | null {
+  const candidates = db
     .prepare(
       `${UNLOCKS}
        WHERE a.global_percent IS NOT NULL
        ORDER BY a.global_percent, u.unlocked_at DESC, a.id DESC
-       LIMIT 1`,
+       LIMIT ?`,
     )
-    .get() as UnlockRecord | undefined
-  if (!row) return null
-  const coverUrl = games.find((game) => game.id === row.game_id)?.coverUrl ?? null
-  return { ...toUnlock(row), coverUrl }
+    .all(RAREST_UNLOCK_POOL) as unknown as UnlockRecord[]
+  const [picked] = seededPick(candidates, 1, `${dayKey(now)}:rarest-unlock`)
+  if (!picked) return null
+  const coverUrl = games.find((game) => game.id === picked.game_id)?.coverUrl ?? null
+  return { ...toUnlock(picked), coverUrl }
 }
 
 export function listActivity(db: DatabaseSync, limit: number): ActivityPage {
