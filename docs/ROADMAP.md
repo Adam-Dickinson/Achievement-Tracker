@@ -69,9 +69,9 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
   - [x] Accounts: built to the design: summary tiles (connected, needing sign-in, available), a card per platform with its status, official or unofficial, games, unlocks and last sync, **Resync** and **Disconnect…**, **Reconnect** for a signed-out account, and a dashed **Connect X** card for a platform with no account, which opens its existing sign-in flow; the info cards on keys and unofficial sources (the key text says how keys are really stored: encrypted by Windows in a file only the app reads, not the Credential Manager the mockup mentions). The emulator section waits for the emulator providers. Checked in the built app on a copy of the owner's data
   - [x] Toast: the platform badge beside the game (the toast payload now carries the platform id, `null` for a burst across several platforms). Checked with test toasts in the built app
   - Settings and Onboarding are designed too; they are built to their designs in the items below
-- [ ] Notification settings (corner, monitor, scale, rarity styling, per-platform toggles)
-- [ ] Toast sound per rarity tier, with volume and a mute (F-22)
-- [ ] Native toast fallback, Do Not Disturb schedule (manual pause is in the tray already)
+- [x] Notification settings (corner, monitor, size, duration, minimum rarity, per-platform toggles): saved with `getNotificationSettings`/`updateNotificationSettings` and applied live to the overlay's position/size and to which unlocks the notification service shows. Settings has them in the design's layout: Placement, "What triggers a toast" and Sound cards beside a live preview (a real toast at the chosen corner and size, any rarity) with Send test toast. The platform switches cover the six platforms with a provider; the design's "Sound file" row is left out (the chime is synthesized) and its "Full-screen games" card waits for the item below
+- [x] Toast sound per rarity tier, with volume and a mute (F-22): the overlay plays a synthesized chime (overlapping triangle-wave notes with a bell-like decay, more and higher notes for a rarer unlock; no bundled audio), set from the Sound card
+- [ ] Native toast fallback, Do Not Disturb schedule (manual pause is in the tray already); needs real fullscreen-game detection, not just settings plumbing
 - [ ] Onboarding flow, empty/error states, provider health UI
 - [ ] Accessibility pass, reduced motion, high contrast
 - [ ] Data export, log viewer

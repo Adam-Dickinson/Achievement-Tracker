@@ -58,7 +58,7 @@ One place to see every achievement and trophy you've ever earned, on any platfor
 - A platinum ("Platinum unlocked" for a game's own, "Platinum earned" for the app-awarded one) is never collapsed into a burst and comes after the unlocks that arrived with it
 - Content: achievement icon, title, description, game name, platform badge, rarity tier (with % of players), points (Gamerscore / trophy tier / Steam %)
 - Rarity styling: Common, Uncommon, Rare, Ultra Rare, each with its own accent and sound
-- Optional sound (custom file allowed), volume control
+- Optional sound, volume control and mute. Built as a synthesized per-rarity chime, no custom file upload
 - **Do Not Disturb** mode (manual + optional "while in exclusive-fullscreen")
 
 ### Known limitation

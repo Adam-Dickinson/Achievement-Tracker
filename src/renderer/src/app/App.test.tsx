@@ -68,7 +68,7 @@ describe('App', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send test toast' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Send test toast' }))
 
     expect(sendTestNotification).toHaveBeenCalledOnce()
     expect(await screen.findByText('Trophy Locker v0.1.0 · database schema 1')).toBeInTheDocument()

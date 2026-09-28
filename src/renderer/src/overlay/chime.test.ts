@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { playChime } from './chime'
 
 class FakeOscillator {
+  type = ''
   frequency = { value: 0 }
   start = vi.fn()
   stop = vi.fn()
@@ -9,7 +10,14 @@ class FakeOscillator {
 }
 
 class FakeGain {
-  gain = { value: 0 }
+  peak = 0
+  gain = {
+    setValueAtTime: vi.fn(),
+    linearRampToValueAtTime: vi.fn((value: number) => {
+      this.peak = Math.max(this.peak, value)
+    }),
+    exponentialRampToValueAtTime: vi.fn(),
+  }
   connect = vi.fn(() => this)
 }
 
@@ -59,7 +67,7 @@ describe('playChime', () => {
 
     expect(created).toHaveLength(1)
     expect(created[0]?.oscillators).toHaveLength(1)
-    expect(created[0]?.oscillators[0]?.frequency.value).toBe(523.25)
+    expect(created[0]?.oscillators[0]?.frequency.value).toBe(659.25)
   })
 
   it('plays more notes for a rarer unlock', () => {
@@ -68,12 +76,18 @@ describe('playChime', () => {
     expect(created[0]?.oscillators).toHaveLength(4)
   })
 
-  it('sets the gain to the given volume', () => {
+  it('ramps the gain up to the given volume for each note', () => {
     playChime('rare', 0.3)
 
     for (const gain of created[0]?.gains ?? []) {
-      expect(gain.gain.value).toBe(0.3)
+      expect(gain.peak).toBe(0.3)
     }
+  })
+
+  it('plays a triangle wave', () => {
+    playChime('common', 0.6)
+
+    expect(created[0]?.oscillators[0]?.type).toBe('triangle')
   })
 
   it('starts and stops every note', () => {

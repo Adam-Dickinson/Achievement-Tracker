@@ -31,11 +31,11 @@ describe('Settings', () => {
     expect(screen.queryByRole('region', { name: 'Profile' })).not.toBeInTheDocument()
   })
 
-  it('sends a test toast from the Notifications card', () => {
+  it('sends a test toast from the Notifications card', async () => {
     renderSettings()
 
     const card = screen.getByRole('region', { name: 'Notifications' })
-    const button = screen.getByRole('button', { name: 'Send test toast' })
+    const button = await screen.findByRole('button', { name: 'Send test toast' })
     fireEvent.click(button)
 
     expect(card).toContainElement(button)
