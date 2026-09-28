@@ -16,6 +16,7 @@ const connectSteam = vi.fn<(input: SteamConnectInput) => Promise<ConnectResult>>
 const findShadPs4 = vi.fn<() => Promise<EmulatorFolder | null>>()
 const connectShadPs4 = vi.fn<(input: EmulatorConnectInput) => Promise<ConnectResult>>()
 const onDone = vi.fn()
+const onFirstConnect = vi.fn()
 
 const SHADPS4_FOLDER: EmulatorFolder = {
   path: 'C:\\Users\\player\\AppData\\Roaming\\shadPS4',
@@ -69,7 +70,7 @@ function connectSteamInForm() {
 
 describe('Onboarding', () => {
   it('starts on Welcome, and Skip setup finishes onboarding from there', () => {
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
 
     expect(screen.getByRole('heading', { name: 'Welcome to Trophy Locker' })).toBeInTheDocument()
 
@@ -79,7 +80,7 @@ describe('Onboarding', () => {
   })
 
   it('moves from Welcome to Platforms, where Continue starts disabled', () => {
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
 
@@ -92,7 +93,7 @@ describe('Onboarding', () => {
   })
 
   it('goes back from Platforms to Welcome', () => {
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
@@ -102,7 +103,7 @@ describe('Onboarding', () => {
 
   it('connecting a platform swaps its tile to Connected and enables Continue', async () => {
     connectSteam.mockResolvedValue({ ok: true, account: STEAM_ACCOUNT })
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
 
     connectSteamInForm()
@@ -115,7 +116,7 @@ describe('Onboarding', () => {
   it('connecting shadPS4 swaps its tile to Connected and enables Continue', async () => {
     findShadPs4.mockResolvedValue(SHADPS4_FOLDER)
     connectShadPs4.mockResolvedValue({ ok: true, account: SHADPS4_ACCOUNT })
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
     const card = screen.getByRole('region', { name: 'shadPS4, not connected' })
     await within(card).findByText(SHADPS4_FOLDER.path)
@@ -131,7 +132,7 @@ describe('Onboarding', () => {
 
   it('a failed connect leaves the tile as it was and Continue disabled', async () => {
     connectSteam.mockResolvedValue({ ok: false, reason: 'other', message: 'Steam is down' })
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
 
     connectSteamInForm()
@@ -141,11 +142,36 @@ describe('Onboarding', () => {
     expect(screen.queryByRole('region', { name: 'Steam, connected' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled()
     expect(screen.getByText('No platforms connected yet')).toBeInTheDocument()
+    expect(onFirstConnect).not.toHaveBeenCalled()
+  })
+
+  it('reports the first connect once, and stays on Platforms for more', async () => {
+    connectSteam.mockResolvedValue({ ok: true, account: STEAM_ACCOUNT })
+    findShadPs4.mockResolvedValue(SHADPS4_FOLDER)
+    connectShadPs4.mockResolvedValue({ ok: true, account: SHADPS4_ACCOUNT })
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
+    const card = screen.getByRole('region', { name: 'shadPS4, not connected' })
+    await within(card).findByText(SHADPS4_FOLDER.path)
+
+    connectSteamInForm()
+    await screen.findByRole('region', { name: 'Steam, connected' })
+
+    expect(onFirstConnect).toHaveBeenCalledOnce()
+    expect(onDone).not.toHaveBeenCalled()
+    expect(screen.getByRole('heading', { name: 'Connect your platforms' })).toBeInTheDocument()
+
+    fireEvent.click(within(card).getByRole('button', { name: 'Connect' }))
+    await screen.findByRole('region', { name: 'shadPS4, connected' })
+
+    expect(screen.getByText('2 platforms connected')).toBeInTheDocument()
+    expect(onFirstConnect).toHaveBeenCalledOnce()
+    expect(onDone).not.toHaveBeenCalled()
   })
 
   it('goes from Platforms to Done, reporting how many platforms connected, then finishes', async () => {
     connectSteam.mockResolvedValue({ ok: true, account: STEAM_ACCOUNT })
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
     connectSteamInForm()
     await screen.findByRole('region', { name: 'Steam, connected' })
@@ -160,7 +186,7 @@ describe('Onboarding', () => {
   })
 
   it('Skip setup finishes onboarding from the Platforms step too', () => {
-    render(<Onboarding onDone={onDone} />)
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Skip setup' }))

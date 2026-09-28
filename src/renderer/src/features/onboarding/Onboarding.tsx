@@ -15,9 +15,10 @@ const STEPS: { id: Step; label: string }[] = [
 
 interface OnboardingProps {
   onDone: () => void
+  onFirstConnect: () => void
 }
 
-export function Onboarding({ onDone }: OnboardingProps) {
+export function Onboarding({ onDone, onFirstConnect }: OnboardingProps) {
   const [step, setStep] = useState<Step>('welcome')
   const [connectedPlatforms, setConnectedPlatforms] = useState<Set<Platform>>(new Set())
   const stepIndex = STEPS.findIndex((s) => s.id === step)
@@ -60,9 +61,10 @@ export function Onboarding({ onDone }: OnboardingProps) {
         {step === 'platforms' && (
           <PlatformsStep
             connectedPlatforms={connectedPlatforms}
-            onPlatformConnected={(platform) =>
+            onPlatformConnected={(platform) => {
+              if (connectedPlatforms.size === 0) onFirstConnect()
               setConnectedPlatforms((current) => new Set(current).add(platform))
-            }
+            }}
             onBack={() => setStep('welcome')}
             onContinue={() => setStep('done')}
           />

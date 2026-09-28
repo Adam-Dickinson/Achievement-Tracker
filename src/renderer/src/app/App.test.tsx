@@ -170,7 +170,7 @@ describe('App: onboarding', () => {
     expect(window.api.getDashboard).not.toHaveBeenCalled()
   })
 
-  it('keeps onboarding up when an account connected in it syncs, until Done is pressed', async () => {
+  it('marks onboarding complete on the first connect, and keeps the wizard up until Done', async () => {
     let dataChanged: () => void = () => {}
     let connected: AccountSummary[] = []
     const completeOnboarding = vi.fn().mockResolvedValue(undefined)
@@ -200,6 +200,8 @@ describe('App: onboarding', () => {
     )
     await screen.findByRole('region', { name: 'Steam, connected' })
 
+    expect(completeOnboarding).toHaveBeenCalledOnce()
+
     const fetchesBefore = listAccounts.mock.calls.length
     act(() => dataChanged())
     await vi.waitFor(() => expect(listAccounts.mock.calls.length).toBeGreaterThan(fetchesBefore))
@@ -207,12 +209,12 @@ describe('App: onboarding', () => {
 
     expect(screen.getByRole('heading', { name: 'Connect your platforms' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Dashboard' })).not.toBeInTheDocument()
-    expect(completeOnboarding).not.toHaveBeenCalled()
+    expect(completeOnboarding).toHaveBeenCalledOnce()
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     fireEvent.click(screen.getByRole('button', { name: 'Go to Dashboard' }))
 
-    expect(completeOnboarding).toHaveBeenCalledOnce()
+    expect(completeOnboarding).toHaveBeenCalledTimes(2)
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
   })
 })

@@ -108,6 +108,7 @@ export function App() {
           setShowOnboarding(false)
           void complete()
         }}
+        onFirstConnect={() => void complete()}
       />
     )
   }
