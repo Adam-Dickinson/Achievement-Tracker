@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import logo from '@/assets/logo.svg'
+import type { Platform } from '@shared/platform'
 import { DoneStep } from './DoneStep'
 import { PlatformsStep } from './PlatformsStep'
 import { WelcomeStep } from './WelcomeStep'
@@ -18,7 +19,7 @@ interface OnboardingProps {
 
 export function Onboarding({ onDone }: OnboardingProps) {
   const [step, setStep] = useState<Step>('welcome')
-  const [connectedPlatforms, setConnectedPlatforms] = useState<Set<string>>(new Set())
+  const [connectedPlatforms, setConnectedPlatforms] = useState<Set<Platform>>(new Set())
   const stepIndex = STEPS.findIndex((s) => s.id === step)
 
   return (
@@ -30,7 +31,7 @@ export function Onboarding({ onDone }: OnboardingProps) {
         </div>
         <button
           type="button"
-          onClick={onDone}
+          onClick={() => onDone()}
           className="rounded-full bg-white/6 px-4 py-2 text-sm font-semibold text-fg-muted hover:bg-white/10 hover:text-fg"
         >
           Skip setup

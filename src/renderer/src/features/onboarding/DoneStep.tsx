@@ -18,7 +18,7 @@ export function DoneStep({ connectedCount, onDone }: DoneStepProps) {
         {plural(connectedCount, 'platform')} connected and syncing in the background. Your games
         will appear as they sync.
       </p>
-      <Button onClick={onDone}>Go to Dashboard</Button>
+      <Button onClick={() => onDone()}>Go to Dashboard</Button>
     </div>
   )
 }

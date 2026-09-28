@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ScrollParentContext, setScrollTop } from '@/components/scroll-parent'
 import type { Profile } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
@@ -68,6 +68,14 @@ export function App() {
   const [libraryView, setLibraryView] = useState<LibraryView>(DEFAULT_VIEW)
   const [libraryScrollTop, setLibraryScrollTop] = useState(0)
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
+  const decided = useRef(false)
+
+  useEffect(() => {
+    if (decided.current || completed === null || accounts === null) return
+    decided.current = true
+    setShowOnboarding(completed === false && accounts.length === 0)
+  }, [completed, accounts])
 
   useLayoutEffect(() => {
     if (scrollParent) setScrollTop(scrollParent, 0)
@@ -91,8 +99,17 @@ export function App() {
 
   const current = NAV_ITEMS.find((item) => item.id === page) ?? NAV_ITEMS[0]!
 
-  if (completed === false && accounts !== null && accounts.length === 0) {
-    return <Onboarding onDone={complete} />
+  if (showOnboarding === null) return <div className="h-full bg-aurora" />
+
+  if (showOnboarding) {
+    return (
+      <Onboarding
+        onDone={() => {
+          setShowOnboarding(false)
+          void complete()
+        }}
+      />
+    )
   }
 
   return (

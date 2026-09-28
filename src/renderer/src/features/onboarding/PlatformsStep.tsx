@@ -9,8 +9,8 @@ import type { Platform } from '@shared/platform'
 import { platformName } from '@shared/platform'
 
 interface PlatformsStepProps {
-  connectedPlatforms: ReadonlySet<string>
-  onPlatformConnected: (platform: string) => void
+  connectedPlatforms: ReadonlySet<Platform>
+  onPlatformConnected: (platform: Platform) => void
   onBack: () => void
   onContinue: () => void
 }
@@ -24,7 +24,7 @@ export function PlatformsStep({
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
-        <h2 className="font-display text-3xl font-bold">Connect your platforms</h2>
+        <h1 className="font-display text-3xl font-bold">Connect your platforms</h1>
         <p className="mt-2 text-fg-muted">Pick where you play. Everything stays on this machine.</p>
       </div>
 
