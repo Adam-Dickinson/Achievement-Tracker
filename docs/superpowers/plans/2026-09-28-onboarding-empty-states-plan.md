@@ -809,9 +809,10 @@ describe('Onboarding', () => {
     expect(onDone).toHaveBeenCalledOnce()
   })
 
-  it('reaching Done having connected nothing says so', () => {
+  it('Skip setup finishes onboarding from the Platforms step too', () => {
     render(<Onboarding onDone={onDone} />)
     fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
+
     fireEvent.click(screen.getByRole('button', { name: 'Skip setup' }))
 
     expect(onDone).toHaveBeenCalledOnce()
@@ -955,9 +956,8 @@ export function DoneStep({ connectedCount, onDone }: DoneStepProps) {
       </span>
       <h1 className="font-display text-4xl font-extrabold">You're set up</h1>
       <p className="max-w-120 text-fg-muted">
-        {connectedCount === 0
-          ? 'You skipped connecting a platform. Connect one any time from Accounts.'
-          : `${plural(connectedCount, 'platform')} connected and syncing in the background. Your games will appear as they sync.`}
+        {plural(connectedCount, 'platform')} connected and syncing in the background. Your games
+        will appear as they sync.
       </p>
       <Button onClick={onDone}>Go to Dashboard</Button>
     </div>
