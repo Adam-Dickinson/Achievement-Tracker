@@ -22,11 +22,26 @@ describe('EmptyState', () => {
       />,
     )
 
-    const status = screen.getByRole('status')
-    expect(status).toHaveTextContent('Nothing tracked yet')
-    expect(status).toHaveTextContent('Connect a platform to start tracking your achievements.')
+    expect(screen.getByRole('heading', { name: 'Nothing tracked yet' })).toBeInTheDocument()
+    expect(
+      screen.getByText('Connect a platform to start tracking your achievements.'),
+    ).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Connect a platform' }))
     expect(onAction).toHaveBeenCalledOnce()
+  })
+
+  it('has no status live region, since this is static content, not a live announcement', () => {
+    render(
+      <EmptyState
+        icon={<Plug aria-hidden="true" />}
+        heading="Nothing tracked yet"
+        body="Connect a platform."
+        cta="Connect"
+        onAction={() => {}}
+      />,
+    )
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 })

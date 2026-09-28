@@ -13,7 +13,7 @@
   --color-line: rgb(255 255 255 / 0.07);
   --color-fg: #f3f5fa;
   --color-fg-muted: #9aa3b8;
-  --color-fg-subtle: #626b82;
+  --color-fg-subtle: #888fa0;
 
   --color-primary: #c4f542;
   --color-primary-hover: #d6ff5c;
@@ -95,6 +95,17 @@
       radial-gradient(900px 520px at 100% 0%, rgb(70 80 200 / 0.26), transparent 62%),
       radial-gradient(1000px 600px at 55% 112%, rgb(160 215 40 / 0.1), transparent 60%),
       var(--color-canvas);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

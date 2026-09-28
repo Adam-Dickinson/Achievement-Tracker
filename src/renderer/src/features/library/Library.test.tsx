@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DashboardStats } from '@shared/dashboard'
@@ -141,7 +141,10 @@ describe('Library', () => {
     listLibrary.mockResolvedValue([])
     renderScrolled(<Harness />)
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Connect an account'))
+    await screen.findByRole('heading', { name: 'No games yet' })
+    expect(
+      screen.getByText('Connect an account on the Accounts screen and its games appear here.'),
+    ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Go to Accounts' }))
     expect(onOpenAccounts).toHaveBeenCalledOnce()
   })
