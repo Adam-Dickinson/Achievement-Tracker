@@ -412,6 +412,50 @@ describe('getDashboardStats', () => {
     expect(stats.recentUnlocks).toHaveLength(6)
   })
 
+  it('only ever shows nearly-finished games among the ten closest to 100%', () => {
+    for (let i = 0; i < 12; i++) {
+      seedGame(
+        String(i),
+        `Game ${i}`,
+        12,
+        Array.from({ length: 11 - i }, () => null),
+      )
+    }
+    const closestTen = new Set(Array.from({ length: 10 }, (_, i) => `Game ${i}`))
+
+    for (let day = 0; day < 30; day++) {
+      const now = new Date(NOW.getTime() + day * DAY)
+      const titles = getDashboardStats(db, now).nearlyThere.map((g) => g.title)
+      expect(titles).toHaveLength(4)
+      for (const title of titles) expect(closestTen.has(title)).toBe(true)
+    }
+  })
+
+  it('rotates the nearly-there picks daily, but keeps the same four across calls the same day', () => {
+    for (let i = 0; i < 12; i++) {
+      seedGame(
+        String(i),
+        `Game ${i}`,
+        12,
+        Array.from({ length: 11 - i }, () => null),
+      )
+    }
+
+    const today = getDashboardStats(db, NOW).nearlyThere.map((g) => g.title)
+    expect(getDashboardStats(db, NOW).nearlyThere.map((g) => g.title)).toEqual(today)
+
+    const picks = new Set(
+      Array.from({ length: 14 }, (_, day) =>
+        JSON.stringify(
+          getDashboardStats(db, new Date(NOW.getTime() + day * DAY)).nearlyThere.map(
+            (g) => g.title,
+          ),
+        ),
+      ),
+    )
+    expect(picks.size).toBeGreaterThan(1)
+  })
+
   it('counts a linked game once, by its best copy, so other copies never inflate the totals', () => {
     seedGame('1', 'Apex Legends', 2, [null, null])
     seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
@@ -485,11 +529,9 @@ describe('getDashboardStats', () => {
     expect(getDashboardStats(db, NOW).platforms).toEqual([])
   })
 
-  it('features the rarest unlock, the newest on a tie, with its game and cover', () => {
+  it('features the rarest unlock, with its game and cover', () => {
     const at = new Date(NOW.getTime() - DAY)
-    const { gameId, platformGameId } = seedGame('400', 'Portal', 4, [at, at, at, at])
-    const earlier = new Date(NOW.getTime() - 3 * DAY)
-    seedGame('500', 'Celeste', 3, [earlier, null, earlier])
+    const { gameId, platformGameId } = seedGame('400', 'Portal', 4, [at])
 
     expect(getDashboardStats(db, NOW).rarestUnlock).toEqual({
       achievementId: expect.any(Number),
@@ -505,6 +547,52 @@ describe('getDashboardStats', () => {
       unlockedAt: at,
       coverUrl: 'https://cover/400.jpg',
     })
+  })
+
+  it('only ever features one of the ten rarest unlocks', () => {
+    const ids: number[] = []
+    for (let i = 0; i < 12; i++) {
+      const { platformGameId } = seedGame(String(i), `Game ${i}`, 1, [
+        new Date(NOW.getTime() - i * DAY),
+      ])
+      db.prepare('UPDATE achievement SET global_percent = ? WHERE platform_game_id = ?').run(
+        i + 1,
+        platformGameId,
+      )
+      ids.push(platformGameId)
+    }
+    const tenRarest = new Set(ids.slice(0, 10))
+
+    for (let day = 0; day < 30; day++) {
+      const now = new Date(NOW.getTime() + day * DAY)
+      const picked = getDashboardStats(db, now).rarestUnlock
+      expect(picked).not.toBeNull()
+      expect(tenRarest.has(picked!.platformGameId)).toBe(true)
+    }
+  })
+
+  it('rotates the rarest-unlock spotlight daily, but keeps the same pick across calls the same day', () => {
+    for (let i = 0; i < 12; i++) {
+      const { platformGameId } = seedGame(String(i), `Game ${i}`, 1, [
+        new Date(NOW.getTime() - i * DAY),
+      ])
+      db.prepare('UPDATE achievement SET global_percent = ? WHERE platform_game_id = ?').run(
+        i + 1,
+        platformGameId,
+      )
+    }
+
+    const today = getDashboardStats(db, NOW).rarestUnlock
+    expect(getDashboardStats(db, NOW).rarestUnlock).toEqual(today)
+
+    const picks = new Set(
+      Array.from(
+        { length: 14 },
+        (_, day) =>
+          getDashboardStats(db, new Date(NOW.getTime() + day * DAY)).rarestUnlock?.platformGameId,
+      ),
+    )
+    expect(picks.size).toBeGreaterThan(1)
   })
 
   it('features an undated rarest unlock too, and has none before anything is unlocked', () => {
@@ -686,6 +774,7 @@ describe('platinums', () => {
       ['achievement', 'Achievement 1-1', true],
       ['achievement', 'Achievement 1-0', false],
     ])
+    db.prepare("UPDATE achievement SET global_percent = NULL WHERE external_id = '1-0'").run()
     db.prepare("UPDATE achievement SET global_percent = 1 WHERE external_id = '1-1'").run()
     expect(getDashboardStats(db, NOW).rarestUnlock?.platinum).toBe(true)
   })
