@@ -1,5 +1,10 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import { IPC, type TrophyLockerApi, type VisibleToast } from '@shared/ipc'
+import {
+  IPC,
+  type NotificationSettings,
+  type OverlayFrame,
+  type TrophyLockerApi,
+} from '@shared/ipc'
 
 const api: TrophyLockerApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC.getAppInfo),
@@ -35,14 +40,16 @@ const api: TrophyLockerApi = {
   findMissingArtwork: () => ipcRenderer.invoke(IPC.findMissingArtwork),
   getDashboard: () => ipcRenderer.invoke(IPC.getDashboard),
   listActivity: (limit) => ipcRenderer.invoke(IPC.listActivity, limit),
+  getNotificationSettings: () => ipcRenderer.invoke(IPC.getNotificationSettings),
+  updateNotificationSettings: (patch) => ipcRenderer.invoke(IPC.updateNotificationSettings, patch),
+  listDisplays: () => ipcRenderer.invoke(IPC.listDisplays),
   onDataChanged: (listener) => {
     const handler = (): void => listener()
     ipcRenderer.on(IPC.dataChanged, handler)
     return () => ipcRenderer.removeListener(IPC.dataChanged, handler)
   },
   onToasts: (listener) => {
-    const handler = (_event: IpcRendererEvent, toasts: readonly VisibleToast[]): void =>
-      listener(toasts)
+    const handler = (_event: IpcRendererEvent, frame: OverlayFrame): void => listener(frame)
     ipcRenderer.on(IPC.setToasts, handler)
     return () => ipcRenderer.removeListener(IPC.setToasts, handler)
   },
@@ -50,6 +57,12 @@ const api: TrophyLockerApi = {
     const handler = (_event: IpcRendererEvent, paused: boolean): void => listener(paused)
     ipcRenderer.on(IPC.notificationsPausedChanged, handler)
     return () => ipcRenderer.removeListener(IPC.notificationsPausedChanged, handler)
+  },
+  onNotificationSettingsChanged: (listener) => {
+    const handler = (_event: IpcRendererEvent, settings: NotificationSettings): void =>
+      listener(settings)
+    ipcRenderer.on(IPC.notificationSettingsChanged, handler)
+    return () => ipcRenderer.removeListener(IPC.notificationSettingsChanged, handler)
   },
 }
 

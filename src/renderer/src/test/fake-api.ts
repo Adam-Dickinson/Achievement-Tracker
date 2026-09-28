@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { TrophyLockerApi } from '@shared/ipc'
+import { DEFAULT_NOTIFICATION_SETTINGS, type TrophyLockerApi } from '@shared/ipc'
 
 export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerApi {
   return {
@@ -38,9 +38,15 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     findMissingArtwork: vi.fn().mockResolvedValue({ found: 0, checked: 0 }),
     getDashboard: vi.fn().mockReturnValue(new Promise(() => {})),
     listActivity: vi.fn().mockReturnValue(new Promise(() => {})),
+    getNotificationSettings: vi.fn().mockResolvedValue(DEFAULT_NOTIFICATION_SETTINGS),
+    updateNotificationSettings: vi.fn().mockResolvedValue(DEFAULT_NOTIFICATION_SETTINGS),
+    listDisplays: vi
+      .fn()
+      .mockResolvedValue([{ id: 1, label: 'Display 1 · Primary', primary: true }]),
     onDataChanged: vi.fn(() => () => {}),
     onToasts: vi.fn(() => () => {}),
     onNotificationsPausedChanged: vi.fn(() => () => {}),
+    onNotificationSettingsChanged: vi.fn(() => () => {}),
     ...overrides,
   }
 }

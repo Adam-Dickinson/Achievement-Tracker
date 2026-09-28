@@ -1,6 +1,27 @@
 import type { DatabaseSync } from 'node:sqlite'
+import { z } from 'zod'
+import {
+  DEFAULT_NOTIFICATION_SETTINGS,
+  TOAST_CORNERS,
+  TOAST_SIZES,
+  type NotificationSettings,
+  type NotificationSettingsPatch,
+} from '@shared/ipc'
+import { PLATFORMS } from '@shared/platform'
+import { RARITIES } from '@shared/rarity'
 
 const PROFILE_NAME = 'profile.name'
+const NOTIFICATION_SETTINGS = 'notifications.settings'
+
+const notificationSettingsSchema = z.object({
+  corner: z.enum(TOAST_CORNERS),
+  monitor: z.union([z.literal('primary'), z.number().int().nonnegative()]),
+  size: z.enum(TOAST_SIZES),
+  durationSec: z.number().min(1).max(30),
+  minRarity: z.enum(RARITIES),
+  enabledPlatforms: z.record(z.enum(PLATFORMS), z.boolean()),
+  sound: z.object({ enabled: z.boolean(), volume: z.number().min(0).max(1) }),
+})
 
 export function readProfileName(db: DatabaseSync): string | null {
   const row = db.prepare('SELECT value FROM setting WHERE key = ?').get(PROFILE_NAME) as
@@ -24,4 +45,38 @@ export function saveProfileName(db: DatabaseSync, name: string | null): void {
     `INSERT INTO setting (key, value) VALUES (?, ?)
      ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
   ).run(PROFILE_NAME, JSON.stringify(trimmed))
+}
+
+export function readNotificationSettings(db: DatabaseSync): NotificationSettings {
+  const row = db.prepare('SELECT value FROM setting WHERE key = ?').get(NOTIFICATION_SETTINGS) as
+    { value: string } | undefined
+  if (!row) return DEFAULT_NOTIFICATION_SETTINGS
+  try {
+    const parsed = notificationSettingsSchema.safeParse(JSON.parse(row.value))
+    return parsed.success ? parsed.data : DEFAULT_NOTIFICATION_SETTINGS
+  } catch {
+    return DEFAULT_NOTIFICATION_SETTINGS
+  }
+}
+
+function saveNotificationSettings(db: DatabaseSync, settings: NotificationSettings): void {
+  db.prepare(
+    `INSERT INTO setting (key, value) VALUES (?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+  ).run(NOTIFICATION_SETTINGS, JSON.stringify(settings))
+}
+
+export function updateNotificationSettings(
+  db: DatabaseSync,
+  patch: NotificationSettingsPatch,
+): NotificationSettings {
+  const current = readNotificationSettings(db)
+  const settings: NotificationSettings = {
+    ...current,
+    ...patch,
+    enabledPlatforms: { ...current.enabledPlatforms, ...patch.enabledPlatforms },
+    sound: { ...current.sound, ...patch.sound },
+  }
+  saveNotificationSettings(db, settings)
+  return settings
 }

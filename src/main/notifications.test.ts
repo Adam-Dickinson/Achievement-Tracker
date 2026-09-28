@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ToastPayload, VisibleToast } from '@shared/ipc'
+import { DEFAULT_NOTIFICATION_SETTINGS, type ToastPayload, type VisibleToast } from '@shared/ipc'
 import type { RemoteAchievement, UnlockEvent } from '@shared/models'
+import type { Platform } from '@shared/platform'
 import {
   BURST_SIZE,
   burstToast,
@@ -280,4 +281,54 @@ describe('NotificationService', () => {
 
     expect(onScreen()).toEqual(['Achievement b'])
   })
+
+  it('holds a toast on screen for the current duration', () => {
+    service.durationMs = 1000
+    service.notify([unlock('a')])
+
+    vi.advanceTimersByTime(999)
+    expect(onScreen()).toEqual(['Achievement a'])
+
+    vi.advanceTimersByTime(1)
+    expect(onScreen()).toEqual([])
+  })
+
+  it('hides unlocks below the minimum rarity, but still shows rarer ones', () => {
+    service.minRarity = 'rare'
+    service.notify([unlock('a', { globalPercent: 40 }), unlock('b', { globalPercent: 1.5 })])
+
+    expect(onScreen()).toEqual(['Achievement b'])
+  })
+
+  it('always shows a platinum, even below the minimum rarity', () => {
+    service.minRarity = 'ultra_rare'
+    const platinum = {
+      ...unlock('x', { globalPercent: 40 }),
+      achievement: appPlatinumAchievement('Half-Life 2'),
+    }
+
+    service.notify([platinum])
+
+    expect(onScreen()).toEqual(['Platinum'])
+  })
+
+  it('hides unlocks from a disabled platform', () => {
+    service.enabledPlatforms = platforms({ steam: false })
+
+    service.notify([unlock('a')])
+
+    expect(frames).toHaveLength(0)
+  })
+
+  it('keeps showing unlocks from a platform that stays enabled', () => {
+    service.enabledPlatforms = platforms({ xbox: false })
+
+    service.notify([unlock('a')])
+
+    expect(onScreen()).toEqual(['Achievement a'])
+  })
 })
+
+function platforms(overrides: Partial<Record<Platform, boolean>>): Record<Platform, boolean> {
+  return { ...DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms, ...overrides }
+}
