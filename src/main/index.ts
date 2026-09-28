@@ -49,6 +49,8 @@ import {
 } from './store/library-store'
 import {
   readNotificationSettings,
+  readOnboardingCompleted,
+  saveOnboardingCompleted,
   saveProfileName,
   updateNotificationSettings,
 } from './store/settings-store'
@@ -269,6 +271,8 @@ async function start(): Promise<void> {
       saveProfileName(db, name)
       return getProfile(db, windowsName)
     },
+    getOnboardingCompleted: () => readOnboardingCompleted(db),
+    completeOnboarding: () => saveOnboardingCompleted(db),
     getNotificationsPaused: () => notifications.paused,
     setNotificationsPaused,
     listAccounts: () => listAccountSummaries(db, (id) => scheduler.isSyncing(id)),
