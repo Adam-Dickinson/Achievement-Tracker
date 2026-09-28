@@ -56,6 +56,7 @@ function AccountsBody({
   onChanged: () => void
 }) {
   const [reconnecting, setReconnecting] = useState<number | null>(null)
+  const [reconnectingShadPs4, setReconnectingShadPs4] = useState<string | null>(null)
   const counts = countAccounts(accounts)
 
   const slot = (platform: OnlinePlatform) => {
@@ -134,13 +135,22 @@ function AccountsBody({
           {accounts
             .filter((account) => account.platform === 'shadps4')
             .map((account) => (
-              <AccountCard key={account.id} account={account} onChanged={onChanged} />
+              <AccountCard
+                key={account.id}
+                account={account}
+                onChanged={onChanged}
+                onReconnect={() => setReconnectingShadPs4(account.displayName)}
+              />
             ))}
           <ShadPs4Card
             connectedNames={accounts
               .filter((account) => account.platform === 'shadps4' && account.status !== 'disabled')
               .map((account) => account.displayName)}
-            onConnected={onChanged}
+            onConnected={() => {
+              setReconnectingShadPs4(null)
+              onChanged()
+            }}
+            reconnectName={reconnectingShadPs4}
           />
         </div>
       </section>

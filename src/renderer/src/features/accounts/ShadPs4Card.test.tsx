@@ -48,8 +48,14 @@ afterEach(() => {
   vi.resetAllMocks()
 })
 
-function renderCard(connectedNames: readonly string[] = []) {
-  return render(<ShadPs4Card connectedNames={connectedNames} onConnected={onConnected} />)
+function renderCard(connectedNames: readonly string[] = [], reconnectName?: string | null) {
+  return render(
+    <ShadPs4Card
+      connectedNames={connectedNames}
+      onConnected={onConnected}
+      reconnectName={reconnectName}
+    />,
+  )
 }
 
 describe('ShadPs4Card', () => {
@@ -145,6 +151,15 @@ describe('ShadPs4Card', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'No shadPS4 data found in C:\\Nothing.',
     )
+  })
+
+  it('preselects and focuses the named user for a reconnect', async () => {
+    findShadPs4.mockResolvedValue(FOLDER)
+    renderCard([], 'Player 2')
+
+    const radio = await screen.findByRole('radio', { name: /Player 2/ })
+    await vi.waitFor(() => expect(radio).toBeChecked())
+    expect(radio).toHaveFocus()
   })
 
   it('does nothing when the folder chooser is cancelled', async () => {

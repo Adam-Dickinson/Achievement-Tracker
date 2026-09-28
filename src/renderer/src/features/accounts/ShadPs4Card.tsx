@@ -1,5 +1,5 @@
 import { FolderOpen } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/Button'
 import { PlatformTile } from '@/components/PlatformTile'
 import { plural } from '@/lib/format'
@@ -8,14 +8,16 @@ import type { EmulatorFolder } from '@shared/ipc'
 interface ShadPs4CardProps {
   connectedNames: readonly string[]
   onConnected: () => void
+  reconnectName?: string | null
 }
 
-export function ShadPs4Card({ connectedNames, onConnected }: ShadPs4CardProps) {
+export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: ShadPs4CardProps) {
   const [folder, setFolder] = useState<EmulatorFolder | null>(null)
   const [searched, setSearched] = useState(false)
   const [chosenId, setChosenId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const radios = useRef(new Map<string, HTMLInputElement>())
 
   useEffect(() => {
     let cancelled = false
@@ -41,9 +43,21 @@ export function ShadPs4Card({ connectedNames, onConnected }: ShadPs4CardProps) {
   }
 
   const available = folder?.users.filter((user) => !connectedNames.includes(user.name)) ?? []
+  const availableRef = useRef(available)
+  useEffect(() => {
+    availableRef.current = available
+  })
   const selected = available.some((user) => user.id === chosenId)
     ? chosenId
     : (available[0]?.id ?? null)
+
+  useEffect(() => {
+    if (!reconnectName || !folder) return
+    const match = availableRef.current.find((user) => user.name === reconnectName)
+    if (!match) return
+    setChosenId(match.id)
+    radios.current.get(match.id)?.focus()
+  }, [reconnectName, folder])
 
   async function connect() {
     if (!folder || !selected) return
@@ -106,6 +120,10 @@ export function ShadPs4Card({ connectedNames, onConnected }: ShadPs4CardProps) {
                       name="shadps4-user"
                       checked={selected === user.id}
                       onChange={() => setChosenId(user.id)}
+                      ref={(el) => {
+                        if (el) radios.current.set(user.id, el)
+                        else radios.current.delete(user.id)
+                      }}
                     />
                     {user.name}
                   </span>

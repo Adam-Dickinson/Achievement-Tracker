@@ -214,6 +214,32 @@ describe('Accounts', () => {
     expect(within(emulators).getByRole('region', { name: 'shadPS4: Player 1' })).toBeInTheDocument()
   })
 
+  it('lets a disabled shadPS4 account connect again, preselected below', async () => {
+    listAccounts.mockResolvedValue([
+      { ...STEAM, id: 5, platform: 'shadps4', displayName: 'Player 1', status: 'disabled' },
+    ])
+    window.api = fakeApi({
+      listAccounts,
+      onDataChanged: (listener) => {
+        dataChanged = listener
+        return unsubscribe
+      },
+      findShadPs4: vi.fn().mockResolvedValue({
+        path: 'C:\\Users\\player\\AppData\\Roaming\\shadPS4',
+        users: [{ id: '1000', name: 'Player 1', games: 1, unlocked: 10 }],
+      }),
+    })
+    render(<Accounts />)
+
+    const emulators = await screen.findByRole('region', { name: 'Emulators' })
+    const disabledCard = within(emulators).getByRole('region', { name: 'shadPS4: Player 1' })
+    fireEvent.click(within(disabledCard).getByRole('button', { name: 'Connect again' }))
+
+    const radio = await within(emulators).findByRole('radio', { name: /Player 1/ })
+    expect(radio).toBeChecked()
+    expect(radio).toHaveFocus()
+  })
+
   it('explains where keys live and what unofficial means', async () => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)
