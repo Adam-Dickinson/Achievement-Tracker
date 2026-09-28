@@ -1,0 +1,47 @@
+<!--Sce-Np-Trophy-Signature: 4c39b98c0100000000000000f9e16a29e6b38ce855a4caf8a16a13bc731b44f79f7f9c549d9009b6e1cfe2e12a278cc22269579b900f2bc64c7580da3926f40c4112fe6a10d126398ae475cea451aa3c548d76c8a130d561b99cf189dfab67bd3e2071df33923d46166091440440032b12b287cdaeb8d03f66ecf2f171a234c4db76b848c3845b75b5f89f6827083b6c9d01ed88abce8d1cc45e3ea5c6a0ea08-->
+<trophyconf version="1.1" platform="ps4" policy="large">
+ <npcommid>NPWR05818_00</npcommid>
+ <trophyset-version>01.03</trophyset-version>
+ <parental-level license-area="default">0</parental-level>
+ <group id="001"/>
+ <trophy id="000" hidden="no" ttype="P" pid="-1"/>
+ <trophy id="001" hidden="yes" ttype="G" pid="000"/>
+ <trophy id="002" hidden="yes" ttype="G" pid="000"/>
+ <trophy id="003" hidden="yes" ttype="G" pid="000"/>
+ <trophy id="004" hidden="yes" ttype="G" pid="000"/>
+ <trophy id="005" hidden="no" ttype="G" pid="000"/>
+ <trophy id="006" hidden="no" ttype="G" pid="000"/>
+ <trophy id="007" hidden="no" ttype="S" pid="000"/>
+ <trophy id="008" hidden="no" ttype="S" pid="000"/>
+ <trophy id="009" hidden="no" ttype="S" pid="000"/>
+ <trophy id="010" hidden="yes" ttype="S" pid="000"/>
+ <trophy id="011" hidden="yes" ttype="S" pid="000"/>
+ <trophy id="012" hidden="yes" ttype="S" pid="000"/>
+ <trophy id="013" hidden="yes" ttype="S" pid="000"/>
+ <trophy id="014" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="015" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="016" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="017" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="018" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="019" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="020" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="021" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="022" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="023" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="024" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="025" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="026" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="027" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="028" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="029" hidden="no" ttype="B" pid="000"/>
+ <trophy id="030" hidden="no" ttype="B" pid="000"/>
+ <trophy id="031" hidden="no" ttype="B" pid="000"/>
+ <trophy id="032" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="033" hidden="yes" ttype="B" pid="000"/>
+ <trophy id="034" hidden="no" ttype="G" pid="-1" gid="001"/>
+ <trophy id="035" hidden="yes" ttype="S" pid="-1" gid="001"/>
+ <trophy id="036" hidden="yes" ttype="B" pid="-1" gid="001"/>
+ <trophy id="037" hidden="yes" ttype="B" pid="-1" gid="001"/>
+ <trophy id="038" hidden="yes" ttype="B" pid="-1" gid="001"/>
+ <trophy id="039" hidden="yes" ttype="B" pid="-1" gid="001"/>
+</trophyconf>

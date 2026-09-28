@@ -22,14 +22,17 @@ import { EaProvider } from './providers/ea'
 import { readSignInCookies } from './providers/ea/auth'
 import { EpicProvider } from './providers/epic'
 import { EPIC_SIGN_IN_URL } from './providers/epic/auth'
+import { LOCAL_FILES } from './providers/local-files'
 import { PlayStationProvider } from './providers/playstation'
 import { isPsnRedirect, PSN_SIGN_IN_URL, readNpsso } from './providers/playstation/auth'
 import { SteamProvider } from './providers/steam'
+import { ShadPs4Provider } from './providers/shadps4'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
 import { XboxProvider } from './providers/xbox'
 import { getProfile, windowsUserName } from './profile'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
+import { ShadPs4Accounts } from './shadps4-accounts'
 import { openStorePage } from './store-page'
 import { launchedHidden, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
@@ -155,6 +158,15 @@ async function start(): Promise<void> {
   const ubisoft = new UbisoftProvider()
   const ea = new EaProvider()
   const playstation = new PlayStationProvider()
+  const shadps4 = new ShadPs4Provider()
+  const chooseFolder = async (title: string): Promise<string | null> => {
+    const options: Electron.OpenDialogOptions = { title, properties: ['openDirectory'] }
+    const result =
+      mainWindow && !mainWindow.isDestroyed()
+        ? await dialog.showOpenDialog(mainWindow, options)
+        : await dialog.showOpenDialog(options)
+    return result.canceled ? null : (result.filePaths[0] ?? null)
+  }
   const xboxSignIn = new XboxSignIn({ openExternal: (url) => shell.openExternal(url) })
   const ubisoftSignIn = new UbisoftSignIn({
     openWindow: (url) =>
@@ -198,7 +210,7 @@ async function start(): Promise<void> {
   const findArtworkSoon = coalesce(() => void artwork.run(), ARTWORK_DELAY_MS)
   const scheduler = new Scheduler({
     db,
-    providers: { steam, xbox, playstation, epic, ubisoft, ea },
+    providers: { steam, xbox, playstation, epic, ubisoft, ea, shadps4 },
     secrets,
     onUnlocks: (events) => {
       for (const event of events) console.info(describeUnlockTiming(event))
@@ -212,6 +224,14 @@ async function start(): Promise<void> {
   })
   scheduler.start()
   findArtworkSoon()
+  const shadps4Accounts = new ShadPs4Accounts({
+    db,
+    shadps4,
+    secrets,
+    scheduler,
+    files: LOCAL_FILES,
+    chooseFolder: () => chooseFolder('Choose the shadPS4 data folder or install folder'),
+  })
   app.on('before-quit', () => {
     scheduler.stop()
     artwork.stop()
@@ -299,6 +319,9 @@ async function start(): Promise<void> {
         input,
       ),
     cancelSteamSignIn: () => steamSignIn.cancel(),
+    findShadPs4: () => shadps4Accounts.find(),
+    chooseShadPs4Folder: () => shadps4Accounts.choose(),
+    connectShadPs4: (input) => shadps4Accounts.connect(input),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     mergeGames: ({ intoGameId, gameId }) => {

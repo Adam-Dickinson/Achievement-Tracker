@@ -27,6 +27,11 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     cancelPlayStationSignIn: vi.fn().mockResolvedValue(undefined),
     signInToSteam: vi.fn(),
     cancelSteamSignIn: vi.fn().mockResolvedValue(undefined),
+    findShadPs4: vi.fn().mockResolvedValue(null),
+    chooseShadPs4Folder: vi.fn().mockResolvedValue({ kind: 'cancelled' }),
+    connectShadPs4: vi
+      .fn()
+      .mockResolvedValue({ ok: false, reason: 'other', message: 'not connected in tests' }),
     listLibrary: vi.fn().mockResolvedValue([]),
     getGame: vi.fn().mockResolvedValue(null),
     mergeGames: vi.fn().mockResolvedValue(undefined),

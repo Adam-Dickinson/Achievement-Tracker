@@ -147,6 +147,9 @@
   [data-platform='rpcs3'] {
     --platform: var(--color-platform-emulator);
   }
+  [data-platform='shadps4'] {
+    --platform: var(--color-platform-emulator);
+  }
   [data-platform='xenia'] {
     --platform: var(--color-platform-emulator);
   }

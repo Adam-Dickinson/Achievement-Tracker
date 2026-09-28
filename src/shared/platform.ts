@@ -7,6 +7,7 @@ export const PLATFORMS = [
   'ea',
   'retroachievements',
   'rpcs3',
+  'shadps4',
   'xenia',
   'local_file',
 ] as const
@@ -27,6 +28,7 @@ export const PLATFORM_INFO: Record<Platform, PlatformInfo> = {
   ea: { displayName: 'EA app', unofficial: true },
   retroachievements: { displayName: 'RetroAchievements', unofficial: false },
   rpcs3: { displayName: 'RPCS3', unofficial: false },
+  shadps4: { displayName: 'shadPS4', unofficial: false },
   xenia: { displayName: 'Xenia', unofficial: false },
   local_file: { displayName: 'Local file', unofficial: false },
 }

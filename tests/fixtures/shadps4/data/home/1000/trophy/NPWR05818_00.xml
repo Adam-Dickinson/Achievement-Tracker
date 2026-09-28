@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<trophyconf version="1.1" platform="ps4" policy="large">
+	<npcommid>NPWR05818_00</npcommid>
+	<trophyset-version>01.03</trophyset-version>
+	<parental-level license-area="default">0</parental-level>
+	<group id="001" />
+	<trophy id="000" hidden="no" ttype="P" pid="-1" />
+	<trophy id="001" hidden="yes" ttype="G" pid="000" />
+	<trophy id="002" hidden="yes" ttype="G" pid="000" />
+	<trophy id="003" hidden="yes" ttype="G" pid="000" />
+	<trophy id="004" hidden="yes" ttype="G" pid="000" />
+	<trophy id="005" hidden="no" ttype="G" pid="000" />
+	<trophy id="006" hidden="no" ttype="G" pid="000" />
+	<trophy id="007" hidden="no" ttype="S" pid="000" />
+	<trophy id="008" hidden="no" ttype="S" pid="000" />
+	<trophy id="009" hidden="no" ttype="S" pid="000" />
+	<trophy id="010" hidden="yes" ttype="S" pid="000" />
+	<trophy id="011" hidden="yes" ttype="S" pid="000" />
+	<trophy id="012" hidden="yes" ttype="S" pid="000" unlockstate="true" timestamp="1783458185" />
+	<trophy id="013" hidden="yes" ttype="S" pid="000" />
+	<trophy id="014" hidden="yes" ttype="B" pid="000" unlockstate="true" timestamp="1783370033" />
+	<trophy id="015" hidden="yes" ttype="B" pid="000" unlockstate="true" timestamp="1783543551" />
+	<trophy id="016" hidden="yes" ttype="B" pid="000" />
+	<trophy id="017" hidden="yes" ttype="B" pid="000" />
+	<trophy id="018" hidden="yes" ttype="B" pid="000" />
+	<trophy id="019" hidden="yes" ttype="B" pid="000" />
+	<trophy id="020" hidden="yes" ttype="B" pid="000" />
+	<trophy id="021" hidden="yes" ttype="B" pid="000" unlockstate="true" timestamp="1783367521" />
+	<trophy id="022" hidden="yes" ttype="B" pid="000" unlockstate="true" timestamp="1783441122" />
+	<trophy id="023" hidden="yes" ttype="B" pid="000" unlockstate="true" timestamp="1783540013" />
+	<trophy id="024" hidden="yes" ttype="B" pid="000" unlockstate="true" timestamp="1783456849" />
+	<trophy id="025" hidden="yes" ttype="B" pid="000" />
+	<trophy id="026" hidden="yes" ttype="B" pid="000" />
+	<trophy id="027" hidden="yes" ttype="B" pid="000" />
+	<trophy id="028" hidden="yes" ttype="B" pid="000" />
+	<trophy id="029" hidden="no" ttype="B" pid="000" unlockstate="true" timestamp="1783372068" />
+	<trophy id="030" hidden="no" ttype="B" pid="000" unlockstate="true" timestamp="1783441619" />
+	<trophy id="031" hidden="no" ttype="B" pid="000" unlockstate="true" timestamp="1783441122" />
+	<trophy id="032" hidden="yes" ttype="B" pid="000" />
+	<trophy id="033" hidden="yes" ttype="B" pid="000" />
+	<trophy id="034" hidden="no" ttype="G" pid="-1" gid="001" />
+	<trophy id="035" hidden="yes" ttype="S" pid="-1" gid="001" />
+	<trophy id="036" hidden="yes" ttype="B" pid="-1" gid="001" />
+	<trophy id="037" hidden="yes" ttype="B" pid="-1" gid="001" />
+	<trophy id="038" hidden="yes" ttype="B" pid="-1" gid="001" />
+	<trophy id="039" hidden="yes" ttype="B" pid="-1" gid="001" />
+</trophyconf>

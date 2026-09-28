@@ -7,6 +7,7 @@ import {
   type AccountSummary,
   type ConnectResult,
   type DisplayInfo,
+  type EmulatorFolder,
   type NotificationSettings,
   type Profile,
 } from '@shared/ipc'
@@ -59,6 +60,11 @@ const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
 
 const DISPLAYS: DisplayInfo[] = [{ id: 1, label: 'Display 1 · Primary', primary: true }]
 
+const SHADPS4_FOLDER: EmulatorFolder = {
+  path: 'C:\\Users\\player\\AppData\\Roaming\\shadPS4',
+  users: [{ id: '1000', name: 'Player 1', games: 1, unlocked: 10 }],
+}
+
 const fakes = {
   getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
@@ -82,6 +88,9 @@ const fakes = {
   cancelPlayStationSignIn: vi.fn(),
   signInToSteam: vi.fn(() => Promise.resolve(CONNECTED)),
   cancelSteamSignIn: vi.fn(),
+  findShadPs4: vi.fn(() => Promise.resolve(SHADPS4_FOLDER)),
+  chooseShadPs4Folder: vi.fn(() => Promise.resolve({ kind: 'cancelled' as const })),
+  connectShadPs4: vi.fn(() => Promise.resolve(CONNECTED)),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   mergeGames: vi.fn(),
@@ -145,6 +154,9 @@ describe('registerIpcHandlers', () => {
     IPC.cancelPlayStationSignIn,
     IPC.signInToSteam,
     IPC.cancelSteamSignIn,
+    IPC.findShadPs4,
+    IPC.chooseShadPs4Folder,
+    IPC.connectShadPs4,
     IPC.listLibrary,
     IPC.getGame,
     IPC.mergeGames,
@@ -434,6 +446,32 @@ describe('Epic handlers', () => {
       expect(fakes.connectEpic).not.toHaveBeenCalled()
     },
   )
+})
+
+describe('shadPS4 handlers', () => {
+  it('passes on the shadPS4 folder it finds, and the folder chooser', async () => {
+    await expect(call(IPC.findShadPs4, TRUSTED)).resolves.toEqual(SHADPS4_FOLDER)
+    await expect(call(IPC.chooseShadPs4Folder, TRUSTED)).resolves.toEqual({ kind: 'cancelled' })
+  })
+
+  it('passes a folder and user on to connect', async () => {
+    const input = { path: SHADPS4_FOLDER.path, userId: '1000' }
+
+    await expect(call(IPC.connectShadPs4, TRUSTED, input)).resolves.toEqual(CONNECTED)
+    expect(fakes.connectShadPs4).toHaveBeenCalledWith(input)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['no folder', { path: '', userId: '1000' }],
+    ['a user that is not a number', { path: SHADPS4_FOLDER.path, userId: '../1000' }],
+    ['an absurdly long path', { path: 'x'.repeat(1025), userId: '1000' }],
+  ])('answers %s with invalid_input, without trying to connect', async (_label, payload) => {
+    const result = await call(IPC.connectShadPs4, TRUSTED, payload)
+
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_input' })
+    expect(fakes.connectShadPs4).not.toHaveBeenCalled()
+  })
 })
 
 describe('library and dashboard handlers', () => {
