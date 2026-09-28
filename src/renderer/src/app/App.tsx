@@ -48,7 +48,7 @@ function PageContent({
         />
       )
     case 'activity':
-      return <Activity onOpenGame={onOpenGame} />
+      return <Activity onOpenGame={onOpenGame} onOpenAccounts={() => onNavigate('accounts')} />
     case 'accounts':
       return <Accounts />
     case 'settings':
