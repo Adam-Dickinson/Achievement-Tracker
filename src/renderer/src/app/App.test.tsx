@@ -1,10 +1,23 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { AccountSummary } from '@shared/ipc'
 import { App } from './App'
 import { fakeApi } from '@/test/fake-api'
 import { fakeLayout } from '@/test/layout'
+
+const STEAM_ACCOUNT: AccountSummary = {
+  id: 1,
+  platform: 'steam',
+  displayName: 'Steam Player',
+  status: 'connected',
+  gameCount: 3,
+  checkedGames: 0,
+  unlockedCount: 0,
+  lastSyncAt: null,
+  syncing: false,
+}
 
 const sendTestNotification = vi.fn()
 let restoreLayout: () => void
@@ -25,7 +38,7 @@ afterEach(() => {
 describe('App', () => {
   it('starts on the dashboard and switches page when a nav item is clicked', async () => {
     render(<App />)
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Library' }))
 
@@ -37,7 +50,7 @@ describe('App', () => {
   it('shows the Accounts screen on the Accounts page', async () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Accounts' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Accounts' }))
 
     expect(await screen.findByRole('region', { name: 'Online platforms' })).toBeInTheDocument()
     expect(window.api.listAccounts).toHaveBeenCalled()
@@ -46,7 +59,7 @@ describe('App', () => {
   it('shows the Artwork settings on the Settings page', async () => {
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Settings' }))
 
     expect(await screen.findByRole('region', { name: 'Artwork' })).toBeInTheDocument()
     expect(window.api.getArtworkSettings).toHaveBeenCalled()
@@ -58,7 +71,7 @@ describe('App', () => {
     })
     render(<App />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Activity' }))
 
     expect(await screen.findByText(/Nothing unlocked yet/)).toBeInTheDocument()
     expect(window.api.listActivity).toHaveBeenCalledOnce()
@@ -66,7 +79,7 @@ describe('App', () => {
 
   it('sends a test toast from the Settings page', async () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Settings' }))
 
     fireEvent.click(await screen.findByRole('button', { name: 'Send test toast' }))
 
@@ -90,7 +103,7 @@ describe('App', () => {
       listActivity: vi.fn().mockResolvedValue({ unlocks: [], hasMore: false }),
     })
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Activity' }))
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search library' }), {
       target: { value: 'port' },
@@ -99,6 +112,110 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current', 'page')
     expect(await screen.findByText('Showing 1 of 1 game')).toBeInTheDocument()
     expect(screen.getByRole('searchbox', { name: 'Search library' })).toHaveValue('port')
+  })
+})
+
+describe('App: onboarding', () => {
+  it('shows onboarding when it has not been completed and no account is connected', async () => {
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockResolvedValue(false),
+      listAccounts: vi.fn().mockResolvedValue([]),
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome to Trophy Locker' }),
+    ).toBeInTheDocument()
+  })
+
+  it('skips onboarding once an account exists, even if it was never completed', async () => {
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockResolvedValue(false),
+      listAccounts: vi.fn().mockResolvedValue([STEAM_ACCOUNT]),
+    })
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Welcome to Trophy Locker' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('finishing onboarding marks it complete and shows the normal app', async () => {
+    const completeOnboarding = vi.fn().mockResolvedValue(undefined)
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockResolvedValue(false),
+      completeOnboarding,
+      listAccounts: vi.fn().mockResolvedValue([]),
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Skip setup' }))
+
+    expect(completeOnboarding).toHaveBeenCalledOnce()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
+  })
+
+  it('shows neither onboarding nor the normal app while the decision is still loading', () => {
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockReturnValue(new Promise(() => {})),
+      listAccounts: vi.fn().mockReturnValue(new Promise(() => {})),
+    })
+    render(<App />)
+
+    expect(screen.queryByRole('button', { name: 'Library' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Welcome to Trophy Locker' }),
+    ).not.toBeInTheDocument()
+    expect(window.api.getDashboard).not.toHaveBeenCalled()
+  })
+
+  it('marks onboarding complete on the first connect, and keeps the wizard up until Done', async () => {
+    let dataChanged: () => void = () => {}
+    let connected: AccountSummary[] = []
+    const completeOnboarding = vi.fn().mockResolvedValue(undefined)
+    const listAccounts = vi.fn(() => Promise.resolve(connected))
+    window.api = fakeApi({
+      getOnboardingCompleted: vi.fn().mockResolvedValue(false),
+      completeOnboarding,
+      listAccounts,
+      connectSteam: vi.fn(() => {
+        connected = [STEAM_ACCOUNT]
+        return Promise.resolve({ ok: true as const, account: STEAM_ACCOUNT })
+      }),
+      onDataChanged: (listener) => {
+        dataChanged = listener
+        return () => {}
+      },
+    })
+    render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Get started' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Steam' }))
+    fireEvent.change(screen.getByLabelText('SteamID64'), { target: { value: '76561190000000001' } })
+    fireEvent.change(screen.getByLabelText('Steam API key'), { target: { value: 'KEY' } })
+    fireEvent.click(
+      within(screen.getByRole('form', { name: 'Connect with an API key' })).getByRole('button', {
+        name: 'Connect',
+      }),
+    )
+    await screen.findByRole('region', { name: 'Steam, connected' })
+
+    expect(completeOnboarding).toHaveBeenCalledOnce()
+
+    const fetchesBefore = listAccounts.mock.calls.length
+    act(() => dataChanged())
+    await vi.waitFor(() => expect(listAccounts.mock.calls.length).toBeGreaterThan(fetchesBefore))
+    await act(async () => {})
+
+    expect(screen.getByRole('heading', { name: 'Connect your platforms' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Dashboard' })).not.toBeInTheDocument()
+    expect(completeOnboarding).toHaveBeenCalledOnce()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Go to Dashboard' }))
+
+    expect(completeOnboarding).toHaveBeenCalledTimes(2)
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
   })
 })
 
@@ -135,7 +252,7 @@ describe('App: opening a game', () => {
 
   it('opens a game from the Library, and goes back to it', async () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Library' }))
 
     fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
     expect(await screen.findByRole('heading', { name: 'Portal' })).toBeInTheDocument()
@@ -147,7 +264,7 @@ describe('App: opening a game', () => {
 
   it('keeps the Library search, sort and view after going back from a game', async () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Library' }))
     await screen.findByRole('list', { name: 'Games' })
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search library' }), {
       target: { value: 'port' },
@@ -169,7 +286,7 @@ describe('App: opening a game', () => {
 
   it('goes back to the Library when searching from the top bar with a game open', async () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Library' }))
     fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
     await screen.findByRole('heading', { name: 'Portal' })
 
@@ -184,7 +301,7 @@ describe('App: opening a game', () => {
 
   it('goes back to where the Library was scrolled, and starts a game at the top', async () => {
     const { container } = render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Library' }))
     const card = await screen.findByRole('button', { name: /Portal/ })
     const main = container.firstElementChild as HTMLElement
     main.scrollTop = 500
@@ -200,10 +317,11 @@ describe('App: opening a game', () => {
 
   it('starts each page at the top', async () => {
     const { container } = render(<App />)
+    const activity = await screen.findByRole('button', { name: 'Activity' })
     const main = container.firstElementChild as HTMLElement
     main.scrollTop = 300
 
-    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+    fireEvent.click(activity)
 
     expect(main.scrollTop).toBe(0)
   })
@@ -259,7 +377,7 @@ describe('App: opening a game', () => {
       ],
     })
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Activity' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Activity' }))
 
     fireEvent.click(await screen.findByRole('button', { name: /Test Subject/ }))
 
@@ -271,7 +389,7 @@ describe('App: opening a game', () => {
 
   it('leaves a game when another page is picked in the nav', async () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Library' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Library' }))
     fireEvent.click(await screen.findByRole('button', { name: /Portal/ }))
     await screen.findByRole('heading', { name: 'Portal' })
 

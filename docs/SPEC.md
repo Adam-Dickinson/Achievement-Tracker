@@ -48,6 +48,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | F-33 | Global achievement rarity display where the platform provides it | P1 |
 | F-34 | JSON/CSV export | P2 |
 | F-35 | A platinum for every game: a game's own "unlock everything" achievement counts as its platinum, and a game without one earns an app-awarded Platinum at 100%, shown in Game detail, Activity and toasts ([design](superpowers/specs/2026-09-27-platinum-design.md)) | P2 |
+| F-36 | Onboarding wizard (Welcome → Platforms → Done) on a first launch with no accounts, shown once and skippable; empty states on Dashboard, Library and Activity pointing at Accounts when there is nothing to show | P1 |
 
 ### Desktop integration
 | ID | Requirement | Pri |
@@ -275,6 +276,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `getAppInfo()` | `app:get-info` | App version and database schema version |
 | `getProfile()` | `profile:get` | `Profile`: the saved name (`name`, or `null`) and the Windows user's name (`windowsName`, empty if the system can't say). The app shows the saved name, else the Windows name: in the nav's avatar and at the top of the Library |
 | `setProfileName(name)` | `profile:set-name` | Saves the name (trimmed, at most 40 characters; empty clears it, back to the Windows name) in the `setting` table under `profile.name`, and returns the new `Profile`. Anything else is ignored and the profile returned unchanged |
+| `getOnboardingCompleted()` | `onboarding:get-completed` | Whether the onboarding wizard has been finished or skipped (`onboarding.completed` in the `setting` table, default `false`) |
+| `completeOnboarding()` | `onboarding:complete` | Marks onboarding finished; `App.tsx` stops showing it from then on, even if every account is later disconnected |
 | `sendTestNotification()` | `notifications:send-test` | Queue the next sample toast (cycles rarity tiers). Shown even while notifications are paused |
 | `getNotificationsPaused()` | `notifications:get-paused` | Whether notifications are paused (the tray's Pause notifications, the nav's bell). Not kept across restarts |
 | `setNotificationsPaused(paused)` | `notifications:set-paused` | Pause or resume notifications; anything but a boolean is ignored. Updates the tray's checkbox and fires `onNotificationsPausedChanged` |
@@ -339,6 +342,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
   "appearance":    { "theme": "system" }
 }
 ```
+
+`onboarding.completed` (boolean, default `false`) is stored the same way as `profile.name`, directly under its own `setting` key rather than inside this nested block.
 
 ## 8. Security requirements
 

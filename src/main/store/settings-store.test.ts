@@ -4,7 +4,9 @@ import { DEFAULT_NOTIFICATION_SETTINGS } from '@shared/ipc'
 import { applyMigrations } from './migrate'
 import {
   readNotificationSettings,
+  readOnboardingCompleted,
   readProfileName,
+  saveOnboardingCompleted,
   saveProfileName,
   updateNotificationSettings,
 } from './settings-store'
@@ -141,5 +143,41 @@ describe('notification settings', () => {
     )
 
     expect(readNotificationSettings(db)).toEqual(DEFAULT_NOTIFICATION_SETTINGS)
+  })
+})
+
+describe('onboarding completed setting', () => {
+  let db: DatabaseSync
+
+  beforeEach(() => {
+    db = new DatabaseSync(':memory:')
+    applyMigrations(db)
+  })
+
+  it('has not been completed until it is saved', () => {
+    expect(readOnboardingCompleted(db)).toBe(false)
+  })
+
+  it('is completed once saved, and stays that way', () => {
+    saveOnboardingCompleted(db)
+
+    expect(readOnboardingCompleted(db)).toBe(true)
+  })
+
+  it('stores it as JSON in the setting table', () => {
+    saveOnboardingCompleted(db)
+
+    expect(db.prepare('SELECT key, value FROM setting').all()).toEqual([
+      { key: 'onboarding.completed', value: 'true' },
+    ])
+  })
+
+  it('treats a corrupt stored value as not completed', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'onboarding.completed',
+      'not json',
+    )
+
+    expect(readOnboardingCompleted(db)).toBe(false)
   })
 })

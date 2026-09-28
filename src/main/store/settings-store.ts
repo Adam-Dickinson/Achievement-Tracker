@@ -12,6 +12,7 @@ import { RARITIES } from '@shared/rarity'
 
 const PROFILE_NAME = 'profile.name'
 const NOTIFICATION_SETTINGS = 'notifications.settings'
+const ONBOARDING_COMPLETED = 'onboarding.completed'
 
 const notificationSettingsSchema = z.object({
   corner: z.enum(TOAST_CORNERS),
@@ -86,4 +87,22 @@ export function updateNotificationSettings(
   }
   saveNotificationSettings(db, settings)
   return settings
+}
+
+export function readOnboardingCompleted(db: DatabaseSync): boolean {
+  const row = db.prepare('SELECT value FROM setting WHERE key = ?').get(ONBOARDING_COMPLETED) as
+    { value: string } | undefined
+  if (!row) return false
+  try {
+    return JSON.parse(row.value) === true
+  } catch {
+    return false
+  }
+}
+
+export function saveOnboardingCompleted(db: DatabaseSync): void {
+  db.prepare(
+    `INSERT INTO setting (key, value) VALUES (?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+  ).run(ONBOARDING_COMPLETED, JSON.stringify(true))
 }

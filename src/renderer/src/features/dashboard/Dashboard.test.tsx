@@ -244,6 +244,16 @@ describe('Dashboard', () => {
     expect(await screen.findByText(/Nothing unlocked yet/)).toBeInTheDocument()
   })
 
+  it('shows an empty state with no platforms and no unlocks, whose button opens Accounts', async () => {
+    renderDashboard({ ...STATS, platforms: [], recentUnlocks: [] })
+
+    expect(await screen.findByText('Nothing tracked yet')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Achievements unlocked' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Connect a platform' }))
+    expect(onNavigate).toHaveBeenCalledWith('accounts')
+  })
+
   it('shows each platform with its completion and achievements, and links to Accounts', async () => {
     renderDashboard()
 

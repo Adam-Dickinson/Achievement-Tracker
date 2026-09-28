@@ -1,6 +1,7 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Plug } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { PageId } from '@/app/navigation'
+import { EmptyState } from '@/components/EmptyState'
 import { GameCard } from '@/components/GameCard'
 import type { DashboardStats } from '@shared/dashboard'
 import { DashboardHero } from './DashboardHero'
@@ -21,10 +22,18 @@ export function Dashboard({ onOpenGame, onNavigate }: DashboardProps) {
   return (
     <div className="flex flex-col gap-14">
       <h1 className="sr-only">Dashboard</h1>
-      {stats ? (
-        <DashboardContent stats={stats} onOpenGame={onOpenGame} onNavigate={onNavigate} />
-      ) : (
+      {!stats ? (
         <p role="status">Loading...</p>
+      ) : stats.platforms.length === 0 && stats.recentUnlocks.length === 0 ? (
+        <EmptyState
+          icon={<Plug aria-hidden="true" className="size-6" />}
+          heading="Nothing tracked yet"
+          body="Connect a platform to start tracking your achievements, unlocks and progress."
+          cta="Connect a platform"
+          onAction={() => onNavigate('accounts')}
+        />
+      ) : (
+        <DashboardContent stats={stats} onOpenGame={onOpenGame} onNavigate={onNavigate} />
       )}
     </div>
   )

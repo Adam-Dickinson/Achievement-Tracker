@@ -9,6 +9,8 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     setProfileName: vi.fn((name: string) =>
       Promise.resolve({ name: name.trim() === '' ? null : name.trim(), windowsName: 'adam' }),
     ),
+    getOnboardingCompleted: vi.fn().mockResolvedValue(true),
+    completeOnboarding: vi.fn().mockResolvedValue(undefined),
     getNotificationsPaused: vi.fn().mockResolvedValue(false),
     setNotificationsPaused: vi.fn().mockResolvedValue(undefined),
     listAccounts: vi.fn().mockResolvedValue([]),

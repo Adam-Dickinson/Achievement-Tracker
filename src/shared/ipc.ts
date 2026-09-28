@@ -9,6 +9,8 @@ export const IPC = {
   sendTestNotification: 'notifications:send-test',
   getProfile: 'profile:get',
   setProfileName: 'profile:set-name',
+  getOnboardingCompleted: 'onboarding:get-completed',
+  completeOnboarding: 'onboarding:complete',
   getNotificationsPaused: 'notifications:get-paused',
   setNotificationsPaused: 'notifications:set-paused',
   notificationsPausedChanged: 'notifications:paused-changed',
@@ -262,6 +264,8 @@ export interface TrophyLockerApi {
   sendTestNotification(): Promise<void>
   getProfile(): Promise<Profile>
   setProfileName(name: string): Promise<Profile>
+  getOnboardingCompleted(): Promise<boolean>
+  completeOnboarding(): Promise<void>
   getNotificationsPaused(): Promise<boolean>
   setNotificationsPaused(paused: boolean): Promise<void>
   listAccounts(): Promise<AccountSummary[]>

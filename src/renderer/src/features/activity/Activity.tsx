@@ -1,4 +1,6 @@
+import { Plug } from 'lucide-react'
 import { Button } from '@/components/Button'
+import { EmptyState } from '@/components/EmptyState'
 import { UnlockRow } from '@/components/UnlockRow'
 import { useDashboardStats } from '@/features/dashboard/useDashboardStats'
 import { formatDayHeading, formatTime, plural } from '@/lib/format'
@@ -9,20 +11,21 @@ import { useActivity } from './useActivity'
 
 interface ActivityProps {
   onOpenGame: (id: number, platformGameId?: number) => void
+  onOpenAccounts: () => void
 }
 
-export function Activity({ onOpenGame }: ActivityProps) {
+export function Activity({ onOpenGame, onOpenAccounts }: ActivityProps) {
   const stats = useDashboardStats()
 
   return (
     <div className="mx-auto flex max-w-270 flex-col">
       <ActivityHeader stats={stats} />
-      <ActivityDays onOpenGame={onOpenGame} />
+      <ActivityDays onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />
     </div>
   )
 }
 
-function ActivityDays({ onOpenGame }: ActivityProps) {
+function ActivityDays({ onOpenGame, onOpenAccounts }: ActivityProps) {
   const { page, canShowMore, showMore } = useActivity()
 
   if (!page) {
@@ -31,10 +34,13 @@ function ActivityDays({ onOpenGame }: ActivityProps) {
 
   if (page.unlocks.length === 0) {
     return (
-      <p className="mt-8 text-fg-muted">
-        Nothing unlocked yet. Connect an account on the Accounts screen, and every unlock will
-        appear here.
-      </p>
+      <EmptyState
+        icon={<Plug aria-hidden="true" className="size-6" />}
+        heading="Nothing unlocked yet"
+        body="Connect an account on the Accounts screen, and every unlock will appear here."
+        cta="Go to Accounts"
+        onAction={onOpenAccounts}
+      />
     )
   }
 

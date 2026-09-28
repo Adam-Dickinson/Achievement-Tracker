@@ -70,6 +70,8 @@ const fakes = {
   sendTestNotification: vi.fn(() => Promise.resolve()),
   getProfile: vi.fn(() => PROFILE),
   setProfileName: vi.fn((name: string | null) => ({ ...PROFILE, name })),
+  getOnboardingCompleted: vi.fn(() => false),
+  completeOnboarding: vi.fn(),
   getNotificationsPaused: vi.fn(() => true),
   setNotificationsPaused: vi.fn(),
   listAccounts: vi.fn(() => [ACCOUNT]),
@@ -136,6 +138,8 @@ describe('registerIpcHandlers', () => {
     IPC.sendTestNotification,
     IPC.getProfile,
     IPC.setProfileName,
+    IPC.getOnboardingCompleted,
+    IPC.completeOnboarding,
     IPC.getNotificationsPaused,
     IPC.setNotificationsPaused,
     IPC.listAccounts,
@@ -592,6 +596,18 @@ describe('profile handlers', () => {
   ])('ignores %s and returns the profile unchanged', (_label, name) => {
     expect(call(IPC.setProfileName, TRUSTED, name)).toEqual(PROFILE)
     expect(fakes.setProfileName).not.toHaveBeenCalled()
+  })
+})
+
+describe('onboarding handlers', () => {
+  it('reports whether onboarding is complete', () => {
+    expect(call(IPC.getOnboardingCompleted, TRUSTED)).toBe(false)
+  })
+
+  it('marks onboarding complete', () => {
+    call(IPC.completeOnboarding, TRUSTED)
+
+    expect(fakes.completeOnboarding).toHaveBeenCalledOnce()
   })
 })
 

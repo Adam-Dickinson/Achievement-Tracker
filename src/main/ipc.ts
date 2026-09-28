@@ -46,6 +46,8 @@ export interface IpcHandlers {
   sendTestNotification(): Promise<void>
   getProfile(): Profile
   setProfileName(name: string | null): Profile
+  getOnboardingCompleted(): boolean
+  completeOnboarding(): void
   getNotificationsPaused(): boolean
   setNotificationsPaused(paused: boolean): void
   listAccounts(): AccountSummary[]
@@ -175,6 +177,16 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     const parsed = profileNameSchema.safeParse(name)
     if (!parsed.success) return handlers.getProfile()
     return handlers.setProfileName(parsed.data === '' ? null : parsed.data)
+  })
+
+  ipcMain.handle(IPC.getOnboardingCompleted, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getOnboardingCompleted()
+  })
+
+  ipcMain.handle(IPC.completeOnboarding, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.completeOnboarding()
   })
 
   ipcMain.handle(IPC.getNotificationsPaused, (event) => {

@@ -1,9 +1,10 @@
-import { useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ScrollParentContext, setScrollTop } from '@/components/scroll-parent'
 import type { Profile } from '@shared/ipc'
 import { NAV_ITEMS, type PageId } from './navigation'
 import { IslandNav } from './IslandNav'
 import { displayName, useProfile } from './useProfile'
+import { useOnboarding } from './useOnboarding'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { Accounts } from '@/features/accounts/Accounts'
 import { Activity } from '@/features/activity/Activity'
@@ -11,6 +12,8 @@ import { Library } from '@/features/library/Library'
 import { DEFAULT_VIEW, type LibraryView } from '@/features/library/library-view'
 import { GameDetail } from '@/features/game-detail/GameDetail'
 import { Settings } from '@/features/settings/Settings'
+import { useAccounts } from '@/features/accounts/useAccounts'
+import { Onboarding } from '@/features/onboarding/Onboarding'
 
 interface PageContentProps {
   page: PageId
@@ -44,10 +47,11 @@ function PageContent({
           onViewChange={onLibraryViewChange}
           restoreScrollTop={libraryScrollTop}
           onOpenGame={onOpenGame}
+          onOpenAccounts={() => onNavigate('accounts')}
         />
       )
     case 'activity':
-      return <Activity onOpenGame={onOpenGame} />
+      return <Activity onOpenGame={onOpenGame} onOpenAccounts={() => onNavigate('accounts')} />
     case 'accounts':
       return <Accounts />
     case 'settings':
@@ -59,9 +63,19 @@ export function App() {
   const [page, setPage] = useState<PageId>('dashboard')
   const [opened, setOpened] = useState<{ id: number; entry?: number } | null>(null)
   const { profile, rename } = useProfile()
+  const { accounts } = useAccounts()
+  const { completed, complete } = useOnboarding()
   const [libraryView, setLibraryView] = useState<LibraryView>(DEFAULT_VIEW)
   const [libraryScrollTop, setLibraryScrollTop] = useState(0)
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
+  const decided = useRef(false)
+
+  useEffect(() => {
+    if (decided.current || completed === null || accounts === null) return
+    decided.current = true
+    setShowOnboarding(completed === false && accounts.length === 0)
+  }, [completed, accounts])
 
   useLayoutEffect(() => {
     if (scrollParent) setScrollTop(scrollParent, 0)
@@ -84,6 +98,20 @@ export function App() {
   }
 
   const current = NAV_ITEMS.find((item) => item.id === page) ?? NAV_ITEMS[0]!
+
+  if (showOnboarding === null) return <div className="h-full bg-aurora" />
+
+  if (showOnboarding) {
+    return (
+      <Onboarding
+        onDone={() => {
+          setShowOnboarding(false)
+          void complete()
+        }}
+        onFirstConnect={() => void complete()}
+      />
+    )
+  }
 
   return (
     <div ref={setScrollParent} className="h-full overflow-y-auto bg-aurora">

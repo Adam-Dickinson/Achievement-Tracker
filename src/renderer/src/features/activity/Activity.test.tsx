@@ -54,6 +54,7 @@ const listActivity = vi.fn<(limit: number) => Promise<ActivityPage>>()
 let listeners: (() => void)[] = []
 const dataChanged = () => listeners.forEach((listener) => listener())
 const onOpenGame = vi.fn()
+const onOpenAccounts = vi.fn()
 
 beforeEach(() => {
   listeners = []
@@ -74,14 +75,14 @@ afterEach(() => {
 describe('Activity', () => {
   it('shows a loading status before the unlocks arrive', () => {
     listActivity.mockReturnValue(new Promise(() => {}))
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading')
   })
 
   it('asks for the first page of unlocks', async () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     await screen.findByText('Age of the Stars')
     expect(listActivity).toHaveBeenCalledWith(ACTIVITY_PAGE_SIZE)
@@ -89,7 +90,7 @@ describe('Activity', () => {
 
   it('names today and yesterday with their full date beside them', async () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     const heading = await screen.findByRole('heading', { level: 2, name: /^Today/ })
     const date = TODAY.unlockedAt.toLocaleDateString(undefined, {
@@ -102,7 +103,7 @@ describe('Activity', () => {
 
   it('shows the header card while the unlocks load', () => {
     listActivity.mockReturnValue(new Promise(() => {}))
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Activity' })).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Loading')
@@ -110,7 +111,7 @@ describe('Activity', () => {
 
   it('groups unlocks under a heading for each day, with a count', async () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY, TODAY_XBOX, OLDER], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     const today = await screen.findByRole('region', { name: /^Today/ })
     expect(
@@ -133,7 +134,7 @@ describe('Activity', () => {
 
   it('shows each unlock with its description, game, platform, rarity and time', async () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY, TODAY_XBOX], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     const row = await screen.findByRole('button', { name: /Age of the Stars/ })
     expect(row).toHaveTextContent('Achieve the "Age of the Stars" ending')
@@ -150,7 +151,7 @@ describe('Activity', () => {
 
   it('opens the game when an unlock is clicked', async () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY_XBOX], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     fireEvent.click(await screen.findByRole('button', { name: /First Win/ }))
 
@@ -162,7 +163,7 @@ describe('Activity', () => {
       unlocks: [unlock({ name: 'Elden Ring', platinum: true })],
       hasMore: false,
     })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     expect(await screen.findByRole('button', { name: /Elden Ring/ })).toHaveTextContent('Platinum')
   })
@@ -177,7 +178,7 @@ describe('Activity', () => {
       unlockedAt: daysAgo(0, 0, 40),
     }
     listActivity.mockResolvedValue({ unlocks: [platinum, TODAY], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     const today = await screen.findByRole('region', { name: /^Today/ })
     expect(today).toHaveTextContent('2 unlocks')
@@ -190,19 +191,22 @@ describe('Activity', () => {
     expect(onOpenGame).toHaveBeenCalledWith(8, 80)
   })
 
-  it('says when nothing has been unlocked yet', async () => {
+  it('says when nothing has been unlocked yet, with a way into Accounts', async () => {
     listActivity.mockResolvedValue({ unlocks: [], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     expect(await screen.findByText(/Nothing unlocked yet/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Go to Accounts' }))
+    expect(onOpenAccounts).toHaveBeenCalledOnce()
   })
 
   it('asks for a bigger page when "Show more" is clicked, keeping the list meanwhile', async () => {
     listActivity
       .mockResolvedValueOnce({ unlocks: [TODAY], hasMore: true })
       .mockResolvedValueOnce({ unlocks: [TODAY, OLDER], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Show more' }))
     expect(screen.getByText('Age of the Stars')).toBeInTheDocument()
@@ -214,7 +218,7 @@ describe('Activity', () => {
 
   it('stops offering more at the largest page the main process allows', async () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY], hasMore: true })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
 
     for (let limit = ACTIVITY_PAGE_SIZE; limit < MAX_ACTIVITY_LIMIT; limit += ACTIVITY_PAGE_SIZE) {
       fireEvent.click(await screen.findByRole('button', { name: 'Show more' }))
@@ -228,7 +232,7 @@ describe('Activity', () => {
     listActivity
       .mockResolvedValueOnce({ unlocks: [TODAY], hasMore: false })
       .mockResolvedValueOnce({ unlocks: [TODAY_XBOX, TODAY], hasMore: false })
-    render(<Activity onOpenGame={onOpenGame} />)
+    render(<Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />)
     await screen.findByText('Age of the Stars')
 
     act(() => dataChanged())
@@ -241,7 +245,7 @@ describe('Activity', () => {
     listActivity.mockResolvedValue({ unlocks: [TODAY], hasMore: false })
     render(
       <StrictMode>
-        <Activity onOpenGame={onOpenGame} />
+        <Activity onOpenGame={onOpenGame} onOpenAccounts={onOpenAccounts} />
       </StrictMode>,
     )
 
