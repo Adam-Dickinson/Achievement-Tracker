@@ -6,6 +6,7 @@ import { ConnectFlow } from './ConnectFlow'
 import { ConnectPrompt } from './ConnectPrompt'
 import { isOnline, ONLINE_PLATFORMS, type OnlinePlatform } from './sources'
 import { useAccounts } from './useAccounts'
+import { ShadPs4Card } from './ShadPs4Card'
 
 export interface AccountCounts {
   readonly connected: number
@@ -117,6 +118,30 @@ function AccountsBody({
         </div>
         <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
           {ONLINE_PLATFORMS.flatMap((platform) => slot(platform))}
+        </div>
+      </section>
+
+      <section aria-labelledby="emulators" className="mt-12">
+        <div className="mb-4">
+          <h2 id="emulators" className="font-display text-2xl leading-7 font-bold">
+            Emulators
+          </h2>
+          <p className="mt-0.5 text-[13px] text-fg-muted">
+            Trophies from their own local files, no sign-in
+          </p>
+        </div>
+        <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {accounts
+            .filter((account) => account.platform === 'shadps4')
+            .map((account) => (
+              <AccountCard key={account.id} account={account} onChanged={onChanged} />
+            ))}
+          <ShadPs4Card
+            connectedNames={accounts
+              .filter((account) => account.platform === 'shadps4' && account.status !== 'disabled')
+              .map((account) => account.displayName)}
+            onConnected={onChanged}
+          />
         </div>
       </section>
 

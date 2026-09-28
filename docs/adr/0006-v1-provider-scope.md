@@ -1,6 +1,6 @@
 # ADR-0006: v1 covers the launchers and consoles; emulators move after v1
 
-- **Status:** Accepted. The order of M3 and M4 is superseded by [ADR-0008](0008-stores-before-playstation.md): Epic, Ubisoft and EA now come before PlayStation
+- **Status:** Accepted. The order of M3 and M4 is superseded by [ADR-0008](0008-stores-before-playstation.md): Epic, Ubisoft and EA now come before PlayStation. The emulator part is superseded by [ADR-0015](0015-emulators-in-v1.md): shadPS4 and RPCS3 join v1
 - **Date:** 2026-09-24
 
 ## Context

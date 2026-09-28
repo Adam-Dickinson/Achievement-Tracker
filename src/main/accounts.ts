@@ -182,7 +182,7 @@ export async function signInToSteam(
   }
 }
 
-function saveAccount(
+export function saveAccount(
   deps: Pick<AccountsDeps, 'db' | 'secrets' | 'scheduler'>,
   credentials: AccountCredentials,
   displayName: string,

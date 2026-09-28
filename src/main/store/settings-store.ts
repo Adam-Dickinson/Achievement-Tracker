@@ -19,7 +19,7 @@ const notificationSettingsSchema = z.object({
   size: z.enum(TOAST_SIZES),
   durationSec: z.number().min(1).max(30),
   minRarity: z.enum(RARITIES),
-  enabledPlatforms: z.record(z.enum(PLATFORMS), z.boolean()),
+  enabledPlatforms: z.partialRecord(z.enum(PLATFORMS), z.boolean()),
   sound: z.object({ enabled: z.boolean(), volume: z.number().min(0).max(1) }),
 })
 
@@ -53,7 +53,14 @@ export function readNotificationSettings(db: DatabaseSync): NotificationSettings
   if (!row) return DEFAULT_NOTIFICATION_SETTINGS
   try {
     const parsed = notificationSettingsSchema.safeParse(JSON.parse(row.value))
-    return parsed.success ? parsed.data : DEFAULT_NOTIFICATION_SETTINGS
+    if (!parsed.success) return DEFAULT_NOTIFICATION_SETTINGS
+    return {
+      ...parsed.data,
+      enabledPlatforms: {
+        ...DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms,
+        ...parsed.data.enabledPlatforms,
+      },
+    }
   } catch {
     return DEFAULT_NOTIFICATION_SETTINGS
   }

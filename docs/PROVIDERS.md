@@ -8,7 +8,8 @@
 |---|---|---|---|---|---|
 | Steam | Yes (Web API) | User's own Web API key + SteamID | Poll + local stats files | High | P0 |
 | RetroAchievements | Yes | Username + Web API key | Poll | High | After v1 |
-| RPCS3 | n/a (local) | none | File watch | Medium | After v1 |
+| RPCS3 | n/a (local) | none | File watch | Medium | v1 (ADR-0015), waiting for real trophy data |
+| shadPS4 | n/a (local) | none: its data folder and one of its users | Poll + file watch | Medium | v1 (ADR-0015), verified 2026-09-28 |
 | Xbox | Partly (Xbox Live services, community-documented) | Microsoft OAuth, Xbox/XSTS tokens | Poll | Medium | P0 |
 | PlayStation | No (unofficial, the PlayStation App's own services) | Sony's sign-in page in an app window, then the 60-day `npsso` cookie mints 10-day refresh tokens | Poll | Medium-Low | P0, verified 2026-09-25 |
 | Xenia | n/a (local) | none | File watch / log | Low, spike | After v1 |
@@ -101,11 +102,25 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 - Covers RetroArch, DuckStation, PPSSPP, PCSX2, Dolphin and others that integrate RA, so one provider covers many emulators.
 - **Plan:** poll recent achievements every 30-60 s while an RA-capable emulator process runs, otherwise every few minutes.
 
-## RPCS3 (after v1)
+## RPCS3 (v1, ADR-0015): waiting for real trophy data
 
+- 2026-09-28: the owner's portable RPCS3 (`D:\Emulators\rpcs3-v0.0.41…`) has no `dev_hdd0` yet, so nothing below could be checked. It needs a trophy earned in any game first.
 - Trophy data stored per user under RPCS3's `dev_hdd0/home/<user>/trophy/<NPWR-ID>/` (`TROPCONF.SFM`, `TROPUSR.DAT`, `TROPHY.TRP`-derived icons/names). Community-documented binary formats. *(Verify.)*
 - **Plan:** auto-detect RPCS3 install dir (config + common paths, manual override), watch trophy dirs, parse `TROPUSR.DAT` for unlock flags/timestamps and `TROPCONF.SFM` (XML) for names, descriptions and grade.
 - **Risks:** format changes between RPCS3 versions, so pin fixtures from real files. RPCS3 also logs trophy events, which is a potential fallback signal.
+
+## shadPS4 (v1, ADR-0015): verified 2026-09-28
+
+Checked on the owner's machine (shadPS4 with the Qt launcher in `D:\Emulators\ShadPS4`, data in `%APPDATA%\shadPS4`, Bloodborne played by user 1000). Sanitized copies are in `tests/fixtures/shadps4/data/` (user names replaced, the Windows user name taken out of paths); raw copies in `tests/fixtures/_raw/shadps4/` (git-ignored).
+
+- **Data folder:** `%APPDATA%\shadPS4` for an installed shadPS4, or `user\` beside a portable one. It holds `users.json`, `config.json` (newer versions; older ones also left a `config.toml`), `trophy\` and `home\`. `config.json`'s `General.home_dir` names the home folder (the app falls back to `<data folder>\home` when it's missing).
+- **Users:** `users.json` → `Users.user[]` with `user_id` (1000-1003; shadPS4 always creates four) and `user_name`. Each user has `home\<user_id>\`.
+- **Trophy list, per game:** `trophy\<NPWR>_00\Xml\TROPCONF.XML` (ids, types, hidden flags; no names), `TROP.XML` (the same plus `title-name`, and `name`/`detail` per trophy, in the default language) and `TROP_00.XML`…`TROP_20.XML` (one per console language). Icons are PNGs in `trophy\<NPWR>_00\Icons\` (`ICON0.PNG`, `TROP000.PNG`…). The files start with an `<!--Sce-Np-Trophy-Signature: …-->` comment; descriptions use `&#x0a;` for line breaks.
+- **Progress, per user and game:** `home\<user_id>\trophy\<NPWR>_00.xml`, a copy of `TROPCONF.XML` in which an unlocked trophy gains `unlockstate="true" timestamp="<Unix seconds>"`. A user who has not played has the untouched copy (every user got one for Bloodborne).
+- **Trophy types:** `ttype` `P`/`G`/`S`/`B`, stored as the tiers `platinum`/`gold`/`silver`/`bronze` like PlayStation's, so a game's platinum is recognised the same way. `hidden="yes"` marks a secret trophy.
+- **Ids:** a game is its `npcommid` (`NPWR05818_00`), the same trophy-set id PSN uses; a trophy is its `id` (`012`).
+- **Built:** `ShadPs4Provider` (`src/main/providers/shadps4/`): an account is a data folder plus one user (`<data folder>|<user id>`, no secret). Games are the user's progress files, titled from `TROP.XML`; trophies come from `TROP.XML` (else `TROPCONF.XML`, named "Trophy 012"); a half-written progress file is read again once after 300 ms. The progress folder is watched, and a changed file syncs that game within about half a second. The files are read with a small strict XML reader (`src/main/providers/xml.ts`) and size limits.
+- **Not yet:** trophy icons and the game's `ICON0.PNG` (the renderer's CSP allows only `https:` and `data:` images, so local files need a safe way to be served first); rarity (no "% of players"); linking to a PSN copy by `NPWR` id rather than by title.
 
 ## Xbox (P0)
 

@@ -194,6 +194,26 @@ describe('Accounts', () => {
     expect(await screen.findByRole('button', { name: 'Connect Steam' })).toBeInTheDocument()
   })
 
+  it('offers shadPS4 in its own Emulators section', async () => {
+    listAccounts.mockResolvedValue([])
+    render(<Accounts />)
+
+    const emulators = await screen.findByRole('region', { name: 'Emulators' })
+    expect(
+      within(emulators).getByRole('region', { name: 'shadPS4, not connected' }),
+    ).toBeInTheDocument()
+  })
+
+  it('shows a connected shadPS4 account in the Emulators section', async () => {
+    listAccounts.mockResolvedValue([
+      { ...STEAM, id: 5, platform: 'shadps4', displayName: 'Player 1' },
+    ])
+    render(<Accounts />)
+
+    const emulators = await screen.findByRole('region', { name: 'Emulators' })
+    expect(within(emulators).getByRole('region', { name: 'shadPS4: Player 1' })).toBeInTheDocument()
+  })
+
   it('explains where keys live and what unofficial means', async () => {
     listAccounts.mockResolvedValue([])
     render(<Accounts />)

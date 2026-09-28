@@ -113,6 +113,27 @@ describe('notification settings', () => {
     expect(readNotificationSettings(db)).toEqual(DEFAULT_NOTIFICATION_SETTINGS)
   })
 
+  it('keeps saved settings from before a platform existed, turning the new platform on', () => {
+    const olderPlatforms = Object.fromEntries(
+      Object.entries({ ...DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms, xbox: false }).filter(
+        ([platform]) => platform !== 'shadps4',
+      ),
+    )
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'notifications.settings',
+      JSON.stringify({
+        ...DEFAULT_NOTIFICATION_SETTINGS,
+        corner: 'top-left',
+        enabledPlatforms: olderPlatforms,
+      }),
+    )
+
+    const settings = readNotificationSettings(db)
+
+    expect(settings.corner).toBe('top-left')
+    expect(settings.enabledPlatforms).toMatchObject({ xbox: false, shadps4: true })
+  })
+
   it('falls back to the defaults when the stored value is not JSON', () => {
     db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
       'notifications.settings',

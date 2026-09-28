@@ -29,6 +29,9 @@ export const IPC = {
   cancelPlayStationSignIn: 'accounts:cancel-playstation-sign-in',
   signInToSteam: 'accounts:sign-in-to-steam',
   cancelSteamSignIn: 'accounts:cancel-steam-sign-in',
+  findShadPs4: 'accounts:find-shadps4',
+  chooseShadPs4Folder: 'accounts:choose-shadps4-folder',
+  connectShadPs4: 'accounts:connect-shadps4',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   mergeGames: 'library:merge-games',
@@ -191,6 +194,28 @@ export interface EpicConnectInput {
   readonly acceptedUnofficial: true
 }
 
+export interface EmulatorUser {
+  readonly id: string
+  readonly name: string
+  readonly games: number
+  readonly unlocked: number
+}
+
+export interface EmulatorFolder {
+  readonly path: string
+  readonly users: readonly EmulatorUser[]
+}
+
+export type ChooseEmulatorFolderResult =
+  | { readonly kind: 'chosen'; readonly folder: EmulatorFolder }
+  | { readonly kind: 'cancelled' }
+  | { readonly kind: 'not_found'; readonly path: string }
+
+export interface EmulatorConnectInput {
+  readonly path: string
+  readonly userId: string
+}
+
 export interface MergeGamesInput {
   readonly intoGameId: number
   readonly gameId: number
@@ -255,6 +280,9 @@ export interface TrophyLockerApi {
   cancelPlayStationSignIn(): Promise<void>
   signInToSteam(input: SteamSignInInput): Promise<ConnectResult>
   cancelSteamSignIn(): Promise<void>
+  findShadPs4(): Promise<EmulatorFolder | null>
+  chooseShadPs4Folder(): Promise<ChooseEmulatorFolderResult>
+  connectShadPs4(input: EmulatorConnectInput): Promise<ConnectResult>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   mergeGames(input: MergeGamesInput): Promise<void>

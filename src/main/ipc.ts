@@ -10,10 +10,13 @@ import {
   type ArtworkKeyResult,
   type ArtworkRun,
   type ArtworkSettings,
+  type ChooseEmulatorFolderResult,
   type ConnectResult,
   type DisconnectInput,
   type DisplayInfo,
   type EaConnectInput,
+  type EmulatorConnectInput,
+  type EmulatorFolder,
   type EpicConnectInput,
   MAX_PROFILE_NAME,
   type MergeGamesInput,
@@ -61,6 +64,9 @@ export interface IpcHandlers {
   cancelPlayStationSignIn(): void
   signInToSteam(input: SteamSignInInput): Promise<ConnectResult>
   cancelSteamSignIn(): void
+  findShadPs4(): Promise<EmulatorFolder | null>
+  chooseShadPs4Folder(): Promise<ChooseEmulatorFolderResult>
+  connectShadPs4(input: EmulatorConnectInput): Promise<ConnectResult>
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   mergeGames(input: MergeGamesInput): void
@@ -92,6 +98,11 @@ const steamSignInSchema = z.object({
 const epicConnectInputSchema = z.object({
   code: z.string().trim().min(1).max(2000),
   acceptedUnofficial: z.literal(true),
+})
+
+const emulatorConnectSchema = z.object({
+  path: z.string().min(1).max(1024),
+  userId: z.string().regex(/^\d{1,10}$/),
 })
 
 const gameIdSchema = z.number().int().positive()
@@ -316,6 +327,29 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
       })
     }
     return handlers.connectEpic({ code: parsed.data.code, acceptedUnofficial: true })
+  })
+
+  ipcMain.handle(IPC.findShadPs4, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.findShadPs4()
+  })
+
+  ipcMain.handle(IPC.chooseShadPs4Folder, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.chooseShadPs4Folder()
+  })
+
+  ipcMain.handle(IPC.connectShadPs4, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = emulatorConnectSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Choose a shadPS4 folder and user to connect.',
+      })
+    }
+    return handlers.connectShadPs4(parsed.data)
   })
 
   ipcMain.handle(IPC.listLibrary, (event) => {

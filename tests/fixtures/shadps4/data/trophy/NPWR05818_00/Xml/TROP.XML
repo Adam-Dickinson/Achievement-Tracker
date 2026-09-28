@@ -1,0 +1,172 @@
+<!--Sce-Np-Trophy-Signature: 4c39b98c0100000000000000326b5d07777aeb15137cb6cee8a242d767a5433abe29f318875d7cd9fa14a4c3a0c5fe4ed105532b9ce983221a5d70748906ed4db92745e4a5c3d3e97e648a31c2d03d4de9dd9a4dad640a07a0bd0741ad48b4d74934f59999256f02ff44169ac1997af745baf7cc8f5d846bd671d2e3c723870f8218f64101c5c142a131dadefddaf920979af2151e13306d70358ca7434675a5-->
+<trophyconf version="1.1" platform="ps4" policy="large">
+ <npcommid>NPWR05818_00</npcommid>
+ <trophyset-version>01.03</trophyset-version>
+ <parental-level license-area="default">0</parental-level>
+ <title-name>Bloodborne</title-name>
+ <title-detail>Bloodborne Trophy Set</title-detail>
+ <group id="001">
+  <name>Bloodborne: The Old Hunters </name>
+  <detail>Bloodborne: The Old Hunters Trophy Set</detail>
+ </group>
+ <trophy id="000" hidden="no" ttype="P" pid="-1">
+  <name>Bloodborne</name>
+  <detail>All trophies acquired. Hats off!</detail>
+ </trophy>
+ <trophy id="001" hidden="yes" ttype="G" pid="000">
+  <name>Yharnam Sunrise</name>
+  <detail>You lived through the hunt, and saw another day.</detail>
+ </trophy>
+ <trophy id="002" hidden="yes" ttype="G" pid="000">
+  <name>Honouring Wishes</name>
+  <detail>Captivated by the moon presence,&#x0a;you pledge to watch over the hunter's dream.</detail>
+ </trophy>
+ <trophy id="003" hidden="yes" ttype="G" pid="000">
+  <name>Childhood's Beginning</name>
+  <detail>You became an infant Great One,&#x0a;lifting humanity into its next childhood.</detail>
+ </trophy>
+ <trophy id="004" hidden="yes" ttype="G" pid="000">
+  <name>Yharnam, Pthumerian Queen</name>
+  <detail>Defeat Yharnam, Blood Queen of the Old Labyrinth.</detail>
+ </trophy>
+ <trophy id="005" hidden="no" ttype="G" pid="000">
+  <name>Hunter's Essence</name>
+  <detail>Acquire all hunter weapons.</detail>
+ </trophy>
+ <trophy id="006" hidden="no" ttype="G" pid="000">
+  <name>Hunter's Craft</name>
+  <detail>Acquire all special hunter tools.</detail>
+ </trophy>
+ <trophy id="007" hidden="no" ttype="S" pid="000">
+  <name>Weapon Master</name>
+  <detail>Acquire a weapon of the highest level.</detail>
+ </trophy>
+ <trophy id="008" hidden="no" ttype="S" pid="000">
+  <name>Blood Gem Master</name>
+  <detail>Acquire an extremely precious blood gem.</detail>
+ </trophy>
+ <trophy id="009" hidden="no" ttype="S" pid="000">
+  <name>Rune Master</name>
+  <detail>Acquire an extremely precious Caryll Rune.</detail>
+ </trophy>
+ <trophy id="010" hidden="yes" ttype="S" pid="000">
+  <name>Cainhurst</name>
+  <detail>Gain entry to Cainhurst, the lost and ruined castle.</detail>
+ </trophy>
+ <trophy id="011" hidden="yes" ttype="S" pid="000">
+  <name>The Choir</name>
+  <detail>Gain entry to the realm of the Choir,&#x0a;the high stratum of the Healing Church.</detail>
+ </trophy>
+ <trophy id="012" hidden="yes" ttype="S" pid="000">
+  <name>The Source of the Dream</name>
+  <detail>Discover the abandoned old workshop,&#x0a;the source of the hunter's dream.</detail>
+ </trophy>
+ <trophy id="013" hidden="yes" ttype="S" pid="000">
+  <name>Nightmare Lecture Building</name>
+  <detail>Gain entry into the Byrgenwerth lecture building,&#x0a;that drifts within the realm of nightmare.</detail>
+ </trophy>
+ <trophy id="014" hidden="yes" ttype="B" pid="000">
+  <name>Father Gascoigne</name>
+  <detail>Defeat the beast that once was Father Gascoigne.</detail>
+ </trophy>
+ <trophy id="015" hidden="yes" ttype="B" pid="000">
+  <name>Vicar Amelia</name>
+  <detail>Defeat the beast that once was Vicar Amelia.</detail>
+ </trophy>
+ <trophy id="016" hidden="yes" ttype="B" pid="000">
+  <name>Shadow of Yharnam</name>
+  <detail>Defeat the Shadow of Yharnam.</detail>
+ </trophy>
+ <trophy id="017" hidden="yes" ttype="B" pid="000">
+  <name>Rom, the Vacuous Spider</name>
+  <detail>Defeat Great One: Rom, the Vacuous Spider.</detail>
+ </trophy>
+ <trophy id="018" hidden="yes" ttype="B" pid="000">
+  <name>The One Reborn</name>
+  <detail>Defeat the One Reborn.</detail>
+ </trophy>
+ <trophy id="019" hidden="yes" ttype="B" pid="000">
+  <name>Micolash, Host of the Nightmare</name>
+  <detail>Defeat Micolash, Host of the Nightmare.</detail>
+ </trophy>
+ <trophy id="020" hidden="yes" ttype="B" pid="000">
+  <name>Mergo's Wet Nurse</name>
+  <detail>Defeat Great One: Mergo's Wet Nurse.</detail>
+ </trophy>
+ <trophy id="021" hidden="yes" ttype="B" pid="000">
+  <name>Cleric Beast</name>
+  <detail>Defeat Cleric Beast.</detail>
+ </trophy>
+ <trophy id="022" hidden="yes" ttype="B" pid="000">
+  <name>Blood-starved Beast</name>
+  <detail>Defeat Blood-starved Beast.</detail>
+ </trophy>
+ <trophy id="023" hidden="yes" ttype="B" pid="000">
+  <name>The Witch of Hemwick</name>
+  <detail>Defeat the Witch of Hemwick.</detail>
+ </trophy>
+ <trophy id="024" hidden="yes" ttype="B" pid="000">
+  <name>Darkbeast Paarl</name>
+  <detail>Defeat Darkbeast Paarl.</detail>
+ </trophy>
+ <trophy id="025" hidden="yes" ttype="B" pid="000">
+  <name>Amygdala</name>
+  <detail>Defeat Great One: Amygdala.</detail>
+ </trophy>
+ <trophy id="026" hidden="yes" ttype="B" pid="000">
+  <name>Martyr Logarius</name>
+  <detail>Defeat Martyr Logarius.</detail>
+ </trophy>
+ <trophy id="027" hidden="yes" ttype="B" pid="000">
+  <name>Celestial Emissary</name>
+  <detail>Defeat Great One: Celestial Emissary.</detail>
+ </trophy>
+ <trophy id="028" hidden="yes" ttype="B" pid="000">
+  <name>Ebrietas, Daughter of the Cosmos</name>
+  <detail>Defeat Great One: Ebrietas, Daughter of the Cosmos.</detail>
+ </trophy>
+ <trophy id="029" hidden="no" ttype="B" pid="000">
+  <name>Blood Gem Contact</name>
+  <detail>Acquire a blood gem that imbues hunter weapons&#x0a;with special strength.</detail>
+ </trophy>
+ <trophy id="030" hidden="no" ttype="B" pid="000">
+  <name>Rune Contact</name>
+  <detail>Acquire a Caryll Rune that endows hunters with special strength.</detail>
+ </trophy>
+ <trophy id="031" hidden="no" ttype="B" pid="000">
+  <name>Chalice of Pthumeru</name>
+  <detail>Acquire the Chalice of Pthumeru that seals the catacombs&#x0a;that form a web deep below Yharnam.</detail>
+ </trophy>
+ <trophy id="032" hidden="yes" ttype="B" pid="000">
+  <name>Chalice of Ailing Loran</name>
+  <detail>Acquire the Chalice of Ailing Loran that seals&#x0a;the tragic land lost to the sands.</detail>
+ </trophy>
+ <trophy id="033" hidden="yes" ttype="B" pid="000">
+  <name>Chalice of Isz</name>
+  <detail>Acquire the Great Chalice of Isz that seals&#x0a;the home of the cosmic kin.</detail>
+ </trophy>
+ <trophy id="034" hidden="no" ttype="G" pid="-1" gid="001">
+  <name>Old Hunter's Essence</name>
+  <detail>Acquire all old hunter weapons.</detail>
+ </trophy>
+ <trophy id="035" hidden="yes" ttype="S" pid="-1" gid="001">
+  <name>Orphan of Kos</name>
+  <detail>Defeat Great One: Orphan of Kos.</detail>
+ </trophy>
+ <trophy id="036" hidden="yes" ttype="B" pid="-1" gid="001">
+  <name>Ludwig, the Holy Blade</name>
+  <detail>Defeat the beast that was once Ludwig, the Holy Blade.</detail>
+ </trophy>
+ <trophy id="037" hidden="yes" ttype="B" pid="-1" gid="001">
+  <name>Lady Maria of the Astral Clocktower</name>
+  <detail>Defeat Lady Maria of the Astral Clocktower.</detail>
+ </trophy>
+ <trophy id="038" hidden="yes" ttype="B" pid="-1" gid="001">
+  <name>Living Failures</name>
+  <detail>Defeat the failed attempts to become Great Ones.</detail>
+ </trophy>
+ <trophy id="039" hidden="yes" ttype="B" pid="-1" gid="001">
+  <name>Laurence, the First Vicar</name>
+  <detail>Defeat the beast that was once Laurence, the First Vicar.</detail>
+ </trophy>
+</trophyconf>
