@@ -149,7 +149,7 @@ describe('Dashboard', () => {
     expect(await hero()).not.toHaveTextContent('streak')
   })
 
-  it('counts the unlocks of each rarity, in words', async () => {
+  it('counts platinums, then the unlocks of each rarity, in words', async () => {
     renderDashboard()
 
     const rarity = within(await hero()).getByRole('list', { name: 'By rarity' })
@@ -157,7 +157,14 @@ describe('Dashboard', () => {
       within(rarity)
         .getAllByRole('listitem')
         .map((item) => item.textContent),
-    ).toEqual(['9Ultra Rare', '142Rare', '388Uncommon', '745Common'])
+    ).toEqual(['9Platinum', '9Ultra Rare', '142Rare', '388Uncommon', '745Common'])
+  })
+
+  it('separates thousands in the platinum count', async () => {
+    renderDashboard({ ...STATS, platinums: 1203 })
+
+    const rarity = within(await hero()).getByRole('list', { name: 'By rarity' })
+    expect(within(rarity).getAllByRole('listitem')[0]).toHaveTextContent(`${n(1203)}Platinum`)
   })
 
   it('fans out the covers of the games closest to 100%, each opening its game', async () => {

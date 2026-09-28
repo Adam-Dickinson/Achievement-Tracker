@@ -1,4 +1,4 @@
-import { CalendarDays, Flame, Plus } from 'lucide-react'
+import { CalendarDays, Crown, Flame, Plus } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { RarityGem } from '@/components/RarityGem'
 import { formatShare, plural } from '@/lib/format'
@@ -8,6 +8,9 @@ import { CoverFan } from './CoverFan'
 import { greeting } from './greeting'
 
 const RARITIES: readonly Rarity[] = ['ultra_rare', 'rare', 'uncommon', 'common']
+
+const RARITY_CHIP =
+  'inline-flex items-center gap-2 rounded-full border border-line bg-white/4 py-1.5 pr-4 pl-3 text-[13px] font-semibold text-(--rarity)'
 
 interface DashboardHeroProps {
   stats: DashboardStats
@@ -89,12 +92,15 @@ export function DashboardHero({ stats, onOpenGame, className = '' }: DashboardHe
             By rarity
           </p>
           <ul aria-labelledby="by-rarity" className="flex flex-wrap gap-2">
+            <li data-platinum="" className={RARITY_CHIP}>
+              <Crown aria-hidden="true" className="size-3.25" />
+              <b className="font-display text-[17px] font-extrabold text-fg">
+                {stats.platinums.toLocaleString()}
+              </b>
+              <span className="text-fg-muted">Platinum</span>
+            </li>
             {RARITIES.map((rarity) => (
-              <li
-                key={rarity}
-                data-rarity={rarity}
-                className="inline-flex items-center gap-2 rounded-full border border-line bg-white/4 py-1.5 pr-4 pl-3 text-[13px] font-semibold text-(--rarity)"
-              >
+              <li key={rarity} data-rarity={rarity} className={RARITY_CHIP}>
                 <RarityGem rarity={rarity} className="size-3.25" />
                 <b className="font-display text-[17px] font-extrabold text-fg">
                   {stats.unlockedByRarity[rarity].toLocaleString()}
