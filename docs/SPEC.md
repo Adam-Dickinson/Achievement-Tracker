@@ -308,11 +308,14 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `cancelSteamSignIn()` | `accounts:cancel-steam-sign-in` | Closes a waiting Steam sign-in window; its `signInToSteam` call answers `cancelled` |
 | `openEpicSignIn()` | `accounts:open-epic-sign-in` | Opens Epic's sign-in page in the user's browser. After signing in, Epic shows a page with a one-time `authorizationCode` for the user to copy |
 | `connectEpic({ code, acceptedUnofficial: true })` | `accounts:connect-epic` | Takes the pasted text (the 32-character code, or the whole page Epic showed), swaps the code for tokens, saves the account (keyed by Epic account ID, named by display name) and the refresh token, and starts syncing it. Refused with `invalid_input` unless `acceptedUnofficial` is exactly `true` (rule 5) or when the text holds no code; a used or expired code answers `code_rejected` |
+| `getNotificationSettings()` | `notifications:get-settings` | `NotificationSettings`: corner, monitor (`'primary'` or a display id), toast size, duration, minimum rarity to show, per-platform toggles and sound (enabled, volume). Defaults to `DEFAULT_NOTIFICATION_SETTINGS` |
+| `updateNotificationSettings(patch)` | `notifications:update-settings` | Merges a `NotificationSettingsPatch` into the stored settings (checked with zod; an invalid field is dropped rather than rejecting the call), repositions/rescales the overlay window at once, and returns the new `NotificationSettings`. Fires `onNotificationSettingsChanged`. A platinum always bypasses `minRarity` and a disabled platform |
+| `onNotificationSettingsChanged(listener)` | `notifications:settings-changed` (main → main and overlay windows) | Called with the new `NotificationSettings` whenever they change. Returns an unsubscribe function |
+| `listDisplays()` | `overlay:list-displays` | Every connected display as a `DisplayInfo` (`id`, a label such as "Display 1 (2560×1440)", `primary`), for the corner/monitor picker |
 
 **Planned** (added in the milestones that need them)
 | API | Description |
 |---|---|
-| `getSettings()` / `updateSettings(patch)` | |
 | `exportData(format)` | |
 
 **Events** (main → UI, via `webContents.send`): `sync:status` (per-account progress/state), `achievement:unlocked`, `account:status-changed`, `settings:changed`.
@@ -324,11 +327,11 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
   "startup":       { "launchAtLogin": false, "startMinimized": true },
   "sync":          { "intervalSec": 300, "gameRunningIntervalSec": 45, "pauseOnBattery": false },
   "notifications": {
-    "enabled": true, "corner": "bottom-right", "monitor": "primary",
-    "durationSec": 5, "scale": 1.0, "opacity": 1.0,
-    "sound": { "enabled": true, "volume": 0.6 },
-    "fallbackNativeToast": true,
-    "perPlatform": {}, "minRarity": "common", "dnd": { "manual": false }
+    "corner": "bottom-right", "monitor": "primary", "size": "medium",
+    "durationSec": 5, "minRarity": "common",
+    "enabledPlatforms": { "steam": true, "xbox": true, /* ...one per platform */ },
+    "sound": { "enabled": true, "volume": 0.6 }
+    // full-screen-game fallback and a DND schedule are planned but not yet built (M5)
   },
   "appearance":    { "theme": "system" }
 }

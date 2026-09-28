@@ -23,15 +23,21 @@ export function Settings({ profile, onRename }: SettingsProps) {
   }, [])
 
   return (
-    <div className="mt-8 flex max-w-3xl flex-col gap-6">
-      {profile && <ProfileCard profile={profile} onRename={onRename} />}
-      <NotificationsCard />
-      <ArtworkCard />
-      {info && (
-        <p className="text-sm text-fg-subtle">
-          Trophy Locker v{info.version} · database schema {info.schemaVersion}
-        </p>
+    <div className="mt-8 flex flex-col gap-8">
+      {profile && (
+        <div className="max-w-3xl">
+          <ProfileCard profile={profile} onRename={onRename} />
+        </div>
       )}
+      <NotificationsCard />
+      <div className="flex max-w-3xl flex-col gap-6">
+        <ArtworkCard />
+        {info && (
+          <p className="text-sm text-fg-subtle">
+            Trophy Locker v{info.version} · database schema {info.schemaVersion}
+          </p>
+        )}
+      </div>
     </div>
   )
 }
