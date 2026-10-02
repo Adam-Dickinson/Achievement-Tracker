@@ -54,3 +54,7 @@ desktop.ini
 
 # --- Superdesign ---
 .superdesign/
+
+# --- Local tooling output ---
+.omc/
+graphify-out/
