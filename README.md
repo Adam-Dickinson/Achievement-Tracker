@@ -4,6 +4,14 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 
 > **Status:** Pre-alpha, not yet released. All six platforms connect and sync, unlocks pop up as animated toasts (Steam's within seconds), and the Dashboard, Library, Game detail, Activity and Accounts screens work on your synced data, with games linked across platforms and a platinum for every game. Milestones M0 to M4 are nearly done; polish, settings and an installer come next ([roadmap](docs/ROADMAP.md)).
 
+## Download
+
+Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [Releases page](https://github.com/Adam-Dickinson/Achievement-Tracker/releases). It installs for the current user and needs no admin rights.
+
+Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**.
+
+**Updates:** the app checks GitHub for new versions at launch and every 6 hours, tells you when one exists, and only downloads it when you press Download. The check reads the release list on github.com and sends nothing else. You can switch it off in Settings under Updates. See [ADR-0016](docs/adr/0016-release-and-updates.md).
+
 ## Goals
 
 - One unified library and progress view across every platform you play on
