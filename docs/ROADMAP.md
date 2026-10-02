@@ -113,11 +113,11 @@ Not in v1 ([ADR-0006](adr/0006-v1-provider-scope.md); shadPS4 and RPCS3 moved in
 
 ## Risks
 
-| Risk                                                                | Impact                   | Mitigation                                                                                                                                      |
-| ------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unofficial APIs (PSN, Xbox, Epic, Ubisoft, EA) break or are blocked | Provider outage          | Isolation, clear "needs attention" state, fixtures, keep Steam solid                                                                            |
-| Exclusive-fullscreen hides the overlay                              | Missed toasts            | Native toast fallback, docs, Activity feed                                                                                                      |
-| Idle memory above the N-02 target                                   | Not "lightweight"        | Measured baseline ~170 MB private in the tray. Options: create the overlay on demand, disable GPU acceleration, trim dependencies; see ADR-0003 |
-| Local file formats change (Steam's stats files)                     | Parser breakage          | Pinned fixtures, defensive parsing, version detection                                                                                           |
-| ToS concerns for unofficial providers                               | Legal/ban risk for users | Opt-in with warnings, tokens only, no game injection                                                                                            |
-| First-sync toast flood                                              | Terrible UX              | Baseline rule (F-16), burst collapsing                                                                                                          |
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Unofficial APIs (PSN, Xbox, Epic, Ubisoft, EA) break or are blocked | Provider outage | Isolation, clear "needs attention" state, fixtures, keep Steam solid |
+| Exclusive-fullscreen hides the overlay | Missed toasts | Native toast fallback, docs, Activity feed |
+| Idle memory above the N-02 target | Not "lightweight" | Measured baseline ~170 MB private in the tray. Options: create the overlay on demand, disable GPU acceleration, trim dependencies; see ADR-0003 |
+| Local file formats change (Steam's stats files) | Parser breakage | Pinned fixtures, defensive parsing, version detection |
+| ToS concerns for unofficial providers | Legal/ban risk for users | Opt-in with warnings, tokens only, no game injection |
+| First-sync toast flood | Terrible UX | Baseline rule (F-16), burst collapsing |

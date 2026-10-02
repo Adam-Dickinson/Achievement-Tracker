@@ -36,15 +36,15 @@ electron-builder, configured under `build` in `package.json`.
 
 An injectable class (the updater, the clock, the notifier and the settings store are passed in), so it is tested without Electron. State:
 
-| State         | Meaning                                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------- |
-| `disabled`    | Not packaged (`npm run dev`), or the user turned automatic checking off and has not checked by hand. |
-| `idle`        | Nothing known; shows the last check time.                                                            |
-| `checking`    | A check is running.                                                                                  |
-| `available`   | A newer version exists: `{ version, releaseNotes? }`. Nothing downloaded.                            |
-| `downloading` | The user asked to download: `{ version, percent }`.                                                  |
-| `ready`       | Downloaded and verified: `{ version }`.                                                              |
-| `error`       | The last check or download failed: a plain message.                                                  |
+| State | Meaning |
+| --- | --- |
+| `disabled` | Not packaged (`npm run dev`), or the user turned automatic checking off and has not checked by hand. |
+| `idle` | Nothing known; shows the last check time. |
+| `checking` | A check is running. |
+| `available` | A newer version exists: `{ version, releaseNotes? }`. Nothing downloaded. |
+| `downloading` | The user asked to download: `{ version, percent }`. |
+| `ready` | Downloaded and verified: `{ version }`. |
+| `error` | The last check or download failed: a plain message. |
 
 - **When it checks:** once about 10 seconds after launch (so startup is not slowed), then every 6 hours while the app runs, if **Automatically check for updates** is on (default on). **Check now** always works.
 - **What the user is told:** when the state first becomes `available` for a version, and the user has not dismissed that version:
@@ -61,15 +61,15 @@ Update checking is the first time the app contacts anything other than the platf
 
 ### IPC (rule 9: sender checked, payloads validated)
 
-| Call                             | Channel                        | Payload | Result                                              |
-| -------------------------------- | ------------------------------ | ------- | --------------------------------------------------- |
-| `getUpdateState()`               | `updates:get-state`            | none    | `UpdateState` plus `autoCheck` and `currentVersion` |
-| `checkForUpdates()`              | `updates:check`                | none    | `UpdateState` after the check starts                |
-| `downloadUpdate()`               | `updates:download`             | none    | `UpdateState`                                       |
-| `installUpdate()`                | `updates:install`              | none    | `void` (quits and installs)                         |
-| `dismissUpdate()`                | `updates:dismiss`              | none    | `UpdateState` (remembers the dismissed version)     |
-| `setAutoCheck(on)`               | `updates:set-auto-check`       | boolean | `UpdateState`                                       |
-| `onUpdateStateChanged(listener)` | `updates:state-changed` (push) |         | the new `UpdateState`                               |
+| Call | Channel | Payload | Result |
+| --- | --- | --- | --- |
+| `getUpdateState()` | `updates:get-state` | none | `UpdateState` plus `autoCheck` and `currentVersion` |
+| `checkForUpdates()` | `updates:check` | none | `UpdateState` after the check starts |
+| `downloadUpdate()` | `updates:download` | none | `UpdateState` |
+| `installUpdate()` | `updates:install` | none | `void` (quits and installs) |
+| `dismissUpdate()` | `updates:dismiss` | none | `UpdateState` (remembers the dismissed version) |
+| `setAutoCheck(on)` | `updates:set-auto-check` | boolean | `UpdateState` |
+| `onUpdateStateChanged(listener)` | `updates:state-changed` (push) | | the new `UpdateState` |
 
 Saved settings: `updates.autoCheck` (boolean, default true), `updates.dismissedVersion` (string), `updates.notifiedVersion` (string, so a restart does not repeat the system notification).
 

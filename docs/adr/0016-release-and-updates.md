@@ -11,13 +11,13 @@ Update checking is the first request the app makes to anything other than the pl
 
 ## Options considered
 
-| Option                                                                       | Result                                                                                                      |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| No auto-update, manual download only                                         | Simplest, but users on old versions miss fixes and never learn a new version exists                         |
-| Microsoft Store (MSIX)                                                       | Handles signing and updates, but needs a developer account, a review process and MSIX packaging constraints |
-| Sign with Azure Trusted Signing or a purchased certificate                   | Removes the SmartScreen warning, but costs money and setup time that a first release does not justify yet   |
-| Download updates automatically                                               | Less friction, but the app fetches and stages a binary the user did not ask for                             |
-| **GitHub Releases, `electron-updater` in notify-only mode, unsigned for v1** | No cost, no new infrastructure, the user stays in control of every download                                 |
+| Option | Result |
+|---|---|
+| No auto-update, manual download only | Simplest, but users on old versions miss fixes and never learn a new version exists |
+| Microsoft Store (MSIX) | Handles signing and updates, but needs a developer account, a review process and MSIX packaging constraints |
+| Sign with Azure Trusted Signing or a purchased certificate | Removes the SmartScreen warning, but costs money and setup time that a first release does not justify yet |
+| Download updates automatically | Less friction, but the app fetches and stages a binary the user did not ask for |
+| **GitHub Releases, `electron-updater` in notify-only mode, unsigned for v1** | No cost, no new infrastructure, the user stays in control of every download |
 
 ## Decision
 
