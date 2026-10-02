@@ -46,7 +46,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | F-31 | Search, filter, sort across all games and achievements. Built for the Library (games) and Game detail (one game's achievements), in the UI ([ADR-0014](adr/0014-virtualized-lists-client-side-filtering.md)); one search across every game's achievements is not built | P1 |
 | F-32 | Cross-platform game linking (auto + manual). Built: same cleaned title links automatically; merge and unlink on Game detail ([design](superpowers/specs/2026-09-26-game-linking-design.md)) | P1 |
 | F-33 | Global achievement rarity display where the platform provides it | P1 |
-| F-34 | JSON/CSV export | P2 |
+| F-34 | JSON export (v1; CSV not planned) | P2 |
 | F-35 | A platinum for every game: a game's own "unlock everything" achievement counts as its platinum, and a game without one earns an app-awarded Platinum at 100%, shown in Game detail, Activity and toasts ([design](superpowers/specs/2026-09-27-platinum-design.md)) | P2 |
 | F-36 | Onboarding wizard (Welcome → Platforms → Done) on a first launch with no accounts, shown once and skippable; empty states on Dashboard, Library and Activity pointing at Accounts when there is nothing to show | P1 |
 
@@ -318,11 +318,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `updateNotificationSettings(patch)` | `notifications:update-settings` | Merges a `NotificationSettingsPatch` into the stored settings (checked with zod; an invalid field is dropped rather than rejecting the call), repositions/rescales the overlay window at once, and returns the new `NotificationSettings`. Fires `onNotificationSettingsChanged`. A platinum always bypasses `minRarity` and a disabled platform |
 | `onNotificationSettingsChanged(listener)` | `notifications:settings-changed` (main → main and overlay windows) | Called with the new `NotificationSettings` whenever they change. Returns an unsubscribe function |
 | `listDisplays()` | `overlay:list-displays` | Every connected display as a `DisplayInfo` (`id`, a label such as "Display 1 (2560×1440)", `primary`), for the corner/monitor picker |
-
-**Planned** (added in the milestones that need them)
-| API | Description |
-|---|---|
-| `exportData(format)` | |
+| `exportData()` | `data:export` | Opens a save dialog in the main process and writes one JSON file of the user's data (no secrets, no external ids). The UI sends nothing, so it cannot choose the path. Answers an `ExportResult`: `{ kind: 'saved', path, games, achievements }`, `{ kind: 'cancelled' }`, or `{ kind: 'failed', message }`; it never rejects |
 
 **Events** (main → UI, via `webContents.send`): `sync:status` (per-account progress/state), `achievement:unlocked`, `account:status-changed`, `settings:changed`.
 

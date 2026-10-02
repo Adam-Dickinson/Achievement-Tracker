@@ -8,6 +8,7 @@ import {
   type ConnectResult,
   type DisplayInfo,
   type EmulatorFolder,
+  type ExportResult,
   type NotificationSettings,
   type Profile,
 } from '@shared/ipc'
@@ -101,6 +102,7 @@ const fakes = {
   findRpcs3: vi.fn(() => Promise.resolve(RPCS3_FOLDER)),
   chooseRpcs3Folder: vi.fn(() => Promise.resolve({ kind: 'cancelled' as const })),
   connectRpcs3: vi.fn(() => Promise.resolve(CONNECTED)),
+  exportData: vi.fn<() => Promise<ExportResult>>(() => Promise.resolve({ kind: 'cancelled' })),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   mergeGames: vi.fn(),
@@ -172,6 +174,7 @@ describe('registerIpcHandlers', () => {
     IPC.findRpcs3,
     IPC.chooseRpcs3Folder,
     IPC.connectRpcs3,
+    IPC.exportData,
     IPC.listLibrary,
     IPC.getGame,
     IPC.mergeGames,
@@ -512,6 +515,16 @@ describe('RPCS3 handlers', () => {
 
     expect(result).toMatchObject({ ok: false, reason: 'invalid_input' })
     expect(fakes.connectRpcs3).not.toHaveBeenCalled()
+  })
+})
+
+describe('data export handler', () => {
+  it('runs the export for our own pages and returns its result', async () => {
+    const saved = { kind: 'saved' as const, path: 'C:\\out.json', games: 2, achievements: 9 }
+    fakes.exportData.mockResolvedValueOnce(saved)
+
+    await expect(call(IPC.exportData, TRUSTED)).resolves.toEqual(saved)
+    expect(fakes.exportData).toHaveBeenCalledOnce()
   })
 })
 

@@ -37,6 +37,7 @@ export const IPC = {
   findRpcs3: 'accounts:find-rpcs3',
   chooseRpcs3Folder: 'accounts:choose-rpcs3-folder',
   connectRpcs3: 'accounts:connect-rpcs3',
+  exportData: 'data:export',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   mergeGames: 'library:merge-games',
@@ -54,6 +55,16 @@ export const IPC = {
   listDisplays: 'overlay:list-displays',
   dataChanged: 'data:changed',
 } as const
+
+export type ExportResult =
+  | {
+      readonly kind: 'saved'
+      readonly path: string
+      readonly games: number
+      readonly achievements: number
+    }
+  | { readonly kind: 'cancelled' }
+  | { readonly kind: 'failed'; readonly message: string }
 
 export interface AppInfo {
   readonly version: string
@@ -293,6 +304,7 @@ export interface TrophyLockerApi {
   findRpcs3(): Promise<EmulatorFolder | null>
   chooseRpcs3Folder(): Promise<ChooseEmulatorFolderResult>
   connectRpcs3(input: EmulatorConnectInput): Promise<ConnectResult>
+  exportData(): Promise<ExportResult>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   mergeGames(input: MergeGamesInput): Promise<void>

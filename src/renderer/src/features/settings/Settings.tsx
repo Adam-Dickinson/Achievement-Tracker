@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { AppInfo, Profile } from '@shared/ipc'
 import { ArtworkCard } from './ArtworkCard'
+import { DataCard } from './DataCard'
 import { NotificationsCard } from './NotificationsCard'
 import { ProfileCard } from './ProfileCard'
 
@@ -32,6 +33,7 @@ export function Settings({ profile, onRename }: SettingsProps) {
       <NotificationsCard />
       <div className="flex max-w-3xl flex-col gap-6">
         <ArtworkCard />
+        <DataCard />
         {info && (
           <p className="text-sm text-fg-subtle">
             Trophy Locker v{info.version} · database schema {info.schemaVersion}

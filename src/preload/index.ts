@@ -29,6 +29,7 @@ const api: TrophyLockerApi = {
   findRpcs3: () => ipcRenderer.invoke(IPC.findRpcs3),
   chooseRpcs3Folder: () => ipcRenderer.invoke(IPC.chooseRpcs3Folder),
   connectRpcs3: (input) => ipcRenderer.invoke(IPC.connectRpcs3, input),
+  exportData: () => ipcRenderer.invoke(IPC.exportData),
   connectUbisoft: (input) => ipcRenderer.invoke(IPC.connectUbisoft, input),
   cancelUbisoftSignIn: () => ipcRenderer.invoke(IPC.cancelUbisoftSignIn),
   connectEa: (input) => ipcRenderer.invoke(IPC.connectEa, input),

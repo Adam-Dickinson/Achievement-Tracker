@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, Menu, safeStorage, screen, shell } from 'electron'
 import { IPC, type NotificationSettings } from '@shared/ipc'
@@ -13,6 +14,7 @@ import {
 import { coalesce } from './coalesce'
 import { CookieSignIn, isBackHome } from './cookie-sign-in'
 import { type CookieSignInPage, openCookieSignInWindow } from './cookie-sign-in-window'
+import { DataExporter } from './data-export'
 import { registerIpcHandlers, type IpcHandlers } from './ipc'
 import { DATABASE_FILE, moveLegacyData } from './legacy-data'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
@@ -245,6 +247,23 @@ async function start(): Promise<void> {
     files: LOCAL_FILES,
     chooseFolder: () => chooseFolder('Choose the RPCS3 folder (the one that holds dev_hdd0)'),
   })
+  const dataExporter = new DataExporter({
+    db,
+    appInfo: () => ({ version: app.getVersion(), schemaVersion }),
+    chooseFile: async (defaultName) => {
+      const options: Electron.SaveDialogOptions = {
+        title: 'Export your data',
+        defaultPath: join(app.getPath('documents'), defaultName),
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+      }
+      const result =
+        mainWindow && !mainWindow.isDestroyed()
+          ? await dialog.showSaveDialog(mainWindow, options)
+          : await dialog.showSaveDialog(options)
+      return result.canceled ? null : (result.filePath ?? null)
+    },
+    writeFile: (path, text) => writeFile(path, text, 'utf8'),
+  })
   app.on('before-quit', () => {
     scheduler.stop()
     artwork.stop()
@@ -340,6 +359,7 @@ async function start(): Promise<void> {
     findRpcs3: () => rpcs3Accounts.find(),
     chooseRpcs3Folder: () => rpcs3Accounts.choose(),
     connectRpcs3: (input) => rpcs3Accounts.connect(input),
+    exportData: () => dataExporter.run(),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     mergeGames: ({ intoGameId, gameId }) => {
