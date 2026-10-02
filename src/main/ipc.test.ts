@@ -14,6 +14,7 @@ import {
 } from '@shared/ipc'
 import { type ActivityPage, MAX_ACTIVITY_LIMIT } from '@shared/library'
 import type { LogEntry, LogLevel } from '@shared/logs'
+import type { UpdateState } from '@shared/updates'
 
 type Handler = (event: unknown, ...args: unknown[]) => unknown
 const handlers = new Map<string, Handler>()
@@ -72,6 +73,17 @@ const SHADPS4_FOLDER: EmulatorFolder = {
   users: [{ id: '1000', name: 'Player 1', games: 1, unlocked: 10 }],
 }
 
+const UPDATE_STATE: UpdateState = {
+  status: 'idle',
+  currentVersion: '1.0.0',
+  version: null,
+  percent: null,
+  message: null,
+  lastCheckedAt: null,
+  autoCheck: true,
+  dismissed: false,
+}
+
 const fakes = {
   getAppInfo: vi.fn(() => ({ version: '0.1.0', schemaVersion: 2 })),
   sendTestNotification: vi.fn(() => Promise.resolve()),
@@ -110,6 +122,12 @@ const fakes = {
   openLogsFolder: vi.fn(() => Promise.resolve()),
   getStartupSettings: vi.fn(() => ({ available: true, enabled: false })),
   setStartWithWindows: vi.fn((on: boolean) => ({ available: true, enabled: on })),
+  getUpdateState: vi.fn(() => UPDATE_STATE),
+  checkForUpdates: vi.fn(() => Promise.resolve(UPDATE_STATE)),
+  downloadUpdate: vi.fn(() => Promise.resolve(UPDATE_STATE)),
+  installUpdate: vi.fn(),
+  dismissUpdate: vi.fn(() => UPDATE_STATE),
+  setAutoCheck: vi.fn((on: boolean): UpdateState => ({ ...UPDATE_STATE, autoCheck: on })),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   mergeGames: vi.fn(),
@@ -188,6 +206,12 @@ describe('registerIpcHandlers', () => {
     IPC.openLogsFolder,
     IPC.getStartupSettings,
     IPC.setStartWithWindows,
+    IPC.getUpdateState,
+    IPC.checkForUpdates,
+    IPC.downloadUpdate,
+    IPC.installUpdate,
+    IPC.dismissUpdate,
+    IPC.setAutoCheck,
     IPC.listLibrary,
     IPC.getGame,
     IPC.mergeGames,
@@ -589,6 +613,42 @@ describe('log and startup handlers', () => {
     call(IPC.setStartWithWindows, TRUSTED, payload)
 
     expect(fakes.setStartWithWindows).not.toHaveBeenCalled()
+  })
+})
+
+describe('update handlers', () => {
+  it('returns the state and runs a check, a download, a dismiss and an install', async () => {
+    expect(call(IPC.getUpdateState, TRUSTED)).toEqual(UPDATE_STATE)
+    await expect(call(IPC.checkForUpdates, TRUSTED)).resolves.toEqual(UPDATE_STATE)
+    await expect(call(IPC.downloadUpdate, TRUSTED)).resolves.toEqual(UPDATE_STATE)
+    expect(call(IPC.dismissUpdate, TRUSTED)).toEqual(UPDATE_STATE)
+    call(IPC.installUpdate, TRUSTED)
+
+    expect(fakes.checkForUpdates).toHaveBeenCalledOnce()
+    expect(fakes.downloadUpdate).toHaveBeenCalledOnce()
+    expect(fakes.installUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('takes no arguments from the page for those calls', () => {
+    call(IPC.dismissUpdate, TRUSTED, '1.9.9')
+    call(IPC.installUpdate, TRUSTED, 'C:\\evil.exe')
+
+    expect(fakes.dismissUpdate).toHaveBeenCalledExactlyOnceWith()
+    expect(fakes.installUpdate).toHaveBeenCalledExactlyOnceWith()
+  })
+
+  it('switches automatic checking on and off', () => {
+    expect(call(IPC.setAutoCheck, TRUSTED, false)).toMatchObject({ autoCheck: false })
+    expect(fakes.setAutoCheck).toHaveBeenCalledExactlyOnceWith(false)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a string', 'no'],
+    ['a number', 0],
+  ])('ignores a switch change with %s', (_label, payload) => {
+    expect(call(IPC.setAutoCheck, TRUSTED, payload)).toEqual(UPDATE_STATE)
+    expect(fakes.setAutoCheck).not.toHaveBeenCalled()
   })
 })
 

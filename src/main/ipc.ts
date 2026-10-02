@@ -48,6 +48,7 @@ import {
 } from '@shared/logs'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
+import type { UpdateState } from '@shared/updates'
 
 export interface IpcHandlers {
   getAppInfo(): AppInfo
@@ -87,6 +88,12 @@ export interface IpcHandlers {
   openLogsFolder(): Promise<void>
   getStartupSettings(): StartupSettings
   setStartWithWindows(on: boolean): StartupSettings
+  getUpdateState(): UpdateState
+  checkForUpdates(): Promise<UpdateState>
+  downloadUpdate(): Promise<UpdateState>
+  installUpdate(): void
+  dismissUpdate(): UpdateState
+  setAutoCheck(on: boolean): UpdateState
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   mergeGames(input: MergeGamesInput): void
@@ -447,6 +454,37 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     return parsed.success
       ? handlers.setStartWithWindows(parsed.data)
       : handlers.getStartupSettings()
+  })
+
+  ipcMain.handle(IPC.getUpdateState, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getUpdateState()
+  })
+
+  ipcMain.handle(IPC.checkForUpdates, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.checkForUpdates()
+  })
+
+  ipcMain.handle(IPC.downloadUpdate, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.downloadUpdate()
+  })
+
+  ipcMain.handle(IPC.installUpdate, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    handlers.installUpdate()
+  })
+
+  ipcMain.handle(IPC.dismissUpdate, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.dismissUpdate()
+  })
+
+  ipcMain.handle(IPC.setAutoCheck, (event, on: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = flagSchema.safeParse(on)
+    return parsed.success ? handlers.setAutoCheck(parsed.data) : handlers.getUpdateState()
   })
 
   ipcMain.handle(IPC.listLibrary, (event) => {

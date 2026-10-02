@@ -4,6 +4,7 @@ import type { LogEntry, LogLevel, LogSettings, StartupSettings } from './logs'
 import type { AccountStatus } from './models'
 import { PLATFORMS, type Platform } from './platform'
 import type { Rarity } from './rarity'
+import type { UpdateState } from './updates'
 
 export const IPC = {
   getAppInfo: 'app:get-info',
@@ -45,6 +46,13 @@ export const IPC = {
   openLogsFolder: 'logs:open-folder',
   getStartupSettings: 'startup:get',
   setStartWithWindows: 'startup:set',
+  getUpdateState: 'updates:get-state',
+  checkForUpdates: 'updates:check',
+  downloadUpdate: 'updates:download',
+  installUpdate: 'updates:install',
+  dismissUpdate: 'updates:dismiss',
+  setAutoCheck: 'updates:set-auto-check',
+  updateStateChanged: 'updates:state-changed',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   mergeGames: 'library:merge-games',
@@ -318,6 +326,13 @@ export interface TrophyLockerApi {
   openLogsFolder(): Promise<void>
   getStartupSettings(): Promise<StartupSettings>
   setStartWithWindows(on: boolean): Promise<StartupSettings>
+  getUpdateState(): Promise<UpdateState>
+  checkForUpdates(): Promise<UpdateState>
+  downloadUpdate(): Promise<UpdateState>
+  installUpdate(): Promise<void>
+  dismissUpdate(): Promise<UpdateState>
+  setAutoCheck(on: boolean): Promise<UpdateState>
+  onUpdateStateChanged(listener: (state: UpdateState) => void): () => void
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   mergeGames(input: MergeGamesInput): Promise<void>

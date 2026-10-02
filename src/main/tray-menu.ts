@@ -12,11 +12,14 @@ export interface TrayActions {
   quit(): void
   readonly pauseNotifications: Toggle
   readonly startWithWindows: Toggle | null
+  readonly updateLabel: () => string | null
 }
 
 export function trayMenuTemplate(actions: TrayActions): MenuItemConstructorOptions[] {
+  const update = actions.updateLabel()
   return [
     { label: 'Open Trophy Locker', click: () => actions.open() },
+    ...(update === null ? [] : [{ label: update, click: () => actions.open() }]),
     { label: 'Sync now', click: () => actions.syncNow() },
     { label: 'Send test notification', click: () => actions.sendTestNotification() },
     { type: 'separator' },
