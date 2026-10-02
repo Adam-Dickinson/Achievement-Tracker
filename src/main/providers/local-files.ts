@@ -11,10 +11,19 @@ export interface FolderEntry {
   readonly modifiedAt: Date
 }
 
+export interface WatchOptions {
+  readonly recursive?: boolean
+}
+
 export interface LocalFiles {
   readonly readText: (path: string, maxBytes: number) => Promise<string | null>
+  readonly readBytes: (path: string, maxBytes: number) => Promise<Uint8Array | null>
   readonly listFolder: (path: string) => Promise<readonly FolderEntry[] | null>
-  readonly watchFolder: (path: string, onFile: (name: string) => void) => () => void
+  readonly watchFolder: (
+    path: string,
+    onFile: (name: string) => void,
+    options?: WatchOptions,
+  ) => () => void
 }
 
 function isMissing(err: unknown): boolean {
@@ -22,7 +31,7 @@ function isMissing(err: unknown): boolean {
   return code === 'ENOENT' || code === 'ENOTDIR'
 }
 
-export async function readText(path: string, maxBytes: number): Promise<string | null> {
+async function readFile(path: string, maxBytes: number): Promise<Buffer | null> {
   let file
   try {
     file = await open(path, 'r')
@@ -35,11 +44,21 @@ export async function readText(path: string, maxBytes: number): Promise<string |
     if (size > maxBytes) {
       throw new ProviderError('parse', `${basename(path)} is larger than ${maxBytes} bytes`)
     }
-    const text = await file.readFile('utf8')
-    return text.charCodeAt(0) === BYTE_ORDER_MARK ? text.slice(1) : text
+    return await file.readFile()
   } finally {
     await file.close()
   }
+}
+
+export async function readText(path: string, maxBytes: number): Promise<string | null> {
+  const bytes = await readFile(path, maxBytes)
+  if (bytes === null) return null
+  const text = bytes.toString('utf8')
+  return text.charCodeAt(0) === BYTE_ORDER_MARK ? text.slice(1) : text
+}
+
+export function readBytes(path: string, maxBytes: number): Promise<Uint8Array | null> {
+  return readFile(path, maxBytes)
 }
 
 export async function listFolder(path: string): Promise<readonly FolderEntry[] | null> {
@@ -64,9 +83,13 @@ export async function listFolder(path: string): Promise<readonly FolderEntry[] |
   return entries.filter((entry) => entry !== null)
 }
 
-export function watchFolder(path: string, onFile: (name: string) => void): () => void {
+export function watchFolder(
+  path: string,
+  onFile: (name: string) => void,
+  { recursive = false }: WatchOptions = {},
+): () => void {
   try {
-    const watcher = watch(path, (_event, name) => {
+    const watcher = watch(path, { recursive }, (_event, name) => {
       if (name) onFile(name)
     })
     watcher.on('error', (err) => {
@@ -80,4 +103,4 @@ export function watchFolder(path: string, onFile: (name: string) => void): () =>
   }
 }
 
-export const LOCAL_FILES: LocalFiles = { readText, listFolder, watchFolder }
+export const LOCAL_FILES: LocalFiles = { readText, readBytes, listFolder, watchFolder }

@@ -34,6 +34,11 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     connectShadPs4: vi
       .fn()
       .mockResolvedValue({ ok: false, reason: 'other', message: 'not connected in tests' }),
+    findRpcs3: vi.fn().mockResolvedValue(null),
+    chooseRpcs3Folder: vi.fn().mockResolvedValue({ kind: 'cancelled' }),
+    connectRpcs3: vi
+      .fn()
+      .mockResolvedValue({ ok: false, reason: 'other', message: 'not connected in tests' }),
     listLibrary: vi.fn().mockResolvedValue([]),
     getGame: vi.fn().mockResolvedValue(null),
     mergeGames: vi.fn().mockResolvedValue(undefined),

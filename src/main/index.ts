@@ -26,12 +26,14 @@ import { LOCAL_FILES } from './providers/local-files'
 import { PlayStationProvider } from './providers/playstation'
 import { isPsnRedirect, PSN_SIGN_IN_URL, readNpsso } from './providers/playstation/auth'
 import { SteamProvider } from './providers/steam'
+import { Rpcs3Provider } from './providers/rpcs3'
 import { ShadPs4Provider } from './providers/shadps4'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
 import { XboxProvider } from './providers/xbox'
 import { getProfile, windowsUserName } from './profile'
 import { SafeStorageSecretStore } from './safe-storage-secret-store'
+import { Rpcs3Accounts } from './rpcs3-accounts'
 import { ShadPs4Accounts } from './shadps4-accounts'
 import { openStorePage } from './store-page'
 import { launchedHidden, startWithWindows } from './startup'
@@ -161,6 +163,7 @@ async function start(): Promise<void> {
   const ea = new EaProvider()
   const playstation = new PlayStationProvider()
   const shadps4 = new ShadPs4Provider()
+  const rpcs3 = new Rpcs3Provider()
   const chooseFolder = async (title: string): Promise<string | null> => {
     const options: Electron.OpenDialogOptions = { title, properties: ['openDirectory'] }
     const result =
@@ -212,7 +215,7 @@ async function start(): Promise<void> {
   const findArtworkSoon = coalesce(() => void artwork.run(), ARTWORK_DELAY_MS)
   const scheduler = new Scheduler({
     db,
-    providers: { steam, xbox, playstation, epic, ubisoft, ea, shadps4 },
+    providers: { steam, xbox, playstation, epic, ubisoft, ea, shadps4, rpcs3 },
     secrets,
     onUnlocks: (events) => {
       for (const event of events) console.info(describeUnlockTiming(event))
@@ -233,6 +236,14 @@ async function start(): Promise<void> {
     scheduler,
     files: LOCAL_FILES,
     chooseFolder: () => chooseFolder('Choose the shadPS4 data folder or install folder'),
+  })
+  const rpcs3Accounts = new Rpcs3Accounts({
+    db,
+    rpcs3,
+    secrets,
+    scheduler,
+    files: LOCAL_FILES,
+    chooseFolder: () => chooseFolder('Choose the RPCS3 folder (the one that holds dev_hdd0)'),
   })
   app.on('before-quit', () => {
     scheduler.stop()
@@ -326,6 +337,9 @@ async function start(): Promise<void> {
     findShadPs4: () => shadps4Accounts.find(),
     chooseShadPs4Folder: () => shadps4Accounts.choose(),
     connectShadPs4: (input) => shadps4Accounts.connect(input),
+    findRpcs3: () => rpcs3Accounts.find(),
+    chooseRpcs3Folder: () => rpcs3Accounts.choose(),
+    connectRpcs3: (input) => rpcs3Accounts.connect(input),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     mergeGames: ({ intoGameId, gameId }) => {

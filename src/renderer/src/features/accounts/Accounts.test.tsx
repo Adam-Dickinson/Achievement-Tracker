@@ -214,6 +214,24 @@ describe('Accounts', () => {
     expect(within(emulators).getByRole('region', { name: 'shadPS4: Player 1' })).toBeInTheDocument()
   })
 
+  it('offers RPCS3 beside shadPS4 in the Emulators section', async () => {
+    listAccounts.mockResolvedValue([])
+    render(<Accounts />)
+
+    const emulators = await screen.findByRole('region', { name: 'Emulators' })
+    expect(
+      within(emulators).getByRole('region', { name: 'RPCS3, not connected' }),
+    ).toBeInTheDocument()
+  })
+
+  it('shows a connected RPCS3 account in the Emulators section', async () => {
+    listAccounts.mockResolvedValue([{ ...STEAM, id: 6, platform: 'rpcs3', displayName: 'User' }])
+    render(<Accounts />)
+
+    const emulators = await screen.findByRole('region', { name: 'Emulators' })
+    expect(within(emulators).getByRole('region', { name: 'RPCS3: User' })).toBeInTheDocument()
+  })
+
   it('lets a disabled shadPS4 account connect again, preselected below', async () => {
     listAccounts.mockResolvedValue([
       { ...STEAM, id: 5, platform: 'shadps4', displayName: 'Player 1', status: 'disabled' },

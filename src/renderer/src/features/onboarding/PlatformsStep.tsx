@@ -2,6 +2,7 @@ import { CircleCheck } from 'lucide-react'
 import { Button } from '@/components/Button'
 import { PlatformTile } from '@/components/PlatformTile'
 import { ConnectPrompt } from '@/features/accounts/ConnectPrompt'
+import { Rpcs3Card } from '@/features/accounts/Rpcs3Card'
 import { ShadPs4Card } from '@/features/accounts/ShadPs4Card'
 import { ONLINE_PLATFORMS } from '@/features/accounts/sources'
 import { plural } from '@/lib/format'
@@ -44,6 +45,11 @@ export function PlatformsStep({
           <ConnectedTile platform="shadps4" />
         ) : (
           <ShadPs4Card connectedNames={[]} onConnected={() => onPlatformConnected('shadps4')} />
+        )}
+        {connectedPlatforms.has('rpcs3') ? (
+          <ConnectedTile platform="rpcs3" />
+        ) : (
+          <Rpcs3Card connectedNames={[]} onConnected={() => onPlatformConnected('rpcs3')} />
         )}
       </div>
 

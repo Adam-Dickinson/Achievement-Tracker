@@ -69,6 +69,9 @@ export interface IpcHandlers {
   findShadPs4(): Promise<EmulatorFolder | null>
   chooseShadPs4Folder(): Promise<ChooseEmulatorFolderResult>
   connectShadPs4(input: EmulatorConnectInput): Promise<ConnectResult>
+  findRpcs3(): Promise<EmulatorFolder | null>
+  chooseRpcs3Folder(): Promise<ChooseEmulatorFolderResult>
+  connectRpcs3(input: EmulatorConnectInput): Promise<ConnectResult>
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   mergeGames(input: MergeGamesInput): void
@@ -362,6 +365,29 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
       })
     }
     return handlers.connectShadPs4(parsed.data)
+  })
+
+  ipcMain.handle(IPC.findRpcs3, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.findRpcs3()
+  })
+
+  ipcMain.handle(IPC.chooseRpcs3Folder, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.chooseRpcs3Folder()
+  })
+
+  ipcMain.handle(IPC.connectRpcs3, (event, input: unknown): Promise<ConnectResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = emulatorConnectSchema.safeParse(input)
+    if (!parsed.success) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'invalid_input',
+        message: 'Choose an RPCS3 folder and user to connect.',
+      })
+    }
+    return handlers.connectRpcs3(parsed.data)
   })
 
   ipcMain.handle(IPC.listLibrary, (event) => {

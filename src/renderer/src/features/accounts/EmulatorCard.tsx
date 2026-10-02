@@ -3,15 +3,40 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/Button'
 import { PlatformTile } from '@/components/PlatformTile'
 import { plural } from '@/lib/format'
-import type { EmulatorFolder } from '@shared/ipc'
+import type {
+  ChooseEmulatorFolderResult,
+  EmulatorConnectInput,
+  EmulatorFolder,
+  ConnectResult,
+} from '@shared/ipc'
+import type { Platform } from '@shared/platform'
 
-interface ShadPs4CardProps {
+export interface EmulatorCardProps {
   connectedNames: readonly string[]
   onConnected: () => void
   reconnectName?: string | null
 }
 
-export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: ShadPs4CardProps) {
+interface EmulatorCardSource extends EmulatorCardProps {
+  platform: Platform
+  name: string
+  description: string
+  find: () => Promise<EmulatorFolder | null>
+  choose: () => Promise<ChooseEmulatorFolderResult>
+  connect: (input: EmulatorConnectInput) => Promise<ConnectResult>
+}
+
+export function EmulatorCard({
+  platform,
+  name,
+  description,
+  find,
+  choose,
+  connect: connectUser,
+  connectedNames,
+  onConnected,
+  reconnectName,
+}: EmulatorCardSource) {
   const [folder, setFolder] = useState<EmulatorFolder | null>(null)
   const [searched, setSearched] = useState(false)
   const [chosenId, setChosenId] = useState<string | null>(null)
@@ -21,7 +46,7 @@ export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: Shad
 
   useEffect(() => {
     let cancelled = false
-    void window.api.findShadPs4().then((found) => {
+    void find().then((found) => {
       if (cancelled) return
       setFolder(found)
       setSearched(true)
@@ -29,16 +54,16 @@ export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: Shad
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [find])
 
   async function chooseFolder() {
     setError(null)
-    const result = await window.api.chooseShadPs4Folder()
+    const result = await choose()
     if (result.kind === 'chosen') {
       setFolder(result.folder)
       setChosenId(null)
     } else if (result.kind === 'not_found') {
-      setError(`No shadPS4 data found in ${result.path}.`)
+      setError(`No ${name} data found in ${result.path}.`)
     }
   }
 
@@ -64,7 +89,7 @@ export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: Shad
     setBusy(true)
     setError(null)
     try {
-      const result = await window.api.connectShadPs4({ path: folder.path, userId: selected })
+      const result = await connectUser({ path: folder.path, userId: selected })
       if (result.ok) onConnected()
       else setError(result.message)
     } finally {
@@ -74,22 +99,22 @@ export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: Shad
 
   return (
     <section
-      aria-label="shadPS4, not connected"
+      aria-label={`${name}, not connected`}
       className="flex flex-col rounded-panel border-[1.5px] border-dashed border-white/16 bg-white/2 p-6"
     >
       <div className="flex items-center gap-4">
-        <PlatformTile platform="shadps4" muted />
+        <PlatformTile platform={platform} muted />
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-[22px] leading-6 font-bold">shadPS4</h3>
-          <p className="mt-0.5 text-[13px] text-fg-muted">PS4 trophies from its own data folder</p>
+          <h3 className="font-display text-[22px] leading-6 font-bold">{name}</h3>
+          <p className="mt-0.5 text-[13px] text-fg-muted">{description}</p>
         </div>
       </div>
 
-      {!searched && <p className="mt-5 text-sm text-fg-muted">Looking for shadPS4…</p>}
+      {!searched && <p className="mt-5 text-sm text-fg-muted">Looking for {name}…</p>}
 
       {searched && !folder && (
         <div className="mt-5 flex flex-col gap-3">
-          <p className="text-sm text-fg-muted">No shadPS4 data found automatically.</p>
+          <p className="text-sm text-fg-muted">No {name} data found automatically.</p>
           <Button variant="secondary" onClick={() => void chooseFolder()}>
             <span className="flex items-center gap-2">
               <FolderOpen aria-hidden="true" className="size-4" />
@@ -106,9 +131,9 @@ export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: Shad
           </p>
 
           {available.length === 0 ? (
-            <p className="text-sm text-fg-muted">Every shadPS4 user here is already connected.</p>
+            <p className="text-sm text-fg-muted">Every {name} user here is already connected.</p>
           ) : (
-            <div role="radiogroup" aria-label="shadPS4 user" className="flex flex-col gap-2">
+            <div role="radiogroup" aria-label={`${name} user`} className="flex flex-col gap-2">
               {available.map((user) => (
                 <label
                   key={user.id}
@@ -117,7 +142,7 @@ export function ShadPs4Card({ connectedNames, onConnected, reconnectName }: Shad
                   <span className="flex items-center gap-2.5">
                     <input
                       type="radio"
-                      name="shadps4-user"
+                      name={`${platform}-user`}
                       checked={selected === user.id}
                       onChange={() => setChosenId(user.id)}
                       ref={(el) => {
