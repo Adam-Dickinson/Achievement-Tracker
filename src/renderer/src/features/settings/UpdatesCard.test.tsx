@@ -113,4 +113,17 @@ describe('UpdatesCard', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.')
   })
+
+  it('shows a generic alert when the last check failed without a message', async () => {
+    await showing({ ...BASE, status: 'error' })
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not check for updates.')
+  })
+
+  it('does not render an empty status line for an error', async () => {
+    await showing({ ...BASE, status: 'error', message: 'Nope.' })
+
+    const empty = Array.from(document.querySelectorAll('p')).filter((p) => !p.textContent)
+    expect(empty).toHaveLength(0)
+  })
 })

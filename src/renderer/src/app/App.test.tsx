@@ -51,6 +51,7 @@ describe('App', () => {
     const { unmount } = render(<App />)
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
     await vi.waitFor(() => expect(window.api.getUpdateState).toHaveBeenCalled())
+    await act(async () => {})
     expect(screen.queryByText(/is available\./)).not.toBeInTheDocument()
     unmount()
 

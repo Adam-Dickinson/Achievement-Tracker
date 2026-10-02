@@ -55,10 +55,10 @@ export function UpdatesCard() {
 
       {state && (
         <>
-          <p className="text-sm">{statusText(state)}</p>
-          {state.status === 'error' && state.message && (
+          {statusText(state) !== '' && <p className="text-sm">{statusText(state)}</p>}
+          {state.status === 'error' && (
             <p role="alert" className="text-sm text-danger">
-              {state.message}
+              {state.message ?? 'Could not check for updates.'}
             </p>
           )}
 

@@ -1,19 +1,24 @@
+import { useState } from 'react'
 import { Button } from '@/components/Button'
 import type { UpdateState } from '@shared/updates'
 import { useUpdateState } from './useUpdateState'
 
 export function UpdateBanner() {
   const { state, apply } = useUpdateState()
+  const [busy, setBusy] = useState(false)
   if (state === null) return null
 
   const { status, version, percent, dismissed } = state
 
   async function run(action: () => Promise<UpdateState | void>) {
+    setBusy(true)
     try {
       const next = await action()
       if (next) apply(next)
     } catch {
       return
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -24,8 +29,14 @@ export function UpdateBanner() {
     return (
       <div role="status" className={shell}>
         <span className="flex-1 text-fg">Version {version} is available.</span>
-        <Button onClick={() => void run(() => window.api.downloadUpdate())}>Download</Button>
-        <Button variant="secondary" onClick={() => void run(() => window.api.dismissUpdate())}>
+        <Button disabled={busy} onClick={() => void run(() => window.api.downloadUpdate())}>
+          Download
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={busy}
+          onClick={() => void run(() => window.api.dismissUpdate())}
+        >
           Later
         </Button>
       </div>
@@ -36,7 +47,12 @@ export function UpdateBanner() {
     return (
       <div role="status" className={shell}>
         <span className="flex-1 text-fg">Downloading version {version}…</span>
-        <progress max={100} value={percent ?? 0} className="w-48 accent-primary" />
+        <progress
+          aria-label="Download progress"
+          max={100}
+          value={percent ?? 0}
+          className="w-48 accent-primary"
+        />
       </div>
     )
   }
@@ -45,7 +61,7 @@ export function UpdateBanner() {
     return (
       <div role="status" className={shell}>
         <span className="flex-1 text-fg">Version {version} is ready to install.</span>
-        <Button onClick={() => void run(() => window.api.installUpdate())}>
+        <Button disabled={busy} onClick={() => void run(() => window.api.installUpdate())}>
           Restart and update
         </Button>
       </div>

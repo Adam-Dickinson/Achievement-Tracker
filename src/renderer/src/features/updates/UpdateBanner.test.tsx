@@ -46,6 +46,7 @@ async function showing(state: UpdateState) {
   getUpdateState.mockResolvedValue(state)
   render(<UpdateBanner />)
   await vi.waitFor(() => expect(getUpdateState).toHaveBeenCalled())
+  await act(async () => {})
 }
 
 describe('UpdateBanner', () => {
@@ -61,7 +62,7 @@ describe('UpdateBanner', () => {
   ])('shows nothing for %s', async (_label, state) => {
     await showing(state)
 
-    await vi.waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument())
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('announces an available update with Download and Later', async () => {
@@ -85,7 +86,9 @@ describe('UpdateBanner', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Download' }))
 
     expect(downloadUpdate).toHaveBeenCalledOnce()
-    expect(await screen.findByRole('progressbar')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('progressbar', { name: 'Download progress' }),
+    ).toBeInTheDocument()
   })
 
   it('hides the banner when Later is clicked', async () => {
@@ -139,5 +142,50 @@ describe('UpdateBanner', () => {
 
     await vi.waitFor(() => expect(downloadUpdate).toHaveBeenCalledOnce())
     expect(screen.getByRole('status')).toHaveTextContent('Version 1.1.0 is available.')
+  })
+
+  it('keeps a pushed state when the initial read resolves afterwards', async () => {
+    let resolveInitial: (state: UpdateState) => void = () => undefined
+    getUpdateState.mockReturnValue(
+      new Promise<UpdateState>((resolve) => {
+        resolveInitial = resolve
+      }),
+    )
+    render(<UpdateBanner />)
+    await vi.waitFor(() => expect(getUpdateState).toHaveBeenCalled())
+
+    act(() => push({ ...BASE, status: 'available', version: '1.2.0' }))
+    await act(async () => resolveInitial(BASE))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Version 1.2.0 is available.')
+  })
+
+  it('stops listening for pushes when it unmounts', async () => {
+    const unsubscribe = vi.fn()
+    window.api = fakeApi({
+      getUpdateState: getUpdateState.mockResolvedValue(BASE),
+      onUpdateStateChanged: () => unsubscribe,
+    })
+    const { unmount } = render(<UpdateBanner />)
+
+    unmount()
+
+    expect(unsubscribe).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    ['Download', { ...BASE, status: 'available' as const, version: '1.1.0' }, downloadUpdate],
+    ['Later', { ...BASE, status: 'available' as const, version: '1.1.0' }, dismissUpdate],
+    ['Restart and update', { ...BASE, status: 'ready' as const, version: '1.1.0' }, installUpdate],
+  ])('fires %s only once on a double click', async (name, state, call) => {
+    await showing(state)
+    call.mockReturnValue(new Promise<never>(() => undefined))
+    const button = await screen.findByRole('button', { name })
+
+    fireEvent.click(button)
+    fireEvent.click(button)
+
+    expect(call).toHaveBeenCalledOnce()
+    expect(button).toBeDisabled()
   })
 })
