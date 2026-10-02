@@ -5,10 +5,41 @@
   "description": "Tracks achievements and trophies across platforms and emulators, with unlock pop-ups",
   "license": "GPL-3.0-only",
   "main": "./out/main/index.js",
+  "build": {
+    "appId": "io.github.adam-dickinson.trophy-locker",
+    "productName": "Trophy Locker",
+    "copyright": "Copyright (c) 2026 Adam Dickinson",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Trophy Locker",
+      "artifactName": "Trophy-Locker-Setup-${version}.exe"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Adam-Dickinson",
+      "repo": "Achievement-Tracker",
+      "releaseType": "draft"
+    }
+  },
   "scripts": {
     "postinstall": "install-electron",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
+    "dist": "npm run build && electron-builder --win --publish never",
+    "dist:dir": "npm run build && electron-builder --win --dir --publish never",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "lint": "eslint . --max-warnings 0",
@@ -20,6 +51,7 @@
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/figtree": "^5.3.0",
     "@tanstack/react-virtual": "^3.14.13",
+    "electron-updater": "^6.8.9",
     "lucide-react": "^1.47.0",
     "motion": "^13.4.0",
     "react": "^19.3.0",
@@ -37,6 +69,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
     "electron": "^44.4.3",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
