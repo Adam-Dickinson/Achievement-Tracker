@@ -67,6 +67,12 @@ describe('Settings', () => {
     expect(await screen.findByRole('region', { name: 'Logs' })).toBeInTheDocument()
   })
 
+  it('shows the Updates card', async () => {
+    renderSettings()
+
+    expect(await screen.findByRole('region', { name: 'Updates' })).toBeInTheDocument()
+  })
+
   it('leaves the version out until it is known', () => {
     window.api = fakeApi({ getAppInfo: vi.fn().mockReturnValue(new Promise(() => {})) })
     renderSettings()

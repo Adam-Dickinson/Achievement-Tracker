@@ -6,6 +6,7 @@ import { LogsCard } from './LogsCard'
 import { NotificationsCard } from './NotificationsCard'
 import { ProfileCard } from './ProfileCard'
 import { StartupCard } from './StartupCard'
+import { UpdatesCard } from './UpdatesCard'
 
 interface SettingsProps {
   profile: Profile | null
@@ -38,6 +39,7 @@ export function Settings({ profile, onRename }: SettingsProps) {
         <DataCard />
         <StartupCard />
         <LogsCard />
+        <UpdatesCard />
         {info && (
           <p className="text-sm text-fg-subtle">
             Trophy Locker v{info.version} · database schema {info.schemaVersion}

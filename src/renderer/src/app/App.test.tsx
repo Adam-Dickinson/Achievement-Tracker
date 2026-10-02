@@ -47,6 +47,30 @@ describe('App', () => {
     expect(await screen.findByRole('img', { name: 'adam' })).toBeInTheDocument()
   })
 
+  it('shows the update banner only when an update is available', async () => {
+    const { unmount } = render(<App />)
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
+    await vi.waitFor(() => expect(window.api.getUpdateState).toHaveBeenCalled())
+    expect(screen.queryByText(/is available\./)).not.toBeInTheDocument()
+    unmount()
+
+    window.api = fakeApi({
+      getUpdateState: vi.fn().mockResolvedValue({
+        status: 'available',
+        currentVersion: '1.0.0',
+        version: '1.1.0',
+        percent: null,
+        message: null,
+        lastCheckedAt: null,
+        autoCheck: true,
+        dismissed: false,
+      }),
+    })
+    render(<App />)
+
+    expect(await screen.findByText('Version 1.1.0 is available.')).toBeInTheDocument()
+  })
+
   it('shows the Accounts screen on the Accounts page', async () => {
     render(<App />)
 
