@@ -4,38 +4,27 @@ export const REDACTED = '[redacted]'
 
 const MAX_STRING = 2000
 const MAX_DEPTH = 4
-const SENSITIVE_NAMES = [
-  'access_token',
-  'refresh_token',
-  'id_token',
-  'token',
-  'apikey',
-  'api_key',
-  'key',
-  'code',
-  'npsso',
-  'ticket',
-  'password',
-  'secret',
-  'session',
-  'sessionid',
-  'cookie',
-  'authorization',
-]
-const NAME_PATTERN = SENSITIVE_NAMES.join('|')
-const SENSITIVE_NAME = new RegExp(`^(?:${NAME_PATTERN})$`, 'i')
+const NAME_PATTERN =
+  '(?:[A-Za-z0-9_-]*(?:token|secret|key|password|session|sessionid|session_id|ticket|npsso|cookie|authorization)|code)'
+const SENSITIVE_NAME = new RegExp(`^${NAME_PATTERN}$`, 'i')
 const HEADER_VALUE = /\b(Cookie|Set-Cookie|Authorization)(\s*[:=]\s*)[^\r\n]+/gi
 const BEARER = /\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi
-const PARAMETER = new RegExp(`\\b(${NAME_PATTERN})(=)[^&\\s"']+`, 'gi')
-const JSON_PAIR = new RegExp(`("(?:${NAME_PATTERN})"\\s*:\\s*")[^"]*(")`, 'gi')
+const PAIR = new RegExp(
+  String.raw`(?<![A-Za-z0-9_-])(["']?)(${NAME_PATTERN})(\1\s*[:=]\s*)("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^&\s"',;}]+)`,
+  'gi',
+)
 const LONG_RUN = /[A-Za-z0-9_-]{32,}/g
+
+function maskPair(_match: string, quote: string, name: string, separator: string, value: string) {
+  const mark = value.startsWith('"') || value.startsWith("'") ? value[0] : ''
+  return `${quote}${name}${separator}${mark}${REDACTED}${mark}`
+}
 
 export function redactText(text: string): string {
   const redacted = text
     .replace(HEADER_VALUE, `$1$2${REDACTED}`)
     .replace(BEARER, `$1 ${REDACTED}`)
-    .replace(PARAMETER, `$1$2${REDACTED}`)
-    .replace(JSON_PAIR, `$1${REDACTED}$2`)
+    .replace(PAIR, maskPair)
     .replace(LONG_RUN, REDACTED)
   return redacted.length > MAX_STRING ? `${redacted.slice(0, MAX_STRING)}…` : redacted
 }

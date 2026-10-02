@@ -37,11 +37,50 @@ describe('redactText', () => {
     expect(redactText(input)).toBe(input)
   })
 
+  it.each([
+    [
+      'a JSON value with an escaped quote',
+      '{"token": "a\\"b-secretpart"}',
+      `{"token": "${REDACTED}"}`,
+    ],
+    ['an escaped quote in a password', '{"password":"p\\"w"}', `{"password":"${REDACTED}"}`],
+    ['a double-quoted parameter', 'token="abc def" next', `token="${REDACTED}" next`],
+    ['a single-quoted parameter', "token='abc' next", `token='${REDACTED}' next`],
+    ['an unquoted value up to a space', 'password=hun ter2', `password=${REDACTED} ter2`],
+    ['a camelCase name', 'accessToken=abc', `accessToken=${REDACTED}`],
+    ['a client_secret name', 'client_secret=abc', `client_secret=${REDACTED}`],
+    ['a session_id name', 'session_id=abc', `session_id=${REDACTED}`],
+    ['a user_session name', 'user_session=abc', `user_session=${REDACTED}`],
+    ['an x_api_key name', 'x_api_key=abc', `x_api_key=${REDACTED}`],
+    ['a dashed X-Api-Key name', 'X-Api-Key=abc', `X-Api-Key=${REDACTED}`],
+    ['a colon pair', 'token: abc', `token: ${REDACTED}`],
+    ['a colon password', 'password: hunter2', `password: ${REDACTED}`],
+    ['a tight colon pair', 'api_key:abc', `api_key:${REDACTED}`],
+    ['spaces around equals', 'token = abc', `token = ${REDACTED}`],
+    ['a numeric JSON value', '{"token": 12345}', `{"token": ${REDACTED}}`],
+    ['a single-quoted pair', "{'token':'abc'}", `{'token':'${REDACTED}'}`],
+  ])('also redacts %s', (_label, input, expected) => {
+    expect(redactText(input)).toBe(expected)
+  })
+
+  it.each([
+    ['a keyboard word', 'keyboard=us'],
+    ['a dashed error code', 'error-code=5'],
+  ])('also leaves %s alone', (_label, input) => {
+    expect(redactText(input)).toBe(input)
+  })
+
   it('cuts a very long message after redacting it', () => {
     const result = redactText(`${'word '.repeat(1000)}`)
 
     expect(result.length).toBeLessThan(2100)
     expect(result.endsWith('…')).toBe(true)
+  })
+
+  it('redacts a secret that straddles the cut point', () => {
+    const result = redactText(`${'x '.repeat(990)}${'S'.repeat(40)} tail`)
+
+    expect(result).not.toContain('SSSS')
   })
 })
 
@@ -78,6 +117,20 @@ describe('redactValue', () => {
     expect(result.name).toBe('Error')
     expect(result.message).toBe(`bad token=${REDACTED}`)
     expect(result.stack).not.toContain('token=abc')
+  })
+
+  it.each(['accessToken', 'refresh_token', 'client_secret', 'x_api_key', 'X-Api-Key', 'authToken'])(
+    'hides the value of a key named %s',
+    (name) => {
+      expect(redactValue({ [name]: 'abc' })).toEqual({ [name]: REDACTED })
+    },
+  )
+
+  it('keeps the value of keys that only resemble credentials', () => {
+    expect(redactValue({ error_code: 5, keyboard: 'us' })).toEqual({
+      error_code: 5,
+      keyboard: 'us',
+    })
   })
 
   it('walks arrays', () => {
