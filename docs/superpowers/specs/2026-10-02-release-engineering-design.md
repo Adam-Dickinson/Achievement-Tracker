@@ -23,7 +23,7 @@ electron-builder, configured under `build` in `package.json`.
 
 - `productName` "Trophy Locker", `appId` `io.github.adam-dickinson.trophy-locker`, icon `resources/icon.ico`, license GPL-3.0.
 - NSIS, **per user, not per machine** (no admin prompt), the user may choose the folder, Start Menu shortcut, normal Windows uninstaller entry. Artifact name `Trophy-Locker-Setup-${version}.exe`.
-- Package contents: `out/**` and `package.json` only. `node:sqlite` is part of Electron 44, so there are no native modules to rebuild.
+- Package contents: `out/**`, `package.json` and the production dependencies (electron-builder adds them automatically). `node:sqlite` is part of Electron 44, so there are no native modules to rebuild.
 - `publish` provider `github`, owner `Adam-Dickinson`, repo `Achievement-Tracker` (the repository keeps its old name).
 - Scripts: `npm run dist` (build and package the installer) and `npm run dist:dir` (unpacked folder, used for measuring). Neither publishes.
 - The version in `package.json` becomes `1.0.0` for the release; the tag must equal `v<version>` (the workflow checks).
@@ -36,15 +36,15 @@ electron-builder, configured under `build` in `package.json`.
 
 An injectable class (the updater, the clock, the notifier and the settings store are passed in), so it is tested without Electron. State:
 
-| State | Meaning |
-| --- | --- |
-| `disabled` | Not packaged (`npm run dev`), or the user turned automatic checking off and has not checked by hand. |
-| `idle` | Nothing known; shows the last check time. |
-| `checking` | A check is running. |
-| `available` | A newer version exists: `{ version, releaseNotes? }`. Nothing downloaded. |
-| `downloading` | The user asked to download: `{ version, percent }`. |
-| `ready` | Downloaded and verified: `{ version }`. |
-| `error` | The last check or download failed: a plain message. |
+| State         | Meaning                                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| `disabled`    | Not packaged (`npm run dev`), or the user turned automatic checking off and has not checked by hand. |
+| `idle`        | Nothing known; shows the last check time.                                                            |
+| `checking`    | A check is running.                                                                                  |
+| `available`   | A newer version exists: `{ version, releaseNotes? }`. Nothing downloaded.                            |
+| `downloading` | The user asked to download: `{ version, percent }`.                                                  |
+| `ready`       | Downloaded and verified: `{ version }`.                                                              |
+| `error`       | The last check or download failed: a plain message.                                                  |
 
 - **When it checks:** once about 10 seconds after launch (so startup is not slowed), then every 6 hours while the app runs, if **Automatically check for updates** is on (default on). **Check now** always works.
 - **What the user is told:** when the state first becomes `available` for a version, and the user has not dismissed that version:
@@ -57,19 +57,19 @@ An injectable class (the updater, the clock, the notifier and the settings store
 
 ### Privacy
 
-Update checking is the first time the app contacts anything other than the platforms the user connected. It sends the normal HTTPS request to github.com for the release feed and nothing else (no ids, no library data). The Updates card and the README say so, and turning **Automatically check for updates** off stops all automatic traffic. Recorded in a new ADR (0016).
+Update checking is the first time the app contacts anything other than the platforms the user connected. It sends the normal HTTPS request to github.com for the release feed, which carries only the usual details of a web request (such as the IP address), with no account, game or library information. The app replaces the updater's random per-install staging id header with a fixed value so no per-install id is sent. The Updates card and the README say so, and turning **Automatically check for updates** off stops all automatic traffic. Recorded in a new ADR (0016).
 
 ### IPC (rule 9: sender checked, payloads validated)
 
-| Call | Channel | Payload | Result |
-| --- | --- | --- | --- |
-| `getUpdateState()` | `updates:get-state` | none | `UpdateState` plus `autoCheck` and `currentVersion` |
-| `checkForUpdates()` | `updates:check` | none | `UpdateState` after the check starts |
-| `downloadUpdate()` | `updates:download` | none | `UpdateState` |
-| `installUpdate()` | `updates:install` | none | `void` (quits and installs) |
-| `dismissUpdate()` | `updates:dismiss` | none | `UpdateState` (remembers the dismissed version) |
-| `setAutoCheck(on)` | `updates:set-auto-check` | boolean | `UpdateState` |
-| `onUpdateStateChanged(listener)` | `updates:state-changed` (push) | | the new `UpdateState` |
+| Call                             | Channel                        | Payload | Result                                              |
+| -------------------------------- | ------------------------------ | ------- | --------------------------------------------------- |
+| `getUpdateState()`               | `updates:get-state`            | none    | `UpdateState` plus `autoCheck` and `currentVersion` |
+| `checkForUpdates()`              | `updates:check`                | none    | `UpdateState` after the check starts                |
+| `downloadUpdate()`               | `updates:download`             | none    | `UpdateState`                                       |
+| `installUpdate()`                | `updates:install`              | none    | `void` (quits and installs)                         |
+| `dismissUpdate()`                | `updates:dismiss`              | none    | `UpdateState` (remembers the dismissed version)     |
+| `setAutoCheck(on)`               | `updates:set-auto-check`       | boolean | `UpdateState`                                       |
+| `onUpdateStateChanged(listener)` | `updates:state-changed` (push) |         | the new `UpdateState`                               |
 
 Saved settings: `updates.autoCheck` (boolean, default true), `updates.dismissedVersion` (string), `updates.notifiedVersion` (string, so a restart does not repeat the system notification).
 

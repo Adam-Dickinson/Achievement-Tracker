@@ -81,7 +81,7 @@ import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
 import { type AppTray, createTray } from './tray'
-import { UpdateService, type UpdaterLike } from './update-service'
+import { trayUpdateLabel, UpdateService, type UpdaterLike } from './update-service'
 import { UbisoftSignIn } from './ubisoft-sign-in'
 import { openUbisoftSignInWindow } from './ubisoft-sign-in-window'
 import { describeUnlockTiming } from './unlock-timing'
@@ -115,6 +115,11 @@ if (!dataFolderReady() || !app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   void start()
+}
+
+function packagedUpdater(): UpdaterLike {
+  autoUpdater.requestHeaders = { 'x-user-staging-id': 'trophy-locker' }
+  return autoUpdater as unknown as UpdaterLike
 }
 
 function dataFolderReady(): boolean {
@@ -326,8 +331,9 @@ async function start(): Promise<void> {
 
   const startToggle = startWithWindows(app)
 
+  let updateNotification: Notification | null = null
   const updateService = new UpdateService({
-    updater: app.isPackaged ? (autoUpdater as unknown as UpdaterLike) : null,
+    updater: app.isPackaged ? packagedUpdater() : null,
     currentVersion: app.getVersion(),
     settings: {
       read: () => readUpdateSettings(db),
@@ -344,7 +350,15 @@ async function start(): Promise<void> {
         title: 'Trophy Locker update',
         body: `Version ${version} is available.`,
       })
-      notification.on('click', showMainWindow)
+      const release = (): void => {
+        if (updateNotification === notification) updateNotification = null
+      }
+      notification.on('click', () => {
+        release()
+        showMainWindow()
+      })
+      notification.on('close', release)
+      updateNotification = notification
       notification.show()
     },
     onChange: (state) => {
@@ -492,15 +506,7 @@ async function start(): Promise<void> {
       set: setNotificationsPaused,
     },
     startWithWindows: startToggle,
-    updateLabel: () => {
-      const state = updateService.state()
-      if (state.version === null) return null
-      if (state.status === 'ready') return `Restart to update to v${state.version}`
-      if (state.status === 'available' && !state.dismissed) {
-        return `Update available: v${state.version}`
-      }
-      return null
-    },
+    updateLabel: () => trayUpdateLabel(updateService.state()),
   })
   console.info('Ready in the tray')
   updateService.start()

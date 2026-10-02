@@ -56,6 +56,14 @@ export function UpdatesCard() {
       {state && (
         <>
           {statusText(state) !== '' && <p className="text-sm">{statusText(state)}</p>}
+          {state.lastCheckedAt !== null && (
+            <p className="text-sm text-fg-muted">
+              Last checked{' '}
+              <time dateTime={state.lastCheckedAt}>
+                {new Date(state.lastCheckedAt).toLocaleString()}
+              </time>
+            </p>
+          )}
           {state.status === 'error' && (
             <p role="alert" className="text-sm text-danger">
               {state.message ?? 'Could not check for updates.'}
@@ -75,7 +83,8 @@ export function UpdatesCard() {
             >
               Check now
             </Button>
-            {state.status === 'available' && (
+            {(state.status === 'available' ||
+              (state.status === 'error' && state.version !== null)) && (
               <Button disabled={busy} onClick={() => void run(() => window.api.downloadUpdate())}>
                 Download
               </Button>
@@ -100,9 +109,9 @@ export function UpdatesCard() {
               Automatically check for updates
             </label>
             <p id={`${id}-auto-note`} className="text-fg-muted">
-              Checking contacts github.com to read the list of releases and sends nothing else about
-              you or your library. Turn it off to stop all update traffic; you can still check by
-              hand.
+              Checking contacts github.com and sends only the usual details of a web request, such
+              as your IP address, with no account, game or library information. Turn it off to stop
+              all update traffic; you can still check by hand.
             </p>
           </div>
         </>

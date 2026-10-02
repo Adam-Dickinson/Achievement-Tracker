@@ -10,7 +10,7 @@ Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [Releases page]
 
 Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**.
 
-**Updates:** the app checks GitHub for new versions at launch and every 6 hours, tells you when one exists, and only downloads it when you press Download. The check reads the release list on github.com and sends nothing else. You can switch it off in Settings under Updates. See [ADR-0016](docs/adr/0016-release-and-updates.md).
+**Updates:** the app checks GitHub for new versions at launch and every 6 hours, tells you when one exists, and only downloads it when you press Download. The check contacts github.com and sends only the usual details of a web request, such as your IP address, with no account, game or library information. You can switch it off in Settings under Updates. See [ADR-0016](docs/adr/0016-release-and-updates.md).
 
 ## Goals
 
@@ -22,16 +22,16 @@ Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC
 
 ## Supported sources
 
-| Source | Method | Real-time | Confidence |
-|---|---|---|---|
-| Steam | Web API + local stats files | Yes | High |
-| Xbox | Xbox Live API | Polling | Medium |
-| PlayStation | PlayStation App services (unofficial), signed in on Sony's page in an app window (again every 2 months) | Polling, after the console syncs | Medium-Low |
-| Epic Games | Epic launcher services (unofficial), signed in with a code from the browser | Polling | Medium |
-| Ubisoft Connect | Ubisoft Connect launcher services (unofficial), signed in on Ubisoft's page in an app window | Polling | Medium-Low |
-| EA app | EA app services (unofficial), signed in on EA's page in an app window | Polling | Medium-Low |
-| shadPS4 (PS4 emulator) | Its own trophy files on this PC | Yes | Medium |
-| RPCS3 (PS3 emulator) | Its own trophy files on this PC | Yes | Medium |
+| Source                 | Method                                                                                                  | Real-time                        | Confidence |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------- | ---------- |
+| Steam                  | Web API + local stats files                                                                             | Yes                              | High       |
+| Xbox                   | Xbox Live API                                                                                           | Polling                          | Medium     |
+| PlayStation            | PlayStation App services (unofficial), signed in on Sony's page in an app window (again every 2 months) | Polling, after the console syncs | Medium-Low |
+| Epic Games             | Epic launcher services (unofficial), signed in with a code from the browser                             | Polling                          | Medium     |
+| Ubisoft Connect        | Ubisoft Connect launcher services (unofficial), signed in on Ubisoft's page in an app window            | Polling                          | Medium-Low |
+| EA app                 | EA app services (unofficial), signed in on EA's page in an app window                                   | Polling                          | Medium-Low |
+| shadPS4 (PS4 emulator) | Its own trophy files on this PC                                                                         | Yes                              | Medium     |
+| RPCS3 (PS3 emulator)   | Its own trophy files on this PC                                                                         | Yes                              | Medium     |
 
 After v1: RetroAchievements (RetroArch, PPSSPP, DuckStation, Dolphin, PCSX2) and Xenia (Xbox 360).
 
@@ -43,18 +43,18 @@ Details and risks for each: [docs/PROVIDERS.md](docs/PROVIDERS.md).
 
 ## Documentation
 
-| Doc | Purpose |
-|---|---|
-| [docs/DESIGN.md](docs/DESIGN.md) | Product vision, users, UX, notification design |
-| [docs/design/](docs/design/README.md) | UI mockups for the core screens (HTML snapshots + Superdesign canvas) |
-| [docs/SPEC.md](docs/SPEC.md) | Requirements, data model, provider interface, services |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, folder structure |
-| [docs/PROVIDERS.md](docs/PROVIDERS.md) | Per-platform integration notes and risks |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Milestones and task breakdown |
-| [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md) | Where everything is: every folder and file, how they connect, and where to work for each kind of change |
-| [docs/SCAFFOLD-GUIDE.md](docs/SCAFFOLD-GUIDE.md) | What's in the scaffold, how to run it, and a React + Electron primer |
-| [docs/adr/](docs/adr/) | Architecture decision records |
-| [CLAUDE.md](CLAUDE.md) | Guide for Claude Code working in this repo |
+| Doc                                              | Purpose                                                                                                 |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| [docs/DESIGN.md](docs/DESIGN.md)                 | Product vision, users, UX, notification design                                                          |
+| [docs/design/](docs/design/README.md)            | UI mockups for the core screens (HTML snapshots + Superdesign canvas)                                   |
+| [docs/SPEC.md](docs/SPEC.md)                     | Requirements, data model, provider interface, services                                                  |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)     | System design, data flow, folder structure                                                              |
+| [docs/PROVIDERS.md](docs/PROVIDERS.md)           | Per-platform integration notes and risks                                                                |
+| [docs/ROADMAP.md](docs/ROADMAP.md)               | Milestones and task breakdown                                                                           |
+| [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md)       | Where everything is: every folder and file, how they connect, and where to work for each kind of change |
+| [docs/SCAFFOLD-GUIDE.md](docs/SCAFFOLD-GUIDE.md) | What's in the scaffold, how to run it, and a React + Electron primer                                    |
+| [docs/adr/](docs/adr/)                           | Architecture decision records                                                                           |
+| [CLAUDE.md](CLAUDE.md)                           | Guide for Claude Code working in this repo                                                              |
 
 ## Getting started
 

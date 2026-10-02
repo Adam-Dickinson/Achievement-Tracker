@@ -22,7 +22,7 @@ export interface UpdaterLike {
   on(event: 'error', listener: (error: Error) => void): unknown
   checkForUpdates(): Promise<unknown>
   downloadUpdate(): Promise<unknown>
-  quitAndInstall(): void
+  quitAndInstall(isSilent: boolean, isForceRunAfter: boolean): void
 }
 
 export interface UpdateServiceDeps {
@@ -36,6 +36,13 @@ export interface UpdateServiceDeps {
   readonly notify: (version: string) => void
   readonly onChange: (state: UpdateState) => void
   readonly now?: () => Date
+}
+
+export function trayUpdateLabel(state: UpdateState): string | null {
+  if (state.version === null) return null
+  if (state.status === 'ready') return `Restart to update to v${state.version}`
+  if (state.status === 'available') return `Update available: v${state.version}`
+  return null
 }
 
 const CHECK_FAILED = 'Could not check for updates.'
@@ -108,7 +115,7 @@ export class UpdateService {
   }
 
   install(): void {
-    if (this.#status === 'ready') this.#deps.updater?.quitAndInstall()
+    if (this.#status === 'ready') this.#deps.updater?.quitAndInstall(true, true)
   }
 
   dismiss(): UpdateState {

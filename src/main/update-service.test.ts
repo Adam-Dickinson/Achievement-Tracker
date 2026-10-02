@@ -6,7 +6,7 @@ import {
   type UpdateSettings,
   type UpdateState,
 } from '@shared/updates'
-import { UpdateService, type UpdaterLike } from './update-service'
+import { trayUpdateLabel, UpdateService, type UpdaterLike } from './update-service'
 
 const NOW = new Date('2026-10-02T12:00:00.000Z')
 
@@ -339,6 +339,7 @@ describe('UpdateService', () => {
       updater.emit('update-downloaded', { version: '1.1.0' })
       installing.install()
       expect(updater.quitAndInstall).toHaveBeenCalledOnce()
+      expect(updater.quitAndInstall).toHaveBeenCalledWith(true, true)
     })
 
     it('does not run an automatic check while an update is ready', async () => {
@@ -404,5 +405,43 @@ describe('UpdateService', () => {
     expect(stored.autoCheck).toBe(false)
     expect(state.autoCheck).toBe(false)
     expect(changes.at(-1)?.autoCheck).toBe(false)
+  })
+})
+
+describe('trayUpdateLabel', () => {
+  const base: UpdateState = {
+    status: 'idle',
+    currentVersion: '1.0.0',
+    version: null,
+    percent: null,
+    message: null,
+    lastCheckedAt: null,
+    autoCheck: true,
+    dismissed: false,
+  }
+
+  it('offers the restart when an update is ready', () => {
+    expect(trayUpdateLabel({ ...base, status: 'ready', version: '1.1.0' })).toBe(
+      'Restart to update to v1.1.0',
+    )
+  })
+
+  it('names an available update', () => {
+    expect(trayUpdateLabel({ ...base, status: 'available', version: '1.1.0' })).toBe(
+      'Update available: v1.1.0',
+    )
+  })
+
+  it('still names an available update that was dismissed', () => {
+    expect(
+      trayUpdateLabel({ ...base, status: 'available', version: '1.1.0', dismissed: true }),
+    ).toBe('Update available: v1.1.0')
+  })
+
+  it('has no entry when idle, failed or without a version', () => {
+    expect(trayUpdateLabel(base)).toBeNull()
+    expect(trayUpdateLabel({ ...base, status: 'error', version: '1.1.0' })).toBeNull()
+    expect(trayUpdateLabel({ ...base, status: 'available' })).toBeNull()
+    expect(trayUpdateLabel({ ...base, status: 'ready' })).toBeNull()
   })
 })

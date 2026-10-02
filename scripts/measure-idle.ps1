@@ -1,7 +1,8 @@
 param(
   [Parameter(Mandatory = $true)][string]$ExePath,
   [int]$Minutes = 5,
-  [string]$UserDataDir = (Join-Path ([System.IO.Path]::GetTempPath()) ("trophy-locker-idle-" + [guid]::NewGuid().ToString('N')))
+  [string]$UserDataDir = (Join-Path ([System.IO.Path]::GetTempPath()) ("trophy-locker-idle-" + [guid]::NewGuid().ToString('N'))),
+  [switch]$AllowAnyUserDataDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,13 +10,26 @@ Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 
 $exeFull = (Resolve-Path $ExePath).Path
 $cores = [Environment]::ProcessorCount
+$tempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd('') + ''
+$dataFull = [System.IO.Path]::GetFullPath($UserDataDir)
+if (-not $AllowAnyUserDataDir) {
+  if (-not $dataFull.StartsWith($tempRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    Write-Error "Refusing -UserDataDir '$dataFull': it is not under the temp folder. Pass -AllowAnyUserDataDir to use it anyway."
+    exit 1
+  }
+  if ((Test-Path $dataFull) -and (@(Get-ChildItem -Force -Path $dataFull).Count -gt 0)) {
+    Write-Error "Refusing -UserDataDir '$dataFull': it is not empty. Pass -AllowAnyUserDataDir to use it anyway."
+    exit 1
+  }
+}
+$UserDataDir = $dataFull
 New-Item -ItemType Directory -Force -Path $UserDataDir | Out-Null
 
 function Get-AppProcesses {
   Get-Process | Where-Object { $_.Path -eq $exeFull }
 }
 
-$process = Start-Process -FilePath $exeFull -ArgumentList @('--hidden', "--user-data-dir=$UserDataDir") -PassThru
+$process = Start-Process -FilePath $exeFull -ArgumentList @('--hidden', "`"--user-data-dir=$UserDataDir`"") -PassThru
 $startTime = $process.StartTime.ToUniversalTime()
 $logPath = Join-Path $UserDataDir 'logs\trophy-locker.log'
 

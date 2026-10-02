@@ -126,4 +126,34 @@ describe('UpdatesCard', () => {
     const empty = Array.from(document.querySelectorAll('p')).filter((p) => !p.textContent)
     expect(empty).toHaveLength(0)
   })
+
+  it('shows when the last check ran, as a machine-readable time', async () => {
+    await showing({ ...BASE, lastCheckedAt: '2026-10-02T12:00:00.000Z' })
+
+    const time = screen.getByText('Last checked', { exact: false }).querySelector('time')
+    expect(time).toHaveAttribute('datetime', '2026-10-02T12:00:00.000Z')
+  })
+
+  it('shows no time before any check', async () => {
+    await showing(BASE)
+
+    expect(document.querySelector('time')).toBeNull()
+  })
+
+  it('offers Download again after a failed download', async () => {
+    await showing({
+      ...BASE,
+      status: 'error',
+      version: '1.1.0',
+      message: 'Could not download the update.',
+    })
+
+    expect(screen.getByRole('button', { name: 'Download' })).toBeInTheDocument()
+  })
+
+  it('does not offer Download after a failed check with no known version', async () => {
+    await showing({ ...BASE, status: 'error', message: 'Could not check for updates.' })
+
+    expect(screen.queryByRole('button', { name: 'Download' })).toBeNull()
+  })
 })
