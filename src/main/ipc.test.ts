@@ -13,6 +13,7 @@ import {
   type Profile,
 } from '@shared/ipc'
 import { type ActivityPage, MAX_ACTIVITY_LIMIT } from '@shared/library'
+import type { LogEntry, LogLevel } from '@shared/logs'
 
 type Handler = (event: unknown, ...args: unknown[]) => unknown
 const handlers = new Map<string, Handler>()
@@ -103,6 +104,12 @@ const fakes = {
   chooseRpcs3Folder: vi.fn(() => Promise.resolve({ kind: 'cancelled' as const })),
   connectRpcs3: vi.fn(() => Promise.resolve(CONNECTED)),
   exportData: vi.fn<() => Promise<ExportResult>>(() => Promise.resolve({ kind: 'cancelled' })),
+  getLogSettings: vi.fn(() => ({ level: 'info' as LogLevel, available: true })),
+  setLogLevel: vi.fn((level: LogLevel) => ({ level, available: true })),
+  readLogs: vi.fn((): Promise<LogEntry[]> => Promise.resolve([])),
+  openLogsFolder: vi.fn(() => Promise.resolve()),
+  getStartupSettings: vi.fn(() => ({ available: true, enabled: false })),
+  setStartWithWindows: vi.fn((on: boolean) => ({ available: true, enabled: on })),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   mergeGames: vi.fn(),
@@ -175,6 +182,12 @@ describe('registerIpcHandlers', () => {
     IPC.chooseRpcs3Folder,
     IPC.connectRpcs3,
     IPC.exportData,
+    IPC.getLogSettings,
+    IPC.setLogLevel,
+    IPC.readLogs,
+    IPC.openLogsFolder,
+    IPC.getStartupSettings,
+    IPC.setStartWithWindows,
     IPC.listLibrary,
     IPC.getGame,
     IPC.mergeGames,
@@ -525,6 +538,57 @@ describe('data export handler', () => {
 
     await expect(call(IPC.exportData, TRUSTED)).resolves.toEqual(saved)
     expect(fakes.exportData).toHaveBeenCalledOnce()
+  })
+})
+
+describe('log and startup handlers', () => {
+  it('returns the log settings and changes the level', () => {
+    expect(call(IPC.getLogSettings, TRUSTED)).toEqual({ level: 'info', available: true })
+    expect(call(IPC.setLogLevel, TRUSTED, 'debug')).toEqual({
+      level: 'debug',
+      available: true,
+    })
+    expect(fakes.setLogLevel).toHaveBeenCalledExactlyOnceWith('debug')
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['an unknown level', 'loud'],
+    ['a number', 3],
+  ])('ignores a level change with %s', (_label, payload) => {
+    expect(call(IPC.setLogLevel, TRUSTED, payload)).toEqual({
+      level: 'info',
+      available: true,
+    })
+    expect(fakes.setLogLevel).not.toHaveBeenCalled()
+  })
+
+  it('reads logs at a level, and answers an unknown level with nothing', async () => {
+    await call(IPC.readLogs, TRUSTED, 'warn')
+    await expect(call(IPC.readLogs, TRUSTED, '../x')).resolves.toEqual([])
+
+    expect(fakes.readLogs).toHaveBeenCalledExactlyOnceWith('warn')
+  })
+
+  it('opens the logs folder without taking a path', async () => {
+    await call(IPC.openLogsFolder, TRUSTED, 'C:\\Windows')
+
+    expect(fakes.openLogsFolder).toHaveBeenCalledExactlyOnceWith()
+  })
+
+  it('returns and sets the start-with-Windows state', () => {
+    expect(call(IPC.getStartupSettings, TRUSTED)).toEqual({ available: true, enabled: false })
+    expect(call(IPC.setStartWithWindows, TRUSTED, true)).toEqual({ available: true, enabled: true })
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['a string', 'yes'],
+    ['a number', 1],
+  ])('ignores a start-with-Windows change with %s', (_label, payload) => {
+    call(IPC.setStartWithWindows, TRUSTED, payload)
+
+    expect(fakes.setStartWithWindows).not.toHaveBeenCalled()
   })
 })
 

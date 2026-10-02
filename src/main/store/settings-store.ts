@@ -7,12 +7,14 @@ import {
   type NotificationSettings,
   type NotificationSettingsPatch,
 } from '@shared/ipc'
+import { LOG_LEVELS, type LogLevel } from '@shared/logs'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
 
 const PROFILE_NAME = 'profile.name'
 const NOTIFICATION_SETTINGS = 'notifications.settings'
 const ONBOARDING_COMPLETED = 'onboarding.completed'
+const LOG_LEVEL = 'logging.level'
 
 const notificationSettingsSchema = z.object({
   corner: z.enum(TOAST_CORNERS),
@@ -105,4 +107,23 @@ export function saveOnboardingCompleted(db: DatabaseSync): void {
     `INSERT INTO setting (key, value) VALUES (?, ?)
      ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
   ).run(ONBOARDING_COMPLETED, JSON.stringify(true))
+}
+
+export function readLogLevel(db: DatabaseSync): LogLevel {
+  const row = db.prepare('SELECT value FROM setting WHERE key = ?').get(LOG_LEVEL) as
+    { value: string } | undefined
+  if (!row) return 'info'
+  try {
+    const parsed = z.enum(LOG_LEVELS).safeParse(JSON.parse(row.value))
+    return parsed.success ? parsed.data : 'info'
+  } catch {
+    return 'info'
+  }
+}
+
+export function saveLogLevel(db: DatabaseSync, level: LogLevel): void {
+  db.prepare(
+    `INSERT INTO setting (key, value) VALUES (?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+  ).run(LOG_LEVEL, JSON.stringify(level))
 }

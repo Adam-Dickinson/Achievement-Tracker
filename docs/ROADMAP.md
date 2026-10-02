@@ -75,7 +75,8 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 - [x] Onboarding flow, empty/error states, provider health UI: a 3-step wizard (Welcome, Platforms, Done) shows on a first launch with no accounts, reusing the Accounts screen's own connect flows (including shadPS4) for the Platforms step; skippable, shown once. Dashboard, Library and Activity each show an empty state pointing at Accounts when they have nothing to show. Provider health UI needed no new work: it was already built across M4/M5 (AccountCard's status badges and sync progress, the nav's "Check accounts")
 - [x] Accessibility pass, reduced motion, high contrast: a targeted pass, not a full audit. `prefers-reduced-motion` is respected app-wide (a global CSS media query plus `MotionConfig` on both React roots); every color-token pairing in `styles/index.css` was computed against WCAG AA, and the one that failed (`--color-fg-subtle`, used as small text in a few places) was brightened to clear it; Windows' forced-colors mode needed no code changes (checked). `EmptyState` uses a real heading instead of a `role="status"` live region, and the onboarding wizard's step indicator hides its decorative glyph and connector from screen readers
 - [x] Data export ([design](superpowers/specs/2026-10-02-data-export-design.md)): Settings, "Your data", **Export data…** saves one JSON file (accounts without platform ids, games with each platform entry, achievements and unlocks, platinums, manual links, settings); no credentials, since they never leave the `SecretStore`
-- [ ] Log viewer: rolling log files, a level setting and an in-app viewer in Settings (next; needs its own design)
+- [x] Log viewer ([design](superpowers/specs/2026-10-02-logging-design.md)): a logger writing redacted JSON lines to `userData/logs` (1 MB per file, 5 files), capture of the main process's `console` and uncaught exceptions, a saved level setting, and a Logs card in Settings with a level-filtered viewer (newest 500 entries, Refresh) and **Open logs folder**. Limits: the renderer's console is not captured, and an unquoted parameter value with spaces is redacted only up to its first space. Not yet checked by running the app
+- [x] Start with Windows in Settings: a Startup card with the same switch as the tray's, disabled with "Available in the installed app." in development; the real login start is checked in the installed build (release plan)
 - [x] Dashboard: rotate the "Nearly there" cover fan and the rarest-unlock spotlight daily, so the same few games and the same one achievement aren't pinned there forever. "Nearly there" shows 4 of the closest 10 games to 100%, and the rarest-unlock spotlight shows 1 of the rarest 10 unlocks; the pick is seeded from today's local date (`seededPick`/`dayKey` in `main/store/seeded-pick.ts`), so it stays the same all day and across a restart, then changes tomorrow
 - [x] Platinums (F-35, [design](superpowers/specs/2026-09-27-platinum-design.md)): a game's own "unlock everything" achievement counts as its platinum (40 Steam and Xbox games in the owner's library, found from the description), and a game without one earns an app-awarded Platinum at 100%. Shown as a banner on each Game detail tab, a chip on platinum achievements and unlocks, Activity lines and platinum toasts. Checked in the built app on a copy of the owner's data: all 15 finished games got a platinum (10 their own, 5 app-awarded, silently at startup)
 
@@ -93,6 +94,14 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 - [ ] Performance validation against N-01..N-07
 - [ ] Crash reporting (opt-in), docs site/README screenshots
 - [ ] v1.0.0
+
+## After v1: launch installed games
+
+Wanted by the owner: launch any installed game from the app. Each platform is its own adapter and must be checked against real installs first (rule 10); it needs its own design.
+
+- [ ] Detect what is installed and match it to the library by title: Steam `appmanifest` files, Epic manifests, Xbox packages, the Ubisoft and EA registry entries, and the emulators' game folders
+- [ ] Steam launch (`steam://rungameid/<appid>`, the easy first adapter), then Xbox, Epic, Ubisoft and EA through their launchers, then shadPS4 and RPCS3 (needs the emulator exe and the game folder)
+- [ ] A Play button on Game detail for entries with a known install; always through the platform's own launcher, never touching the game process (rule 4)
 
 ## After v1: more emulators
 

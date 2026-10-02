@@ -1,7 +1,8 @@
-import { writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, Menu, safeStorage, screen, shell } from 'electron'
 import { IPC, type NotificationSettings } from '@shared/ipc'
+import { MAX_LOG_ENTRIES } from '@shared/logs'
 import {
   connectEa,
   connectEpic,
@@ -17,6 +18,9 @@ import { type CookieSignInPage, openCookieSignInWindow } from './cookie-sign-in-
 import { DataExporter } from './data-export'
 import { registerIpcHandlers, type IpcHandlers } from './ipc'
 import { DATABASE_FILE, moveLegacyData } from './legacy-data'
+import { captureConsole, captureUncaught } from './logging/capture'
+import { Logger } from './logging/logger'
+import { readLogs } from './logging/read-logs'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
@@ -38,7 +42,8 @@ import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { Rpcs3Accounts } from './rpcs3-accounts'
 import { ShadPs4Accounts } from './shadps4-accounts'
 import { openStorePage } from './store-page'
-import { launchedHidden, startWithWindows } from './startup'
+import { openLogsFolder } from './logs-folder'
+import { launchedHidden, setStartWithWindows, startupSettings, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
 import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
@@ -52,8 +57,10 @@ import {
   storePageUrl,
 } from './store/library-store'
 import {
+  readLogLevel,
   readNotificationSettings,
   readOnboardingCompleted,
+  saveLogLevel,
   saveOnboardingCompleted,
   saveProfileName,
   updateNotificationSettings,
@@ -113,6 +120,14 @@ function dataFolderReady(): boolean {
 }
 
 async function start(): Promise<void> {
+  const logsDir = join(app.getPath('userData'), 'logs')
+  const logger = new Logger({
+    dir: logsDir,
+    onProblem: (problem) => process.stderr.write(`Logging problem: ${String(problem)}\n`),
+  })
+  captureConsole(logger)
+  captureUncaught(logger)
+
   let mainWindow: BrowserWindow | null = null
 
   const showMainWindow = (): void => {
@@ -138,6 +153,7 @@ async function start(): Promise<void> {
   if (app.isPackaged) Menu.setApplicationMenu(null)
 
   const { db, schemaVersion } = openDatabase(join(app.getPath('userData'), DATABASE_FILE))
+  logger.setLevel(readLogLevel(db))
   relinkGames(db)
   awardPlatinums(db)
 
@@ -265,6 +281,7 @@ async function start(): Promise<void> {
     writeFile: (path, text) => writeFile(path, text, 'utf8'),
   })
   app.on('before-quit', () => {
+    void logger.flush()
     scheduler.stop()
     artwork.stop()
     notifications.stop()
@@ -292,6 +309,8 @@ async function start(): Promise<void> {
     }
     return settings
   }
+
+  const startToggle = startWithWindows(app)
 
   registerIpcHandlers({
     getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),
@@ -360,6 +379,27 @@ async function start(): Promise<void> {
     chooseRpcs3Folder: () => rpcs3Accounts.choose(),
     connectRpcs3: (input) => rpcs3Accounts.connect(input),
     exportData: () => dataExporter.run(),
+    getLogSettings: () => ({ level: logger.level, available: logger.available }),
+    setLogLevel: (level) => {
+      saveLogLevel(db, level)
+      logger.setLevel(level)
+      return { level, available: logger.available }
+    },
+    readLogs: async (minLevel) => {
+      await logger.flush()
+      return readLogs(logsDir, minLevel, MAX_LOG_ENTRIES)
+    },
+    openLogsFolder: () =>
+      openLogsFolder(logsDir, {
+        makeFolder: (dir) => mkdir(dir, { recursive: true }),
+        openPath: (dir) => shell.openPath(dir),
+      }),
+    getStartupSettings: () => startupSettings(startToggle),
+    setStartWithWindows: (on) => {
+      const settings = setStartWithWindows(startToggle, on)
+      tray?.refresh()
+      return settings
+    },
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     mergeGames: ({ intoGameId, gameId }) => {
@@ -402,7 +442,7 @@ async function start(): Promise<void> {
       get: () => notifications.paused,
       set: setNotificationsPaused,
     },
-    startWithWindows: startWithWindows(app),
+    startWithWindows: startToggle,
   })
 
   if (!launchedHidden(process.argv)) showMainWindow()
