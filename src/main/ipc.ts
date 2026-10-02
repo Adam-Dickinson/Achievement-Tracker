@@ -39,6 +39,13 @@ import {
   type LibraryGame,
   MAX_ACTIVITY_LIMIT,
 } from '@shared/library'
+import {
+  LOG_LEVELS,
+  type LogEntry,
+  type LogLevel,
+  type LogSettings,
+  type StartupSettings,
+} from '@shared/logs'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
 
@@ -74,6 +81,12 @@ export interface IpcHandlers {
   chooseRpcs3Folder(): Promise<ChooseEmulatorFolderResult>
   connectRpcs3(input: EmulatorConnectInput): Promise<ConnectResult>
   exportData(): Promise<ExportResult>
+  getLogSettings(): LogSettings
+  setLogLevel(level: LogLevel): LogSettings
+  readLogs(minLevel: LogLevel): Promise<LogEntry[]>
+  openLogsFolder(): Promise<void>
+  getStartupSettings(): StartupSettings
+  setStartWithWindows(on: boolean): StartupSettings
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   mergeGames(input: MergeGamesInput): void
@@ -89,6 +102,10 @@ export interface IpcHandlers {
   updateNotificationSettings(patch: NotificationSettingsPatch): NotificationSettings
   listDisplays(): DisplayInfo[]
 }
+
+const logLevelSchema = z.enum(LOG_LEVELS)
+
+const flagSchema = z.boolean()
 
 const steamConnectInputSchema = z.object({
   steamId: z.string().trim().min(1).max(100),
@@ -395,6 +412,41 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.exportData, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.exportData()
+  })
+
+  ipcMain.handle(IPC.getLogSettings, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getLogSettings()
+  })
+
+  ipcMain.handle(IPC.setLogLevel, (event, level: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = logLevelSchema.safeParse(level)
+    return parsed.success ? handlers.setLogLevel(parsed.data) : handlers.getLogSettings()
+  })
+
+  ipcMain.handle(IPC.readLogs, (event, level: unknown): Promise<LogEntry[]> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = logLevelSchema.safeParse(level)
+    return parsed.success ? handlers.readLogs(parsed.data) : Promise.resolve([])
+  })
+
+  ipcMain.handle(IPC.openLogsFolder, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.openLogsFolder()
+  })
+
+  ipcMain.handle(IPC.getStartupSettings, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getStartupSettings()
+  })
+
+  ipcMain.handle(IPC.setStartWithWindows, (event, on: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = flagSchema.safeParse(on)
+    return parsed.success
+      ? handlers.setStartWithWindows(parsed.data)
+      : handlers.getStartupSettings()
   })
 
   ipcMain.handle(IPC.listLibrary, (event) => {

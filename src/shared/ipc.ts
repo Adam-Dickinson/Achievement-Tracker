@@ -1,5 +1,6 @@
 import type { DashboardStats } from './dashboard'
 import type { ActivityPage, GameDetail, LibraryGame } from './library'
+import type { LogEntry, LogLevel, LogSettings, StartupSettings } from './logs'
 import type { AccountStatus } from './models'
 import { PLATFORMS, type Platform } from './platform'
 import type { Rarity } from './rarity'
@@ -38,6 +39,12 @@ export const IPC = {
   chooseRpcs3Folder: 'accounts:choose-rpcs3-folder',
   connectRpcs3: 'accounts:connect-rpcs3',
   exportData: 'data:export',
+  getLogSettings: 'logs:get-settings',
+  setLogLevel: 'logs:set-level',
+  readLogs: 'logs:read',
+  openLogsFolder: 'logs:open-folder',
+  getStartupSettings: 'startup:get',
+  setStartWithWindows: 'startup:set',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   mergeGames: 'library:merge-games',
@@ -305,6 +312,12 @@ export interface TrophyLockerApi {
   chooseRpcs3Folder(): Promise<ChooseEmulatorFolderResult>
   connectRpcs3(input: EmulatorConnectInput): Promise<ConnectResult>
   exportData(): Promise<ExportResult>
+  getLogSettings(): Promise<LogSettings>
+  setLogLevel(level: LogLevel): Promise<LogSettings>
+  readLogs(minLevel: LogLevel): Promise<LogEntry[]>
+  openLogsFolder(): Promise<void>
+  getStartupSettings(): Promise<StartupSettings>
+  setStartWithWindows(on: boolean): Promise<StartupSettings>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   mergeGames(input: MergeGamesInput): Promise<void>

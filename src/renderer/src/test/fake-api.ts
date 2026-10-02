@@ -40,6 +40,12 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
       .fn()
       .mockResolvedValue({ ok: false, reason: 'other', message: 'not connected in tests' }),
     exportData: vi.fn().mockResolvedValue({ kind: 'cancelled' }),
+    getLogSettings: vi.fn().mockResolvedValue({ level: 'info' }),
+    setLogLevel: vi.fn().mockResolvedValue({ level: 'info' }),
+    readLogs: vi.fn().mockResolvedValue([]),
+    openLogsFolder: vi.fn().mockResolvedValue(undefined),
+    getStartupSettings: vi.fn().mockResolvedValue({ available: false, enabled: false }),
+    setStartWithWindows: vi.fn().mockResolvedValue({ available: false, enabled: false }),
     listLibrary: vi.fn().mockResolvedValue([]),
     getGame: vi.fn().mockResolvedValue(null),
     mergeGames: vi.fn().mockResolvedValue(undefined),
