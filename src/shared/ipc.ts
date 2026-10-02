@@ -34,6 +34,9 @@ export const IPC = {
   findShadPs4: 'accounts:find-shadps4',
   chooseShadPs4Folder: 'accounts:choose-shadps4-folder',
   connectShadPs4: 'accounts:connect-shadps4',
+  findRpcs3: 'accounts:find-rpcs3',
+  chooseRpcs3Folder: 'accounts:choose-rpcs3-folder',
+  connectRpcs3: 'accounts:connect-rpcs3',
   listLibrary: 'library:list',
   getGame: 'library:get-game',
   mergeGames: 'library:merge-games',
@@ -287,6 +290,9 @@ export interface TrophyLockerApi {
   findShadPs4(): Promise<EmulatorFolder | null>
   chooseShadPs4Folder(): Promise<ChooseEmulatorFolderResult>
   connectShadPs4(input: EmulatorConnectInput): Promise<ConnectResult>
+  findRpcs3(): Promise<EmulatorFolder | null>
+  chooseRpcs3Folder(): Promise<ChooseEmulatorFolderResult>
+  connectRpcs3(input: EmulatorConnectInput): Promise<ConnectResult>
   listLibrary(): Promise<LibraryGame[]>
   getGame(id: number): Promise<GameDetail | null>
   mergeGames(input: MergeGamesInput): Promise<void>

@@ -60,6 +60,11 @@ const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
 
 const DISPLAYS: DisplayInfo[] = [{ id: 1, label: 'Display 1 · Primary', primary: true }]
 
+const RPCS3_FOLDER: EmulatorFolder = {
+  path: 'D:\\Emulators\\rpcs3',
+  users: [{ id: '00000001', name: 'User', games: 1, unlocked: 0 }],
+}
+
 const SHADPS4_FOLDER: EmulatorFolder = {
   path: 'C:\\Users\\player\\AppData\\Roaming\\shadPS4',
   users: [{ id: '1000', name: 'Player 1', games: 1, unlocked: 10 }],
@@ -93,6 +98,9 @@ const fakes = {
   findShadPs4: vi.fn(() => Promise.resolve(SHADPS4_FOLDER)),
   chooseShadPs4Folder: vi.fn(() => Promise.resolve({ kind: 'cancelled' as const })),
   connectShadPs4: vi.fn(() => Promise.resolve(CONNECTED)),
+  findRpcs3: vi.fn(() => Promise.resolve(RPCS3_FOLDER)),
+  chooseRpcs3Folder: vi.fn(() => Promise.resolve({ kind: 'cancelled' as const })),
+  connectRpcs3: vi.fn(() => Promise.resolve(CONNECTED)),
   listLibrary: vi.fn(() => []),
   getGame: vi.fn(() => null),
   mergeGames: vi.fn(),
@@ -161,6 +169,9 @@ describe('registerIpcHandlers', () => {
     IPC.findShadPs4,
     IPC.chooseShadPs4Folder,
     IPC.connectShadPs4,
+    IPC.findRpcs3,
+    IPC.chooseRpcs3Folder,
+    IPC.connectRpcs3,
     IPC.listLibrary,
     IPC.getGame,
     IPC.mergeGames,
@@ -475,6 +486,32 @@ describe('shadPS4 handlers', () => {
 
     expect(result).toMatchObject({ ok: false, reason: 'invalid_input' })
     expect(fakes.connectShadPs4).not.toHaveBeenCalled()
+  })
+})
+
+describe('RPCS3 handlers', () => {
+  it('passes on the RPCS3 folder it finds, and the folder chooser', async () => {
+    await expect(call(IPC.findRpcs3, TRUSTED)).resolves.toEqual(RPCS3_FOLDER)
+    await expect(call(IPC.chooseRpcs3Folder, TRUSTED)).resolves.toEqual({ kind: 'cancelled' })
+  })
+
+  it('passes a folder and user on to connect', async () => {
+    const input = { path: RPCS3_FOLDER.path, userId: '00000001' }
+
+    await expect(call(IPC.connectRpcs3, TRUSTED, input)).resolves.toEqual(CONNECTED)
+    expect(fakes.connectRpcs3).toHaveBeenCalledWith(input)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['no folder', { path: '', userId: '00000001' }],
+    ['a user that is not a number', { path: RPCS3_FOLDER.path, userId: '../1' }],
+    ['an absurdly long path', { path: 'x'.repeat(1025), userId: '00000001' }],
+  ])('answers %s with invalid_input, without trying to connect', async (_label, payload) => {
+    const result = await call(IPC.connectRpcs3, TRUSTED, payload)
+
+    expect(result).toMatchObject({ ok: false, reason: 'invalid_input' })
+    expect(fakes.connectRpcs3).not.toHaveBeenCalled()
   })
 })
 

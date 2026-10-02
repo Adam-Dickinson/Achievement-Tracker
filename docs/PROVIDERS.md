@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|
 | Steam | Yes (Web API) | User's own Web API key + SteamID | Poll + local stats files | High | P0 |
 | RetroAchievements | Yes | Username + Web API key | Poll | High | After v1 |
-| RPCS3 | n/a (local) | none | File watch | Medium | v1 (ADR-0015), waiting for real trophy data |
+| RPCS3 | n/a (local) | none | File watch | Medium | v1 (ADR-0015), built; unlock state and time still unverified |
 | shadPS4 | n/a (local) | none: its data folder and one of its users | Poll + file watch | Medium | v1 (ADR-0015), verified 2026-09-28 |
 | Xbox | Partly (Xbox Live services, community-documented) | Microsoft OAuth, Xbox/XSTS tokens | Poll | Medium | P0 |
 | PlayStation | No (unofficial, the PlayStation App's own services) | Sony's sign-in page in an app window, then the 60-day `npsso` cookie mints 10-day refresh tokens | Poll | Medium-Low | P0, verified 2026-09-25 |
@@ -102,12 +102,24 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 - Covers RetroArch, DuckStation, PPSSPP, PCSX2, Dolphin and others that integrate RA, so one provider covers many emulators.
 - **Plan:** poll recent achievements every 30-60 s while an RA-capable emulator process runs, otherwise every few minutes.
 
-## RPCS3 (v1, ADR-0015): waiting for real trophy data
+## RPCS3 (v1, ADR-0015): built 2026-10-02, unlock state and time unverified
 
-- 2026-09-28: the owner's portable RPCS3 (`D:\Emulators\rpcs3-v0.0.41…`) has no `dev_hdd0` yet, so nothing below could be checked. It needs a trophy earned in any game first.
-- Trophy data stored per user under RPCS3's `dev_hdd0/home/<user>/trophy/<NPWR-ID>/` (`TROPCONF.SFM`, `TROPUSR.DAT`, `TROPHY.TRP`-derived icons/names). Community-documented binary formats. *(Verify.)*
-- **Plan:** auto-detect RPCS3 install dir (config + common paths, manual override), watch trophy dirs, parse `TROPUSR.DAT` for unlock flags/timestamps and `TROPCONF.SFM` (XML) for names, descriptions and grade.
-- **Risks:** format changes between RPCS3 versions, so pin fixtures from real files. RPCS3 also logs trophy events, which is a potential fallback signal.
+Checked against the owner's portable RPCS3 (`D:\Emulators\rpcs3-v0.0.41-19559-d87cf99b_win64_msvc`) with Demon's Souls (`NPWR00881_00`, 38 trophies) booted once, **no trophy earned yet**. Fixtures: `tests/fixtures/rpcs3/data/`.
+
+**Verified on the real files**
+- Per user, under `dev_hdd0/home/<8-digit user id>/`: `localusername` (the user's name, plain text, no newline) and `trophy/<NPWR id>/` holding `TROPCONF.SFM`, `TROPUSR.DAT`, `ICON0.PNG` and `TROP000.PNG` to `TROP037.PNG`. Folder name = the trophy set id, same as PSN and shadPS4.
+- `TROPCONF.SFM` is UTF-8 XML led by an `<!--Sce-Np-Trophy-Signature: …-->` comment, then `<trophyconf>` with `<npcommid>`, `<title-name>`, and one `<trophy id="000" hidden="no" ttype="P" pid="-1">` per trophy (`ttype` P/G/S/B) with `<name>` and `<detail>`. Same shape as shadPS4's list, so the same grades and ids apply. Curly quotes in descriptions are real UTF-8.
+- `TROPUSR.DAT` is big-endian. Header 0x30 bytes: magic `0x818F54AD`, version, table count at 8 (2 here). Table headers from 0x30, 0x20 bytes each: type, entry data size, 1, entry count, 64-bit offset (low half at +20). Type 4 (data 0x50, from 0x70): trophy id, grade (1 platinum, 2 gold, 3 silver, 4 bronze), parent platinum id. Type 6 (data 0x60, from 0xEB0): one state record per trophy. Each entry has a 0x10 header (type, size, entry id, 0) before its data. File size = 0xEB0 + 38 × 0x70 = 8016, exactly.
+- The watcher needs a recursive watch: RPCS3 rewrites `trophy/<id>/TROPUSR.DAT` in place, one folder deeper than the trophy root.
+
+**Not verified: needs one earned trophy**
+- Type 6 data layout: trophy id, state, two words, then a 64-bit timestamp at +0x10 (a second copy follows). Every record in the fixture is all zeros but the id, so the state value for "earned" and the timestamp format are from RPCS3's source as remembered, not checked.
+- The parser treats any non-zero state as earned, and reads the time as PS3 RTC ticks (microseconds since year 1). A time outside 2006 to 2100 is read as unknown (`unlockedAt: null`) rather than guessed. The unlock tests use a synthetic earned trophy (`test-helpers.ts`), not a captured one.
+- **To finish:** earn one trophy, copy the new `TROPUSR.DAT`, diff against the fixture, and replace the synthetic one.
+
+**Not built**
+- Auto-detection on Windows: portable RPCS3 has no fixed place, so Windows relies on the folder picker. Linux (`~/.config/rpcs3`) and macOS paths are guessed.
+- Icons: the trophy PNGs sit beside the files but are not shown yet; icons come from a linked PlayStation entry when there is one.
 
 ## shadPS4 (v1, ADR-0015): verified 2026-09-28
 

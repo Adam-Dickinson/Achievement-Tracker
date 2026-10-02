@@ -6,6 +6,7 @@ import { ConnectFlow } from './ConnectFlow'
 import { ConnectPrompt } from './ConnectPrompt'
 import { isOnline, ONLINE_PLATFORMS, type OnlinePlatform } from './sources'
 import { useAccounts } from './useAccounts'
+import { Rpcs3Card } from './Rpcs3Card'
 import { ShadPs4Card } from './ShadPs4Card'
 
 export interface AccountCounts {
@@ -57,6 +58,7 @@ function AccountsBody({
 }) {
   const [reconnecting, setReconnecting] = useState<number | null>(null)
   const [reconnectingShadPs4, setReconnectingShadPs4] = useState<string | null>(null)
+  const [reconnectingRpcs3, setReconnectingRpcs3] = useState<string | null>(null)
   const counts = countAccounts(accounts)
 
   const slot = (platform: OnlinePlatform) => {
@@ -151,6 +153,26 @@ function AccountsBody({
               onChanged()
             }}
             reconnectName={reconnectingShadPs4}
+          />
+          {accounts
+            .filter((account) => account.platform === 'rpcs3')
+            .map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                onChanged={onChanged}
+                onReconnect={() => setReconnectingRpcs3(account.displayName)}
+              />
+            ))}
+          <Rpcs3Card
+            connectedNames={accounts
+              .filter((account) => account.platform === 'rpcs3' && account.status !== 'disabled')
+              .map((account) => account.displayName)}
+            onConnected={() => {
+              setReconnectingRpcs3(null)
+              onChanged()
+            }}
+            reconnectName={reconnectingRpcs3}
           />
         </div>
       </section>

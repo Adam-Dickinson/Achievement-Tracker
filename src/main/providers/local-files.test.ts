@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { listFolder, readText } from './local-files'
+import { listFolder, readBytes, readText } from './local-files'
 
 let folder: string
 
@@ -30,6 +30,26 @@ describe('readText', () => {
     writeFileSync(join(folder, 'big.xml'), 'x'.repeat(10))
 
     await expect(readText(join(folder, 'big.xml'), 5)).rejects.toMatchObject({ kind: 'parse' })
+  })
+})
+
+describe('readBytes', () => {
+  it('reads a file as it is, without treating it as text', async () => {
+    writeFileSync(join(folder, 'a.dat'), Buffer.from([0x81, 0x8f, 0x54, 0xad]))
+
+    expect(Array.from((await readBytes(join(folder, 'a.dat'), 100)) ?? [])).toEqual([
+      0x81, 0x8f, 0x54, 0xad,
+    ])
+  })
+
+  it('answers null for a missing file', async () => {
+    await expect(readBytes(join(folder, 'missing.dat'), 100)).resolves.toBeNull()
+  })
+
+  it('refuses a file larger than the limit as a parse error', async () => {
+    writeFileSync(join(folder, 'big.dat'), Buffer.alloc(10))
+
+    await expect(readBytes(join(folder, 'big.dat'), 5)).rejects.toMatchObject({ kind: 'parse' })
   })
 })
 

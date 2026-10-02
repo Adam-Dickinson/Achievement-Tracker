@@ -130,6 +130,28 @@ describe('Onboarding', () => {
     expect(screen.getByText('1 platform connected')).toBeInTheDocument()
   })
 
+  it('offers RPCS3 on the Platforms step and swaps its tile to Connected once connected', async () => {
+    const path = 'D:\\Emulators\\rpcs3'
+    const findRpcs3 = vi.fn().mockResolvedValue({
+      path,
+      users: [{ id: '00000001', name: 'User', games: 1, unlocked: 0 }],
+    })
+    const connectRpcs3 = vi.fn().mockResolvedValue({
+      ok: true,
+      account: { ...SHADPS4_ACCOUNT, id: 3, platform: 'rpcs3', displayName: 'User' },
+    })
+    window.api = fakeApi({ connectSteam, findShadPs4, connectShadPs4, findRpcs3, connectRpcs3 })
+    render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Get started' }))
+    const card = screen.getByRole('region', { name: 'RPCS3, not connected' })
+    await within(card).findByText(path)
+
+    fireEvent.click(within(card).getByRole('button', { name: 'Connect' }))
+
+    expect(await screen.findByRole('region', { name: 'RPCS3, connected' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled()
+  })
+
   it('a failed connect leaves the tile as it was and Continue disabled', async () => {
     connectSteam.mockResolvedValue({ ok: false, reason: 'other', message: 'Steam is down' })
     render(<Onboarding onDone={onDone} onFirstConnect={onFirstConnect} />)

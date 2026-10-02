@@ -1,0 +1,160 @@
+<!--Sce-Np-Trophy-Signature: 4c39b98c010000000000000061ce896b788cf9c933d921b798074d68192cb68385c62958f6b00ddf53b05261cc141db34dbd408b511dd48bbccc4d9eb7c3f9fa126574c9a7b3d01ba66df93c31697dc8cd87cf88a8dfdbd87fb78fcb3ea1b077dacc375d2a70a7db5fc2cf8c5b83ef939c400edad04db3ba7851d92aef9c8730667521982820c4784c3ab6e2f6c2eb104ffce898a5ead4e729d255ec4bc1f72e-->
+<trophyconf version="1.0">
+ <npcommid>NPWR00881_00</npcommid>
+ <trophyset-version>01.00</trophyset-version>
+ <parental-level license-area="default">0</parental-level>
+ <title-name>Demon's Souls</title-name>
+ <title-detail>Demon's Souls Trophy Set</title-detail>
+ <trophy id="000" hidden="no" ttype="P" pid="-1">
+  <name>Toughest Soul Trophy</name>
+  <detail>All Trophies Obtained</detail>
+ </trophy>
+ <trophy id="001" hidden="no" ttype="G" pid="000">
+  <name>World Uniter's Trophy</name>
+  <detail>Old One Put to Sleep &amp; World United</detail>
+ </trophy>
+ <trophy id="002" hidden="no" ttype="G" pid="000">
+  <name>Sage's Trophy</name>
+  <detail>All Spells Learned</detail>
+ </trophy>
+ <trophy id="003" hidden="no" ttype="G" pid="000">
+  <name>Saint's Trophy</name>
+  <detail>All Miracles Learned</detail>
+ </trophy>
+ <trophy id="004" hidden="no" ttype="G" pid="000">
+  <name>Rogue's Trophy</name>
+  <detail>All Rings Obtained</detail>
+ </trophy>
+ <trophy id="005" hidden="no" ttype="G" pid="000">
+  <name>Soldier's Trophy</name>
+  <detail>All Unique Weapons Obtained</detail>
+ </trophy>
+ <trophy id="006" hidden="no" ttype="S" pid="000">
+  <name>False King's Trophy</name>
+  <detail>Slayer of Demon “False King”</detail>
+ </trophy>
+ <trophy id="007" hidden="no" ttype="S" pid="000">
+  <name>Storm King's Trophy</name>
+  <detail>Slayer of Demon “Storm King”</detail>
+ </trophy>
+ <trophy id="008" hidden="no" ttype="S" pid="000">
+  <name>Old Monk's Trophy</name>
+  <detail>Slayer of Demon “Old Monk”</detail>
+ </trophy>
+ <trophy id="009" hidden="no" ttype="S" pid="000">
+  <name>Maiden Astraea's Trophy</name>
+  <detail>Slayer of Demon “Maiden Astraea”</detail>
+ </trophy>
+ <trophy id="010" hidden="no" ttype="S" pid="000">
+  <name>Dragon God's Trophy</name>
+  <detail>Slayer of Demon “Dragon God”</detail>
+ </trophy>
+ <trophy id="011" hidden="no" ttype="B" pid="000">
+  <name>Old King's Trophy</name>
+  <detail>Conqueror of Old King Doran</detail>
+ </trophy>
+ <trophy id="012" hidden="no" ttype="B" pid="000">
+  <name>Flying Dragon's Trophy</name>
+  <detail>Slayer of Demon “Blue Flying Dragon”</detail>
+ </trophy>
+ <trophy id="013" hidden="no" ttype="B" pid="000">
+  <name>Trophy of Hardness</name>
+  <detail>Obtained Best Weapon by Hardstone</detail>
+ </trophy>
+ <trophy id="014" hidden="no" ttype="B" pid="000">
+  <name>Trophy of Sharpness</name>
+  <detail>Obtained Best Weapon by Sharpstone</detail>
+ </trophy>
+ <trophy id="015" hidden="no" ttype="B" pid="000">
+  <name>Trophy of Distinction</name>
+  <detail>Obtained Best Weapon by Clearstone</detail>
+ </trophy>
+ <trophy id="016" hidden="no" ttype="B" pid="000">
+  <name>Master Basher's Trophy</name>
+  <detail>Obtained Best Weapon by Greystone</detail>
+ </trophy>
+ <trophy id="017" hidden="no" ttype="B" pid="000">
+  <name>Master Slasher's Trophy</name>
+  <detail>Obtained Best Weapon by Bladestone</detail>
+ </trophy>
+ <trophy id="018" hidden="no" ttype="B" pid="000">
+  <name>Master Bowman's Trophy</name>
+  <detail>Obtained Best Bow by Spiderstone</detail>
+ </trophy>
+ <trophy id="019" hidden="no" ttype="B" pid="000">
+  <name>Poison Master's Trophy</name>
+  <detail>Obtained Best Weapon by Mercurystone</detail>
+ </trophy>
+ <trophy id="020" hidden="no" ttype="B" pid="000">
+  <name>Flame Master's Trophy</name>
+  <detail>Obtained Best Weapon by Dragonstone</detail>
+ </trophy>
+ <trophy id="021" hidden="no" ttype="B" pid="000">
+  <name>Blood Master's Trophy</name>
+  <detail>Obtained Best Weapon by Suckerstone</detail>
+ </trophy>
+ <trophy id="022" hidden="no" ttype="B" pid="000">
+  <name>Life Master's Trophy</name>
+  <detail>Obtained Best Weapon by Marrowstone</detail>
+ </trophy>
+ <trophy id="023" hidden="no" ttype="B" pid="000">
+  <name>Moonlight's Trophy</name>
+  <detail>Obtained Best Weapon by Moonlightstone</detail>
+ </trophy>
+ <trophy id="024" hidden="no" ttype="B" pid="000">
+  <name>Darkmoon's Trophy</name>
+  <detail>Obtained Best Weapon by Darkmoonstone</detail>
+ </trophy>
+ <trophy id="025" hidden="no" ttype="B" pid="000">
+  <name>Congratulant's Trophy</name>
+  <detail>Obtained Best Weapon by Faintstone</detail>
+ </trophy>
+ <trophy id="026" hidden="no" ttype="B" pid="000">
+  <name>Shade Master's Trophy</name>
+  <detail>Obtained Best Weapon by Cloudstone</detail>
+ </trophy>
+ <trophy id="027" hidden="no" ttype="B" pid="000">
+  <name>Phalanx's Trophy</name>
+  <detail>Slayer of Demon “Phalanx”</detail>
+ </trophy>
+ <trophy id="028" hidden="no" ttype="B" pid="000">
+  <name>Tower Knight's Trophy</name>
+  <detail>Slayer of Demon “Tower Knight”</detail>
+ </trophy>
+ <trophy id="029" hidden="no" ttype="B" pid="000">
+  <name>Penetrator's Trophy</name>
+  <detail>Slayer of Demon “Penetrator”</detail>
+ </trophy>
+ <trophy id="030" hidden="no" ttype="B" pid="000">
+  <name>Adjudicator's Trophy</name>
+  <detail>Slayer of Demon “Adjudicator”</detail>
+ </trophy>
+ <trophy id="031" hidden="no" ttype="B" pid="000">
+  <name>Old Hero's Trophy</name>
+  <detail>Slayer of Demon “Old Hero”</detail>
+ </trophy>
+ <trophy id="032" hidden="no" ttype="B" pid="000">
+  <name>Fool's Idol's Trophy</name>
+  <detail>Slayer of Demon “Fool's Idol”</detail>
+ </trophy>
+ <trophy id="033" hidden="no" ttype="B" pid="000">
+  <name>Maneater's Trophy</name>
+  <detail>Slayer of Demon “Maneater”</detail>
+ </trophy>
+ <trophy id="034" hidden="no" ttype="B" pid="000">
+  <name>Leechmonger's Trophy</name>
+  <detail>Slayer of Demon “Leechmonger”</detail>
+ </trophy>
+ <trophy id="035" hidden="no" ttype="B" pid="000">
+  <name>Dirty Colossus' Trophy</name>
+  <detail>Slayer of Demon “Dirty Colossus”</detail>
+ </trophy>
+ <trophy id="036" hidden="no" ttype="B" pid="000">
+  <name>Armor Spider's Trophy</name>
+  <detail>Slayer of Demon “Armor Spider”</detail>
+ </trophy>
+ <trophy id="037" hidden="no" ttype="B" pid="000">
+  <name>Flamelurker's Trophy</name>
+  <detail>Slayer of Demon “Flamelurker”</detail>
+ </trophy>
+</trophyconf>

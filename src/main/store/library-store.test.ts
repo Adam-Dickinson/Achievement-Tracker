@@ -308,6 +308,106 @@ describe('getGameDetail', () => {
   })
 })
 
+describe('icons borrowed from a linked PlayStation entry', () => {
+  function seedTrophies(
+    platform: Platform,
+    externalId: string,
+    title: string,
+    trophies: readonly RemoteAchievement[],
+    unlockedIds: readonly string[] = [],
+  ): Seeded {
+    const account = upsertAccount(db, { platform, externalId: 'acc', displayName: 'Player' })
+    addPlatformGames(db, account, [game(externalId, title)])
+    const { id } = getPlatformGameByExternalId(db, account.id, externalId)
+    upsertAchievements(db, id, trophies)
+    insertNewUnlocks(
+      db,
+      id,
+      unlockedIds.map((achievementExternalId) => ({
+        achievementExternalId,
+        unlockedAt: new Date('2026-09-20T10:00:00Z'),
+        progress: null,
+      })),
+    )
+    const row = db.prepare('SELECT game_id FROM platform_game WHERE id = ?').get(id) as {
+      game_id: number
+    }
+    return { gameId: row.game_id, platformGameId: id }
+  }
+
+  const bare = (externalId: string, tier: string): RemoteAchievement =>
+    achievement(externalId, { iconUrl: null, iconLockedUrl: null, tier })
+
+  const psn = (externalId: string, tier: string): RemoteAchievement =>
+    achievement(externalId, {
+      iconUrl: `https://psn/${externalId}.png`,
+      iconLockedUrl: `https://psn/${externalId}-locked.png`,
+      tier,
+    })
+
+  function iconsOf(gameId: number, platform: Platform): (string | null)[] {
+    const entry = getGameDetail(db, gameId)?.entries.find((e) => e.platform === platform)
+    return entry?.achievements.map((a) => a.iconUrl) ?? []
+  }
+
+  it('fills a missing icon from the PlayStation trophy with the same id and tier', () => {
+    const shad = seedTrophies('shadps4', 'NPWR1_00', 'Bloodborne', [
+      bare('0', 'platinum'),
+      bare('1', 'bronze'),
+    ])
+    seedTrophies('playstation', 'trophy/NPWR1_00', 'Bloodborne', [
+      psn('0', 'platinum'),
+      psn('1', 'bronze'),
+    ])
+
+    expect(iconsOf(shad.gameId, 'shadps4')).toEqual(['https://psn/0.png', 'https://psn/1.png'])
+    expect(
+      getGameDetail(db, shad.gameId)
+        ?.entries.find((e) => e.platform === 'shadps4')
+        ?.achievements.map((a) => a.iconLockedUrl),
+    ).toEqual(['https://psn/0-locked.png', 'https://psn/1-locked.png'])
+  })
+
+  it('keeps an icon the entry already has', () => {
+    const shad = seedTrophies('shadps4', 'NPWR1_00', 'Bloodborne', [
+      achievement('0', { iconUrl: 'https://own/0.png', tier: 'gold' }),
+    ])
+    seedTrophies('playstation', 'trophy/NPWR1_00', 'Bloodborne', [psn('0', 'gold')])
+
+    expect(iconsOf(shad.gameId, 'shadps4')).toEqual(['https://own/0.png'])
+  })
+
+  it('does not borrow when the tier differs', () => {
+    const shad = seedTrophies('shadps4', 'NPWR1_00', 'Bloodborne', [bare('0', 'bronze')])
+    seedTrophies('playstation', 'trophy/NPWR1_00', 'Bloodborne', [psn('0', 'gold')])
+
+    expect(iconsOf(shad.gameId, 'shadps4')).toEqual([null])
+  })
+
+  it('does not borrow from a non-PlayStation platform', () => {
+    const shad = seedTrophies('shadps4', 'NPWR1_00', 'Bloodborne', [bare('0', 'gold')])
+    seedTrophies('steam', '1', 'Bloodborne', [achievement('0', { tier: 'gold' })])
+
+    expect(iconsOf(shad.gameId, 'shadps4')).toEqual([null])
+  })
+
+  it('does not borrow from an unlinked game', () => {
+    const shad = seedTrophies('shadps4', 'NPWR1_00', 'Bloodborne', [bare('0', 'gold')])
+    seedTrophies('playstation', 'trophy/NPWR2_00', 'Another Game', [psn('0', 'gold')])
+
+    expect(iconsOf(shad.gameId, 'shadps4')).toEqual([null])
+  })
+
+  it('shows the borrowed icon on recent unlocks', () => {
+    seedTrophies('shadps4', 'NPWR1_00', 'Bloodborne', [bare('0', 'gold')], ['0'])
+    seedTrophies('playstation', 'trophy/NPWR1_00', 'Bloodborne', [psn('0', 'gold')])
+
+    expect(listRecentUnlocks(db, 5)).toEqual([
+      expect.objectContaining({ platform: 'shadps4', iconUrl: 'https://psn/0.png' }),
+    ])
+  })
+})
+
 describe('listRecentUnlocks', () => {
   it('lists dated unlocks newest first, with their game, up to the limit', () => {
     const portal = seedGame('400', 'Portal', 3, [
