@@ -117,6 +117,38 @@ describe('UpdateService', () => {
     expect(updater.checkForUpdates).toHaveBeenCalledOnce()
   })
 
+  it('does not leak timers when started twice', async () => {
+    const twice = service()
+
+    twice.start()
+    twice.start()
+    await vi.advanceTimersByTimeAsync(FIRST_CHECK_DELAY_MS)
+
+    expect(updater.checkForUpdates).toHaveBeenCalledOnce()
+  })
+
+  it('stays usable when the change listener throws', async () => {
+    foundUpdate('1.1.0')
+    const throwing = new UpdateService({
+      updater,
+      currentVersion: '1.0.0',
+      settings: { read: () => stored, save: () => undefined },
+      windowVisible: () => true,
+      notify,
+      onChange: () => {
+        throw new Error('window destroyed')
+      },
+      now: () => NOW,
+    })
+
+    const first = await throwing.checkNow()
+    const second = await throwing.checkNow()
+
+    expect(first.status).toBe('available')
+    expect(second.status).toBe('available')
+    expect(updater.checkForUpdates).toHaveBeenCalledTimes(2)
+  })
+
   it('stops its timers', async () => {
     const running = service()
 
@@ -207,7 +239,7 @@ describe('UpdateService', () => {
       expect(notify.mock.calls.map(([version]) => version)).toEqual(['1.1.0', '1.2.0'])
     })
 
-    it('does not notify while the window is visible, and does not save it as told', async () => {
+    it('does not notify while the window is visible, but still saves the version as notified', async () => {
       visible = true
       foundUpdate('1.1.0')
 
@@ -263,6 +295,30 @@ describe('UpdateService', () => {
 
       expect(updater.downloadUpdate).toHaveBeenCalledOnce()
       expect(downloading.state()).toMatchObject({ status: 'ready', version: '1.1.0', percent: 100 })
+    })
+
+    it('can still download a known update after a failed re-check', async () => {
+      foundUpdate('1.1.0')
+      const known = service()
+      await known.checkNow()
+      updater.checkForUpdates.mockRejectedValue(new Error('offline'))
+      const failed = await known.checkNow()
+
+      await known.download()
+
+      expect(failed).toMatchObject({ status: 'error', version: '1.1.0' })
+      expect(updater.downloadUpdate).toHaveBeenCalledOnce()
+      expect(known.state().status).toBe('downloading')
+    })
+
+    it('does not download from an error when no update is known', async () => {
+      updater.checkForUpdates.mockRejectedValue(new Error('offline'))
+      const unknown = service()
+      await unknown.checkNow()
+
+      await unknown.download()
+
+      expect(updater.downloadUpdate).not.toHaveBeenCalled()
     })
 
     it('ignores a download request when no update is available', async () => {

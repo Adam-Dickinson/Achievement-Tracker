@@ -63,6 +63,7 @@ export class UpdateService {
 
   start(): void {
     if (!this.#deps.updater) return
+    this.stop()
     this.#first = setTimeout(() => void this.#automatic(), FIRST_CHECK_DELAY_MS)
     this.#every = setInterval(() => void this.#automatic(), CHECK_INTERVAL_MS)
   }
@@ -95,7 +96,7 @@ export class UpdateService {
 
   async download(): Promise<UpdateState> {
     const updater = this.#deps.updater
-    if (!updater || this.#status !== 'available') return this.state()
+    if (!updater || !this.#canDownload()) return this.state()
     this.#percent = 0
     this.#set('downloading')
     try {
@@ -125,8 +126,16 @@ export class UpdateService {
     return state
   }
 
+  #canDownload(): boolean {
+    return this.#status === 'available' || (this.#status === 'error' && this.#version !== null)
+  }
+
   async #automatic(): Promise<void> {
-    if (this.#deps.settings.read().autoCheck) await this.#check()
+    try {
+      if (this.#deps.settings.read().autoCheck) await this.#check()
+    } catch (error) {
+      console.warn('Update problem', error)
+    }
   }
 
   async #check(): Promise<void> {
@@ -189,6 +198,10 @@ export class UpdateService {
 
   #set(status: UpdateStatus): void {
     this.#status = status
-    this.#deps.onChange(this.state())
+    try {
+      this.#deps.onChange(this.state())
+    } catch (error) {
+      console.warn('Update change listener failed', error)
+    }
   }
 }
