@@ -59,8 +59,25 @@ interface UnlockRecord {
   platform: Platform
 }
 
+function sharedPlayStationIcon(column: 'icon_url' | 'icon_locked_url'): string {
+  return `(SELECT b.${column}
+           FROM achievement b
+           JOIN platform_game bp ON bp.id = b.platform_game_id
+           WHERE bp.game_id = pg.game_id
+             AND bp.platform = 'playstation'
+             AND b.external_id = a.external_id
+             AND b.tier IS a.tier
+             AND b.${column} IS NOT NULL
+           ORDER BY b.id
+           LIMIT 1)`
+}
+
+const ICON = `COALESCE(a.icon_url, ${sharedPlayStationIcon('icon_url')})`
+const LOCKED_ICON = `COALESCE(a.icon_locked_url, ${sharedPlayStationIcon('icon_locked_url')})`
+
 const UNLOCKS = `
-  SELECT a.id AS achievement_id, a.name, a.description, a.tier, a.icon_url, a.global_percent,
+  SELECT a.id AS achievement_id, a.name, a.description, a.tier, ${ICON} AS icon_url,
+         a.global_percent,
          u.unlocked_at,
          pg.game_id, pg.id AS platform_game_id, pg.title AS game_title, pg.platform
   FROM unlock u
@@ -441,9 +458,11 @@ function listAchievements(
 ): GameAchievement[] {
   const rows = db
     .prepare(
-      `SELECT a.id, a.name, a.description, a.tier, a.hidden, a.icon_url, a.icon_locked_url,
+      `SELECT a.id, a.name, a.description, a.tier, a.hidden,
+              ${ICON} AS icon_url, ${LOCKED_ICON} AS icon_locked_url,
               a.global_percent, u.id AS unlock_id, u.unlocked_at
        FROM achievement a
+       JOIN platform_game pg ON pg.id = a.platform_game_id
        LEFT JOIN unlock u ON u.achievement_id = a.id
        WHERE a.platform_game_id = ?
        ORDER BY a.id`,

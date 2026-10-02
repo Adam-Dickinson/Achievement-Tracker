@@ -1,26 +1,27 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this repository.
+Guidance for Claude Code in this repo.
 
 ## What this is
 
-**Trophy Locker** (formerly Achievement Tracker; the repo folder and GitHub repo keep the old name): an Electron desktop app (TypeScript everywhere, React UI) that tracks achievements/trophies across Steam, Xbox, PlayStation, Epic, Ubisoft and EA, plus the shadPS4 and RPCS3 emulators (ADR-0015; more emulators after v1), running in the tray and showing animated unlock toasts. **Read before making non-trivial changes:**
+**Trophy Locker** (formerly Achievement Tracker; repo folder and GitHub repo keep old name): Electron desktop app (TypeScript everywhere, React UI) tracking achievements/trophies across Steam, Xbox, PlayStation, Epic, Ubisoft, EA, plus shadPS4 and RPCS3 emulators (ADR-0015; more emulators after v1). Runs in tray, shows animated unlock toasts. **Read before non-trivial changes:**
 
 - [docs/SPEC.md](docs/SPEC.md): requirements, DB schema, provider interface, IPC contract
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): code areas, data flow, folder structure
-- [docs/PROVIDERS.md](docs/PROVIDERS.md): per-platform notes (endpoints there are **unverified**)
-- [docs/adr/](docs/adr/): decisions already made (ADR-0003 is the stack; ADR-0004 is zod for provider replies; ADR-0005 is the library scope, baseline cutoff and tiered polling; ADR-0006 is the v1 provider scope and order; ADR-0007 is refreshing provider credentials; ADR-0008 puts Epic, Ubisoft and EA before PlayStation; ADR-0009 is the Ubisoft sign-in window; ADR-0010 is the EA sign-in window; ADR-0011 is the Steam family library; ADR-0012 is the PlayStation sign-in and its `npsso` cookie; ADR-0013 is SteamGridDB artwork with the user's own key; ADR-0014 is virtualized lists and filtering the Library in the UI; ADR-0015 brings shadPS4 and RPCS3 into v1). Don't relitigate without a new ADR.
+- [docs/PROVIDERS.md](docs/PROVIDERS.md): per-platform notes (endpoints there **unverified**)
+- [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md): every folder/file, how they connect, where to work per change
+- [docs/adr/](docs/adr/): decisions made. 0003 stack; 0004 zod for provider replies; 0005 library scope, baseline cutoff, tiered polling; 0006 v1 provider scope/order; 0007 refreshing credentials; 0008 Epic/Ubisoft/EA before PlayStation; 0009 Ubisoft sign-in window; 0010 EA sign-in window; 0011 Steam family library; 0012 PlayStation sign-in + `npsso`; 0013 SteamGridDB artwork with user's key; 0014 virtualized lists, Library filtered in UI; 0015 shadPS4 + RPCS3 in v1. Don't relitigate without new ADR.
 
-The owner is **new to React**: when writing UI code, favour clear, idiomatic code and explain non-obvious React concepts in your replies.
+Owner is **new to React**: write clear, idiomatic UI code; explain non-obvious React concepts in replies.
 
-## Repo layout (short)
+## Repo layout
 
-- `src/shared` types and contracts used by both sides (domain, provider interface, `ipc.ts`)
-- `src/main` Node main process: `store/` (SQLite), `providers/`, `sync/`, plus windows, tray, overlay service, IPC handlers
-- `src/preload` builds `window.api` (the only bridge to the UI)
-- `src/renderer/src` the React UI (`app/`, `features/*`, `components/`, `overlay/`, `styles/`)
+- `src/shared` types/contracts used by both sides (domain, provider interface, `ipc.ts`)
+- `src/main` Node main process: `store/` (SQLite), `providers/`, `sync/`, windows, tray, overlay service, IPC handlers
+- `src/preload` builds `window.api` (only bridge to UI)
+- `src/renderer/src` React UI (`app/`, `features/*`, `components/`, `overlay/`, `styles/`)
 
-Dependency rule: `shared` ← `main/store`, `main/providers` ← `main/sync` ← `main`. The renderer imports only `shared`, never `main`. Providers never touch the DB; the UI never calls providers.
+Dependency rule: `shared` ← `main/store`, `main/providers` ← `main/sync` ← `main`. Renderer imports only `shared`, never `main`. Providers never touch DB; UI never calls providers.
 
 ## Commands
 
@@ -34,58 +35,69 @@ npm run format           # Prettier on src and config files (CI runs format:chec
 npm run build            # typecheck + production build into ./out; run it with `npm start`
 ```
 
-electron-vite looks for Electron's binary itself and fails with `Error: Electron uninstall` if it is missing. `npm install` fetches it via the `postinstall` script (`install-electron`); if it is ever missing, run `npx install-electron`.
+Electron binary missing (`Error: Electron uninstall`): run `npx install-electron`.
 
-**Launching Electron from a shell that has `ELECTRON_RUN_AS_NODE` set (VS Code's extension host does, so Claude Code's shell has it) makes Electron behave as plain Node** and the app fails with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`. Unset it first (`env -u ELECTRON_RUN_AS_NODE ...` in bash, `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell).
+**Shell with `ELECTRON_RUN_AS_NODE` set (VS Code extension host, so Claude Code's shell) makes Electron act as plain Node**: app fails with `Cannot read properties of undefined (reading 'requestSingleInstanceLock')`. Unset first (`env -u ELECTRON_RUN_AS_NODE ...` in bash, `Remove-Item Env:ELECTRON_RUN_AS_NODE` in PowerShell).
 
-Status: the scaffold is real and verified (lint, typecheck, 1834 tests, production build, and a scripted run of the built app). `shared`, `main/store`, `main/sync` and the Steam provider have real code: the sync engine (scheduler with library and game scopes, tiered polling, and the sync pass with the baseline cutoff) starts with the app with Steam registered, and secrets are encrypted with `safeStorage`; the Accounts screen connects a Steam account (checks the key with Steam, stores it, starts syncing) and shows, as designed, a card per platform with its games, unlocks, first-sync progress or last sync, **Resync** and **Disconnect…** (keeping or removing its games), **Reconnect** for a signed-out account, and a **Connect** card for a platform with none; "Sync all" (in the nav's sync status and the tray) and Game detail's "Sync this game" force a sync past the idle interval and any backoff. The Xbox provider is built and verified live (Microsoft sign-in in the browser with a loopback redirect, tokens refreshed by the Scheduler per ADR-0007) and registered, and the Accounts screen connects an Xbox account (an "unofficial" opt-in, then the browser sign-in). Steam unlocks are picked up in near real time: the provider's `watch()` reports a changed stats file and, every 30 s, the game Steam is running, and the Scheduler syncs that game at once (`syncGameNow`); because the Web API reports an unlock about a minute late, that sync also reads the unlocks from Steam's own stats file (`stats-file.ts`). Steam connects with one sign-in (Steam's page in the same kind of window as EA's): the app reads the account's Web API key from Steam and, if the family library is wanted, keeps the refresh token beside it and renews it into 24-hour sessions to add the whole Steam family library (ADR-0011); typing a key stays as a fallback. The Epic provider is built and verified live (a code from Epic's sign-in page in the browser, pasted into the app, then launcher tokens refreshed per ADR-0007) and registered, and the Accounts screen connects an Epic account (the "unofficial" opt-in, a button that opens Epic's sign-in, and a box for the code). The Ubisoft provider is built and verified against a real account (Ubisoft's own sign-in page in a locked-down app window, whose remember-me ticket is traded for Ubisoft Connect launcher sessions and rotated per ADR-0007 and ADR-0009) and registered, and the Accounts screen connects a Ubisoft account (the "unofficial" opt-in, then the sign-in window). The EA provider is built and verified against a real account (EA's own sign-in page in a locked-down app window that may navigate only within `ea.com`, whose `sid`/`remid`/`_nx_mpcid` cookies are traded for 4-hour tokens and rotated per ADR-0007 and ADR-0010) and registered, and the Accounts screen connects an EA account (the "unofficial" opt-in, then the sign-in window). The PlayStation provider is built and verified against a real account (Sony's own sign-in page in a locked-down app window that may navigate only within `sony.com`; the window catches Sony's redirect to the PlayStation App and keeps only the 60-day `npsso` cookie, which mints 10-day refresh tokens per ADR-0012) and registered, and the Accounts screen connects a PlayStation account (the "unofficial" opt-in, then the sign-in window). Emulators are in v1 (ADR-0015): the shadPS4 provider is built and checked against the owner's real trophy files (an account is a shadPS4 data folder plus one of its users, found in `%APPDATA%\shadPS4` or chosen in a folder picker; the trophy XML is read with a small strict reader, and a watcher syncs a game within about half a second of shadPS4 saving it), and registered, with IPC to find, choose and connect it; the Accounts screen has an Emulators section with a Connect card (finds shadPS4 automatically or opens a folder picker, lists every user of the chosen folder with their progress, connects the one picked) and a card per connected shadPS4 user, with **Connect again** for a disabled one preselecting and focusing it back in the Connect card. RPCS3 waits for real trophy data; the other emulator providers are still stubs. Games on several platforms are linked (cross-platform game linking): entries whose cleaned titles match share one canonical `game` (grouped when found and again at startup), the Library shows one card per game and Game detail has a tab per platform, with "Link another game…" and "Unlink" for manual changes that stick. Every game has a platinum (F-35): a game's own "unlock everything" achievement is recognised from its description (or PlayStation's platinum tier), and a game without one earns an app-awarded Platinum at 100% (the `platinum` table, awarded by the sync pass and silently at startup), shown as a Game detail banner, chips, Activity lines and platinum toasts. Unlocks found by the sync engine go through the notification service (`main/notifications.ts`) to the overlay, which stacks up to 3 animated toasts. Notification settings (corner, monitor, size, duration, minimum rarity, per-platform toggles, sound) are persisted and applied live to the overlay's position/size and to which unlocks the notification service shows, and the overlay plays a synthesized per-rarity chime; the mockup's "Full-screen games" card waits for real fullscreen-game detection. The UI has a real floating island nav in the Afterglow design (frosted glass over the aurora background, with a library search on Ctrl+K, the sync status, a bell that pauses notifications in step with the tray, and the profile name's initial as the avatar: a name set in Settings, else the Windows user name), and the Dashboard, Library, Game detail, Activity and Accounts screens are real, on synced data that refreshes as syncs land (the Dashboard is built to its Afterglow design: the unlocked total with each game counted once by its best copy, today / week / streak chips and counts per rarity, a rarest-unlock spotlight and a "Nearly there" cover fan that each rotate daily among the 10 rarest unlocks and the 10 games closest to 100% (seeded from today's date, so the pick holds all day and across a restart), recent unlocks, per-platform completion and a seven-day chart; Activity has the design's header card with this week's unlocks, streak and rarest unlock; the Library is built to its Afterglow design (a profile card with totals and unlocks per rarity, platform chips, progress and sort dropdowns, and Landscape, Portrait and List views; Portrait uses each game's tall art from Steam, Xbox, Epic or EA, else frames its landscape cover; Game detail's banner uses the platform's hero art) and is searched from the nav, Game detail is built to its Afterglow design (full-bleed banner, overlapping stat cards, a segmented platform bar) with **Open in Steam** and **View on Xbox.com** for entries that have a store page, and searches and sorts achievements, and both long lists are virtualized); Settings has the profile name, the notification settings built to their design (Placement, triggers and Sound cards beside a live toast preview with Send test toast), the app version and Artwork (an optional SteamGridDB key, ADR-0013: games with no art from their platform or a linked copy get it from SteamGridDB, else a generated Afterglow cover). UI targets are on the Superdesign canvas (link in `docs/design/README.md`); the HTML snapshots in `docs/design/mockups/` (every screen, Activity included) were re-exported from it on 2026-09-27. Design tokens are in `src/renderer/src/styles/index.css`. Onboarding welcomes a first launch with no accounts (Welcome → Platforms → Done, reusing the Accounts screen's own connect flows including shadPS4), shown once and skippable; Dashboard, Library and Activity each show an empty state pointing at Accounts when there is nothing to show yet. A targeted accessibility pass respects the OS's reduced-motion and contrast preferences automatically (no new app setting), fixed the one color token that failed WCAG AA for its actual usage, and cleaned up two ARIA gaps in the onboarding wizard and EmptyState.
+## Status
+
+Scaffold real and verified (lint, typecheck, 1834 tests, production build, scripted run of built app). Built: sync engine (Scheduler, tiered polling, baseline cutoff, `safeStorage` secrets); providers Steam (near-real-time via stats file), Xbox, Epic, Ubisoft, EA, PlayStation, shadPS4, all connectable from Accounts screen; RPCS3 waits for real trophy data, other emulator providers stubs. Also: cross-platform game linking, platinum for every game (F-35), notification service + overlay toasts with live settings, Afterglow UI (nav, Dashboard, Library, Game detail, Activity, Accounts, Settings, onboarding, empty states), SteamGridDB artwork (ADR-0013), accessibility pass. Fullscreen-game detection not built. Per-feature detail: `docs/PROJECT-MAP.md`, `docs/ROADMAP.md`. Design targets: Superdesign canvas (link in `docs/design/README.md`), snapshots in `docs/design/mockups/`; tokens in `src/renderer/src/styles/index.css`.
 
 ## Rules
 
-1. **Providers are pure adapters.** They return normalized `Remote*` objects. No SQL, no notifications, no UI knowledge.
-2. **Baseline rule:** a game's first sync must never announce unlocks from before its cutoff, so connecting an account never floods toasts (SPEC F-16, ADR-0005). Preserve this in any sync change.
-3. **Secrets only via `SecretStore`.** Never in SQLite, config, logs or the renderer. Keep tokens wrapped in `Secret`, which redacts itself.
-4. **Never inject into or read memory of game processes.** Non-negotiable (anti-cheat safety). The overlay only changes its own window.
-5. **Unofficial APIs are opt-in and labelled.** Don't add a provider that requires storing a user's password.
-6. **Parsers must be defensive:** check JSON replies with a zod schema (ADR-0004); for local files also enforce size limits; throw `ProviderError('parse', ...)` on malformed input; fixture tests.
-7. **Fixtures must be sanitized.** No real account IDs, tokens or emails in `tests/fixtures/`. Raw recordings go in `tests/fixtures/_raw/` (gitignored).
-8. **SQL lives only in `src/main/store`.** Schema changes are a new `migrations/NNNN_name.sql`, never an edit to an applied one; add an upgrade test.
-9. **The renderer is untrusted web content.** Keep `contextIsolation` and `sandbox` on and Node integration off. New capabilities go through `shared/ipc.ts` → `main/ipc.ts` (validate the sender and the payload) → `preload/index.ts`.
-10. **Verify endpoints and file formats before coding against them.** PROVIDERS.md is prior knowledge, not ground truth. Capture a real response/file and record findings.
-11. **Don't add `"type": "module"` to package.json:** main and preload must build as CommonJS (sandboxed preload scripts can't be ES modules).
+1. **Providers are pure adapters.** Return normalized `Remote*` objects. No SQL, notifications, or UI knowledge.
+2. **Baseline rule:** a game's first sync never announces unlocks from before its cutoff, so connecting an account never floods toasts (SPEC F-16, ADR-0005). Preserve in any sync change.
+3. **Secrets only via `SecretStore`.** Never in SQLite, config, logs, renderer. Keep tokens wrapped in `Secret` (self-redacting).
+4. **Never inject into or read memory of game processes.** Non-negotiable (anti-cheat safety). Overlay only changes its own window.
+5. **Unofficial APIs are opt-in and labelled.** No provider that requires storing a user's password.
+6. **Parsers defensive:** check JSON replies with zod (ADR-0004); local files also enforce size limits; throw `ProviderError('parse', ...)` on malformed input; fixture tests.
+7. **Fixtures sanitized.** No real account IDs, tokens, emails in `tests/fixtures/`. Raw recordings go in `tests/fixtures/_raw/` (gitignored).
+8. **SQL only in `src/main/store`.** Schema change = new `migrations/NNNN_name.sql`, never edit an applied one; add upgrade test.
+9. **Renderer is untrusted web content.** Keep `contextIsolation` and `sandbox` on, Node integration off. New capabilities go `shared/ipc.ts` → `main/ipc.ts` (validate sender and payload) → `preload/index.ts`.
+10. **Verify endpoints and file formats before coding against them.** PROVIDERS.md is prior knowledge, not ground truth. Capture a real response/file, record findings.
+11. **No `"type": "module"` in package.json:** main and preload build as CommonJS (sandboxed preload can't be ES modules).
 
 ## Style
 
-- TypeScript strict (`noUncheckedIndexedAccess` on), no `any`; prefer `interface` for object shapes, string-literal unions over enums, and `Record<Union, ...>` tables so the compiler enforces exhaustiveness
-- Prettier formatting (no semicolons, single quotes); ESLint must pass with zero warnings; fix rather than disable rules
-- React: function components and hooks; state as local as possible; effects must clean up after themselves; components under `features/<area>/`; shared UI in `components/`
-- Styling: Tailwind utility classes using the design tokens (`bg-surface-1`, `text-fg-muted`, `border-rarity-rare`...). **Don't name a colour token `base`, `sm`, `lg`, `xl` etc.** These collide with Tailwind's font-size utilities and silently break text colour. Never hard-code hex colours in components.
+- TypeScript strict (`noUncheckedIndexedAccess` on), no `any`; prefer `interface` for object shapes, string-literal unions over enums, `Record<Union, ...>` tables for exhaustiveness
+- Prettier (no semicolons, single quotes); ESLint zero warnings; fix rather than disable rules
+- React: function components + hooks; state as local as possible; effects clean up; components under `features/<area>/`; shared UI in `components/`
+- Styling: Tailwind utilities with design tokens (`bg-surface-1`, `text-fg-muted`, `border-rarity-rare`...). **Never name a colour token `base`, `sm`, `lg`, `xl` etc.**: collides with Tailwind font-size utilities, silently breaks text colour. No hard-coded hex in components.
 - Match surrounding code; keep functions small
-- **No code comments** (the owner's choice): explanations go in the docs, mainly `docs/PROJECT-MAP.md`, and in your replies. Only tool directives stay: `/// <reference types=...>`, `// @vitest-environment jsdom`, and an `eslint-disable` if one is ever unavoidable (put the reason in the docs). Applied migration files keep theirs (rule 8)
+- **No code comments** (owner's choice): explanations go in docs (mainly `docs/PROJECT-MAP.md`) and replies. Only tool directives stay: `/// <reference types=...>`, `// @vitest-environment jsdom`, unavoidable `eslint-disable` (reason in docs). Applied migration files keep theirs (rule 8)
 
 ## Project skills
 
-Local project skills live in `.claude/skills/` (git-ignored, so only present on machines that have them; if missing, follow the same steps using the docs): `add-provider`, `add-emulator-adapter`, `db-migration`, `write-adr`.
+`.claude/skills/` (git-ignored, machine-local; if missing follow same steps using docs): `add-provider`, `add-emulator-adapter`, `db-migration`, `write-adr`.
 
 ## Definition of done
 
-`npm run lint`, `npm run typecheck` and `npm test` pass, `npm run format:check` is clean, docs are updated if behaviour or the spec changed, UI changes were checked by actually running the app, and for provider work: fixtures added and PROVIDERS.md updated with what was actually verified.
+`npm run lint`, `typecheck`, `test` pass; `npm run format:check` clean; docs updated if behaviour/spec changed; UI changes checked by running the app; provider work: fixtures added, PROVIDERS.md updated with what was actually verified.
 
 ## Tests are written by Claude
 
-The owner does not write tests; Claude does, as part of getting a change ready. Before any commit or pull request:
+Owner does not write tests; Claude does. Before any commit or PR:
 
-1. Check the change is covered. Add or update tests beside the code (`*.test.ts` / `*.test.tsx`) for new behaviour, changed behaviour and every bug fixed. Test what the code does, not how it is styled: content and accessibility text, props and states, data mapping, edge cases. Pure styling (a token, a class name) needs no test; say so.
-2. Run `npm run format:check`, `npm run lint`, `npm run typecheck` and `npm test`, then commit, then open the PR.
-3. Say which tests were added or changed in the commit message and the PR description.
+1. Cover the change. Add/update tests beside code (`*.test.ts` / `*.test.tsx`) for new behaviour, changed behaviour, every bug fixed. Test what code does, not styling: content, accessibility text, props/states, data mapping, edge cases. Pure styling (token, class name) needs no test; say so.
+2. Run `npm run format:check`, `lint`, `typecheck`, `test`, then commit, then open PR.
+3. State tests added/changed in commit message and PR description.
 
-Tests describe intended behaviour. If one fails because the owner's code is wrong or unfinished, report it and leave the production code to the owner; never weaken a test to make it pass. If the owner says they've already committed, add the tests in a follow-up commit before the PR.
+Tests describe intended behaviour. If one fails because owner's code is wrong or unfinished, report it, leave production code to owner; never weaken a test. If owner says already committed, add tests in follow-up commit before PR.
 
 ## When the owner says they've committed
 
-Treat that as a request to sync the docs with the commit. Read the change (`git show`, or `git diff <base>..HEAD`), then update whatever it made stale:
+Sync docs with the commit. Read change (`git show`, or `git diff <base>..HEAD`), update what it made stale:
 
-- `docs/ROADMAP.md` (tick or add items), `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, `docs/PROVIDERS.md` (only what was actually verified), `docs/PROJECT-MAP.md` (the file map: new, moved or removed files and changed status labels), `README.md`. A new ADR is only for an architectural decision.
-- The **Status** paragraph and any counts in this file (tests, providers, and so on).
-- Code comments the change made wrong, such as one describing removed behaviour.
-- Edit docs and comments only, never behaviour. Leave the edits uncommitted, and list what changed and anything you're unsure about.
+- `docs/ROADMAP.md` (tick/add items), `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, `docs/PROVIDERS.md` (only actually verified), `docs/PROJECT-MAP.md` (file map: new/moved/removed files, status labels), `README.md`. New ADR only for architectural decisions.
+- **Status** section and counts in this file (tests, providers).
+- Code comments the change made wrong.
+- Docs and comments only, never behaviour. Leave edits uncommitted; list what changed and any doubts.
+
+## graphify
+
+Knowledge graph at graphify-out/ (god nodes, communities, cross-file relationships).
+
+- Codebase questions: first `graphify query "<question>"` when graphify-out/graph.json exists. `graphify path "<A>" "<B>"` for relationships, `graphify explain "<concept>"` for one concept. Scoped subgraph, much smaller than GRAPH_REPORT.md or grep.
+- If graphify-out/wiki/index.md exists, use it for broad navigation.
+- Read GRAPH_REPORT.md only for broad architecture review or when query/path/explain miss.
+- After modifying code, run `graphify update .` (AST-only, no API cost).
