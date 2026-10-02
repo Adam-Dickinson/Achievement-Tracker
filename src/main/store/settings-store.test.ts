@@ -6,9 +6,11 @@ import {
   readLogLevel,
   readNotificationSettings,
   readOnboardingCompleted,
+  readUpdateSettings,
   readProfileName,
   saveLogLevel,
   saveOnboardingCompleted,
+  saveUpdateSettings,
   saveProfileName,
   updateNotificationSettings,
 } from './settings-store'
@@ -212,5 +214,55 @@ describe('log level', () => {
     db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run('logging.level', 'debug')
 
     expect(readLogLevel(db)).toBe('info')
+  })
+})
+
+describe('update settings', () => {
+  let db: DatabaseSync
+
+  beforeEach(() => {
+    db = new DatabaseSync(':memory:')
+    applyMigrations(db)
+  })
+
+  it('defaults to automatic checking with nothing dismissed or notified', () => {
+    expect(readUpdateSettings(db)).toEqual({
+      autoCheck: true,
+      dismissedVersion: null,
+      notifiedVersion: null,
+    })
+  })
+
+  it('saves each setting on its own and reads them back', () => {
+    saveUpdateSettings(db, { autoCheck: false })
+    saveUpdateSettings(db, { dismissedVersion: '1.1.0' })
+    saveUpdateSettings(db, { notifiedVersion: '1.2.0' })
+
+    expect(readUpdateSettings(db)).toEqual({
+      autoCheck: false,
+      dismissedVersion: '1.1.0',
+      notifiedVersion: '1.2.0',
+    })
+  })
+
+  it('clears a version saved as null', () => {
+    saveUpdateSettings(db, { dismissedVersion: '1.1.0' })
+    saveUpdateSettings(db, { dismissedVersion: null })
+
+    expect(readUpdateSettings(db).dismissedVersion).toBeNull()
+  })
+
+  it.each([
+    ['autoCheck', 'updates.autoCheck', '"yes"'],
+    ['autoCheck', 'updates.autoCheck', 'not json'],
+    ['dismissedVersion', 'updates.dismissedVersion', '5'],
+  ])('falls back to the default for a bad stored %s', (_name, key, value) => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(key, value)
+
+    expect(readUpdateSettings(db)).toEqual({
+      autoCheck: true,
+      dismissedVersion: null,
+      notifiedVersion: null,
+    })
   })
 })
