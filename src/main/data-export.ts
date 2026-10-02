@@ -21,10 +21,17 @@ export class DataExporter {
   }
 
   async run(): Promise<ExportResult> {
+    try {
+      return await this.#export()
+    } catch (err) {
+      console.error('Saving the data export failed', err)
+      return { kind: 'failed', message: FAILED_MESSAGE }
+    }
+  }
+
+  async #export(): Promise<ExportResult> {
     const now = (this.#deps.now ?? (() => new Date()))()
-    const path = await this.#deps.chooseFile(
-      `trophy-locker-export-${now.toISOString().slice(0, 10)}.json`,
-    )
+    const path = await this.#deps.chooseFile(`trophy-locker-export-${localDate(now)}.json`)
     if (path === null) return { kind: 'cancelled' }
 
     const { version, schemaVersion } = this.#deps.appInfo()
@@ -33,12 +40,7 @@ export class DataExporter {
       schemaVersion,
       exportedAt: now,
     })
-    try {
-      await this.#deps.writeFile(path, JSON.stringify(data, null, 2))
-    } catch (err) {
-      console.error('Saving the data export failed', err)
-      return { kind: 'failed', message: FAILED_MESSAGE }
-    }
+    await this.#deps.writeFile(path, JSON.stringify(data, null, 2))
     return {
       kind: 'saved',
       path,
@@ -50,4 +52,10 @@ export class DataExporter {
       ),
     }
   }
+}
+
+function localDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
 }

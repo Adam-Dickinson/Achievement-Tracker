@@ -60,8 +60,23 @@ describe('DataCard', () => {
     clickExport()
 
     await vi.waitFor(() => expect(exportData).toHaveBeenCalled())
+    expect(await screen.findByRole('button', { name: 'Export data…' })).toBeEnabled()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('clears the previous result when a new export starts', async () => {
+    exportData.mockResolvedValueOnce({ kind: 'failed', message: 'Could not save the file.' })
+    exportData.mockResolvedValueOnce({ kind: 'cancelled' })
+    render(<DataCard />)
+
+    clickExport()
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    clickExport()
+
+    await vi.waitFor(() => expect(exportData).toHaveBeenCalledTimes(2))
+    await vi.waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+    expect(await screen.findByRole('button', { name: 'Export data…' })).toBeEnabled()
   })
 
   it('shows why saving failed', async () => {

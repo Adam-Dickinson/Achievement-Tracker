@@ -318,11 +318,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `updateNotificationSettings(patch)` | `notifications:update-settings` | Merges a `NotificationSettingsPatch` into the stored settings (checked with zod; an invalid field is dropped rather than rejecting the call), repositions/rescales the overlay window at once, and returns the new `NotificationSettings`. Fires `onNotificationSettingsChanged`. A platinum always bypasses `minRarity` and a disabled platform |
 | `onNotificationSettingsChanged(listener)` | `notifications:settings-changed` (main → main and overlay windows) | Called with the new `NotificationSettings` whenever they change. Returns an unsubscribe function |
 | `listDisplays()` | `overlay:list-displays` | Every connected display as a `DisplayInfo` (`id`, a label such as "Display 1 (2560×1440)", `primary`), for the corner/monitor picker |
-
-**Planned** (added in the milestones that need them)
-| API | Description |
-|---|---|
-| `exportData()` | Save dialog in the main process, one JSON file; resolves `saved`, `cancelled` or `failed` |
+| `exportData()` | `data:export` | Opens a save dialog in the main process and writes one JSON file of the user's data (no secrets, no external ids). The UI sends nothing, so it cannot choose the path. Answers an `ExportResult`: `{ kind: 'saved', path, games, achievements }`, `{ kind: 'cancelled' }`, or `{ kind: 'failed', message }`; it never rejects |
 
 **Events** (main → UI, via `webContents.send`): `sync:status` (per-account progress/state), `achievement:unlocked`, `account:status-changed`, `settings:changed`.
 

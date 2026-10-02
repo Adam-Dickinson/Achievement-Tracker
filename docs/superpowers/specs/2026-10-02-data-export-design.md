@@ -10,6 +10,7 @@ A user can save everything Trophy Locker knows about their games, achievements a
 
 - CSV, import, and a full local wipe (a destructive feature that needs its own confirmation design).
 - Anything secret. Credentials live in the `SecretStore`, never in SQLite (rule 3), so the export reads SQLite only and cannot leak them. Account `external_id` values (SteamID, XUID, PSN account id, file paths for emulators) are left out too, because they identify the person and the file is meant to be shared or archived.
+- Public catalogue ids stay: `storeUrl` and `iconUrl` can contain one (for example a Steam appid), which names a game, not a person. Account ids never appear in the file because no provider builds a URL from an account id.
 
 ## The file
 

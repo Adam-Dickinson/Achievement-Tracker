@@ -159,7 +159,7 @@ describe('buildDataExport', () => {
     })
   })
 
-  it('never writes a platform account id, game id or achievement id', () => {
+  it('never writes the external id columns of accounts, games or achievements', () => {
     seed()
 
     const text = JSON.stringify(buildDataExport(db, META))
