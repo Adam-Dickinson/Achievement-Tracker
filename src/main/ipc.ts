@@ -7,6 +7,7 @@ import {
   TOAST_SIZES,
   type AccountSummary,
   type AppInfo,
+  type ExportResult,
   type ArtworkKeyResult,
   type ArtworkRun,
   type ArtworkSettings,
@@ -72,6 +73,7 @@ export interface IpcHandlers {
   findRpcs3(): Promise<EmulatorFolder | null>
   chooseRpcs3Folder(): Promise<ChooseEmulatorFolderResult>
   connectRpcs3(input: EmulatorConnectInput): Promise<ConnectResult>
+  exportData(): Promise<ExportResult>
   listLibrary(): LibraryGame[]
   getGame(id: number): GameDetail | null
   mergeGames(input: MergeGamesInput): void
@@ -388,6 +390,11 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
       })
     }
     return handlers.connectRpcs3(parsed.data)
+  })
+
+  ipcMain.handle(IPC.exportData, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.exportData()
   })
 
   ipcMain.handle(IPC.listLibrary, (event) => {
