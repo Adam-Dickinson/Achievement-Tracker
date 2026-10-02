@@ -1,7 +1,7 @@
 {
   "name": "trophy-locker",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Adam Dickinson",
   "description": "Tracks achievements and trophies across platforms and emulators, with unlock pop-ups",
   "license": "GPL-3.0-only",
@@ -15,6 +15,9 @@
     },
     "files": [
       "out/**",
+      "resources/tray.png",
+      "resources/tray@2x.png",
+      "resources/icon.ico",
       "package.json"
     ],
     "win": {
