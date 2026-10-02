@@ -19,11 +19,12 @@ afterEach(() => {
 })
 
 describe('StartupCard', () => {
-  it('has a titled region', () => {
+  it('has a titled region', async () => {
     getStartupSettings.mockResolvedValue({ available: true, enabled: false })
     render(<StartupCard />)
 
     expect(screen.getByRole('region', { name: 'Startup' })).toBeInTheDocument()
+    await screen.findByRole('checkbox', { name: 'Start with Windows' })
   })
 
   it('shows the switch off or on as it is now', async () => {
@@ -48,15 +49,17 @@ describe('StartupCard', () => {
   })
 
   it('shows the real state when the change did not stick', async () => {
-    getStartupSettings.mockResolvedValue({ available: true, enabled: false })
-    setStartWithWindows.mockResolvedValue({ available: true, enabled: false })
+    getStartupSettings.mockResolvedValue({ available: true, enabled: true })
+    setStartWithWindows.mockResolvedValue({ available: true, enabled: true })
     render(<StartupCard />)
     const toggle = await screen.findByRole('checkbox', { name: 'Start with Windows' })
+    await vi.waitFor(() => expect(toggle).toBeChecked())
 
     fireEvent.click(toggle)
 
-    await vi.waitFor(() => expect(setStartWithWindows).toHaveBeenCalled())
-    await vi.waitFor(() => expect(toggle).not.toBeChecked())
+    await vi.waitFor(() => expect(setStartWithWindows).toHaveBeenCalledExactlyOnceWith(false))
+    await vi.waitFor(() => expect(toggle).toBeEnabled())
+    expect(toggle).toBeChecked()
   })
 
   it('is disabled, with a reason, when the app is not installed', async () => {
@@ -75,5 +78,13 @@ describe('StartupCard', () => {
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Start with Windows' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not change this setting.')
+  })
+
+  it('shows an alert and keeps the switch disabled when the setting cannot be read', async () => {
+    getStartupSettings.mockRejectedValue(new Error('denied'))
+    render(<StartupCard />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not read this setting.')
+    expect(screen.getByRole('checkbox', { name: 'Start with Windows' })).toBeDisabled()
   })
 })

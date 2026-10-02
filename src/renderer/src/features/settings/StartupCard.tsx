@@ -1,19 +1,26 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { StartupSettings } from '@shared/logs'
 
 export function StartupCard() {
   const [settings, setSettings] = useState<StartupSettings | null>(null)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [unreadable, setUnreadable] = useState(false)
+  const mounted = useRef(true)
   const id = useId()
 
   useEffect(() => {
-    let cancelled = false
-    void window.api.getStartupSettings().then((data) => {
-      if (!cancelled) setSettings(data)
-    })
+    mounted.current = true
+    window.api.getStartupSettings().then(
+      (data) => {
+        if (mounted.current) setSettings(data)
+      },
+      () => {
+        if (mounted.current) setUnreadable(true)
+      },
+    )
     return () => {
-      cancelled = true
+      mounted.current = false
     }
   }, [])
 
@@ -21,11 +28,12 @@ export function StartupCard() {
     setBusy(true)
     setFailed(false)
     try {
-      setSettings(await window.api.setStartWithWindows(on))
+      const next = await window.api.setStartWithWindows(on)
+      if (mounted.current) setSettings(next)
     } catch {
-      setFailed(true)
+      if (mounted.current) setFailed(true)
     } finally {
-      setBusy(false)
+      if (mounted.current) setBusy(false)
     }
   }
 
@@ -58,6 +66,11 @@ export function StartupCard() {
 
       {settings !== null && !available && (
         <p className="text-sm text-fg-muted">Available in the installed app.</p>
+      )}
+      {unreadable && (
+        <p role="alert" className="text-sm text-danger">
+          Could not read this setting.
+        </p>
       )}
       {failed && (
         <p role="alert" className="text-sm text-danger">

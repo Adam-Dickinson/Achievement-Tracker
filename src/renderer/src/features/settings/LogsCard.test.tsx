@@ -12,7 +12,7 @@ const ENTRIES: LogEntry[] = [
     time: '2026-10-02T12:01:00.000Z',
     level: 'error',
     message: 'Sync failed',
-    data: { name: 'Error', message: 'boom' },
+    data: { name: 'TypeError', message: 'boom' },
   },
 ]
 
@@ -35,10 +35,11 @@ afterEach(() => {
 })
 
 describe('LogsCard', () => {
-  it('has a titled region', () => {
+  it('has a titled region', async () => {
     render(<LogsCard />)
 
     expect(screen.getByRole('region', { name: 'Logs' })).toBeInTheDocument()
+    await screen.findByRole('list', { name: 'Log entries' })
   })
 
   it('lists the entries with their level and message', async () => {
@@ -49,7 +50,8 @@ describe('LogsCard', () => {
     expect(items).toHaveLength(2)
     expect(items[0]).toHaveTextContent('Synced 12 games')
     expect(items[1]).toHaveTextContent('Sync failed')
-    expect(items[1]).toHaveTextContent('Error')
+    expect(within(items[1]!).getByText('Error')).toBeInTheDocument()
+    expect(within(items[0]!).getByText('Info')).toBeInTheDocument()
   })
 
   it('shows the saved logging level', async () => {
@@ -117,5 +119,74 @@ describe('LogsCard', () => {
     render(<LogsCard />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not read the log.')
+  })
+
+  it('shows an alert when the logs folder cannot be opened', async () => {
+    openLogsFolder.mockRejectedValue(new Error('denied'))
+    render(<LogsCard />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open logs folder' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not open the logs folder.')
+  })
+
+  it('clears the folder alert on the next action', async () => {
+    openLogsFolder.mockRejectedValueOnce(new Error('denied'))
+    render(<LogsCard />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open logs folder' }))
+    await screen.findByRole('alert')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open logs folder' }))
+
+    await vi.waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+  })
+
+  it('shows an alert and re-reads the level when saving it fails', async () => {
+    getLogSettings.mockResolvedValueOnce({ level: 'info' }).mockResolvedValue({ level: 'warn' })
+    setLogLevel.mockRejectedValue(new Error('denied'))
+    render(<LogsCard />)
+    await screen.findByRole('list', { name: 'Log entries' })
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Logging level' }), {
+      target: { value: 'debug' },
+    })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not change this setting.')
+    await vi.waitFor(() =>
+      expect(screen.getByRole('combobox', { name: 'Logging level' })).toHaveValue('warn'),
+    )
+  })
+
+  it('survives the re-read failing too', async () => {
+    getLogSettings.mockResolvedValueOnce({ level: 'info' }).mockRejectedValue(new Error('gone'))
+    setLogLevel.mockRejectedValue(new Error('denied'))
+    render(<LogsCard />)
+    await screen.findByRole('list', { name: 'Log entries' })
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Logging level' }), {
+      target: { value: 'debug' },
+    })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not change this setting.')
+  })
+
+  it('keeps the default level and stays quiet when the saved level cannot be read', async () => {
+    getLogSettings.mockRejectedValue(new Error('denied'))
+    render(<LogsCard />)
+
+    await screen.findByRole('list', { name: 'Log entries' })
+    expect(screen.getByRole('combobox', { name: 'Logging level' })).toHaveValue('info')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('hides the old list when a later read fails', async () => {
+    render(<LogsCard />)
+    await screen.findByRole('list', { name: 'Log entries' })
+    readLogs.mockRejectedValue(new Error('denied'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not read the log.')
+    expect(screen.queryByRole('list', { name: 'Log entries' })).not.toBeInTheDocument()
   })
 })

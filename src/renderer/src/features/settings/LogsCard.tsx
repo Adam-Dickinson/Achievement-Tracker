@@ -31,13 +31,17 @@ export function LogsCard() {
   const [entries, setEntries] = useState<readonly LogEntry[] | null>(null)
   const [failed, setFailed] = useState(false)
   const [version, setVersion] = useState(0)
+  const [problem, setProblem] = useState<string | null>(null)
   const id = useId()
 
   useEffect(() => {
     let cancelled = false
-    void window.api.getLogSettings().then((settings) => {
-      if (!cancelled) setLevel(settings.level)
-    })
+    window.api.getLogSettings().then(
+      (settings) => {
+        if (!cancelled) setLevel(settings.level)
+      },
+      () => undefined,
+    )
     return () => {
       cancelled = true
     }
@@ -52,7 +56,9 @@ export function LogsCard() {
         setFailed(false)
       },
       () => {
-        if (!cancelled) setFailed(true)
+        if (cancelled) return
+        setEntries(null)
+        setFailed(true)
       },
     )
     return () => {
@@ -61,8 +67,27 @@ export function LogsCard() {
   }, [shown, version])
 
   async function changeLevel(next: LogLevel) {
-    const saved = await window.api.setLogLevel(next)
-    setLevel(saved.level)
+    setProblem(null)
+    try {
+      const saved = await window.api.setLogLevel(next)
+      setLevel(saved.level)
+    } catch {
+      setProblem('Could not change this setting.')
+      try {
+        setLevel((await window.api.getLogSettings()).level)
+      } catch {
+        return
+      }
+    }
+  }
+
+  async function openFolder() {
+    setProblem(null)
+    try {
+      await window.api.openLogsFolder()
+    } catch {
+      setProblem('Could not open the logs folder.')
+    }
   }
 
   return (
@@ -95,13 +120,25 @@ export function LogsCard() {
           value={shown}
           onChange={setShown}
         />
-        <Button variant="secondary" onClick={() => setVersion((v) => v + 1)}>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            setProblem(null)
+            setVersion((v) => v + 1)
+          }}
+        >
           Refresh
         </Button>
-        <Button variant="secondary" onClick={() => void window.api.openLogsFolder()}>
+        <Button variant="secondary" onClick={() => void openFolder()}>
           Open logs folder
         </Button>
       </div>
+
+      {problem !== null && (
+        <p role="alert" className="text-sm text-danger">
+          {problem}
+        </p>
+      )}
 
       {failed && (
         <p role="alert" className="text-sm text-danger">
