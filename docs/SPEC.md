@@ -63,13 +63,13 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 
 | ID | Requirement | Target |
 |---|---|---|
-| N-01 | Idle CPU (tray, no sync) | < 0.5% average |
-| N-02 | Idle memory in the tray (main window closed) | ≤ 200 MB private (measured baseline: ~170 MB, 4 processes; see ADR-0003 for tuning options) |
+| N-01 | Idle CPU (tray, no sync) | < 0.5% average (measured for v1.0.0: 0.16% of one core) |
+| N-02 | Idle memory in the tray (main window closed) | ≤ 200 MB private (measured for v1.0.0: 173 MB average, 177 MB peak, 4 processes; see [PERFORMANCE.md](PERFORMANCE.md) and ADR-0003 for tuning options) |
 | N-03 | Unlock-to-toast latency, local providers | < 2 s |
 | N-04 | Unlock-to-toast latency, polling providers | ≤ poll interval + 5 s |
-| N-05 | Installer size | < 120 MB (Electron bundles Chromium) |
-| N-06 | Cold start to tray | < 3 s |
-| N-07 | Handles libraries of 5,000+ games / 200,000+ achievements smoothly (virtualized lists) | |
+| N-05 | Installer size | < 120 MB (Electron bundles Chromium; measured for v1.0.0: 111.85 MiB) |
+| N-06 | Cold start to tray | < 3 s (measured for v1.0.0: 2.87 s) |
+| N-07 | Handles libraries of 5,000+ games / 200,000+ achievements smoothly (virtualized lists) | Measured for v1.0.0 with the opt-in large-library test: library 76 ms, dashboard 267 ms, activity 8 ms, each against a 2 s budget |
 | N-08 | Works offline: shows cached data, queues sync | |
 | N-09 | No game process injection or memory reading, ever | |
 | N-10 | Crash in one provider never affects others (isolated tasks) | |
@@ -325,6 +325,13 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `openLogsFolder()` | `logs:open-folder` | Opens the logs folder with `shell.openPath`. No payload |
 | `getStartupSettings()` | `startup:get` | `StartupSettings`: `{ available, enabled }`. `available` is false when the app is not packaged (development), so the switch is disabled there |
 | `setStartWithWindows(on)` | `startup:set` | Registers or removes the login start (`on` must be a boolean) through the same toggle as the tray's Start with Windows, and answers `{ available, enabled }` read back, so a failed change shows the real state |
+| `getUpdateState()` | `updates:get-state` | `UpdateState`: `status` (`disabled` when the app is not packaged, otherwise `idle`, `checking`, `available`, `downloading`, `ready` or `error`), `currentVersion`, `version` (the newer one, or `null`), `percent` while downloading, `message` for an error, `lastCheckedAt`, `autoCheck` and `dismissed` |
+| `checkForUpdates()` | `updates:check` | Checks GitHub for a newer release now (always works, even with automatic checking off) and answers the new `UpdateState`. Nothing is downloaded |
+| `downloadUpdate()` | `updates:download` | Downloads the available version and answers the new `UpdateState`; the download is verified against the SHA-512 in `latest.yml`, then the status becomes `ready`. Ignored unless the status is `available` |
+| `installUpdate()` | `updates:install` | Quits and installs the downloaded update. Ignored unless the status is `ready`. No payload, no result |
+| `dismissUpdate()` | `updates:dismiss` | Remembers the current newer version as dismissed (`updates.dismissedVersion`) so the banner and the system notification stay away until a newer one appears, and answers the new `UpdateState` |
+| `setAutoCheck(on)` | `updates:set-auto-check` | Turns the automatic check (about 10 seconds after launch, then every 6 hours) on or off (`on` must be a boolean; saved as `updates.autoCheck`) and answers the new `UpdateState` |
+| `onUpdateStateChanged(listener)` | `updates:state-changed` (main → main window) | Called with the new `UpdateState` on every change. Returns an unsubscribe function |
 
 **Events** (main → UI, via `webContents.send`): `sync:status` (per-account progress/state), `achievement:unlocked`, `account:status-changed`, `settings:changed`.
 
@@ -346,6 +353,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 ```
 
 `onboarding.completed` (boolean, default `false`) is stored the same way as `profile.name`, directly under its own `setting` key rather than inside this nested block.
+
+The update service keeps three more such keys: `updates.autoCheck` (boolean, default `true`; a missing or wrong-typed value reads as `true`), `updates.dismissedVersion` (the version whose banner the user dismissed with Later; `null` when none) and `updates.notifiedVersion` (the version a system notification was last shown for, so a restart does not repeat it; `null` when none).
 
 ## 8. Security requirements
 

@@ -104,3 +104,7 @@ Saved settings: `updates.autoCheck` (boolean, default true), `updates.dismissedV
 - IPC: each handler checks the sender and validates its payload.
 - Renderer: `UpdateBanner` (each state's buttons and text, **Later** dismisses, `role="status"`), `UpdatesCard`, the tray menu entry.
 - Checked by hand and recorded in the PR: the installer installs per user and uninstalls cleanly; installing over an older build keeps the data folder; a real update from a test release to a later one through the banner; the workflow produces a draft release on a test tag; the unsigned SmartScreen steps in the README are accurate.
+
+## Deviations
+
+- `disabled` means only "not packaged" (`npm run dev`). Turning automatic checking off leaves the state `idle` (a check by hand still works), so the table above overstates `disabled`.
