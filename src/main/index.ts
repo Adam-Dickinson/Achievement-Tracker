@@ -502,6 +502,7 @@ async function start(): Promise<void> {
       return null
     },
   })
+  console.info('Ready in the tray')
   updateService.start()
 
   if (!launchedHidden(process.argv)) showMainWindow()
