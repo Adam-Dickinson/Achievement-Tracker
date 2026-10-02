@@ -94,6 +94,14 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 - [ ] Crash reporting (opt-in), docs site/README screenshots
 - [ ] v1.0.0
 
+## After v1: launch installed games
+
+Wanted by the owner: launch any installed game from the app. Each platform is its own adapter and must be checked against real installs first (rule 10); it needs its own design.
+
+- [ ] Detect what is installed and match it to the library by title: Steam `appmanifest` files, Epic manifests, Xbox packages, the Ubisoft and EA registry entries, and the emulators' game folders
+- [ ] Steam launch (`steam://rungameid/<appid>`, the easy first adapter), then Xbox, Epic, Ubisoft and EA through their launchers, then shadPS4 and RPCS3 (needs the emulator exe and the game folder)
+- [ ] A Play button on Game detail for entries with a known install; always through the platform's own launcher, never touching the game process (rule 4)
+
 ## After v1: more emulators
 
 Not in v1 ([ADR-0006](adr/0006-v1-provider-scope.md); shadPS4 and RPCS3 moved into v1 by [ADR-0015](adr/0015-emulators-in-v1.md)). Notes for each stay in PROVIDERS.md.
