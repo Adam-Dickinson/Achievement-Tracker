@@ -42,6 +42,7 @@ import { SafeStorageSecretStore } from './safe-storage-secret-store'
 import { Rpcs3Accounts } from './rpcs3-accounts'
 import { ShadPs4Accounts } from './shadps4-accounts'
 import { openStorePage } from './store-page'
+import { openLogsFolder } from './logs-folder'
 import { launchedHidden, setStartWithWindows, startupSettings, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
 import { openDatabase } from './store/database'
@@ -378,20 +379,21 @@ async function start(): Promise<void> {
     chooseRpcs3Folder: () => rpcs3Accounts.choose(),
     connectRpcs3: (input) => rpcs3Accounts.connect(input),
     exportData: () => dataExporter.run(),
-    getLogSettings: () => ({ level: logger.level }),
+    getLogSettings: () => ({ level: logger.level, available: logger.available }),
     setLogLevel: (level) => {
       saveLogLevel(db, level)
       logger.setLevel(level)
-      return { level }
+      return { level, available: logger.available }
     },
     readLogs: async (minLevel) => {
       await logger.flush()
       return readLogs(logsDir, minLevel, MAX_LOG_ENTRIES)
     },
-    openLogsFolder: async () => {
-      await mkdir(logsDir, { recursive: true })
-      await shell.openPath(logsDir)
-    },
+    openLogsFolder: () =>
+      openLogsFolder(logsDir, {
+        makeFolder: (dir) => mkdir(dir, { recursive: true }),
+        openPath: (dir) => shell.openPath(dir),
+      }),
     getStartupSettings: () => startupSettings(startToggle),
     setStartWithWindows: (on) => {
       const settings = setStartWithWindows(startToggle, on)

@@ -34,6 +34,7 @@ export class Logger {
   #queue: Promise<void> = Promise.resolve()
   #size: number | null = null
   #reported = false
+  #available = true
 
   constructor({
     dir,
@@ -53,6 +54,10 @@ export class Logger {
 
   get level(): LogLevel {
     return this.#level
+  }
+
+  get available(): boolean {
+    return this.#available
   }
 
   setLevel(level: LogLevel): void {
@@ -110,8 +115,10 @@ export class Logger {
       }
       await appendFile(join(this.#dir, LOG_FILE), line)
       this.#size = (this.#size ?? 0) + bytes
+      this.#available = true
     } catch (problem) {
       this.#size = null
+      this.#available = false
       this.#report(problem)
     }
   }

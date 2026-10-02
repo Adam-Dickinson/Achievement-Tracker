@@ -1,3 +1,4 @@
+import { inspect } from 'node:util'
 import { describe, expect, it } from 'vitest'
 import { Secret } from '@shared/secret'
 import { REDACTED, redactText, redactValue } from './redact'
@@ -66,8 +67,26 @@ describe('redactText', () => {
   it.each([
     ['a keyboard word', 'keyboard=us'],
     ['a dashed error code', 'error-code=5'],
+    ['a code with a colon', "{ code: 'ENOENT' }"],
+    ['a quoted code field', '{"code": "invalid_type"}'],
   ])('also leaves %s alone', (_label, input) => {
     expect(redactText(input)).toBe(input)
+  })
+
+  it('redacts a code given as a parameter', () => {
+    expect(redactText('GET /cb?code=abc123&state=x')).toBe(`GET /cb?code=${REDACTED}&state=x`)
+  })
+
+  it('redacts a token shown by util.inspect of a Map', () => {
+    const text = inspect(new Map([['token', 'tok999']]))
+
+    expect(redactText(text)).not.toContain('tok999')
+  })
+
+  it('redacts a token shown by util.inspect of search params', () => {
+    const text = inspect(new URL('https://example.test/x?token=tok999').searchParams)
+
+    expect(redactText(text)).not.toContain('tok999')
   })
 
   it('cuts a very long message after redacting it', () => {
@@ -131,6 +150,10 @@ describe('redactValue', () => {
       error_code: 5,
       keyboard: 'us',
     })
+  })
+
+  it('keeps the value of a key named code', () => {
+    expect(redactValue({ code: 'ENOENT' })).toEqual({ code: 'ENOENT' })
   })
 
   it('walks arrays', () => {

@@ -104,8 +104,8 @@ const fakes = {
   chooseRpcs3Folder: vi.fn(() => Promise.resolve({ kind: 'cancelled' as const })),
   connectRpcs3: vi.fn(() => Promise.resolve(CONNECTED)),
   exportData: vi.fn<() => Promise<ExportResult>>(() => Promise.resolve({ kind: 'cancelled' })),
-  getLogSettings: vi.fn(() => ({ level: 'info' as LogLevel })),
-  setLogLevel: vi.fn((level: LogLevel) => ({ level })),
+  getLogSettings: vi.fn(() => ({ level: 'info' as LogLevel, available: true })),
+  setLogLevel: vi.fn((level: LogLevel) => ({ level, available: true })),
   readLogs: vi.fn((): Promise<LogEntry[]> => Promise.resolve([])),
   openLogsFolder: vi.fn(() => Promise.resolve()),
   getStartupSettings: vi.fn(() => ({ available: true, enabled: false })),
@@ -543,8 +543,11 @@ describe('data export handler', () => {
 
 describe('log and startup handlers', () => {
   it('returns the log settings and changes the level', () => {
-    expect(call(IPC.getLogSettings, TRUSTED)).toEqual({ level: 'info' })
-    expect(call(IPC.setLogLevel, TRUSTED, 'debug')).toEqual({ level: 'debug' })
+    expect(call(IPC.getLogSettings, TRUSTED)).toEqual({ level: 'info', available: true })
+    expect(call(IPC.setLogLevel, TRUSTED, 'debug')).toEqual({
+      level: 'debug',
+      available: true,
+    })
     expect(fakes.setLogLevel).toHaveBeenCalledExactlyOnceWith('debug')
   })
 
@@ -553,7 +556,10 @@ describe('log and startup handlers', () => {
     ['an unknown level', 'loud'],
     ['a number', 3],
   ])('ignores a level change with %s', (_label, payload) => {
-    expect(call(IPC.setLogLevel, TRUSTED, payload)).toEqual({ level: 'info' })
+    expect(call(IPC.setLogLevel, TRUSTED, payload)).toEqual({
+      level: 'info',
+      available: true,
+    })
     expect(fakes.setLogLevel).not.toHaveBeenCalled()
   })
 

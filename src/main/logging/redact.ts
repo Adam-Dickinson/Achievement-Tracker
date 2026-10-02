@@ -5,12 +5,17 @@ export const REDACTED = '[redacted]'
 const MAX_STRING = 2000
 const MAX_DEPTH = 4
 const NAME_PATTERN =
-  '(?:[A-Za-z0-9_-]*(?:token|secret|key|password|session|sessionid|session_id|ticket|npsso|cookie|authorization)|code)'
-const SENSITIVE_NAME = new RegExp(`^${NAME_PATTERN}$`, 'i')
+  '[A-Za-z0-9_-]*(?:token|secret|key|password|session|sessionid|session_id|ticket|npsso|cookie|authorization)'
+const VALUE_PATTERN = String.raw`"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^&\s"',;}]+`
+const SENSITIVE_NAME = new RegExp(`^(?:${NAME_PATTERN})$`, 'i')
 const HEADER_VALUE = /\b(Cookie|Set-Cookie|Authorization)(\s*[:=]\s*)[^\r\n]+/gi
 const BEARER = /\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi
 const PAIR = new RegExp(
-  String.raw`(?<![A-Za-z0-9_-])(["']?)(${NAME_PATTERN})(\1\s*[:=]\s*)("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^&\s"',;}]+)`,
+  String.raw`(?<![A-Za-z0-9_-])(["']?)(${NAME_PATTERN})(\1\s*(?:=>|[:=])\s*)(${VALUE_PATTERN})`,
+  'gi',
+)
+const CODE_PAIR = new RegExp(
+  String.raw`(?<![A-Za-z0-9_-])(["']?)(code)(\1\s*=\s*)(${VALUE_PATTERN})`,
   'gi',
 )
 const LONG_RUN = /[A-Za-z0-9_-]{32,}/g
@@ -25,6 +30,7 @@ export function redactText(text: string): string {
     .replace(HEADER_VALUE, `$1$2${REDACTED}`)
     .replace(BEARER, `$1 ${REDACTED}`)
     .replace(PAIR, maskPair)
+    .replace(CODE_PAIR, maskPair)
     .replace(LONG_RUN, REDACTED)
   return redacted.length > MAX_STRING ? `${redacted.slice(0, MAX_STRING)}…` : redacted
 }

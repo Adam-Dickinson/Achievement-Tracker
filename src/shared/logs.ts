@@ -20,6 +20,7 @@ export interface LogEntry {
 
 export interface LogSettings {
   readonly level: LogLevel
+  readonly available: boolean
 }
 
 export interface StartupSettings {

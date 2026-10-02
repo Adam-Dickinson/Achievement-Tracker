@@ -144,6 +144,21 @@ describe('Logger', () => {
     expect(lines(join('blocked', LOG_FILE)).map((entry) => entry.message)).toEqual(['kept'])
   })
 
+  it('is available at first, unavailable after a blocked write, and available again after a good one', async () => {
+    writeFileSync(join(dir, 'blocked'), '')
+    const log = logger({ dir: join(dir, 'blocked'), onProblem: vi.fn() })
+    expect(log.available).toBe(true)
+
+    log.info('lost')
+    await log.flush()
+    expect(log.available).toBe(false)
+
+    rmSync(join(dir, 'blocked'))
+    log.info('kept')
+    await log.flush()
+    expect(log.available).toBe(true)
+  })
+
   it('does not throw when the data has a throwing getter', async () => {
     const onProblem = vi.fn()
     const log = logger({ onProblem })

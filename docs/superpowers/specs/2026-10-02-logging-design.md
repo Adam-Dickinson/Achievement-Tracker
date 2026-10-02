@@ -44,8 +44,8 @@ No new dependency.
 
 | Call | Channel | Payload | Result |
 | --- | --- | --- | --- |
-| `getLogSettings()` | `logs:get-settings` | none | `{ level }` |
-| `setLogLevel(level)` | `logs:set-level` | one of the four level names | `{ level }` |
+| `getLogSettings()` | `logs:get-settings` | none | `{ level, available }` |
+| `setLogLevel(level)` | `logs:set-level` | one of the four level names | `{ level, available }` |
 | `readLogs(minLevel)` | `logs:read` | one of the four level names | `LogEntry[]` (at most 500) |
 | `openLogsFolder()` | `logs:open-folder` | none | `void`, opens the folder with `shell.openPath` |
 | `getStartupSettings()` | `startup:get` | none | `{ available: boolean, enabled: boolean }` |
@@ -65,6 +65,14 @@ No new dependency.
 - If the logs folder cannot be created, logging is off for the session, the viewer shows "Logging is unavailable", and the app carries on.
 - Rotation failures never stop logging: if a rename fails the logger keeps appending to the current file.
 - `setStartWithWindows` failing returns the real state (`enabled` read back), so the switch cannot lie.
+
+## Deviations from the first design
+
+- The long-run redaction class is `[A-Za-z0-9_-]{32,}` (no `+`, `/` or `=`), so long URL paths survive.
+- The logger retries every write instead of switching itself off for the session when the folder is unwritable, and reports unavailability through `getLogSettings().available` instead; the Logs card shows "Logging is unavailable" from it.
+- An unquoted parameter value stops at whitespace.
+- Bare `code` is redacted only in the `code=...` form, so `code: 'ENOENT'` and an object key named `code` stay readable.
+- The renderer console is not captured.
 
 ## Tests
 

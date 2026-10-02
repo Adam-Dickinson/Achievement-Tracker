@@ -22,8 +22,8 @@ const readLogs = vi.fn<(minLevel: LogLevel) => Promise<LogEntry[]>>()
 const openLogsFolder = vi.fn<() => Promise<void>>()
 
 beforeEach(() => {
-  getLogSettings.mockResolvedValue({ level: 'info' })
-  setLogLevel.mockImplementation((level) => Promise.resolve({ level }))
+  getLogSettings.mockResolvedValue({ level: 'info', available: true })
+  setLogLevel.mockImplementation((level) => Promise.resolve({ level, available: true }))
   readLogs.mockResolvedValue(ENTRIES)
   openLogsFolder.mockResolvedValue(undefined)
   window.api = fakeApi({ getLogSettings, setLogLevel, readLogs, openLogsFolder })
@@ -55,11 +55,42 @@ describe('LogsCard', () => {
   })
 
   it('shows the saved logging level', async () => {
-    getLogSettings.mockResolvedValue({ level: 'warn' })
+    getLogSettings.mockResolvedValue({ level: 'warn', available: true })
     render(<LogsCard />)
 
     await vi.waitFor(() =>
       expect(screen.getByRole('combobox', { name: 'Logging level' })).toHaveValue('warn'),
+    )
+  })
+
+  it('says so when logging is unavailable', async () => {
+    getLogSettings.mockResolvedValue({ level: 'info', available: false })
+    render(<LogsCard />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Logging is unavailable. The app cannot write to its logs folder.',
+    )
+    await screen.findByRole('list', { name: 'Log entries' })
+  })
+
+  it('says nothing when logging is available', async () => {
+    render(<LogsCard />)
+    await screen.findByRole('list', { name: 'Log entries' })
+
+    expect(screen.queryByText(/Logging is unavailable/)).not.toBeInTheDocument()
+  })
+
+  it('recovers after Refresh once logging works again', async () => {
+    getLogSettings
+      .mockResolvedValueOnce({ level: 'info', available: false })
+      .mockResolvedValue({ level: 'info', available: true })
+    render(<LogsCard />)
+    await screen.findByText(/Logging is unavailable/)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+
+    await vi.waitFor(() =>
+      expect(screen.queryByText(/Logging is unavailable/)).not.toBeInTheDocument(),
     )
   })
 
@@ -142,7 +173,9 @@ describe('LogsCard', () => {
   })
 
   it('shows an alert and re-reads the level when saving it fails', async () => {
-    getLogSettings.mockResolvedValueOnce({ level: 'info' }).mockResolvedValue({ level: 'warn' })
+    getLogSettings
+      .mockResolvedValueOnce({ level: 'info', available: true })
+      .mockResolvedValue({ level: 'warn', available: true })
     setLogLevel.mockRejectedValue(new Error('denied'))
     render(<LogsCard />)
     await screen.findByRole('list', { name: 'Log entries' })
@@ -158,7 +191,9 @@ describe('LogsCard', () => {
   })
 
   it('survives the re-read failing too', async () => {
-    getLogSettings.mockResolvedValueOnce({ level: 'info' }).mockRejectedValue(new Error('gone'))
+    getLogSettings
+      .mockResolvedValueOnce({ level: 'info', available: true })
+      .mockRejectedValue(new Error('gone'))
     setLogLevel.mockRejectedValue(new Error('denied'))
     render(<LogsCard />)
     await screen.findByRole('list', { name: 'Log entries' })

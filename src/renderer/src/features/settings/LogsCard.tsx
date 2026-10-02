@@ -27,6 +27,7 @@ const LEVEL_COLOR: Record<LogLevel, string> = {
 
 export function LogsCard() {
   const [level, setLevel] = useState<LogLevel>('info')
+  const [available, setAvailable] = useState(true)
   const [shown, setShown] = useState<LogLevel>('info')
   const [entries, setEntries] = useState<readonly LogEntry[] | null>(null)
   const [failed, setFailed] = useState(false)
@@ -38,14 +39,16 @@ export function LogsCard() {
     let cancelled = false
     window.api.getLogSettings().then(
       (settings) => {
-        if (!cancelled) setLevel(settings.level)
+        if (cancelled) return
+        setLevel(settings.level)
+        setAvailable(settings.available)
       },
       () => undefined,
     )
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [version])
 
   useEffect(() => {
     let cancelled = false
@@ -71,10 +74,13 @@ export function LogsCard() {
     try {
       const saved = await window.api.setLogLevel(next)
       setLevel(saved.level)
+      setAvailable(saved.available)
     } catch {
       setProblem('Could not change this setting.')
       try {
-        setLevel((await window.api.getLogSettings()).level)
+        const current = await window.api.getLogSettings()
+        setLevel(current.level)
+        setAvailable(current.available)
       } catch {
         return
       }
@@ -134,6 +140,12 @@ export function LogsCard() {
         </Button>
       </div>
 
+      {!available && (
+        <p role="alert" className="text-sm text-danger">
+          Logging is unavailable. The app cannot write to its logs folder.
+        </p>
+      )}
+
       {problem !== null && (
         <p role="alert" className="text-sm text-danger">
           {problem}
@@ -159,7 +171,7 @@ export function LogsCard() {
             <li key={`${entry.time}-${index}`} className="flex flex-col gap-1">
               <div className="flex flex-wrap gap-x-3">
                 <time dateTime={entry.time} className="text-fg-subtle">
-                  {new Date(entry.time).toLocaleTimeString()}
+                  {new Date(entry.time).toLocaleString()}
                 </time>
                 <span className={`font-semibold ${LEVEL_COLOR[entry.level]}`}>
                   {LEVEL_TEXT[entry.level]}
