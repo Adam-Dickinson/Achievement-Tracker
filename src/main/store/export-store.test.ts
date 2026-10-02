@@ -167,4 +167,45 @@ describe('buildDataExport', () => {
     expect(text).not.toContain(ACCOUNT_EXTERNAL_ID)
     expect(text).not.toContain(GAME_EXTERNAL_ID)
   })
+
+  it('keeps each entry and achievement under its own game', () => {
+    seed()
+    const xbox = upsertAccount(db, { platform: 'xbox', externalId: 'xuid-1', displayName: 'Gamer' })
+    addPlatformGames(db, xbox, [game('xbox-portal', 'Portal'), game('xbox-doom', 'Doom')])
+    const portal = getPlatformGameByExternalId(db, xbox.id, 'xbox-portal')
+    const doom = getPlatformGameByExternalId(db, xbox.id, 'xbox-doom')
+    upsertAchievements(db, portal.id, [
+      achievement('p-0', { name: 'Xbox Portal One' }),
+      achievement('p-1', { name: 'Xbox Portal Two' }),
+      achievement('p-2', { name: 'Xbox Portal Three' }),
+    ])
+    upsertAchievements(db, doom.id, [achievement('d-0', { name: 'Doom One' })])
+    insertNewUnlocks(db, portal.id, [
+      { achievementExternalId: 'p-1', unlockedAt: NOW, progress: null },
+    ])
+    db.prepare('INSERT INTO game (title, sort_title) VALUES (?, ?)').run('Empty', 'empty')
+
+    const games = buildDataExport(db, META).games
+    const shared = games.find((exported) => exported.title === 'Portal')
+    const [steamEntry, xboxEntry] = shared?.entries ?? []
+
+    expect(games).toHaveLength(3)
+    expect(shared?.entries.map((entry) => entry.platform)).toEqual(['steam', 'xbox'])
+    expect(steamEntry?.achievements).toHaveLength(2)
+    expect(steamEntry?.achievements.filter((item) => item.unlock)).toHaveLength(1)
+    expect(xboxEntry?.achievements.map((item) => item.name)).toEqual([
+      'Xbox Portal One',
+      'Xbox Portal Two',
+      'Xbox Portal Three',
+    ])
+    expect(xboxEntry?.achievements.map((item) => item.unlock !== null)).toEqual([
+      false,
+      true,
+      false,
+    ])
+    const other = games.find((exported) => exported.title === 'Doom')
+    expect(other?.entries).toHaveLength(1)
+    expect(other?.entries[0]?.achievements.map((item) => item.name)).toEqual(['Doom One'])
+    expect(games.find((exported) => exported.title === 'Empty')?.entries).toEqual([])
+  })
 })
