@@ -77,6 +77,16 @@ describe('redactText', () => {
     expect(redactText('GET /cb?code=abc123&state=x')).toBe(`GET /cb?code=${REDACTED}&state=x`)
   })
 
+  it('redacts a code shown by util.inspect of a Map', () => {
+    expect(inspect(new Map([['code', 'qq']]))).toContain('qq')
+    expect(redactText(inspect(new Map([['code', 'qq']])))).not.toContain('qq')
+  })
+
+  it('redacts a code shown by util.inspect of URLSearchParams', () => {
+    const text = inspect(new URL('https://x.test/?code=qq&a=b').searchParams)
+    expect(redactText(text)).not.toContain('qq')
+  })
+
   it('redacts a token shown by util.inspect of a Map', () => {
     const text = inspect(new Map([['token', 'tok999']]))
 

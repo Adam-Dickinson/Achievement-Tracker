@@ -15,7 +15,7 @@ const PAIR = new RegExp(
   'gi',
 )
 const CODE_PAIR = new RegExp(
-  String.raw`(?<![A-Za-z0-9_-])(["']?)(code)(\1\s*=\s*)(${VALUE_PATTERN})`,
+  String.raw`(?<![A-Za-z0-9_-])(["']?)(code)(\1\s*(?:=>|=)\s*)(${VALUE_PATTERN})`,
   'gi',
 )
 const LONG_RUN = /[A-Za-z0-9_-]{32,}/g
