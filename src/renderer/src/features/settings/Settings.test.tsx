@@ -48,6 +48,12 @@ describe('Settings', () => {
     expect(screen.getByRole('region', { name: 'Artwork' })).toBeInTheDocument()
   })
 
+  it('shows the Your data card', async () => {
+    renderSettings()
+
+    expect(await screen.findByRole('region', { name: 'Your data' })).toBeInTheDocument()
+  })
+
   it('shows the app version and database schema once known', async () => {
     renderSettings()
 
