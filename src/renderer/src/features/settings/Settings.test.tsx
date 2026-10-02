@@ -60,6 +60,13 @@ describe('Settings', () => {
     expect(await screen.findByText('Trophy Locker v0.1.0 · database schema 1')).toBeInTheDocument()
   })
 
+  it('shows the Startup and Logs cards', async () => {
+    renderSettings()
+
+    expect(await screen.findByRole('region', { name: 'Startup' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Logs' })).toBeInTheDocument()
+  })
+
   it('leaves the version out until it is known', () => {
     window.api = fakeApi({ getAppInfo: vi.fn().mockReturnValue(new Promise(() => {})) })
     renderSettings()
