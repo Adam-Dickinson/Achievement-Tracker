@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_NOTIFICATION_SETTINGS } from '@shared/ipc'
 import { applyMigrations } from './migrate'
 import {
+  readLogLevel,
   readNotificationSettings,
   readOnboardingCompleted,
   readProfileName,
+  saveLogLevel,
   saveOnboardingCompleted,
   saveProfileName,
   updateNotificationSettings,
@@ -179,5 +181,36 @@ describe('onboarding completed setting', () => {
     )
 
     expect(readOnboardingCompleted(db)).toBe(false)
+  })
+})
+
+describe('log level', () => {
+  let db: DatabaseSync
+
+  beforeEach(() => {
+    db = new DatabaseSync(':memory:')
+    applyMigrations(db)
+  })
+
+  it('defaults to info', () => {
+    expect(readLogLevel(db)).toBe('info')
+  })
+
+  it('saves and reads back a level', () => {
+    saveLogLevel(db, 'debug')
+
+    expect(readLogLevel(db)).toBe('debug')
+  })
+
+  it('falls back to info for a value it does not know', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run('logging.level', '"loud"')
+
+    expect(readLogLevel(db)).toBe('info')
+  })
+
+  it('falls back to info for a value that is not JSON', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run('logging.level', 'debug')
+
+    expect(readLogLevel(db)).toBe('info')
   })
 })

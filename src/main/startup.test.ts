@@ -1,6 +1,12 @@
 import type { App, LoginItemSettings } from 'electron'
 import { describe, expect, it, vi } from 'vitest'
-import { HIDDEN_ARG, launchedHidden, startWithWindows } from './startup'
+import {
+  HIDDEN_ARG,
+  launchedHidden,
+  setStartWithWindows,
+  startupSettings,
+  startWithWindows,
+} from './startup'
 
 type LoginApp = Pick<App, 'isPackaged' | 'getLoginItemSettings' | 'setLoginItemSettings'>
 
@@ -36,5 +42,43 @@ describe('startWithWindows', () => {
       openAtLogin: false,
       args: [HIDDEN_ARG],
     })
+  })
+})
+
+describe('startupSettings', () => {
+  it('is unavailable and off without a toggle', () => {
+    expect(startupSettings(null)).toEqual({ available: false, enabled: false })
+  })
+
+  it('reports whether the login item is on', () => {
+    expect(startupSettings({ get: () => true, set: vi.fn() })).toEqual({
+      available: true,
+      enabled: true,
+    })
+  })
+})
+
+describe('setStartWithWindows', () => {
+  it('sets the toggle and answers with the state read back', () => {
+    let on = false
+    const toggle = { get: () => on, set: (value: boolean) => void (on = value) }
+
+    expect(setStartWithWindows(toggle, true)).toEqual({ available: true, enabled: true })
+  })
+
+  it('answers with the real state when setting fails', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const toggle = {
+      get: () => false,
+      set: () => {
+        throw new Error('denied')
+      },
+    }
+
+    expect(setStartWithWindows(toggle, true)).toEqual({ available: true, enabled: false })
+  })
+
+  it('does nothing without a toggle', () => {
+    expect(setStartWithWindows(null, true)).toEqual({ available: false, enabled: false })
   })
 })
