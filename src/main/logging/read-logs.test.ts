@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -88,5 +88,20 @@ describe('readLogs', () => {
     )
 
     expect((await readLogs(dir, 'debug'))[0]).toMatchObject({ data: { a: 1 } })
+  })
+
+  it('returns nothing when the limit is zero or less', async () => {
+    file('trophy-locker.log', entry('a'))
+
+    expect(await readLogs(dir, 'debug', 0)).toEqual([])
+  })
+
+  it('skips a file it cannot read and keeps the others', async () => {
+    mkdirSync(join(dir, 'trophy-locker.log'))
+    file('trophy-locker.1.log', entry('old'))
+
+    const messages = (await readLogs(dir, 'debug')).map((item) => item.message)
+
+    expect(messages).toEqual(['old'])
   })
 })

@@ -24,6 +24,7 @@ export async function readLogs(
   keep: number = DEFAULT_KEEP,
 ): Promise<LogEntry[]> {
   const collected: LogEntry[] = []
+  if (limit <= 0) return collected
   for (const name of logFileNames(keep)) {
     const text = await readText(join(dir, name))
     for (const line of text.split('\n').reverse()) {
@@ -40,9 +41,8 @@ export async function readLogs(
 async function readText(path: string): Promise<string> {
   try {
     return await readFile(path, 'utf8')
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return ''
-    throw error
+  } catch {
+    return ''
   }
 }
 

@@ -47,7 +47,7 @@ export class Logger {
     this.#level = level
     this.#now = now
     this.#maxBytes = maxBytes
-    this.#keep = keep
+    this.#keep = Math.max(1, keep)
     this.#onProblem = onProblem
   }
 
@@ -77,23 +77,24 @@ export class Logger {
 
   log(level: LogLevel, message: string, data?: unknown): void {
     if (LOG_LEVEL_RANK[level] < LOG_LEVEL_RANK[this.#level]) return
-    const entry = {
-      time: this.#now().toISOString(),
-      level,
-      message: redactText(message),
-      ...(data === undefined ? {} : { data: redactValue(data) }),
-    }
     let line: string
     try {
+      const entry = {
+        time: this.#now().toISOString(),
+        level,
+        message: redactText(message),
+        ...(data === undefined ? {} : { data: redactValue(data) }),
+      }
       line = `${JSON.stringify(entry)}\n`
-    } catch {
+    } catch (problem) {
+      this.#report(problem)
       return
     }
     this.#queue = this.#queue.then(() => this.#append(line))
   }
 
   flush(): Promise<void> {
-    return this.#queue
+    return this.#queue.catch(() => undefined)
   }
 
   async #append(line: string): Promise<void> {
@@ -138,6 +139,10 @@ export class Logger {
   #report(problem: unknown): void {
     if (this.#reported) return
     this.#reported = true
-    this.#onProblem(problem)
+    try {
+      this.#onProblem(problem)
+    } catch {
+      return
+    }
   }
 }

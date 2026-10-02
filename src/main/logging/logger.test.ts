@@ -143,4 +143,63 @@ describe('Logger', () => {
 
     expect(lines(join('blocked', LOG_FILE)).map((entry) => entry.message)).toEqual(['kept'])
   })
+
+  it('does not throw when the data has a throwing getter', async () => {
+    const onProblem = vi.fn()
+    const log = logger({ onProblem })
+
+    expect(() =>
+      log.info('m', {
+        get a(): number {
+          throw new Error('x')
+        },
+      }),
+    ).not.toThrow()
+    await log.flush()
+
+    expect(onProblem).toHaveBeenCalledOnce()
+  })
+
+  it('does not throw when the clock throws', async () => {
+    const onProblem = vi.fn()
+    const log = logger({
+      onProblem,
+      now: () => {
+        throw new Error('clock')
+      },
+    })
+
+    expect(() => log.info('m')).not.toThrow()
+    await log.flush()
+
+    expect(onProblem).toHaveBeenCalledOnce()
+  })
+
+  it('survives an onProblem that throws', async () => {
+    writeFileSync(join(dir, 'blocked'), '')
+    const log = logger({
+      dir: join(dir, 'blocked'),
+      onProblem: () => {
+        throw new Error('handler')
+      },
+    })
+
+    log.info('lost')
+    await expect(log.flush()).resolves.toBeUndefined()
+    rmSync(join(dir, 'blocked'))
+    log.info('kept')
+    await expect(log.flush()).resolves.toBeUndefined()
+
+    expect(lines(join('blocked', LOG_FILE)).map((entry) => entry.message)).toEqual(['kept'])
+  })
+
+  it('still rotates when keep is below one', async () => {
+    const log = logger({ maxBytes: 100, keep: 0 })
+
+    for (let i = 0; i < 10; i++) log.info(`line ${i}`)
+    await log.flush()
+
+    expect(readdirSync(dir)).toEqual([LOG_FILE])
+    expect(lines().length).toBeLessThan(5)
+  })
 })
