@@ -164,7 +164,7 @@ Tests live next to the code they test (`*.test.ts`, `*.test.tsx`).
 | Running-game detection | Steam's own `RunningAppID` registry value, read with `reg query` (never the game process, rule 4) |
 | Testing | Vitest; Testing Library + jsdom for UI |
 | Quality | ESLint (zero warnings), Prettier, GitHub Actions |
-| Packaging | electron-builder (M6) |
+| Packaging | electron-builder, NSIS per-user installer, published to GitHub Releases; `electron-updater` notify-only (ADR-0016) |
 
 ## 8. Extension points
 

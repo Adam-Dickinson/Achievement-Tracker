@@ -10,11 +10,15 @@ import {
 import { LOG_LEVELS, type LogLevel } from '@shared/logs'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
+import type { UpdateSettings } from '@shared/updates'
 
 const PROFILE_NAME = 'profile.name'
 const NOTIFICATION_SETTINGS = 'notifications.settings'
 const ONBOARDING_COMPLETED = 'onboarding.completed'
 const LOG_LEVEL = 'logging.level'
+const UPDATES_AUTO_CHECK = 'updates.autoCheck'
+const UPDATES_DISMISSED = 'updates.dismissedVersion'
+const UPDATES_NOTIFIED = 'updates.notifiedVersion'
 
 const notificationSettingsSchema = z.object({
   corner: z.enum(TOAST_CORNERS),
@@ -126,4 +130,42 @@ export function saveLogLevel(db: DatabaseSync, level: LogLevel): void {
     `INSERT INTO setting (key, value) VALUES (?, ?)
      ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
   ).run(LOG_LEVEL, JSON.stringify(level))
+}
+
+function readParsed<T>(db: DatabaseSync, key: string, schema: z.ZodType<T>, fallback: T): T {
+  const row = db.prepare('SELECT value FROM setting WHERE key = ?').get(key) as
+    { value: string } | undefined
+  if (!row) return fallback
+  try {
+    const parsed = schema.safeParse(JSON.parse(row.value))
+    return parsed.success ? parsed.data : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeSetting(db: DatabaseSync, key: string, value: unknown): void {
+  if (value === null) {
+    db.prepare('DELETE FROM setting WHERE key = ?').run(key)
+    return
+  }
+  db.prepare(
+    `INSERT INTO setting (key, value) VALUES (?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+  ).run(key, JSON.stringify(value))
+}
+
+export function readUpdateSettings(db: DatabaseSync): UpdateSettings {
+  return {
+    autoCheck: readParsed(db, UPDATES_AUTO_CHECK, z.boolean(), true),
+    dismissedVersion: readParsed(db, UPDATES_DISMISSED, z.string().nullable(), null),
+    notifiedVersion: readParsed(db, UPDATES_NOTIFIED, z.string().nullable(), null),
+  }
+}
+
+export function saveUpdateSettings(db: DatabaseSync, patch: Partial<UpdateSettings>): void {
+  if (patch.autoCheck !== undefined) writeSetting(db, UPDATES_AUTO_CHECK, patch.autoCheck)
+  if (patch.dismissedVersion !== undefined)
+    writeSetting(db, UPDATES_DISMISSED, patch.dismissedVersion)
+  if (patch.notifiedVersion !== undefined) writeSetting(db, UPDATES_NOTIFIED, patch.notifiedVersion)
 }

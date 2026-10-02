@@ -14,6 +14,7 @@ import { GameDetail } from '@/features/game-detail/GameDetail'
 import { Settings } from '@/features/settings/Settings'
 import { useAccounts } from '@/features/accounts/useAccounts'
 import { Onboarding } from '@/features/onboarding/Onboarding'
+import { UpdateBanner } from '@/features/updates/UpdateBanner'
 
 interface PageContentProps {
   page: PageId
@@ -122,6 +123,8 @@ export function App() {
         query={libraryView.query}
         onSearch={searchLibrary}
       />
+
+      <UpdateBanner />
 
       <main className="mx-auto w-[calc(100%-48px)] max-w-348 pt-7 pb-20">
         <ScrollParentContext value={scrollParent}>

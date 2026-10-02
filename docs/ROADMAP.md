@@ -89,11 +89,11 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 
 ## M6: Release engineering
 
-- [ ] Code signing, signed auto-update channel
-- [ ] Installer (electron-builder, NSIS), code signing, signed auto-update; measure memory and size against N-02 / N-05
-- [ ] Performance validation against N-01..N-07
+- [ ] Code signing, signed auto-update channel: not done, deferred. Version 1 ships unsigned with notify-only updates instead ([ADR-0016](adr/0016-release-and-updates.md)); signing and a silent auto-update are revisited when the project has a certificate
+- [x] Installer (electron-builder, NSIS, per user, no admin prompt), a tag-triggered release workflow that drafts a GitHub release, and notify-only updates (banner, Settings Updates card, tray entry, system notification; nothing downloads until the user asks); size measured against N-05
+- [x] Performance validation against N-01..N-07: measured on the packaged build, see [PERFORMANCE.md](PERFORMANCE.md)
 - [ ] Crash reporting (opt-in), docs site/README screenshots
-- [ ] v1.0.0
+- [ ] v1.0.0: the version is set and the installer builds; waiting for the owner's hands-on checks (install, upgrade over an older build, a test tag, a real update through the banner, Start with Windows) before tagging
 
 ## After v1: launch installed games
 

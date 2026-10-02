@@ -5,6 +5,7 @@ import {
   type OverlayFrame,
   type TrophyLockerApi,
 } from '@shared/ipc'
+import type { UpdateState } from '@shared/updates'
 
 const api: TrophyLockerApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC.getAppInfo),
@@ -36,6 +37,17 @@ const api: TrophyLockerApi = {
   openLogsFolder: () => ipcRenderer.invoke(IPC.openLogsFolder),
   getStartupSettings: () => ipcRenderer.invoke(IPC.getStartupSettings),
   setStartWithWindows: (on) => ipcRenderer.invoke(IPC.setStartWithWindows, on),
+  getUpdateState: () => ipcRenderer.invoke(IPC.getUpdateState),
+  checkForUpdates: () => ipcRenderer.invoke(IPC.checkForUpdates),
+  downloadUpdate: () => ipcRenderer.invoke(IPC.downloadUpdate),
+  installUpdate: () => ipcRenderer.invoke(IPC.installUpdate),
+  dismissUpdate: () => ipcRenderer.invoke(IPC.dismissUpdate),
+  setAutoCheck: (on) => ipcRenderer.invoke(IPC.setAutoCheck, on),
+  onUpdateStateChanged: (listener) => {
+    const handler = (_event: IpcRendererEvent, state: UpdateState): void => listener(state)
+    ipcRenderer.on(IPC.updateStateChanged, handler)
+    return () => ipcRenderer.removeListener(IPC.updateStateChanged, handler)
+  },
   connectUbisoft: (input) => ipcRenderer.invoke(IPC.connectUbisoft, input),
   cancelUbisoftSignIn: () => ipcRenderer.invoke(IPC.cancelUbisoftSignIn),
   connectEa: (input) => ipcRenderer.invoke(IPC.connectEa, input),

@@ -14,6 +14,7 @@ function actions(overrides: Partial<TrayActions> = {}): TrayActions {
     quit: vi.fn(),
     pauseNotifications: toggle(),
     startWithWindows: toggle(),
+    updateLabel: () => null,
     ...overrides,
   }
 }
@@ -42,6 +43,23 @@ describe('trayMenuTemplate', () => {
       'Start with Windows',
       'Quit',
     ])
+  })
+
+  it('adds an update entry under Open when an update is known, and opens the window from it', () => {
+    const tray = actions({ updateLabel: () => 'Update available: v1.1.0' })
+
+    const template = trayMenuTemplate(tray)
+    const labels = template.filter((entry) => entry.type !== 'separator').map((e) => e.label)
+    click(item(template, /Update available/))
+
+    expect(labels.slice(0, 2)).toEqual(['Open Trophy Locker', 'Update available: v1.1.0'])
+    expect(tray.open).toHaveBeenCalledOnce()
+  })
+
+  it('has no update entry when there is nothing to report', () => {
+    const labels = trayMenuTemplate(actions()).map((entry) => entry.label ?? '')
+
+    expect(labels.some((label) => /update/i.test(label))).toBe(false)
   })
 
   it('calls the matching action for each plain item', () => {

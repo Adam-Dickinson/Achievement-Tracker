@@ -1,6 +1,16 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { app, BrowserWindow, dialog, Menu, safeStorage, screen, shell } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  Menu,
+  Notification,
+  safeStorage,
+  screen,
+  shell,
+} from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { IPC, type NotificationSettings } from '@shared/ipc'
 import { MAX_LOG_ENTRIES } from '@shared/logs'
 import {
@@ -60,15 +70,18 @@ import {
   readLogLevel,
   readNotificationSettings,
   readOnboardingCompleted,
+  readUpdateSettings,
   saveLogLevel,
   saveOnboardingCompleted,
   saveProfileName,
+  saveUpdateSettings,
   updateNotificationSettings,
 } from './store/settings-store'
 import { listAccountSummaries } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
 import { type AppTray, createTray } from './tray'
+import { trayUpdateLabel, UpdateService, type UpdaterLike } from './update-service'
 import { UbisoftSignIn } from './ubisoft-sign-in'
 import { openUbisoftSignInWindow } from './ubisoft-sign-in-window'
 import { describeUnlockTiming } from './unlock-timing'
@@ -102,6 +115,11 @@ if (!dataFolderReady() || !app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   void start()
+}
+
+function packagedUpdater(): UpdaterLike {
+  autoUpdater.requestHeaders = { 'x-user-staging-id': 'trophy-locker' }
+  return autoUpdater as unknown as UpdaterLike
 }
 
 function dataFolderReady(): boolean {
@@ -290,6 +308,7 @@ async function start(): Promise<void> {
     eaSignIn.cancel()
     playstationSignIn.cancel()
     steamSignIn.cancel()
+    updateService.stop()
   })
 
   const windowsName = windowsUserName()
@@ -311,6 +330,44 @@ async function start(): Promise<void> {
   }
 
   const startToggle = startWithWindows(app)
+
+  let updateNotification: Notification | null = null
+  const updateService = new UpdateService({
+    updater: app.isPackaged ? packagedUpdater() : null,
+    currentVersion: app.getVersion(),
+    settings: {
+      read: () => readUpdateSettings(db),
+      save: (patch) => saveUpdateSettings(db, patch),
+    },
+    windowVisible: () =>
+      mainWindow !== null &&
+      !mainWindow.isDestroyed() &&
+      mainWindow.isVisible() &&
+      !mainWindow.isMinimized(),
+    notify: (version) => {
+      if (!Notification.isSupported()) return
+      const notification = new Notification({
+        title: 'Trophy Locker update',
+        body: `Version ${version} is available.`,
+      })
+      const release = (): void => {
+        if (updateNotification === notification) updateNotification = null
+      }
+      notification.on('click', () => {
+        release()
+        showMainWindow()
+      })
+      notification.on('close', release)
+      updateNotification = notification
+      notification.show()
+    },
+    onChange: (state) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(IPC.updateStateChanged, state)
+      }
+      tray?.refresh()
+    },
+  })
 
   registerIpcHandlers({
     getAppInfo: () => ({ version: app.getVersion(), schemaVersion }),
@@ -400,6 +457,12 @@ async function start(): Promise<void> {
       tray?.refresh()
       return settings
     },
+    getUpdateState: () => updateService.state(),
+    checkForUpdates: () => updateService.checkNow(),
+    downloadUpdate: () => updateService.download(),
+    installUpdate: () => updateService.install(),
+    dismissUpdate: () => updateService.dismiss(),
+    setAutoCheck: (on) => updateService.setAutoCheck(on),
     listLibrary: () => listLibraryGames(db),
     getGame: (id) => getGameDetail(db, id),
     mergeGames: ({ intoGameId, gameId }) => {
@@ -443,7 +506,10 @@ async function start(): Promise<void> {
       set: setNotificationsPaused,
     },
     startWithWindows: startToggle,
+    updateLabel: () => trayUpdateLabel(updateService.state()),
   })
+  console.info('Ready in the tray')
+  updateService.start()
 
   if (!launchedHidden(process.argv)) showMainWindow()
 }
