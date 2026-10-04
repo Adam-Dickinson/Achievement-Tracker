@@ -84,7 +84,7 @@ Saved settings: `updates.autoCheck` (boolean, default true), `updates.dismissedV
 
 1. Check the tag equals `v` plus the `package.json` version.
 2. `npm ci`, `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`.
-3. `npm run build`, then electron-builder with `--publish always` on `windows-latest`, using the built-in `GITHUB_TOKEN` (no new secrets).
+3. `npm run build`, then electron-builder with `--publish never` on `windows-latest`, then one `gh release create --draft` call with the installer, blockmap and `latest.yml`, using the built-in `GITHUB_TOKEN` (no new secrets). Letting electron-builder publish created two draft releases on a race, so the upload is done in one call.
 4. The result is a **draft** GitHub Release holding the installer and `latest.yml`. The dry run on 2 October 2026 uploaded no blockmap, so updates download the whole installer. The maintainer reads it, edits the notes and presses Publish; electron-updater only sees published releases.
 
 ## 4. Measurement

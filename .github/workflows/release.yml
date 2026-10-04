@@ -32,7 +32,17 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - name: Package and publish a draft release
-        run: npx electron-builder --win --publish always
+      - name: Package the installer
+        run: npx electron-builder --win --publish never
+      - name: Create the draft release
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
+            --title "Trophy Locker $version" --generate-notes \
+            "release/Trophy-Locker-Setup-$version.exe" \
+            "release/Trophy-Locker-Setup-$version.exe.blockmap" \
+            release/latest.yml
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
