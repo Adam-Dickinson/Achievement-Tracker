@@ -17,7 +17,7 @@ Measured on 2 October 2026 against the non-functional targets N-01 to N-07 in [S
 | N-02 | Idle memory in the tray: at most 200 MB private | 173.3 MB average, 176.7 MB peak, across 4 processes (peak working set 329.9 MB) | Within target |
 | N-03 | Unlock-to-toast, local providers: under 2 s | Not re-run. Earlier check: 1,397 of 1,412 Steam unlocks read from the local stats files matched the Web API's within 2 s (ROADMAP, M2); the toast follows the file change by one sync | Not re-measured |
 | N-04 | Unlock-to-toast, polling providers: at most poll interval plus 5 s | Not re-run. Earlier checks are in [PROVIDERS.md](PROVIDERS.md) and ROADMAP M2 (Steam's Web API itself reported unlocks 70, 71 and 153 s late) | Not re-measured |
-| N-05 | Installer size: under 120 MB | `Trophy-Locker-Setup-1.0.0.exe` is 117,285,127 bytes (111.85 MiB, 117.3 MB) | Within target |
+| N-05 | Installer size: under 120 MB | `Trophy-Locker-Setup-1.0.0.exe` is 117,285,127 bytes (111.85 MiB, 117.3 MB) | Within target. Moving the renderer-only packages to devDependencies cut 1.0.1 to 113,145,196 bytes (107.9 MiB) |
 | N-06 | Cold start to tray: under 3 s | 2.87 s from process start to the `Ready in the tray` log line | Within target, narrowly |
 | N-07 | 5,000+ games and 200,000+ achievements handled smoothly | 5,000 games and 200,000 achievements: `listLibraryGames` 76.1 ms, `getDashboardStats` 266.8 ms, `listActivity` (50 items) 7.8 ms; each must be under 2,000 ms | Within target |
 
