@@ -55,6 +55,16 @@ function folderKey(path: string): string {
 }
 
 async function installedIn(deps: SteamInstallDeps, library: string): Promise<InstalledGame[]> {
+  try {
+    return await scanLibrary(deps, library)
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    console.warn(`Launch: skipped the Steam library at ${library} (${reason})`)
+    return []
+  }
+}
+
+async function scanLibrary(deps: SteamInstallDeps, library: string): Promise<InstalledGame[]> {
   const apps = join(library, 'steamapps')
   const entries = await deps.files.listFolder(apps)
   if (entries === null) return []

@@ -542,7 +542,7 @@ async function start(): Promise<void> {
     updateLabel: () => trayUpdateLabel(updateService.state()),
   })
   setTimeout(() => void launcher.scan(), 10_000)
-  let lastFocusScan = 0
+  let lastFocusScan = Date.now()
   app.on('browser-window-focus', () => {
     const now = Date.now()
     if (now - lastFocusScan < 60_000) return

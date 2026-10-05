@@ -125,4 +125,6 @@ ADR-0017, SPEC (the IPC table), PROVIDERS.md (per adapter, with what was verifie
 - **Scan triggers:** 10 seconds after start, when the window gains focus (at most once a minute) and after a failed Play. There is no scan after an account connects, and no Rescan button yet; `rescanInstalled` exists for the emulator card work.
 - **The Steam adapter** dedupes the main library by a normalised path (the registry gives `c:/program files (x86)/steam` with forward slashes, `libraryfolders.vdf` uses backslashes), accepts only object entries in `libraryfolders.vdf` (the legacy string-entry format is dropped), and counts a manifest as installed when `StateFlags` has bit 4.
 - **`findInstalled()` takes no `AbortSignal`** and the Xbox `shell:AppsFolder` scheme is not in the URI allow-list yet (it arrives with the Xbox adapter).
+- **A failed start triggers a rescan; Play does not re-check the target.** Section 6's "Play re-checks the target and reports 'That game is no longer installed'" is not built: `play` starts the target from its last scan and rescans if the start fails.
+- **The installed-changed push carries no payload.** The renderer refetches with `getInstalled()`.
 - `ToggleGroup` options gained an optional `disabled` for the Installed filter.

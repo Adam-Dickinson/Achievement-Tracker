@@ -35,14 +35,15 @@ Whether a game is installed is not in the database. Each launcher keeps it in it
 **Positive:**
 
 - No schema change, no stale data to repair, and one place (`start.ts`) to audit for what can be started.
-- Adding a launcher is one adapter and one line in `index.ts`.
+- Adding a launcher is one adapter, one line in `index.ts` and its URI scheme in the allow-list in `src/main/launch/start.ts`.
 - The renderer cannot start anything the main process did not find itself.
 
 **Negative:**
 
-- The installed list is empty until the first scan finishes, so Play and the Installed filter appear a few seconds after start.
+- The installed list is empty until the first scan finishes, so Play appears a few seconds after start, and the Installed option is shown disabled until the first scan finds an install.
 - Installs made while the app has focus show up only after the next focus scan or a failed Play, until a Rescan button exists.
 - Title matching can miss a game whose store title differs from the library title; an id match avoids that where the ids agree.
+- Title matching can also match the wrong game, because edition words are dropped ("BioShock" and "BioShock Remastered" normalise alike). Installs matched by external id are claimed first and are never offered to another game by title, and each install serves at most one title match, but two owned editions with only one installed under a different id can still be confused.
 - The Steam launch URI is not yet checked by hand (`docs/PROVIDERS.md`).
 
 **Follow-ups:**

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KnownGame } from '@shared/launch'
-import { matchInstalled, normalizeTitle } from './match'
+import { buildInstallIndex, matchInstalled, matchWithIndex, normalizeTitle } from './match'
 import type { InstalledGame } from './types'
 
 const known = (over: Partial<KnownGame>): KnownGame => ({
@@ -29,6 +29,15 @@ describe('normalizeTitle', () => {
     ['  ', ''],
   ])('turns %j into %j', (title, expected) => {
     expect(normalizeTitle(title)).toBe(expected)
+  })
+})
+
+describe('matchWithIndex', () => {
+  it('matches against a prebuilt index and can be reused', () => {
+    const index = buildInstallIndex([installed({})])
+
+    expect(matchWithIndex([known({})], index)).toHaveLength(1)
+    expect(matchWithIndex([known({ id: 2, externalId: 'x', title: 'Nope' })], index)).toEqual([])
   })
 })
 
@@ -79,6 +88,74 @@ describe('matchInstalled', () => {
     const result = matchInstalled([known({})], [byTitle, byId])
 
     expect(result[0]?.target).toEqual({ kind: 'uri', uri: 'steam://rungameid/220' })
+  })
+
+  it('does not give an install claimed by an id match to another game by title', () => {
+    const remastered = installed({
+      externalId: '409710',
+      title: 'BioShock Remastered',
+      target: { kind: 'uri', uri: 'steam://rungameid/409710' },
+    })
+
+    const result = matchInstalled(
+      [
+        known({ id: 1, externalId: '7670', title: 'BioShock' }),
+        known({ id: 2, externalId: '409710', title: 'BioShock Remastered' }),
+      ],
+      [remastered],
+    )
+
+    expect(result.map((match) => match.known.id)).toEqual([2])
+    expect(result[0]?.target).toEqual(remastered.target)
+  })
+
+  it('does not match Mafia II to its installed Definitive Edition', () => {
+    const result = matchInstalled(
+      [
+        known({ id: 1, externalId: '50130', title: 'Mafia II' }),
+        known({ id: 2, externalId: '1030830', title: 'Mafia II: Definitive Edition' }),
+      ],
+      [installed({ externalId: '1030830', title: 'Mafia II: Definitive Edition' })],
+    )
+
+    expect(result.map((match) => match.known.id)).toEqual([2])
+  })
+
+  it('still falls back to the title when no id match claims the install', () => {
+    const result = matchInstalled(
+      [known({ id: 1, externalId: '7670', title: 'BioShock' })],
+      [installed({ externalId: '409710', title: 'BioShock Remastered' })],
+    )
+
+    expect(result.map((match) => match.known.id)).toEqual([1])
+  })
+
+  it('lets one install serve only one title match', () => {
+    const result = matchInstalled(
+      [
+        known({ id: 1, externalId: 'a', title: 'BioShock' }),
+        known({ id: 2, externalId: 'b', title: 'BioShock Remastered' }),
+      ],
+      [installed({ externalId: 'z', title: 'BioShock' })],
+    )
+
+    expect(result.map((match) => match.known.id)).toEqual([1])
+  })
+
+  it('matches a large library quickly', () => {
+    const games = Array.from({ length: 5000 }, (_, index) =>
+      known({ id: index, gameId: index, externalId: `k${index}`, title: `Game ${index}` }),
+    )
+    const installs = Array.from({ length: 300 }, (_, index) =>
+      installed({ externalId: `k${index * 10}`, title: `Other ${index}` }),
+    )
+
+    const started = performance.now()
+    const result = matchInstalled(games, installs)
+    const elapsed = performance.now() - started
+
+    expect(result).toHaveLength(300)
+    expect(elapsed).toBeLessThan(500)
   })
 
   it('matches each known game separately', () => {

@@ -1,5 +1,5 @@
 import type { InstalledEntry, KnownGame, PlayResult } from '@shared/launch'
-import { matchInstalled } from './match'
+import { buildInstallIndex, matchWithIndex, type InstallIndex } from './match'
 import type { InstallAdapter, InstalledGame, LaunchTarget } from './types'
 
 export interface LaunchServiceDeps {
@@ -14,7 +14,7 @@ export class LaunchService {
   readonly #known: () => readonly KnownGame[]
   readonly #start: (target: LaunchTarget) => Promise<PlayResult>
   readonly #onChanged: () => void
-  #installs: readonly InstalledGame[] = []
+  #index: InstallIndex = buildInstallIndex([])
   #scanning: Promise<void> | null = null
 
   constructor(deps: LaunchServiceDeps) {
@@ -32,7 +32,7 @@ export class LaunchService {
   }
 
   installed(): InstalledEntry[] {
-    return matchInstalled(this.#known(), this.#installs).map((match) => ({
+    return matchWithIndex(this.#known(), this.#index).map((match) => ({
       gameId: match.known.gameId,
       platformGameId: match.known.id,
       platform: match.known.platform,
@@ -40,7 +40,7 @@ export class LaunchService {
   }
 
   async play(platformGameId: number): Promise<PlayResult> {
-    const match = matchInstalled(this.#known(), this.#installs).find(
+    const match = matchWithIndex(this.#known(), this.#index).find(
       (item) => item.known.id === platformGameId,
     )
     if (!match) return { ok: false, reason: 'That game is not installed.' }
@@ -52,7 +52,7 @@ export class LaunchService {
 
   async #run(): Promise<void> {
     const found = await Promise.all(this.#adapters.map((adapter) => this.#find(adapter)))
-    this.#installs = found.flat()
+    this.#index = buildInstallIndex(found.flat())
     try {
       this.#onChanged()
     } catch (error) {

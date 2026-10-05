@@ -155,6 +155,35 @@ describe('createSteamInstallAdapter', () => {
     expect(warn).toHaveBeenCalledTimes(1)
   })
 
+  it('skips one unreadable library and still lists the others', async () => {
+    const base = deps(
+      {
+        [join(STEAM, 'steamapps', 'libraryfolders.vdf')]: LIBRARY_FOLDERS,
+        [join(LIBRARY, 'steamapps', 'appmanifest_1245620.acf')]: manifest(
+          '1245620',
+          'ELDEN RING',
+          '4',
+        ),
+      },
+      { [join(LIBRARY, 'steamapps')]: ['appmanifest_1245620.acf'] },
+    )
+    const adapter = createSteamInstallAdapter({
+      ...base,
+      files: {
+        ...base.files,
+        listFolder: (path) =>
+          path === join(STEAM, 'steamapps')
+            ? Promise.reject(new Error('EACCES'))
+            : base.files.listFolder(path),
+      },
+    })
+
+    const result = await adapter.findInstalled()
+
+    expect(result.map((game) => game.externalId)).toEqual(['1245620'])
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('EACCES'))
+  })
+
   it('ignores a manifest whose appid is not a number', async () => {
     const adapter = createSteamInstallAdapter(
       deps(
