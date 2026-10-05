@@ -62,7 +62,9 @@ export async function readIsoFile(
   )
   if (!entry) return null
   if (entry.size > MAX_FILE_BYTES) throw malformed(`${file} is larger than ${MAX_FILE_BYTES} bytes`)
-  return source.read(entry.lba * SECTOR, entry.size)
+  const bytes = await source.read(entry.lba * SECTOR, entry.size)
+  if (bytes.length !== entry.size) throw malformed('the disc image is truncated')
+  return bytes
 }
 
 async function listDirectory(source: ByteSource, directory: Entry): Promise<Entry[]> {

@@ -7,8 +7,13 @@ export function fileByteSource(path: string): ByteSource {
       const handle = await open(path, 'r')
       try {
         const buffer = Buffer.alloc(length)
-        const { bytesRead } = await handle.read(buffer, 0, length, position)
-        return buffer.subarray(0, bytesRead)
+        let total = 0
+        while (total < length) {
+          const { bytesRead } = await handle.read(buffer, total, length - total, position + total)
+          if (bytesRead === 0) break
+          total += bytesRead
+        }
+        return buffer.subarray(0, total)
       } finally {
         await handle.close()
       }

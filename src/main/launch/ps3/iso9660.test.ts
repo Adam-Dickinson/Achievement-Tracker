@@ -53,4 +53,63 @@ describe('readIsoFile', () => {
       readIsoFile(memorySource(image), ['PS3_GAME', 'PARAM.SFO']),
     ).rejects.toBeInstanceOf(ProviderError)
   })
+
+  it('refuses a record shorter than the fixed record header', async () => {
+    const image = buildIso(SFO)
+    image[20 * 2048 + 48] = 33
+    image[20 * 2048 + 48 + 32] = 0
+
+    await expect(
+      readIsoFile(memorySource(image), ['PS3_GAME', 'PARAM.SFO']),
+    ).rejects.toBeInstanceOf(ProviderError)
+  })
+
+  it('refuses a record whose name is longer than the record', async () => {
+    const image = buildIso(SFO)
+    image[20 * 2048 + 48 + 32] = 200
+
+    await expect(
+      readIsoFile(memorySource(image), ['PS3_GAME', 'PARAM.SFO']),
+    ).rejects.toBeInstanceOf(ProviderError)
+  })
+
+  it('refuses a folder that is larger than a megabyte', async () => {
+    const image = buildIso(SFO)
+    new DataView(image.buffer).setUint32(16 * 2048 + 166, 2_000_000, true)
+
+    await expect(
+      readIsoFile(memorySource(image), ['PS3_GAME', 'PARAM.SFO']),
+    ).rejects.toBeInstanceOf(ProviderError)
+  })
+
+  it('refuses an image that ends inside the volume descriptor', async () => {
+    const image = buildIso(SFO).slice(0, 16 * 2048 + 100)
+
+    await expect(
+      readIsoFile(memorySource(image), ['PS3_GAME', 'PARAM.SFO']),
+    ).rejects.toBeInstanceOf(ProviderError)
+  })
+
+  it('refuses an image that ends inside the file', async () => {
+    const image = buildIso(SFO).slice(0, 22 * 2048 + SFO.length - 10)
+
+    await expect(
+      readIsoFile(memorySource(image), ['PS3_GAME', 'PARAM.SFO']),
+    ).rejects.toBeInstanceOf(ProviderError)
+  })
+
+  it('lists entries that follow zero padding in a folder spanning several sectors', async () => {
+    const source = buildIso(SFO)
+    const image = new Uint8Array(source.length + 2 * 2048)
+    image.set(source)
+    image.set(source.subarray(20 * 2048, 20 * 2048 + 48), 24 * 2048)
+    image.set(source.subarray(20 * 2048 + 48, 20 * 2048 + 90), 25 * 2048)
+    const view = new DataView(image.buffer)
+    view.setUint32(16 * 2048 + 158, 24, true)
+    view.setUint32(16 * 2048 + 166, 4096, true)
+
+    const bytes = await readIsoFile(memorySource(image), ['PS3_GAME', 'PARAM.SFO'])
+
+    expect(bytes).toEqual(SFO)
+  })
 })

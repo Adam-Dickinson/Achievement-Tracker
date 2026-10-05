@@ -42,4 +42,22 @@ describe('readPs3Title', () => {
   it('returns null when the folder has no PARAM.SFO', async () => {
     await expect(readPs3Title('D:/G/folder', deps({}))).resolves.toBeNull()
   })
+
+  it('returns null when the iso file does not exist', async () => {
+    const d = deps({})
+    d.openSource.mockReturnValue({
+      read: () => Promise.reject(Object.assign(new Error('missing'), { code: 'ENOENT' })),
+    })
+
+    await expect(readPs3Title('D:/G/gone.iso', d)).resolves.toBeNull()
+  })
+
+  it('still rejects when the iso file cannot be opened for another reason', async () => {
+    const d = deps({})
+    d.openSource.mockReturnValue({
+      read: () => Promise.reject(Object.assign(new Error('denied'), { code: 'EACCES' })),
+    })
+
+    await expect(readPs3Title('D:/G/locked.iso', d)).rejects.toThrow('denied')
+  })
 })

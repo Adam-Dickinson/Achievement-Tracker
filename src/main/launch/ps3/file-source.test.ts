@@ -33,4 +33,18 @@ describe('fileByteSource', () => {
   it('rejects when the file does not exist', async () => {
     await expect(fileByteSource(join(dir, 'missing.bin')).read(0, 1)).rejects.toThrow()
   })
+
+  it('returns an empty array when the position is past the end', async () => {
+    const path = join(dir, 'c.bin')
+    await writeFile(path, Buffer.from([1, 2]))
+
+    expect((await fileByteSource(path).read(10, 4)).length).toBe(0)
+  })
+
+  it('returns an empty array for a zero-length read', async () => {
+    const path = join(dir, 'd.bin')
+    await writeFile(path, Buffer.from([1, 2]))
+
+    expect((await fileByteSource(path).read(0, 0)).length).toBe(0)
+  })
 })

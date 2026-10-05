@@ -12,9 +12,22 @@ export interface TitleDeps {
 
 export async function readPs3Title(path: string, deps: TitleDeps): Promise<ParamSfo | null> {
   const bytes = path.toLowerCase().endsWith('.iso')
-    ? await readIsoFile(deps.openSource(path), ['PS3_GAME', 'PARAM.SFO'])
+    ? await readFromIso(path, deps.openSource)
     : await readFromFolder(path, deps.files)
   return bytes === null ? null : parseParamSfo(bytes)
+}
+
+async function readFromIso(
+  path: string,
+  openSource: (path: string) => ByteSource,
+): Promise<Uint8Array | null> {
+  try {
+    return await readIsoFile(openSource(path), ['PS3_GAME', 'PARAM.SFO'])
+  } catch (error) {
+    const code = (error as { code?: unknown } | null)?.code
+    if (code === 'ENOENT' || code === 'ENOTDIR') return null
+    throw error
+  }
 }
 
 async function readFromFolder(
