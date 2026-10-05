@@ -7,6 +7,7 @@ import {
   type NotificationSettings,
   type NotificationSettingsPatch,
 } from '@shared/ipc'
+import type { EmulatorId } from '@shared/launch'
 import { LOG_LEVELS, type LogLevel } from '@shared/logs'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
@@ -130,6 +131,17 @@ export function saveLogLevel(db: DatabaseSync, level: LogLevel): void {
     `INSERT INTO setting (key, value) VALUES (?, ?)
      ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
   ).run(LOG_LEVEL, JSON.stringify(level))
+}
+
+export function readEmulatorProgram(db: DatabaseSync, emulator: EmulatorId): string | null {
+  return readParsed(db, `emulator.${emulator}.exe`, z.string().min(1).nullable(), null)
+}
+
+export function saveEmulatorProgram(db: DatabaseSync, emulator: EmulatorId, path: string): void {
+  db.prepare(
+    `INSERT INTO setting (key, value) VALUES (?, ?)
+     ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+  ).run(`emulator.${emulator}.exe`, JSON.stringify(path))
 }
 
 function readParsed<T>(db: DatabaseSync, key: string, schema: z.ZodType<T>, fallback: T): T {

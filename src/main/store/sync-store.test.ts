@@ -625,6 +625,20 @@ describe('addPlatformGames', () => {
     expect(cover()).toBe('https://img/1-cover.jpg')
   })
 
+  it('replaces a stored cover with a changed one', () => {
+    const { db, account } = setup()
+    const cover = (): unknown =>
+      (db.prepare('SELECT cover_url FROM platform_game').get() as { cover_url: string | null })
+        .cover_url
+
+    addPlatformGames(db, account, [remoteGame('1', { coverUrl: 'file:///D:/old/ICON0.PNG' })])
+    addPlatformGames(db, account, [
+      remoteGame('1', { coverUrl: 'trophy-art://rpcs3/NPWR00881_00' }),
+    ])
+
+    expect(cover()).toBe('trophy-art://rpcs3/NPWR00881_00')
+  })
+
   it('links a new game to an existing game with the same cleaned title, on any account', () => {
     const { db, account } = setup()
     const playstation = upsertAccount(db, {

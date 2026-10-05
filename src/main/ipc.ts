@@ -46,6 +46,7 @@ import {
   type LogSettings,
   type StartupSettings,
 } from '@shared/logs'
+import type { EmulatorId, EmulatorProgram, InstalledEntry, PlayResult } from '@shared/launch'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
 import type { UpdateState } from '@shared/updates'
@@ -99,6 +100,11 @@ export interface IpcHandlers {
   mergeGames(input: MergeGamesInput): void
   unlinkGame(input: UnlinkGameInput): void
   openStorePage(platformGameId: number): Promise<void>
+  getInstalled(): InstalledEntry[]
+  playGame(platformGameId: number): Promise<PlayResult>
+  rescanInstalled(): Promise<InstalledEntry[]>
+  getEmulatorPrograms(): Promise<EmulatorProgram[]>
+  chooseEmulatorProgram(emulator: EmulatorId): Promise<EmulatorProgram>
   getArtworkSettings(): ArtworkSettings
   saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
   removeSteamGridDbKey(): void
@@ -137,6 +143,7 @@ const emulatorConnectSchema = z.object({
 })
 
 const gameIdSchema = z.number().int().positive()
+const emulatorIdSchema = z.literal('rpcs3')
 
 const mergeGamesSchema = z
   .object({ intoGameId: gameIdSchema, gameId: gameIdSchema })
@@ -515,6 +522,42 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     const parsed = gameIdSchema.safeParse(platformGameId)
     return parsed.success ? handlers.openStorePage(parsed.data) : Promise.resolve()
   })
+
+  ipcMain.handle(IPC.getInstalled, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getInstalled()
+  })
+
+  ipcMain.handle(IPC.playGame, (event, platformGameId: unknown): Promise<PlayResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = gameIdSchema.safeParse(platformGameId)
+    if (!parsed.success) {
+      return Promise.resolve({ ok: false, reason: 'That request was not understood.' })
+    }
+    return handlers.playGame(parsed.data)
+  })
+
+  ipcMain.handle(IPC.rescanInstalled, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.rescanInstalled()
+  })
+
+  ipcMain.handle(IPC.getEmulatorPrograms, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getEmulatorPrograms()
+  })
+
+  ipcMain.handle(
+    IPC.chooseEmulatorProgram,
+    (event, emulator: unknown): Promise<EmulatorProgram> => {
+      if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+      const parsed = emulatorIdSchema.safeParse(emulator)
+      if (parsed.success) return handlers.chooseEmulatorProgram(parsed.data)
+      return handlers
+        .getEmulatorPrograms()
+        .then((list) => list[0] ?? { emulator: 'rpcs3', path: null, source: null })
+    },
+  )
 
   ipcMain.handle(IPC.getArtworkSettings, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')

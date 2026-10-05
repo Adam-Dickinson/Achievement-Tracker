@@ -7,6 +7,7 @@ import {
   getDashboardStats,
   getGameDetail,
   listActivity,
+  listKnownGames,
   listLibraryGames,
   listRecentUnlocks,
   storePageUrl,
@@ -120,6 +121,30 @@ function makePlatinum(
      WHERE platform_game_id = ? AND external_id LIKE ?`,
   ).run(change.description ?? null, change.tier ?? null, platformGameId, `%-${index}`)
 }
+
+describe('listKnownGames', () => {
+  it('lists every platform game as a known game for install matching', () => {
+    const steam = seedGame('220', 'Half-Life 2', 1)
+    const epic = seedGame('fn', 'Fortnite', 1, [], 'epic')
+
+    expect(listKnownGames(db)).toEqual([
+      {
+        id: steam.platformGameId,
+        gameId: steam.gameId,
+        platform: 'steam',
+        externalId: '220',
+        title: 'Half-Life 2',
+      },
+      {
+        id: epic.platformGameId,
+        gameId: epic.gameId,
+        platform: 'epic',
+        externalId: 'fn',
+        title: 'Fortnite',
+      },
+    ])
+  })
+})
 
 describe('listLibraryGames', () => {
   it('lists each game with its cover, achievement counts and last unlock', () => {

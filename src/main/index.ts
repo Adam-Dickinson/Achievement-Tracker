@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   app,
@@ -6,6 +6,7 @@ import {
   dialog,
   Menu,
   Notification,
+  protocol,
   safeStorage,
   screen,
   shell,
@@ -31,6 +32,13 @@ import { DATABASE_FILE, moveLegacyData } from './legacy-data'
 import { captureConsole, captureUncaught } from './logging/capture'
 import { Logger } from './logging/logger'
 import { readLogs } from './logging/read-logs'
+import { fileByteSource } from './launch/ps3/file-source'
+import { EmulatorPrograms } from './launch/emulator-programs'
+import { createRpcs3InstallAdapter } from './launch/rpcs3'
+import { createSteamInstallAdapter } from './launch/steam'
+import { LaunchService } from './launch/service'
+import { spawnDetached } from './launch/spawn'
+import { startTarget } from './launch/start'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
@@ -42,7 +50,9 @@ import { LOCAL_FILES } from './providers/local-files'
 import { PlayStationProvider } from './providers/playstation'
 import { isPsnRedirect, PSN_SIGN_IN_URL, readNpsso } from './providers/playstation/auth'
 import { SteamProvider } from './providers/steam'
+import { STEAM_LOCAL } from './providers/steam/local'
 import { Rpcs3Provider } from './providers/rpcs3'
+import { dataDirOf, parseAccountExternalId } from './providers/rpcs3/local'
 import { ShadPs4Provider } from './providers/shadps4'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
@@ -63,23 +73,27 @@ import {
   getDashboardStats,
   getGameDetail,
   listActivity,
+  listKnownGames,
   listLibraryGames,
   storePageUrl,
 } from './store/library-store'
 import {
+  readEmulatorProgram,
   readLogLevel,
   readNotificationSettings,
   readOnboardingCompleted,
   readUpdateSettings,
+  saveEmulatorProgram,
   saveLogLevel,
   saveOnboardingCompleted,
   saveProfileName,
   saveUpdateSettings,
   updateNotificationSettings,
 } from './store/settings-store'
-import { listAccountSummaries } from './store/sync-store'
+import { listAccountSummaries, listConnectedAccounts } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
+import { resolveTrophyArt } from './trophy-art'
 import { type AppTray, createTray } from './tray'
 import { trayUpdateLabel, UpdateService, type UpdaterLike } from './update-service'
 import { UbisoftSignIn } from './ubisoft-sign-in'
@@ -110,6 +124,10 @@ const PSN_SIGN_IN_PAGE: CookieSignInPage = {
   cookieDomain: 'sony.com',
   mayNavigate: isSonyAddress,
 }
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'trophy-art', privileges: { standard: true, secure: true, supportFetchAPI: true } },
+])
 
 if (!dataFolderReady() || !app.requestSingleInstanceLock()) {
   app.quit()
@@ -208,6 +226,18 @@ async function start(): Promise<void> {
         : await dialog.showOpenDialog(options)
     return result.canceled ? null : (result.filePaths[0] ?? null)
   }
+  const chooseProgram = async (): Promise<string | null> => {
+    const options: Electron.OpenDialogOptions = {
+      title: 'Choose rpcs3.exe',
+      properties: ['openFile'],
+      filters: [{ name: 'Program', extensions: ['exe'] }],
+    }
+    const result =
+      mainWindow && !mainWindow.isDestroyed()
+        ? await dialog.showOpenDialog(mainWindow, options)
+        : await dialog.showOpenDialog(options)
+    return result.canceled ? null : (result.filePaths[0] ?? null)
+  }
   const xboxSignIn = new XboxSignIn({ openExternal: (url) => shell.openExternal(url) })
   const ubisoftSignIn = new UbisoftSignIn({
     openWindow: (url) =>
@@ -247,6 +277,65 @@ async function start(): Promise<void> {
   const dataChanged = coalesce(() => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.dataChanged)
   }, 1000)
+  const rpcs3DataDirs = () =>
+    listConnectedAccounts(db)
+      .filter((account) => account.platform === 'rpcs3')
+      .flatMap((account) => dataDirOf(account.externalId) ?? [])
+  protocol.handle('trophy-art', async (request) => {
+    const { status, contentType, body } = await resolveTrophyArt(request.url, {
+      rpcs3Folders: () =>
+        listConnectedAccounts(db)
+          .filter((account) => account.platform === 'rpcs3')
+          .flatMap((account) => {
+            try {
+              return [parseAccountExternalId(account.externalId)]
+            } catch {
+              return []
+            }
+          }),
+      readFile: LOCAL_FILES.readBytes,
+    })
+    return new Response(body, { status, headers: { 'Content-Type': contentType } })
+  })
+  const emulatorPrograms = new EmulatorPrograms({
+    read: (emulator) => readEmulatorProgram(db, emulator),
+    save: (emulator, path) => saveEmulatorProgram(db, emulator, path),
+    dataDirs: () => rpcs3DataDirs(),
+    fileExists: (path) =>
+      access(path).then(
+        () => true,
+        () => false,
+      ),
+    chooseFile: chooseProgram,
+    onChanged: () => void launcher.scan(),
+  })
+  const launcher = new LaunchService({
+    adapters: [
+      createSteamInstallAdapter({ readRegistry: STEAM_LOCAL.readRegistry, files: LOCAL_FILES }),
+      createRpcs3InstallAdapter({
+        dataDirs: rpcs3DataDirs,
+        exePath: (dir) => emulatorPrograms.resolve('rpcs3', dir),
+        files: LOCAL_FILES,
+        openSource: fileByteSource,
+      }),
+    ],
+    known: () => listKnownGames(db),
+    start: (target) =>
+      startTarget(target, {
+        openExternal: (uri) => shell.openExternal(uri),
+        spawnProgram: spawnDetached,
+        fileExists: (path) =>
+          access(path).then(
+            () => true,
+            () => false,
+          ),
+      }),
+    onChanged: () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(IPC.installedChanged)
+      }
+    },
+  })
   const artwork = new ArtworkService({ db, secrets, onFound: () => dataChanged() })
   const findArtworkSoon = coalesce(() => void artwork.run(), ARTWORK_DELAY_MS)
   const scheduler = new Scheduler({
@@ -474,6 +563,14 @@ async function start(): Promise<void> {
     openStorePage: async (platformGameId) => {
       await openStorePage(storePageUrl(db, platformGameId), (url) => shell.openExternal(url))
     },
+    getInstalled: () => launcher.installed(),
+    playGame: (platformGameId) => launcher.play(platformGameId),
+    getEmulatorPrograms: () => emulatorPrograms.list(),
+    chooseEmulatorProgram: (emulator) => emulatorPrograms.choose(emulator),
+    rescanInstalled: async () => {
+      await launcher.scan()
+      return launcher.installed()
+    },
     getArtworkSettings: () => ({
       hasKey: artwork.hasKey(),
       missing: listLibraryGames(db).filter((game) => game.coverUrl === null).length,
@@ -507,6 +604,14 @@ async function start(): Promise<void> {
     },
     startWithWindows: startToggle,
     updateLabel: () => trayUpdateLabel(updateService.state()),
+  })
+  setTimeout(() => void launcher.scan(), 10_000)
+  let lastFocusScan = Date.now()
+  app.on('browser-window-focus', () => {
+    const now = Date.now()
+    if (now - lastFocusScan < 60_000) return
+    lastFocusScan = now
+    void launcher.scan()
   })
   console.info('Ready in the tray')
   updateService.start()

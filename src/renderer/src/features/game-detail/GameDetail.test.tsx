@@ -84,12 +84,14 @@ const getGame = vi.fn<(id: number) => Promise<GameDetailData | null>>()
 const listLibrary = vi.fn()
 const mergeGames = vi.fn<(input: MergeGamesInput) => Promise<void>>()
 const unlinkGame = vi.fn<(input: UnlinkGameInput) => Promise<void>>()
-let dataChanged: () => void = () => {}
+let listeners: (() => void)[] = []
+const dataChanged = () => listeners.forEach((listener) => listener())
 const onBack = vi.fn()
 let restoreLayout: () => void
 
 beforeEach(() => {
   restoreLayout = fakeLayout()
+  listeners = []
   mergeGames.mockResolvedValue(undefined)
   unlinkGame.mockResolvedValue(undefined)
   listLibrary.mockResolvedValue([
@@ -103,7 +105,7 @@ beforeEach(() => {
     mergeGames,
     unlinkGame,
     onDataChanged: (listener) => {
-      dataChanged = listener
+      listeners.push(listener)
       return () => {}
     },
   })
@@ -442,5 +444,59 @@ describe('GameDetail store page', () => {
     await screen.findByRole('heading', { name: 'Elden Ring' })
 
     expect(screen.queryByRole('button', { name: /^Open in|^View on/ })).not.toBeInTheDocument()
+  })
+
+  describe('Play buttons', () => {
+    const playGame = vi.fn()
+    const getInstalled = vi.fn()
+
+    beforeEach(() => {
+      playGame.mockResolvedValue({ ok: true })
+      window.api = fakeApi({
+        getGame,
+        listLibrary,
+        playGame,
+        getInstalled,
+        onDataChanged: () => () => {},
+      })
+    })
+
+    it('plays the installed entry of a linked game by its own platformGameId', async () => {
+      getGame.mockResolvedValue(LINKED)
+      getInstalled.mockResolvedValue([{ gameId: 7, platformGameId: 70, platform: 'steam' }])
+      renderScrolled(<GameDetail id={7} onBack={onBack} />)
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Play' }))
+
+      expect(playGame).toHaveBeenCalledWith(70)
+    })
+
+    it('offers a Play on button per installed entry', async () => {
+      getGame.mockResolvedValue(LINKED)
+      getInstalled.mockResolvedValue([
+        { gameId: 7, platformGameId: 70, platform: 'steam' },
+        { gameId: 7, platformGameId: 71, platform: 'playstation' },
+      ])
+      renderScrolled(<GameDetail id={7} onBack={onBack} />)
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Play on Steam' }))
+      await vi.waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Play on Steam' })).toBeEnabled(),
+      )
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Play on PlayStation' }))
+
+      expect(playGame).toHaveBeenNthCalledWith(1, 70)
+      expect(playGame).toHaveBeenNthCalledWith(2, 71)
+    })
+
+    it('shows no Play button when nothing is installed', async () => {
+      getGame.mockResolvedValue(LINKED)
+      getInstalled.mockResolvedValue([])
+      renderScrolled(<GameDetail id={7} onBack={onBack} />)
+      await screen.findByRole('heading', { name: 'Elden Ring' })
+
+      expect(screen.queryByRole('button', { name: /^Play/ })).not.toBeInTheDocument()
+    })
   })
 })

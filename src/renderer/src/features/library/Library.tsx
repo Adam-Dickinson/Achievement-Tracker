@@ -11,6 +11,7 @@ import { Select, type SelectOption } from '@/components/Select'
 import { ToggleGroup, type ToggleOption } from '@/components/ToggleGroup'
 import { VirtualGrid } from '@/components/VirtualGrid'
 import { useDashboardStats } from '@/features/dashboard/useDashboardStats'
+import { useInstalled } from '@/features/launch/useInstalled'
 import { plural } from '@/lib/format'
 import type { LibraryGame } from '@shared/library'
 import { platformName } from '@shared/platform'
@@ -96,6 +97,7 @@ function LibraryBody({
   onOpenAccounts,
 }: LibraryProps) {
   const games = useLibrary()
+  const installed = useInstalled()
   const stats = useDashboardStats()
   const scrollParent = useScrollParent()
   const loaded = games !== null
@@ -121,7 +123,8 @@ function LibraryBody({
   }
 
   const update = (change: Partial<LibraryView>) => onViewChange({ ...view, ...change })
-  const shown = applyView(games, view)
+  const installedGameIds = new Set((installed ?? []).map((entry) => entry.gameId))
+  const shown = applyView(games, view, installedGameIds)
   const layout = LAYOUTS[view.layout]
 
   return (
@@ -131,15 +134,25 @@ function LibraryBody({
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-surface-1 bg-linear-to-b from-white/5 to-white/1 p-2.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_14px_30px_-16px_rgb(0_0_0/0.7)]">
         <ToggleGroup
           label="Platform"
-          options={platformOptions(games, view)}
+          options={platformOptions(games, view, installedGameIds)}
           selected={view.platform}
           onSelect={(platform) => update({ platform })}
         />
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          <ToggleGroup
+            label="Installed"
+            variant="segmented"
+            options={[
+              { id: 'all', label: 'All' },
+              { id: 'installed', label: 'Installed', disabled: installedGameIds.size === 0 },
+            ]}
+            selected={view.installed ? 'installed' : 'all'}
+            onSelect={(next) => update({ installed: next === 'installed' })}
+          />
           <Select
             label="Progress"
             icon={ListFilter}
-            options={statusOptions(games, view)}
+            options={statusOptions(games, view, installedGameIds)}
             value={view.status}
             onChange={(status) => update({ status })}
           />
@@ -230,18 +243,23 @@ function layoutOptions(): ToggleOption<LayoutId>[] {
 function platformOptions(
   games: readonly LibraryGame[],
   view: LibraryView,
+  installedGameIds: ReadonlySet<number>,
 ): ToggleOption<PlatformFilter>[] {
   return (['all', ...platformsIn(games)] as PlatformFilter[]).map((platform) => ({
     id: platform,
     label: platform === 'all' ? 'All' : platformName(platform),
-    count: countMatching(games, { ...view, platform }),
+    count: countMatching(games, { ...view, platform }, installedGameIds),
     icon: platform === 'all' ? undefined : <PlatformBadge platform={platform} size={20} />,
   }))
 }
 
-function statusOptions(games: readonly LibraryGame[], view: LibraryView): SelectOption<StatusId>[] {
+function statusOptions(
+  games: readonly LibraryGame[],
+  view: LibraryView,
+  installedGameIds: ReadonlySet<number>,
+): SelectOption<StatusId>[] {
   return (Object.keys(STATUSES) as StatusId[]).map((status) => ({
     id: status,
-    label: `${status === 'all' ? 'All progress' : STATUSES[status].label} (${countMatching(games, { ...view, status }).toLocaleString()})`,
+    label: `${status === 'all' ? 'All progress' : STATUSES[status].label} (${countMatching(games, { ...view, status }, installedGameIds).toLocaleString()})`,
   }))
 }

@@ -15,6 +15,7 @@ import { Rpcs3Provider } from '.'
 import {
   accountExternalId,
   DEBOUNCE_MS,
+  dataDirOf,
   defaultDataDirs,
   listUsers,
   parseAccountExternalId,
@@ -97,6 +98,28 @@ describe('RPCS3 account ids', () => {
   })
 })
 
+describe('dataDirOf', () => {
+  it('returns the install folder of an account id', () => {
+    const id = accountExternalId({ dataDir: 'D:\\Emu\\rpcs3', userId: '00000001' })
+
+    expect(dataDirOf(id)).toBe('D:\\Emu\\rpcs3')
+  })
+
+  it('returns null for a malformed id', () => {
+    expect(dataDirOf('garbage')).toBeNull()
+  })
+
+  it('returns null when the user id is not eight digits', () => {
+    expect(dataDirOf('D:\\x|abc')).toBeNull()
+  })
+
+  it('round-trips a folder that contains the separator', () => {
+    const dataDir = 'D:\\Emu|new\\rpcs3'
+
+    expect(dataDirOf(accountExternalId({ dataDir, userId: '00000001' }))).toBe(dataDir)
+  })
+})
+
 describe('listUsers', () => {
   it('lists each RPCS3 user with their name, games and earned trophies', async () => {
     expect(await listUsers(LOCAL_FILES, dataDir)).toEqual([
@@ -176,6 +199,32 @@ describe('Rpcs3Provider', () => {
         recentlyPlayed: true,
       },
     ])
+  })
+
+  it('uses the trophy folder icon as the cover when it exists', async () => {
+    writeFileSync(join(gameDir(), 'ICON0.PNG'), 'png')
+
+    expect((await provider().listGames(credentials()))[0]?.coverUrl).toBe(
+      'trophy-art://rpcs3/NPWR00881_00',
+    )
+  })
+
+  it('has no cover when the trophy folder has no icon', async () => {
+    expect((await provider().listGames(credentials()))[0]?.coverUrl).toBeNull()
+  })
+
+  it('has no cover when the folder cannot be listed for its icon', async () => {
+    writeFileSync(join(gameDir(), 'ICON0.PNG'), 'png')
+    let listings = 0
+    const files: LocalFiles = {
+      ...LOCAL_FILES,
+      listFolder: (path) => {
+        if (path === gameDir() && ++listings > 1) return Promise.reject(new Error('denied'))
+        return LOCAL_FILES.listFolder(path)
+      },
+    }
+
+    expect((await provider(files).listGames(credentials()))[0]?.coverUrl).toBeNull()
   })
 
   it('counts a game as recently played for two weeks after its progress last changed', async () => {

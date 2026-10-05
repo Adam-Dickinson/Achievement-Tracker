@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DashboardStats } from '@shared/dashboard'
@@ -259,6 +259,25 @@ describe('Library', () => {
       platform: 'steam',
       layout: 'portrait',
     })
+  })
+
+  it('shows only installed games when the Installed option is chosen', async () => {
+    vi.mocked(window.api.getInstalled).mockResolvedValue([
+      { gameId: 2, platformGameId: 1, platform: 'steam' },
+    ])
+    await renderLibrary()
+
+    await waitFor(() => expect(option('Installed', 'Installed')).toBeEnabled())
+    fireEvent.click(option('Installed', 'Installed'))
+
+    expect(titles()).toEqual(['Celeste'])
+    expect(onViewChange).toHaveBeenLastCalledWith({ ...DEFAULT_VIEW, installed: true })
+  })
+
+  it('disables the Installed option when nothing is installed', async () => {
+    await renderLibrary()
+
+    expect(option('Installed', 'Installed')).toBeDisabled()
   })
 
   it('opens a game when its card is clicked', async () => {

@@ -49,6 +49,14 @@ export function parseAccountExternalId(externalId: string): Rpcs3Account {
   return { dataDir, userId }
 }
 
+export function dataDirOf(externalId: string): string | null {
+  try {
+    return parseAccountExternalId(externalId).dataDir
+  } catch {
+    return null
+  }
+}
+
 export function defaultDataDirs(
   platform: NodeJS.Platform = process.platform,
   home: string = homedir(),
@@ -103,7 +111,7 @@ export async function listGames(
       ref: { externalId: npCommId },
       title: (await readTrophyList(files, account, npCommId).catch(() => null))?.title ?? npCommId,
       iconUrl: null,
-      coverUrl: null,
+      coverUrl: await trophyIcon(files, join(trophyDir(account), npCommId), npCommId),
       lastPlayed: modifiedAt,
       recentlyPlayed: now.getTime() - modifiedAt.getTime() < RECENT_MS,
     })),
@@ -179,8 +187,24 @@ function homeDir(dataDir: string): string {
   return join(dataDir, 'dev_hdd0', 'home')
 }
 
-function trophyDir({ dataDir, userId }: Rpcs3Account): string {
+export function trophyDir({ dataDir, userId }: Rpcs3Account): string {
   return join(homeDir(dataDir), userId, 'trophy')
+}
+
+async function trophyIcon(
+  files: LocalFiles,
+  folder: string,
+  npCommId: string,
+): Promise<string | null> {
+  try {
+    const entries = await files.listFolder(folder)
+    const icon = entries?.find(
+      (entry) => !entry.isDirectory && entry.name.toUpperCase() === 'ICON0.PNG',
+    )
+    return icon ? `trophy-art://rpcs3/${npCommId}` : null
+  } catch {
+    return null
+  }
 }
 
 async function trophyFolders(

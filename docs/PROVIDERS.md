@@ -96,6 +96,12 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 - **Still to verify with a real unlock:** whether Steam rewrites the stats file at the moment of the unlock (the game has to store its stats, which games normally do right away so Steam's own popup shows). The app logs each unlock it finds as `Steam unlock found at <time>: <game>, "<name>", unlocked at <time> (N s earlier)` in the terminal running `npm run dev`; a delay of a few seconds confirms it (ROADMAP M2).
 - **Risks:** API rate limits (~100k calls/day, be conservative), and possibly private profiles if the own-key result above turns out to be caching.
 
+### Install detection and launch (ADR-0017)
+
+- **Install detection, verified 2026-10-02 on the owner's machine (read in place):** `HKCU\Software\Valve\Steam\SteamPath` gives the main library as `c:/program files (x86)/steam` (forward slashes). `steamapps/libraryfolders.vdf` lists 3 library folders, each as an object with a `path` using backslashes, so the app compares folders by a normalised path to avoid counting the main one twice. Each library's `steamapps` holds `appmanifest_<appid>.acf` files (`AppState` with `appid`, `name`, `StateFlags`); 13 in the first library. A game is fully installed when `StateFlags` has bit 4 set (`4` when installed, other values while updating or installing). The legacy `libraryfolders.vdf` form with plain string entries is not read.
+- **Built:** `main/launch/steam.ts` (`createSteamInstallAdapter`), with `main/launch/vdf.ts` reading the text key-values format. A manifest over 1 MB, malformed or missing a field is skipped with a logged warning.
+- **Launch URI:** `steam://rungameid/<appid>`, opened with `shell.openExternal`. Launch by hand: pending the owner (the date the owner starts one game from the app and what happened go here). Until then the URI is prior knowledge, not verified.
+
 ## RetroAchievements (after v1)
 
 - Official Web API at retroachievements.org (user gets an API key in their settings). Calls include recent achievements, user completion progress, game info and achievement lists. *(Verify current endpoint names.)*
@@ -117,9 +123,20 @@ Checked against the owner's portable RPCS3 (`D:\Emulators\rpcs3-v0.0.41-19559-d8
 - The parser treats any non-zero state as earned, and reads the time as PS3 RTC ticks (microseconds since year 1). A time outside 2006 to 2100 is read as unknown (`unlockedAt: null`) rather than guessed. The unlock tests use a synthetic earned trophy (`test-helpers.ts`), not a captured one.
 - **To finish:** earn one trophy, copy the new `TROPUSR.DAT`, diff against the fixture, and replace the synthetic one.
 
+**Launching (verified 5 October 2026 on the same install, ADR-0017)**
+- `rpcs3.exe` sits in the same folder as `dev_hdd0` (the portable layout), so the program is looked for beside the data folder and the user can choose it when it is not there.
+- `config/games.yml` is a flat `SERIAL: path` map (for example `BLUS30443: D:\...\Demon's Souls.iso`). A path may be a folder or an ISO; the adapter reads only entries whose path is a Windows absolute path.
+- The game's ISO is ISO 9660 and holds `PS3_GAME/PARAM.SFO`, whose `TITLE` ("Demon's Souls") equals the library title and whose `TITLE_ID` is the serial in `games.yml`. Nothing local links the trophy set `NPWR00881_00` to that serial, so the title is what matches the game to the library. A sanitized `PARAM.SFO` is in `tests/fixtures/rpcs3/`.
+- `rpcs3.exe --help` lists `--no-gui` (start the game without the main window) and a positional path to boot.
+- Titles are read 4 at a time with a 10 s limit each; a game whose title cannot be read is skipped with a logged warning.
+- **Not verified by hand:** starting a game with `rpcs3.exe --no-gui <path>` from Trophy Locker. The owner must run it once and add the date and result here.
+
+**Cover art (built 5 October 2026)**
+- The game's cover is `ICON0.PNG` in its trophy folder, served to the UI as `trophy-art://rpcs3/<npCommId>` (`src/main/trophy-art.ts`). `file://` images cannot load from the dev renderer's `http://localhost` origin, and the protocol keeps local paths out of the UI and out of data exports. Only a connected RPCS3 account's trophy folder is read, the id must look like `NPWR00881_00`, the file must start with the PNG signature and is at most 2 MB.
+
 **Not built**
 - Auto-detection on Windows: portable RPCS3 has no fixed place, so Windows relies on the folder picker. Linux (`~/.config/rpcs3`) and macOS paths are guessed.
-- Icons: the trophy PNGs sit beside the files but are not shown yet; icons come from a linked PlayStation entry when there is one.
+- Per-trophy icons: `TROP000.PNG` and the others sit beside the files but are not shown yet; trophy icons come from a linked PlayStation entry when there is one.
 
 ## shadPS4 (v1, ADR-0015): verified 2026-09-28
 

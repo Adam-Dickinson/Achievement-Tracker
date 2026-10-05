@@ -13,6 +13,7 @@ export interface LibraryView {
   readonly status: StatusId
   readonly sort: SortId
   readonly layout: LayoutId
+  readonly installed: boolean
 }
 
 export const DEFAULT_VIEW: LibraryView = {
@@ -21,6 +22,7 @@ export const DEFAULT_VIEW: LibraryView = {
   status: 'all',
   sort: 'recent',
   layout: 'landscape',
+  installed: false,
 }
 
 export const SORTS: Record<
@@ -60,14 +62,24 @@ export function averageCompletion(games: readonly LibraryGame[]): number {
   return Math.floor((sum / synced.length) * 100)
 }
 
-export function applyView(games: readonly LibraryGame[], view: LibraryView): LibraryGame[] {
+export function applyView(
+  games: readonly LibraryGame[],
+  view: LibraryView,
+  installedGameIds: ReadonlySet<number> = new Set(),
+): LibraryGame[] {
   const words = searchWords(view.query)
-  return games.filter((game) => matches(game, view, words)).sort(SORTS[view.sort].compare)
+  return games
+    .filter((game) => matches(game, view, words, installedGameIds))
+    .sort(SORTS[view.sort].compare)
 }
 
-export function countMatching(games: readonly LibraryGame[], view: LibraryView): number {
+export function countMatching(
+  games: readonly LibraryGame[],
+  view: LibraryView,
+  installedGameIds: ReadonlySet<number> = new Set(),
+): number {
   const words = searchWords(view.query)
-  return games.filter((game) => matches(game, view, words)).length
+  return games.filter((game) => matches(game, view, words, installedGameIds)).length
 }
 
 export function platformsIn(games: readonly LibraryGame[]): Platform[] {
@@ -76,13 +88,21 @@ export function platformsIn(games: readonly LibraryGame[]): Platform[] {
 }
 
 export function isFiltered(view: LibraryView): boolean {
-  return view.query.trim() !== '' || view.platform !== 'all' || view.status !== 'all'
+  return (
+    view.query.trim() !== '' || view.platform !== 'all' || view.status !== 'all' || view.installed
+  )
 }
 
-function matches(game: LibraryGame, view: LibraryView, words: readonly string[]): boolean {
+function matches(
+  game: LibraryGame,
+  view: LibraryView,
+  words: readonly string[],
+  installedGameIds: ReadonlySet<number>,
+): boolean {
   return (
     (view.platform === 'all' || game.platforms.includes(view.platform)) &&
     STATUSES[view.status].keep(game) &&
+    (!view.installed || installedGameIds.has(game.id)) &&
     matchesSearch(game.title, words)
   )
 }

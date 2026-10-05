@@ -12,6 +12,7 @@ import type {
   RecentUnlock,
   UnlockedAchievement,
 } from '@shared/library'
+import type { KnownGame } from '@shared/launch'
 import { PLATFORMS, type Platform } from '@shared/platform'
 import { type Rarity, rarityFromPercent } from '@shared/rarity'
 import { listArtworkUrls } from './artwork-store'
@@ -96,6 +97,25 @@ export function storePageUrl(db: DatabaseSync, platformGameId: number): string |
   const row = db.prepare('SELECT store_url FROM platform_game WHERE id = ?').get(platformGameId) as
     { store_url: string | null } | undefined
   return row?.store_url ?? null
+}
+
+export function listKnownGames(db: DatabaseSync): KnownGame[] {
+  const rows = db
+    .prepare('SELECT id, game_id, platform, external_id, title FROM platform_game ORDER BY id')
+    .all() as unknown as {
+    id: number
+    game_id: number
+    platform: Platform
+    external_id: string
+    title: string
+  }[]
+  return rows.map((row) => ({
+    id: row.id,
+    gameId: row.game_id,
+    platform: row.platform,
+    externalId: row.external_id,
+    title: row.title,
+  }))
 }
 
 export function listLibraryGames(db: DatabaseSync): LibraryGame[] {
