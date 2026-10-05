@@ -53,7 +53,12 @@ export class LaunchService {
   async #run(): Promise<void> {
     const found = await Promise.all(this.#adapters.map((adapter) => this.#find(adapter)))
     this.#installs = found.flat()
-    this.#onChanged()
+    try {
+      this.#onChanged()
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      console.warn(`Launch: could not announce the installed games (${reason})`)
+    }
   }
 
   async #find(adapter: InstallAdapter): Promise<readonly InstalledGame[]> {

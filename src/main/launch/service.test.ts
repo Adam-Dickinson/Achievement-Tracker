@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { KnownGame } from '@shared/launch'
 import { LaunchService } from './service'
 import type { InstallAdapter, InstalledGame } from './types'
@@ -33,6 +33,10 @@ function service(over: Partial<ConstructorParameters<typeof LaunchService>[0]> =
 }
 
 describe('LaunchService', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('reports nothing installed before the first scan', () => {
     expect(service().svc.installed()).toEqual([])
   })
@@ -69,7 +73,7 @@ describe('LaunchService', () => {
 
     expect(svc.installed()).toHaveLength(1)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('epic'))
-    warn.mockRestore()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('boom'))
   })
 
   it('shares one scan between callers that overlap', async () => {
@@ -108,5 +112,62 @@ describe('LaunchService', () => {
 
     await svc.play(7)
     await vi.waitFor(() => expect(steam.findInstalled).toHaveBeenCalledTimes(2))
+  })
+
+  it('survives an onChanged callback that throws', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const onChanged = vi.fn(() => {
+      throw new Error('destroyed')
+    })
+    const { svc } = service({ onChanged })
+
+    await expect(svc.scan()).resolves.toBeUndefined()
+
+    expect(svc.installed()).toHaveLength(1)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('destroyed'))
+  })
+
+  it('returns the failure of a start even when the rescan cannot announce', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const unhandled = vi.fn()
+    process.on('unhandledRejection', unhandled)
+    const steam = adapter('steam', [STEAM_INSTALL])
+    const failure = { ok: false, reason: 'Could not open the launcher.' }
+    const start = vi.fn().mockResolvedValue(failure)
+    const onChanged = vi.fn(() => {
+      throw new Error('destroyed')
+    })
+    const { svc } = service({ adapters: [steam], start, onChanged })
+    await svc.scan()
+
+    try {
+      await expect(svc.play(7)).resolves.toEqual(failure)
+      await vi.waitFor(() => expect(steam.findInstalled).toHaveBeenCalledTimes(2))
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      expect(unhandled).not.toHaveBeenCalled()
+    } finally {
+      process.off('unhandledRejection', unhandled)
+    }
+  })
+
+  it('does not rescan after a successful start', async () => {
+    const steam = adapter('steam', [STEAM_INSTALL])
+    const { svc } = service({ adapters: [steam] })
+    await svc.scan()
+
+    await svc.play(7)
+    await new Promise((resolve) => setTimeout(resolve, 10))
+
+    expect(steam.findInstalled).toHaveBeenCalledOnce()
+  })
+
+  it('scans again once the previous scan has finished', async () => {
+    const steam = adapter('steam', [STEAM_INSTALL])
+    const { svc } = service({ adapters: [steam] })
+
+    await svc.scan()
+    await svc.scan()
+
+    expect(steam.findInstalled).toHaveBeenCalledTimes(2)
   })
 })
