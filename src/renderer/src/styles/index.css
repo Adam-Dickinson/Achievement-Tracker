@@ -110,6 +110,16 @@
 }
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-fg-muted) 30%, transparent) transparent;
+  }
+  *:hover {
+    scrollbar-color: color-mix(in srgb, var(--color-fg-muted) 55%, transparent) transparent;
+  }
   [data-rarity='common'] {
     --rarity: var(--color-rarity-common);
     --rarity-light: var(--color-rarity-common-light);
