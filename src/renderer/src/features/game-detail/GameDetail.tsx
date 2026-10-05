@@ -4,6 +4,7 @@ import { SearchBox } from '@/components/SearchBox'
 import { Select } from '@/components/Select'
 import { ToggleGroup } from '@/components/ToggleGroup'
 import { VirtualGrid } from '@/components/VirtualGrid'
+import { useInstalled } from '@/features/launch/useInstalled'
 import { type Platform, platformName } from '@shared/platform'
 import { AchievementRow } from './AchievementRow'
 import {
@@ -22,6 +23,7 @@ import { GameBanner, GLASS_BUTTON } from './GameBanner'
 import { GameStats } from './GameStats'
 import { LinkGame } from './LinkGame'
 import { PlatinumBanner } from './PlatinumBanner'
+import { PlayButtons } from './PlayButtons'
 import { useGame } from './useGame'
 
 export function storeLabel(platform: Platform): string {
@@ -36,6 +38,7 @@ interface GameDetailProps {
 
 export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
   const { detail, reload } = useGame(id)
+  const installed = useInstalled()
   const [view, setView] = useState<AchievementView>(DEFAULT_ACHIEVEMENT_VIEW)
   const [selected, setSelected] = useState(initialEntry)
   const [linking, setLinking] = useState(false)
@@ -103,6 +106,7 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
 
   const actions = (
     <>
+      <PlayButtons installed={installed} entryIds={entries.map((e) => e.platformGameId)} />
       <button
         type="button"
         disabled={syncing}

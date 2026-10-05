@@ -84,12 +84,14 @@ const getGame = vi.fn<(id: number) => Promise<GameDetailData | null>>()
 const listLibrary = vi.fn()
 const mergeGames = vi.fn<(input: MergeGamesInput) => Promise<void>>()
 const unlinkGame = vi.fn<(input: UnlinkGameInput) => Promise<void>>()
-let dataChanged: () => void = () => {}
+let listeners: (() => void)[] = []
+const dataChanged = () => listeners.forEach((listener) => listener())
 const onBack = vi.fn()
 let restoreLayout: () => void
 
 beforeEach(() => {
   restoreLayout = fakeLayout()
+  listeners = []
   mergeGames.mockResolvedValue(undefined)
   unlinkGame.mockResolvedValue(undefined)
   listLibrary.mockResolvedValue([
@@ -103,7 +105,7 @@ beforeEach(() => {
     mergeGames,
     unlinkGame,
     onDataChanged: (listener) => {
-      dataChanged = listener
+      listeners.push(listener)
       return () => {}
     },
   })

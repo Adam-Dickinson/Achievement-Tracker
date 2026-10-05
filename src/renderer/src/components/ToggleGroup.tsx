@@ -7,6 +7,7 @@ export interface ToggleOption<T extends string> {
   readonly label: string
   readonly count?: number
   readonly icon?: ReactNode
+  readonly disabled?: boolean
 }
 
 interface ToggleGroupProps<T extends string> {
@@ -55,8 +56,9 @@ export function ToggleGroup<T extends string>({
             key={option.id}
             type="button"
             aria-pressed={on}
+            disabled={option.disabled}
             onClick={() => onSelect(option.id)}
-            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${style.base} ${on ? style.on : style.off}`}
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${style.base} ${on ? style.on : style.off}`}
           >
             {option.icon && (
               <span aria-hidden="true" className="flex">

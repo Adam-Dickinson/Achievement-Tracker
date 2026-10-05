@@ -53,6 +53,7 @@ describe('clearFilters', () => {
       status: 'completed' as const,
       sort: 'title' as const,
       layout: 'list' as const,
+      installed: true,
     }
 
     expect(clearFilters(view)).toEqual({ ...DEFAULT_VIEW, sort: 'title', layout: 'list' })
@@ -77,5 +78,27 @@ describe('averageCompletion', () => {
   it('is 0 without any read game', () => {
     expect(averageCompletion([])).toBe(0)
     expect(averageCompletion([played(0, 0)])).toBe(0)
+  })
+})
+
+describe('Installed filter', () => {
+  const games = [game(1, 'A', ['steam']), game(2, 'B', ['steam'])]
+
+  it('keeps only installed games when the Installed filter is on', () => {
+    const shown = applyView(games, { ...DEFAULT_VIEW, installed: true }, new Set([2]))
+
+    expect(shown.map((g) => g.id)).toEqual([2])
+  })
+
+  it('ignores the installed set when the filter is off', () => {
+    expect(applyView(games, DEFAULT_VIEW, new Set([2]))).toHaveLength(2)
+  })
+
+  it('counts the Installed filter as a filter', () => {
+    expect(isFiltered({ ...DEFAULT_VIEW, installed: true })).toBe(true)
+  })
+
+  it('clears the Installed filter with the others', () => {
+    expect(clearFilters({ ...DEFAULT_VIEW, installed: true }).installed).toBe(false)
   })
 })
