@@ -480,6 +480,10 @@ describe('GameDetail store page', () => {
       renderScrolled(<GameDetail id={7} onBack={onBack} />)
 
       fireEvent.click(await screen.findByRole('button', { name: 'Play on Steam' }))
+      await vi.waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Play on Steam' })).toBeEnabled(),
+      )
+
       fireEvent.click(await screen.findByRole('button', { name: 'Play on PlayStation' }))
 
       expect(playGame).toHaveBeenNthCalledWith(1, 70)
