@@ -1,5 +1,6 @@
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { ProviderError } from '@shared/errors'
 import type { RemoteGame } from '@shared/models'
 import type { LocalFiles } from '../local-files'
@@ -103,7 +104,7 @@ export async function listGames(
       ref: { externalId: npCommId },
       title: (await readTrophyList(files, account, npCommId).catch(() => null))?.title ?? npCommId,
       iconUrl: null,
-      coverUrl: null,
+      coverUrl: await trophyIcon(files, join(trophyDir(account), npCommId)),
       lastPlayed: modifiedAt,
       recentlyPlayed: now.getTime() - modifiedAt.getTime() < RECENT_MS,
     })),
@@ -181,6 +182,18 @@ function homeDir(dataDir: string): string {
 
 function trophyDir({ dataDir, userId }: Rpcs3Account): string {
   return join(homeDir(dataDir), userId, 'trophy')
+}
+
+async function trophyIcon(files: LocalFiles, folder: string): Promise<string | null> {
+  try {
+    const entries = await files.listFolder(folder)
+    const icon = entries?.find(
+      (entry) => !entry.isDirectory && entry.name.toUpperCase() === 'ICON0.PNG',
+    )
+    return icon ? pathToFileURL(join(folder, icon.name)).href : null
+  } catch {
+    return null
+  }
 }
 
 async function trophyFolders(

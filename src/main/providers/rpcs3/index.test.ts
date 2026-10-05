@@ -1,6 +1,7 @@
 import { cpSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProviderError } from '@shared/errors'
@@ -176,6 +177,32 @@ describe('Rpcs3Provider', () => {
         recentlyPlayed: true,
       },
     ])
+  })
+
+  it('uses the trophy folder icon as the cover when it exists', async () => {
+    writeFileSync(join(gameDir(), 'ICON0.PNG'), 'png')
+
+    expect((await provider().listGames(credentials()))[0]?.coverUrl).toBe(
+      pathToFileURL(join(gameDir(), 'ICON0.PNG')).href,
+    )
+  })
+
+  it('has no cover when the trophy folder has no icon', async () => {
+    expect((await provider().listGames(credentials()))[0]?.coverUrl).toBeNull()
+  })
+
+  it('has no cover when the folder cannot be listed for its icon', async () => {
+    writeFileSync(join(gameDir(), 'ICON0.PNG'), 'png')
+    let listings = 0
+    const files: LocalFiles = {
+      ...LOCAL_FILES,
+      listFolder: (path) => {
+        if (path === gameDir() && ++listings > 1) return Promise.reject(new Error('denied'))
+        return LOCAL_FILES.listFolder(path)
+      },
+    }
+
+    expect((await provider(files).listGames(credentials()))[0]?.coverUrl).toBeNull()
   })
 
   it('counts a game as recently played for two weeks after its progress last changed', async () => {
