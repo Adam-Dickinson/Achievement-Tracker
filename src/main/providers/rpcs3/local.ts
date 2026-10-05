@@ -50,6 +50,14 @@ export function parseAccountExternalId(externalId: string): Rpcs3Account {
   return { dataDir, userId }
 }
 
+export function dataDirOf(externalId: string): string | null {
+  try {
+    return parseAccountExternalId(externalId).dataDir
+  } catch {
+    return null
+  }
+}
+
 export function defaultDataDirs(
   platform: NodeJS.Platform = process.platform,
   home: string = homedir(),

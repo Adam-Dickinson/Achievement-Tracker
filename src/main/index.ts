@@ -31,6 +31,9 @@ import { DATABASE_FILE, moveLegacyData } from './legacy-data'
 import { captureConsole, captureUncaught } from './logging/capture'
 import { Logger } from './logging/logger'
 import { readLogs } from './logging/read-logs'
+import { fileByteSource } from './launch/ps3/file-source'
+import { createRpcs3InstallAdapter } from './launch/rpcs3'
+import { findRpcs3Program } from './launch/rpcs3-program'
 import { createSteamInstallAdapter } from './launch/steam'
 import { LaunchService } from './launch/service'
 import { spawnDetached } from './launch/spawn'
@@ -48,6 +51,7 @@ import { isPsnRedirect, PSN_SIGN_IN_URL, readNpsso } from './providers/playstati
 import { SteamProvider } from './providers/steam'
 import { STEAM_LOCAL } from './providers/steam/local'
 import { Rpcs3Provider } from './providers/rpcs3'
+import { dataDirOf } from './providers/rpcs3/local'
 import { ShadPs4Provider } from './providers/shadps4'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
@@ -83,7 +87,7 @@ import {
   saveUpdateSettings,
   updateNotificationSettings,
 } from './store/settings-store'
-import { listAccountSummaries } from './store/sync-store'
+import { listAccountSummaries, listConnectedAccounts } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
 import { type AppTray, createTray } from './tray'
@@ -256,6 +260,15 @@ async function start(): Promise<void> {
   const launcher = new LaunchService({
     adapters: [
       createSteamInstallAdapter({ readRegistry: STEAM_LOCAL.readRegistry, files: LOCAL_FILES }),
+      createRpcs3InstallAdapter({
+        dataDirs: () =>
+          listConnectedAccounts(db)
+            .filter((account) => account.platform === 'rpcs3')
+            .flatMap((account) => dataDirOf(account.externalId) ?? []),
+        exePath: (dir) => findRpcs3Program(dir),
+        files: LOCAL_FILES,
+        openSource: fileByteSource,
+      }),
     ],
     known: () => listKnownGames(db),
     start: (target) =>

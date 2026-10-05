@@ -16,6 +16,7 @@ import { Rpcs3Provider } from '.'
 import {
   accountExternalId,
   DEBOUNCE_MS,
+  dataDirOf,
   defaultDataDirs,
   listUsers,
   parseAccountExternalId,
@@ -95,6 +96,18 @@ describe('RPCS3 account ids', () => {
       join('/Users/p', 'Library', 'Application Support', 'rpcs3'),
     ])
     expect(defaultDataDirs('win32', 'C:\\Users\\p')).toEqual([])
+  })
+})
+
+describe('dataDirOf', () => {
+  it('returns the install folder of an account id', () => {
+    const id = accountExternalId({ dataDir: 'D:\\Emu\\rpcs3', userId: '00000001' })
+
+    expect(dataDirOf(id)).toBe('D:\\Emu\\rpcs3')
+  })
+
+  it('returns null for a malformed id', () => {
+    expect(dataDirOf('garbage')).toBeNull()
   })
 })
 

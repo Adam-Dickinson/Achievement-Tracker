@@ -93,4 +93,22 @@ describe('startTarget', () => {
       startTarget({ kind: 'program', exe: 'D:\\x\\rpcs3.exe', args: [] }, d),
     ).resolves.toEqual({ ok: false, reason: 'The program could not be started.' })
   })
+
+  it('refuses a program path that is not absolute', async () => {
+    const d = deps()
+
+    const result = await startTarget({ kind: 'program', exe: 'rpcs3.exe', args: [] }, d)
+
+    expect(result.ok).toBe(false)
+    expect(d.fileExists).not.toHaveBeenCalled()
+    expect(d.spawnProgram).not.toHaveBeenCalled()
+  })
+
+  it('allows an upper case .EXE', async () => {
+    const d = deps()
+
+    await expect(
+      startTarget({ kind: 'program', exe: 'D:\\Emu\\RPCS3.EXE', args: [] }, d),
+    ).resolves.toEqual({ ok: true })
+  })
 })
