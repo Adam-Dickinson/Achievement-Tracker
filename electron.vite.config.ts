@@ -3,17 +3,9 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'electron-vite'
 import type { Plugin } from 'vite'
+import { PRODUCTION_CSP } from './src/shared/csp'
 
 const shared = resolve('src/shared')
-
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
-  "font-src 'self' data:",
-  "connect-src 'self'",
-].join('; ')
 
 function productionCsp(): Plugin {
   return {
@@ -24,7 +16,7 @@ function productionCsp(): Plugin {
       handler: () => [
         {
           tag: 'meta',
-          attrs: { 'http-equiv': 'Content-Security-Policy', content: CSP },
+          attrs: { 'http-equiv': 'Content-Security-Policy', content: PRODUCTION_CSP },
           injectTo: 'head-prepend',
         },
       ],

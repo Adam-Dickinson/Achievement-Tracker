@@ -14,16 +14,21 @@ export function EmulatorProgramRow() {
 
   useEffect(() => {
     let cancelled = false
-    window.api.getEmulatorPrograms().then(
-      (programs) => {
-        if (!cancelled) setProgram(programs.find((p) => p.emulator === 'rpcs3') ?? null)
-      },
-      () => {
-        if (!cancelled) setError('Could not read the emulator program.')
-      },
-    )
+    function load() {
+      window.api.getEmulatorPrograms().then(
+        (programs) => {
+          if (!cancelled) setProgram(programs.find((p) => p.emulator === 'rpcs3') ?? null)
+        },
+        () => {
+          if (!cancelled) setError('Could not read the emulator program.')
+        },
+      )
+    }
+    load()
+    const stopListening = window.api.onInstalledChanged(load)
     return () => {
       cancelled = true
+      stopListening()
     }
   }, [])
 
@@ -64,7 +69,12 @@ export function EmulatorProgramRow() {
         )}
       </div>
       <div>
-        <Button variant="secondary" disabled={busy} onClick={() => void choose()}>
+        <Button
+          variant="secondary"
+          aria-label="Choose the RPCS3 program"
+          disabled={busy}
+          onClick={() => void choose()}
+        >
           Choose…
         </Button>
       </div>

@@ -98,4 +98,24 @@ describe('resolveTrophyArt', () => {
 
     expect(result.status).toBe(404)
   })
+
+  it('keeps looking in other accounts when one icon is too large to read', async () => {
+    const second = join('E:', 'rpcs3')
+    const folders = [
+      { dataDir: DATA_DIR, userId: '00000001' },
+      { dataDir: second, userId: '00000001' },
+    ]
+    const readFile = vi.fn(async (path: string) => {
+      if (path === expected(DATA_DIR, '00000001', 'NPWR00881_00')) throw new Error('too big')
+      return path === expected(second, '00000001', 'NPWR00881_00') ? png() : null
+    })
+
+    const result = await resolveTrophyArt('trophy-art://rpcs3/NPWR00881_00', {
+      rpcs3Folders: () => folders,
+      readFile,
+    })
+
+    expect(result.status).toBe(200)
+    expect(result.body).toEqual(png())
+  })
 })

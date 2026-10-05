@@ -41,7 +41,9 @@ export class EmulatorPrograms {
 
   async #savedProgram(emulator: EmulatorId): Promise<string | null> {
     const saved = this.#deps.read(emulator)
-    return saved !== null && (await this.#deps.fileExists(saved)) ? saved : null
+    return saved !== null && isProgramPath(saved) && (await this.#deps.fileExists(saved))
+      ? saved
+      : null
   }
 
   async #describe(emulator: EmulatorId): Promise<EmulatorProgram> {

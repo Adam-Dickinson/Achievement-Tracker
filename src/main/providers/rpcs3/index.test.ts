@@ -1,6 +1,6 @@
-import { cpSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, renameSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProviderError } from '@shared/errors'
@@ -203,6 +203,15 @@ describe('Rpcs3Provider', () => {
 
   it('uses the trophy folder icon as the cover when it exists', async () => {
     writeFileSync(join(gameDir(), 'ICON0.PNG'), 'png')
+
+    expect((await provider().listGames(credentials()))[0]?.coverUrl).toBe(
+      'trophy-art://rpcs3/NPWR00881_00',
+    )
+  })
+
+  it('builds the cover url from the upper-case id even when the folder is lower case', async () => {
+    renameSync(gameDir(), join(dirname(gameDir()), DEMONS_SOULS.toLowerCase()))
+    writeFileSync(join(dirname(gameDir()), DEMONS_SOULS.toLowerCase(), 'ICON0.PNG'), 'png')
 
     expect((await provider().listGames(credentials()))[0]?.coverUrl).toBe(
       'trophy-art://rpcs3/NPWR00881_00',

@@ -237,7 +237,33 @@ describe('Accounts', () => {
     render(<Accounts />)
 
     expect(await screen.findByText('Not found')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Choose…' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose the RPCS3 program' })).toBeInTheDocument()
+  })
+
+  it('puts the single RPCS3 program row under the first connected account', async () => {
+    listAccounts.mockResolvedValue([
+      { ...STEAM, id: 6, platform: 'rpcs3', displayName: 'Old', status: 'needs_reauth' },
+      { ...STEAM, id: 7, platform: 'rpcs3', displayName: 'Current' },
+    ])
+    render(<Accounts />)
+
+    await screen.findByText('Not found')
+    const choose = { name: 'Choose the RPCS3 program' }
+    expect(screen.getAllByRole('button', choose)).toHaveLength(1)
+    const current = screen.getByRole('region', { name: 'RPCS3: Current' }).parentElement
+    const old = screen.getByRole('region', { name: 'RPCS3: Old' }).parentElement
+    expect(within(current as HTMLElement).getByRole('button', choose)).toBeInTheDocument()
+    expect(within(old as HTMLElement).queryByRole('button', choose)).not.toBeInTheDocument()
+  })
+
+  it('has no RPCS3 program row when no RPCS3 account is connected', async () => {
+    listAccounts.mockResolvedValue([
+      { ...STEAM, id: 6, platform: 'rpcs3', displayName: 'Old', status: 'needs_reauth' },
+    ])
+    render(<Accounts />)
+
+    await screen.findByRole('region', { name: 'RPCS3: Old' })
+    expect(screen.queryByText('Emulator program')).not.toBeInTheDocument()
   })
 
   it('has no RPCS3 program row before RPCS3 is connected', async () => {
@@ -245,7 +271,9 @@ describe('Accounts', () => {
     render(<Accounts />)
 
     await screen.findByRole('region', { name: 'Emulators' })
-    expect(screen.queryByRole('button', { name: 'Choose…' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Choose the RPCS3 program' }),
+    ).not.toBeInTheDocument()
   })
 
   it('lets a disabled shadPS4 account connect again, preselected below', async () => {

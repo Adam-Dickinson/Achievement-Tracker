@@ -123,7 +123,7 @@ Checked against the owner's portable RPCS3 (`D:\Emulators\rpcs3-v0.0.41-19559-d8
 - The parser treats any non-zero state as earned, and reads the time as PS3 RTC ticks (microseconds since year 1). A time outside 2006 to 2100 is read as unknown (`unlockedAt: null`) rather than guessed. The unlock tests use a synthetic earned trophy (`test-helpers.ts`), not a captured one.
 - **To finish:** earn one trophy, copy the new `TROPUSR.DAT`, diff against the fixture, and replace the synthetic one.
 
-**Launching (verified 5 October 2026 on the same install, ADR-0017)**
+**Launching and cover art (install detection and covers verified 5 October 2026 on the same install; starting the game not yet verified; ADR-0017)**
 - `rpcs3.exe` sits in the same folder as `dev_hdd0` (the portable layout), so the program is looked for beside the data folder and the user can choose it when it is not there.
 - `config/games.yml` is a flat `SERIAL: path` map (for example `BLUS30443: D:\...\Demon's Souls.iso`). A path may be a folder or an ISO; the adapter reads only entries whose path is a Windows absolute path.
 - The game's ISO is ISO 9660 and holds `PS3_GAME/PARAM.SFO`, whose `TITLE` ("Demon's Souls") equals the library title and whose `TITLE_ID` is the serial in `games.yml`. Nothing local links the trophy set `NPWR00881_00` to that serial, so the title is what matches the game to the library. A sanitized `PARAM.SFO` is in `tests/fixtures/rpcs3/`.
@@ -132,7 +132,7 @@ Checked against the owner's portable RPCS3 (`D:\Emulators\rpcs3-v0.0.41-19559-d8
 - **Not verified by hand:** starting a game with `rpcs3.exe --no-gui <path>` from Trophy Locker. The owner must run it once and add the date and result here.
 
 **Cover art (built 5 October 2026)**
-- The game's cover is `ICON0.PNG` in its trophy folder, served to the UI as `trophy-art://rpcs3/<npCommId>` (`src/main/trophy-art.ts`). `file://` images cannot load from the dev renderer's `http://localhost` origin, and the protocol keeps local paths out of the UI and out of data exports. Only a connected RPCS3 account's trophy folder is read, the id must look like `NPWR00881_00`, the file must start with the PNG signature and is at most 2 MB.
+- The game's cover is `ICON0.PNG` in its trophy folder, served to the UI as `trophy-art://rpcs3/<npCommId>` (`src/main/trophy-art.ts`). `file://` images cannot load from the dev renderer's `http://localhost` origin, and the protocol keeps local paths out of the UI and out of data exports. Only a connected RPCS3 account's trophy folder is read, the id must look like `NPWR00881_00`, the file must start with the PNG signature and is at most 2 MB. The production Content-Security-Policy `img-src` must include `trophy-art:` (`src/shared/csp.ts`), otherwise the packaged app refuses the image although dev works; the missing entry was found and the fix verified live on a production build on 5 October 2026.
 
 **Not built**
 - Auto-detection on Windows: portable RPCS3 has no fixed place, so Windows relies on the folder picker. Linux (`~/.config/rpcs3`) and macOS paths are guessed.
