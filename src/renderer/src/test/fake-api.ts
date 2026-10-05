@@ -70,6 +70,12 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     getInstalled: vi.fn().mockResolvedValue([]),
     playGame: vi.fn().mockResolvedValue({ ok: true }),
     rescanInstalled: vi.fn().mockResolvedValue([]),
+    getEmulatorPrograms: vi
+      .fn()
+      .mockResolvedValue([{ emulator: 'rpcs3', path: null, source: null }]),
+    chooseEmulatorProgram: vi
+      .fn()
+      .mockResolvedValue({ emulator: 'rpcs3', path: null, source: null }),
     onInstalledChanged: vi.fn(() => () => {}),
     getArtworkSettings: vi.fn().mockResolvedValue({ hasKey: false, missing: 0, problem: null }),
     saveSteamGridDbKey: vi.fn(),

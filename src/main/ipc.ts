@@ -46,7 +46,7 @@ import {
   type LogSettings,
   type StartupSettings,
 } from '@shared/logs'
-import type { InstalledEntry, PlayResult } from '@shared/launch'
+import type { EmulatorId, EmulatorProgram, InstalledEntry, PlayResult } from '@shared/launch'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
 import type { UpdateState } from '@shared/updates'
@@ -103,6 +103,8 @@ export interface IpcHandlers {
   getInstalled(): InstalledEntry[]
   playGame(platformGameId: number): Promise<PlayResult>
   rescanInstalled(): Promise<InstalledEntry[]>
+  getEmulatorPrograms(): Promise<EmulatorProgram[]>
+  chooseEmulatorProgram(emulator: EmulatorId): Promise<EmulatorProgram>
   getArtworkSettings(): ArtworkSettings
   saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
   removeSteamGridDbKey(): void
@@ -141,6 +143,7 @@ const emulatorConnectSchema = z.object({
 })
 
 const gameIdSchema = z.number().int().positive()
+const emulatorIdSchema = z.literal('rpcs3')
 
 const mergeGamesSchema = z
   .object({ intoGameId: gameIdSchema, gameId: gameIdSchema })
@@ -538,6 +541,23 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.rescanInstalled()
   })
+
+  ipcMain.handle(IPC.getEmulatorPrograms, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getEmulatorPrograms()
+  })
+
+  ipcMain.handle(
+    IPC.chooseEmulatorProgram,
+    (event, emulator: unknown): Promise<EmulatorProgram> => {
+      if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+      const parsed = emulatorIdSchema.safeParse(emulator)
+      if (parsed.success) return handlers.chooseEmulatorProgram(parsed.data)
+      return handlers
+        .getEmulatorPrograms()
+        .then((list) => list[0] ?? { emulator: 'rpcs3', path: null, source: null })
+    },
+  )
 
   ipcMain.handle(IPC.getArtworkSettings, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')

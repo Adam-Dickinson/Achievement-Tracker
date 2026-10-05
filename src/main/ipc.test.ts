@@ -136,6 +136,12 @@ const fakes = {
   getInstalled: vi.fn(() => [{ gameId: 3, platformGameId: 7, platform: 'steam' as const }]),
   playGame: vi.fn(() => Promise.resolve({ ok: true as const })),
   rescanInstalled: vi.fn(() => Promise.resolve([])),
+  getEmulatorPrograms: vi.fn(() =>
+    Promise.resolve([{ emulator: 'rpcs3' as const, path: null, source: null }]),
+  ),
+  chooseEmulatorProgram: vi.fn((emulator: 'rpcs3') =>
+    Promise.resolve({ emulator, path: null, source: null }),
+  ),
   getArtworkSettings: vi.fn(() => ({ hasKey: false, missing: 3, problem: null })),
   saveSteamGridDbKey: vi.fn(() => Promise.resolve({ ok: true as const })),
   removeSteamGridDbKey: vi.fn(),
@@ -978,5 +984,33 @@ describe('launch handlers', () => {
   it('rescans installed games for our own pages and refuses others', async () => {
     await expect(call(IPC.rescanInstalled, TRUSTED)).resolves.toEqual([])
     expect(() => call(IPC.rescanInstalled, UNTRUSTED)).toThrow('Untrusted sender')
+  })
+
+  it('lists emulator programs for our own pages and refuses others', async () => {
+    await expect(call(IPC.getEmulatorPrograms, TRUSTED)).resolves.toEqual([
+      { emulator: 'rpcs3', path: null, source: null },
+    ])
+    expect(() => call(IPC.getEmulatorPrograms, UNTRUSTED)).toThrow('Untrusted sender')
+  })
+
+  it('chooses an emulator program for a known emulator and refuses others', async () => {
+    await expect(call(IPC.chooseEmulatorProgram, TRUSTED, 'rpcs3')).resolves.toEqual({
+      emulator: 'rpcs3',
+      path: null,
+      source: null,
+    })
+    expect(fakes.chooseEmulatorProgram).toHaveBeenCalledWith('rpcs3')
+    expect(() => call(IPC.chooseEmulatorProgram, UNTRUSTED, 'rpcs3')).toThrow('Untrusted sender')
+  })
+
+  it('answers with the current program for a bad emulator payload', async () => {
+    for (const bad of ['shadps4', '', 42, {}]) {
+      await expect(call(IPC.chooseEmulatorProgram, TRUSTED, bad)).resolves.toEqual({
+        emulator: 'rpcs3',
+        path: null,
+        source: null,
+      })
+    }
+    expect(fakes.chooseEmulatorProgram).not.toHaveBeenCalled()
   })
 })

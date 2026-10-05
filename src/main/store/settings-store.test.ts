@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_NOTIFICATION_SETTINGS } from '@shared/ipc'
 import { applyMigrations } from './migrate'
 import {
+  readEmulatorProgram,
   readLogLevel,
   readNotificationSettings,
   readOnboardingCompleted,
   readUpdateSettings,
   readProfileName,
+  saveEmulatorProgram,
   saveLogLevel,
   saveOnboardingCompleted,
   saveUpdateSettings,
@@ -264,5 +266,36 @@ describe('update settings', () => {
       dismissedVersion: null,
       notifiedVersion: null,
     })
+  })
+})
+
+describe('emulator program setting', () => {
+  let db: DatabaseSync
+
+  beforeEach(() => {
+    db = new DatabaseSync(':memory:')
+    applyMigrations(db)
+  })
+
+  it('is null until one is saved', () => {
+    expect(readEmulatorProgram(db, 'rpcs3')).toBeNull()
+  })
+
+  it('saves a path and reads it back', () => {
+    saveEmulatorProgram(db, 'rpcs3', 'E:\\Tools\\rpcs3.exe')
+
+    expect(readEmulatorProgram(db, 'rpcs3')).toBe('E:\\Tools\\rpcs3.exe')
+  })
+
+  it('ignores a stored value that is not a string', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run('emulator.rpcs3.exe', '42')
+
+    expect(readEmulatorProgram(db, 'rpcs3')).toBeNull()
+  })
+
+  it('survives invalid JSON', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run('emulator.rpcs3.exe', '{nope')
+
+    expect(readEmulatorProgram(db, 'rpcs3')).toBeNull()
   })
 })

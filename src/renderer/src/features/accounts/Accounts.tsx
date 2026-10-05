@@ -6,6 +6,7 @@ import { ConnectFlow } from './ConnectFlow'
 import { ConnectPrompt } from './ConnectPrompt'
 import { isOnline, ONLINE_PLATFORMS, type OnlinePlatform } from './sources'
 import { useAccounts } from './useAccounts'
+import { EmulatorProgramRow } from './EmulatorProgramRow'
 import { Rpcs3Card } from './Rpcs3Card'
 import { ShadPs4Card } from './ShadPs4Card'
 
@@ -156,13 +157,15 @@ function AccountsBody({
           />
           {accounts
             .filter((account) => account.platform === 'rpcs3')
-            .map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                onChanged={onChanged}
-                onReconnect={() => setReconnectingRpcs3(account.displayName)}
-              />
+            .map((account, index) => (
+              <div key={account.id} className="flex flex-col gap-3">
+                <AccountCard
+                  account={account}
+                  onChanged={onChanged}
+                  onReconnect={() => setReconnectingRpcs3(account.displayName)}
+                />
+                {index === 0 && <EmulatorProgramRow />}
+              </div>
             ))}
           <Rpcs3Card
             connectedNames={accounts

@@ -32,8 +32,8 @@ import { captureConsole, captureUncaught } from './logging/capture'
 import { Logger } from './logging/logger'
 import { readLogs } from './logging/read-logs'
 import { fileByteSource } from './launch/ps3/file-source'
+import { EmulatorPrograms } from './launch/emulator-programs'
 import { createRpcs3InstallAdapter } from './launch/rpcs3'
-import { findRpcs3Program } from './launch/rpcs3-program'
 import { createSteamInstallAdapter } from './launch/steam'
 import { LaunchService } from './launch/service'
 import { spawnDetached } from './launch/spawn'
@@ -77,10 +77,12 @@ import {
   storePageUrl,
 } from './store/library-store'
 import {
+  readEmulatorProgram,
   readLogLevel,
   readNotificationSettings,
   readOnboardingCompleted,
   readUpdateSettings,
+  saveEmulatorProgram,
   saveLogLevel,
   saveOnboardingCompleted,
   saveProfileName,
@@ -218,6 +220,18 @@ async function start(): Promise<void> {
         : await dialog.showOpenDialog(options)
     return result.canceled ? null : (result.filePaths[0] ?? null)
   }
+  const chooseProgram = async (): Promise<string | null> => {
+    const options: Electron.OpenDialogOptions = {
+      title: 'Choose rpcs3.exe',
+      properties: ['openFile'],
+      filters: [{ name: 'Program', extensions: ['exe'] }],
+    }
+    const result =
+      mainWindow && !mainWindow.isDestroyed()
+        ? await dialog.showOpenDialog(mainWindow, options)
+        : await dialog.showOpenDialog(options)
+    return result.canceled ? null : (result.filePaths[0] ?? null)
+  }
   const xboxSignIn = new XboxSignIn({ openExternal: (url) => shell.openExternal(url) })
   const ubisoftSignIn = new UbisoftSignIn({
     openWindow: (url) =>
@@ -257,15 +271,28 @@ async function start(): Promise<void> {
   const dataChanged = coalesce(() => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.dataChanged)
   }, 1000)
+  const rpcs3DataDirs = () =>
+    listConnectedAccounts(db)
+      .filter((account) => account.platform === 'rpcs3')
+      .flatMap((account) => dataDirOf(account.externalId) ?? [])
+  const emulatorPrograms = new EmulatorPrograms({
+    read: (emulator) => readEmulatorProgram(db, emulator),
+    save: (emulator, path) => saveEmulatorProgram(db, emulator, path),
+    dataDirs: () => rpcs3DataDirs(),
+    fileExists: (path) =>
+      access(path).then(
+        () => true,
+        () => false,
+      ),
+    chooseFile: chooseProgram,
+    onChanged: () => void launcher.scan(),
+  })
   const launcher = new LaunchService({
     adapters: [
       createSteamInstallAdapter({ readRegistry: STEAM_LOCAL.readRegistry, files: LOCAL_FILES }),
       createRpcs3InstallAdapter({
-        dataDirs: () =>
-          listConnectedAccounts(db)
-            .filter((account) => account.platform === 'rpcs3')
-            .flatMap((account) => dataDirOf(account.externalId) ?? []),
-        exePath: (dir) => findRpcs3Program(dir),
+        dataDirs: rpcs3DataDirs,
+        exePath: (dir) => emulatorPrograms.resolve('rpcs3', dir),
         files: LOCAL_FILES,
         openSource: fileByteSource,
       }),
@@ -516,6 +543,8 @@ async function start(): Promise<void> {
     },
     getInstalled: () => launcher.installed(),
     playGame: (platformGameId) => launcher.play(platformGameId),
+    getEmulatorPrograms: () => emulatorPrograms.list(),
+    chooseEmulatorProgram: (emulator) => emulatorPrograms.choose(emulator),
     rescanInstalled: async () => {
       await launcher.scan()
       return launcher.installed()

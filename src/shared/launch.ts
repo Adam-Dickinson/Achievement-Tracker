@@ -15,3 +15,11 @@ export interface KnownGame {
   readonly externalId: string
   readonly title: string
 }
+
+export type EmulatorId = 'rpcs3'
+
+export interface EmulatorProgram {
+  readonly emulator: EmulatorId
+  readonly path: string | null
+  readonly source: 'chosen' | 'found' | null
+}

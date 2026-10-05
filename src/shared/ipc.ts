@@ -1,6 +1,6 @@
 import type { DashboardStats } from './dashboard'
 import type { ActivityPage, GameDetail, LibraryGame } from './library'
-import type { InstalledEntry, PlayResult } from './launch'
+import type { EmulatorId, EmulatorProgram, InstalledEntry, PlayResult } from './launch'
 import type { LogEntry, LogLevel, LogSettings, StartupSettings } from './logs'
 import type { AccountStatus } from './models'
 import { PLATFORMS, type Platform } from './platform'
@@ -63,6 +63,8 @@ export const IPC = {
   playGame: 'launch:play',
   rescanInstalled: 'launch:rescan',
   installedChanged: 'launch:installed-changed',
+  getEmulatorPrograms: 'launch:get-emulator-programs',
+  chooseEmulatorProgram: 'launch:choose-emulator-program',
   getArtworkSettings: 'artwork:get-settings',
   saveSteamGridDbKey: 'artwork:save-steamgriddb-key',
   removeSteamGridDbKey: 'artwork:remove-steamgriddb-key',
@@ -347,6 +349,8 @@ export interface TrophyLockerApi {
   playGame(platformGameId: number): Promise<PlayResult>
   rescanInstalled(): Promise<InstalledEntry[]>
   onInstalledChanged(listener: () => void): () => void
+  getEmulatorPrograms(): Promise<EmulatorProgram[]>
+  chooseEmulatorProgram(emulator: EmulatorId): Promise<EmulatorProgram>
   getArtworkSettings(): Promise<ArtworkSettings>
   saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
   removeSteamGridDbKey(): Promise<void>
