@@ -12,6 +12,14 @@ describe('mayNavigate', () => {
     expect(mayNavigate({}, 'https://www.ea.com/')).toBe(false)
   })
 
+  it('never allows the trophy-art scheme as a navigation target', () => {
+    const signIn = {}
+    allowNavigation(signIn, isEaAddress)
+
+    expect(mayNavigate({}, 'trophy-art://rpcs3/NPWR00881_00')).toBe(false)
+    expect(mayNavigate(signIn, 'trophy-art://rpcs3/NPWR00881_00')).toBe(false)
+  })
+
   it("follows a window's own rule, and only for that window", () => {
     const signIn = {}
     const other = {}

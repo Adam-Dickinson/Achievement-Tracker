@@ -44,6 +44,7 @@ Whether a game is installed is not in the database. Each launcher keeps it in it
 - Installs made while the app has focus show up only after the next focus scan or a failed Play, until a Rescan button exists.
 - Title matching can miss a game whose store title differs from the library title; an id match avoids that where the ids agree.
 - Title matching can also match the wrong game, because edition words are dropped ("BioShock" and "BioShock Remastered" normalise alike). Installs matched by external id are claimed first and are never offered to another game by title, and each install serves at most one title match, but two owned editions with only one installed under a different id can still be confused.
+- RPCS3 covers are served through the allow-listed `trophy-art://` protocol: `file://` images are blocked from the dev server origin and expose local paths.
 - The Steam launch URI is not yet checked by hand (`docs/PROVIDERS.md`).
 
 **Follow-ups:**

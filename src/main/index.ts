@@ -6,6 +6,7 @@ import {
   dialog,
   Menu,
   Notification,
+  protocol,
   safeStorage,
   screen,
   shell,
@@ -51,7 +52,7 @@ import { isPsnRedirect, PSN_SIGN_IN_URL, readNpsso } from './providers/playstati
 import { SteamProvider } from './providers/steam'
 import { STEAM_LOCAL } from './providers/steam/local'
 import { Rpcs3Provider } from './providers/rpcs3'
-import { dataDirOf } from './providers/rpcs3/local'
+import { dataDirOf, parseAccountExternalId } from './providers/rpcs3/local'
 import { ShadPs4Provider } from './providers/shadps4'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
 import { UbisoftProvider } from './providers/ubisoft'
@@ -92,6 +93,7 @@ import {
 import { listAccountSummaries, listConnectedAccounts } from './store/sync-store'
 import { Scheduler } from './sync/scheduler'
 import { disconnectAccount, syncNow } from './sync-now'
+import { resolveTrophyArt } from './trophy-art'
 import { type AppTray, createTray } from './tray'
 import { trayUpdateLabel, UpdateService, type UpdaterLike } from './update-service'
 import { UbisoftSignIn } from './ubisoft-sign-in'
@@ -122,6 +124,10 @@ const PSN_SIGN_IN_PAGE: CookieSignInPage = {
   cookieDomain: 'sony.com',
   mayNavigate: isSonyAddress,
 }
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'trophy-art', privileges: { standard: true, secure: true, supportFetchAPI: true } },
+])
 
 if (!dataFolderReady() || !app.requestSingleInstanceLock()) {
   app.quit()
@@ -275,6 +281,22 @@ async function start(): Promise<void> {
     listConnectedAccounts(db)
       .filter((account) => account.platform === 'rpcs3')
       .flatMap((account) => dataDirOf(account.externalId) ?? [])
+  protocol.handle('trophy-art', async (request) => {
+    const { status, contentType, body } = await resolveTrophyArt(request.url, {
+      rpcs3Folders: () =>
+        listConnectedAccounts(db)
+          .filter((account) => account.platform === 'rpcs3')
+          .flatMap((account) => {
+            try {
+              return [parseAccountExternalId(account.externalId)]
+            } catch {
+              return []
+            }
+          }),
+      readFile: LOCAL_FILES.readBytes,
+    })
+    return new Response(body, { status, headers: { 'Content-Type': contentType } })
+  })
   const emulatorPrograms = new EmulatorPrograms({
     read: (emulator) => readEmulatorProgram(db, emulator),
     save: (emulator, path) => saveEmulatorProgram(db, emulator, path),

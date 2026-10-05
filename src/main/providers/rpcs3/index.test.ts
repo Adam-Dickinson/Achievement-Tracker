@@ -1,7 +1,6 @@
 import { cpSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProviderError } from '@shared/errors'
@@ -206,7 +205,7 @@ describe('Rpcs3Provider', () => {
     writeFileSync(join(gameDir(), 'ICON0.PNG'), 'png')
 
     expect((await provider().listGames(credentials()))[0]?.coverUrl).toBe(
-      pathToFileURL(join(gameDir(), 'ICON0.PNG')).href,
+      'trophy-art://rpcs3/NPWR00881_00',
     )
   })
 
