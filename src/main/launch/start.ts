@@ -1,4 +1,4 @@
-import { isAbsolute } from 'node:path'
+import { win32 } from 'node:path'
 import type { PlayResult } from '@shared/launch'
 import type { LaunchTarget } from './types'
 
@@ -44,7 +44,7 @@ async function startProgram(
   args: readonly string[],
   deps: StartDeps,
 ): Promise<PlayResult> {
-  if (!isAbsolute(exe) || !exe.toLowerCase().endsWith('.exe')) {
+  if (!win32.isAbsolute(exe) || !exe.toLowerCase().endsWith('.exe')) {
     return { ok: false, reason: 'That game cannot be started from here.' }
   }
   if (!(await deps.fileExists(exe))) return { ok: false, reason: 'The program was not found.' }

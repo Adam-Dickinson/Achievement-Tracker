@@ -109,6 +109,16 @@ describe('dataDirOf', () => {
   it('returns null for a malformed id', () => {
     expect(dataDirOf('garbage')).toBeNull()
   })
+
+  it('returns null when the user id is not eight digits', () => {
+    expect(dataDirOf('D:\\x|abc')).toBeNull()
+  })
+
+  it('round-trips a folder that contains the separator', () => {
+    const dataDir = 'D:\\Emu|new\\rpcs3'
+
+    expect(dataDirOf(accountExternalId({ dataDir, userId: '00000001' }))).toBe(dataDir)
+  })
 })
 
 describe('listUsers', () => {
