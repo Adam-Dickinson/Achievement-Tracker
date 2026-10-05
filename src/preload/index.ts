@@ -70,6 +70,14 @@ const api: TrophyLockerApi = {
   getNotificationSettings: () => ipcRenderer.invoke(IPC.getNotificationSettings),
   updateNotificationSettings: (patch) => ipcRenderer.invoke(IPC.updateNotificationSettings, patch),
   listDisplays: () => ipcRenderer.invoke(IPC.listDisplays),
+  getInstalled: () => ipcRenderer.invoke(IPC.getInstalled),
+  playGame: (platformGameId) => ipcRenderer.invoke(IPC.playGame, platformGameId),
+  rescanInstalled: () => ipcRenderer.invoke(IPC.rescanInstalled),
+  onInstalledChanged: (listener) => {
+    const handler = (): void => listener()
+    ipcRenderer.on(IPC.installedChanged, handler)
+    return () => ipcRenderer.removeListener(IPC.installedChanged, handler)
+  },
   onDataChanged: (listener) => {
     const handler = (): void => listener()
     ipcRenderer.on(IPC.dataChanged, handler)

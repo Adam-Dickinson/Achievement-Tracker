@@ -46,6 +46,7 @@ import {
   type LogSettings,
   type StartupSettings,
 } from '@shared/logs'
+import type { InstalledEntry, PlayResult } from '@shared/launch'
 import { PLATFORMS } from '@shared/platform'
 import { RARITIES } from '@shared/rarity'
 import type { UpdateState } from '@shared/updates'
@@ -99,6 +100,9 @@ export interface IpcHandlers {
   mergeGames(input: MergeGamesInput): void
   unlinkGame(input: UnlinkGameInput): void
   openStorePage(platformGameId: number): Promise<void>
+  getInstalled(): InstalledEntry[]
+  playGame(platformGameId: number): Promise<PlayResult>
+  rescanInstalled(): Promise<InstalledEntry[]>
   getArtworkSettings(): ArtworkSettings
   saveSteamGridDbKey(input: SteamGridDbKeyInput): Promise<ArtworkKeyResult>
   removeSteamGridDbKey(): void
@@ -514,6 +518,25 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     const parsed = gameIdSchema.safeParse(platformGameId)
     return parsed.success ? handlers.openStorePage(parsed.data) : Promise.resolve()
+  })
+
+  ipcMain.handle(IPC.getInstalled, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getInstalled()
+  })
+
+  ipcMain.handle(IPC.playGame, (event, platformGameId: unknown): Promise<PlayResult> => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = gameIdSchema.safeParse(platformGameId)
+    if (!parsed.success) {
+      return Promise.resolve({ ok: false, reason: 'That request was not understood.' })
+    }
+    return handlers.playGame(parsed.data)
+  })
+
+  ipcMain.handle(IPC.rescanInstalled, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.rescanInstalled()
   })
 
   ipcMain.handle(IPC.getArtworkSettings, (event) => {

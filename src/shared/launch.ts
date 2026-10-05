@@ -1,0 +1,17 @@
+import type { Platform } from './platform'
+
+export interface InstalledEntry {
+  readonly gameId: number
+  readonly platformGameId: number
+  readonly platform: Platform
+}
+
+export type PlayResult = { readonly ok: true } | { readonly ok: false; readonly reason: string }
+
+export interface KnownGame {
+  readonly id: number
+  readonly gameId: number
+  readonly platform: Platform
+  readonly externalId: string
+  readonly title: string
+}

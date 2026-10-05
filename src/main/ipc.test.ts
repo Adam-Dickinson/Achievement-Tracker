@@ -133,6 +133,9 @@ const fakes = {
   mergeGames: vi.fn(),
   unlinkGame: vi.fn(),
   openStorePage: vi.fn(() => Promise.resolve()),
+  getInstalled: vi.fn(() => [{ gameId: 3, platformGameId: 7, platform: 'steam' as const }]),
+  playGame: vi.fn(() => Promise.resolve({ ok: true as const })),
+  rescanInstalled: vi.fn(() => Promise.resolve([])),
   getArtworkSettings: vi.fn(() => ({ hasKey: false, missing: 3, problem: null })),
   saveSteamGridDbKey: vi.fn(() => Promise.resolve({ ok: true as const })),
   removeSteamGridDbKey: vi.fn(),
@@ -945,5 +948,35 @@ describe('notification settings handlers', () => {
     call(IPC.updateNotificationSettings, TRUSTED, payload)
 
     expect(fakes.updateNotificationSettings).toHaveBeenCalledWith({})
+  })
+})
+
+describe('launch handlers', () => {
+  it('lists installed games for our own pages and refuses others', () => {
+    expect(call(IPC.getInstalled, TRUSTED)).toEqual([
+      { gameId: 3, platformGameId: 7, platform: 'steam' },
+    ])
+    expect(() => call(IPC.getInstalled, UNTRUSTED)).toThrow('Untrusted sender')
+  })
+
+  it('plays a game by its platform game id only', async () => {
+    await expect(call(IPC.playGame, TRUSTED, 7)).resolves.toEqual({ ok: true })
+    expect(fakes.playGame).toHaveBeenCalledWith(7)
+    expect(() => call(IPC.playGame, UNTRUSTED, 7)).toThrow('Untrusted sender')
+  })
+
+  it('refuses to play with a bad payload', async () => {
+    for (const bad of ['steam://rungameid/220', -1, 1.5, null, { uri: 'x' }]) {
+      await expect(call(IPC.playGame, TRUSTED, bad)).resolves.toEqual({
+        ok: false,
+        reason: 'That request was not understood.',
+      })
+    }
+    expect(fakes.playGame).not.toHaveBeenCalled()
+  })
+
+  it('rescans installed games for our own pages and refuses others', async () => {
+    await expect(call(IPC.rescanInstalled, TRUSTED)).resolves.toEqual([])
+    expect(() => call(IPC.rescanInstalled, UNTRUSTED)).toThrow('Untrusted sender')
   })
 })

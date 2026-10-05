@@ -474,6 +474,9 @@ async function start(): Promise<void> {
     openStorePage: async (platformGameId) => {
       await openStorePage(storePageUrl(db, platformGameId), (url) => shell.openExternal(url))
     },
+    getInstalled: () => [],
+    playGame: () => Promise.resolve({ ok: false, reason: 'Launching is not available yet.' }),
+    rescanInstalled: () => Promise.resolve([]),
     getArtworkSettings: () => ({
       hasKey: artwork.hasKey(),
       missing: listLibraryGames(db).filter((game) => game.coverUrl === null).length,
