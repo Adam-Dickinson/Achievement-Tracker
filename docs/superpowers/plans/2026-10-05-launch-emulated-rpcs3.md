@@ -26,7 +26,7 @@
 - **shadPS4 launching is not built.** The owner's machine has no installed shadPS4 game (the install folders list is empty, only `.pkg` files exist), so rule 10 cannot be satisfied. `shadPS4.exe -g <game path or ID>` is verified from `--help`. It gets its own plan when a game is installed.
 - **Matching RPCS3 games to the library uses the game's own title.** Nothing local links the trophy set `NPWR00881_00` to the serial `BLUS30443`, so the adapter reads `TITLE` from `PARAM.SFO` and the existing title matching links it to the library entry ("Demon's Souls" equals "Demon's Souls").
 - **Program targets must be absolute `.exe` paths** (deferred review item from the base plan).
-- **RPCS3 cover art:** `coverUrl` is a `file://` URL of the local `ICON0.PNG`.
+- **RPCS3 cover art:** `coverUrl` is `trophy-art://rpcs3/<npCommId>`, served from the local `ICON0.PNG` by `src/main/trophy-art.ts` (as built; `file://` cannot load from the dev renderer and would expose local paths).
 
 ---
 

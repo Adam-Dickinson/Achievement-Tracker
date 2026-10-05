@@ -336,6 +336,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `playGame(platformGameId)` | `launch:play` | Starts the game through its platform's launcher (ADR-0017). The payload is a positive integer (zod), otherwise `{ ok: false }`. Main looks the target up in its own scan; the UI sends no URI or path. Answers a `PlayResult`: `{ ok: true }` or `{ ok: false, reason }` (`That game is not installed.`, `Could not open the launcher.`, ...). A failed start triggers a rescan |
 | `rescanInstalled()` | `launch:rescan` | Scans for installs now and answers the new `InstalledEntry[]`. No payload. No button calls it yet |
 | `onInstalledChanged(listener)` | `launch:installed-changed` (main → main window) | Called after each scan finishes, so open screens reload `getInstalled()`. Returns an unsubscribe function |
+| `getEmulatorPrograms()` | `launch:get-emulator-programs` | The emulator programs the launch module uses, as `EmulatorProgram[]`: `{ emulator, path, source }` (`source` is `'chosen'`, `'found'` beside the data folder, or `null` with a `null` path). RPCS3 only so far. No payload |
+| `chooseEmulatorProgram(emulator)` | `launch:choose-emulator-program` | Opens a file dialog in main for the program. `emulator` is validated (`'rpcs3'`). A choice that is a Windows absolute `.exe` path that exists is saved and triggers a rescan; a cancelled or invalid choice changes nothing. Answers the emulator's `EmulatorProgram` |
 
 **Events** (main → UI, via `webContents.send`): `sync:status` (per-account progress/state), `achievement:unlocked`, `account:status-changed`, `settings:changed`.
 

@@ -128,3 +128,12 @@ ADR-0017, SPEC (the IPC table), PROVIDERS.md (per adapter, with what was verifie
 - **A failed start triggers a rescan; Play does not re-check the target.** Section 6's "Play re-checks the target and reports 'That game is no longer installed'" is not built: `play` starts the target from its last scan and rescans if the start fails.
 - **The installed-changed push carries no payload.** The renderer refetches with `getInstalled()`.
 - `ToggleGroup` options gained an optional `disabled` for the Installed filter.
+
+## Deviations (as built, RPCS3)
+
+- **shadPS4 launching is not built.** No shadPS4 game is installed on the owner's machine, so rule 10 cannot be met; `shadPS4.exe -g <game path or ID>` is known from `--help` only.
+- **RPCS3 games match the library by their own title.** The adapter reads `TITLE` from `PS3_GAME/PARAM.SFO` in the game's ISO 9660 image, because nothing local links the trophy set to the serial. Titles are read 4 at a time with a 10 s limit each.
+- **Program targets must be Windows absolute `.exe` paths**, and `games.yml` entries must be Windows absolute paths.
+- **The Emulator program row is built for RPCS3 only** and sits under the first connected RPCS3 account card on Accounts, not in an `EmulatorCard` footer. It is not built for shadPS4 yet.
+- **RPCS3 cover art uses the `trophy-art://rpcs3/<npCommId>` protocol**, not `file://` URLs (the dev renderer at `http://localhost` cannot load them), so no local path reaches the UI or data exports.
+- **Not verified by hand:** starting a game with `rpcs3.exe --no-gui <path>` (owner to test).
