@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   app,
@@ -31,6 +31,10 @@ import { DATABASE_FILE, moveLegacyData } from './legacy-data'
 import { captureConsole, captureUncaught } from './logging/capture'
 import { Logger } from './logging/logger'
 import { readLogs } from './logging/read-logs'
+import { createSteamInstallAdapter } from './launch/steam'
+import { LaunchService } from './launch/service'
+import { spawnDetached } from './launch/spawn'
+import { startTarget } from './launch/start'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
@@ -42,6 +46,7 @@ import { LOCAL_FILES } from './providers/local-files'
 import { PlayStationProvider } from './providers/playstation'
 import { isPsnRedirect, PSN_SIGN_IN_URL, readNpsso } from './providers/playstation/auth'
 import { SteamProvider } from './providers/steam'
+import { STEAM_LOCAL } from './providers/steam/local'
 import { Rpcs3Provider } from './providers/rpcs3'
 import { ShadPs4Provider } from './providers/shadps4'
 import { readApiKey, readSteamSignIn } from './providers/steam/session'
@@ -63,6 +68,7 @@ import {
   getDashboardStats,
   getGameDetail,
   listActivity,
+  listKnownGames,
   listLibraryGames,
   storePageUrl,
 } from './store/library-store'
@@ -247,6 +253,27 @@ async function start(): Promise<void> {
   const dataChanged = coalesce(() => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(IPC.dataChanged)
   }, 1000)
+  const launcher = new LaunchService({
+    adapters: [
+      createSteamInstallAdapter({ readRegistry: STEAM_LOCAL.readRegistry, files: LOCAL_FILES }),
+    ],
+    known: () => listKnownGames(db),
+    start: (target) =>
+      startTarget(target, {
+        openExternal: (uri) => shell.openExternal(uri),
+        spawnProgram: spawnDetached,
+        fileExists: (path) =>
+          access(path).then(
+            () => true,
+            () => false,
+          ),
+      }),
+    onChanged: () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(IPC.installedChanged)
+      }
+    },
+  })
   const artwork = new ArtworkService({ db, secrets, onFound: () => dataChanged() })
   const findArtworkSoon = coalesce(() => void artwork.run(), ARTWORK_DELAY_MS)
   const scheduler = new Scheduler({
@@ -474,9 +501,12 @@ async function start(): Promise<void> {
     openStorePage: async (platformGameId) => {
       await openStorePage(storePageUrl(db, platformGameId), (url) => shell.openExternal(url))
     },
-    getInstalled: () => [],
-    playGame: () => Promise.resolve({ ok: false, reason: 'Launching is not available yet.' }),
-    rescanInstalled: () => Promise.resolve([]),
+    getInstalled: () => launcher.installed(),
+    playGame: (platformGameId) => launcher.play(platformGameId),
+    rescanInstalled: async () => {
+      await launcher.scan()
+      return launcher.installed()
+    },
     getArtworkSettings: () => ({
       hasKey: artwork.hasKey(),
       missing: listLibraryGames(db).filter((game) => game.coverUrl === null).length,
@@ -510,6 +540,14 @@ async function start(): Promise<void> {
     },
     startWithWindows: startToggle,
     updateLabel: () => trayUpdateLabel(updateService.state()),
+  })
+  setTimeout(() => void launcher.scan(), 10_000)
+  let lastFocusScan = 0
+  app.on('browser-window-focus', () => {
+    const now = Date.now()
+    if (now - lastFocusScan < 60_000) return
+    lastFocusScan = now
+    void launcher.scan()
   })
   console.info('Ready in the tray')
   updateService.start()
