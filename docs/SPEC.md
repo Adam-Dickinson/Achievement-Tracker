@@ -332,6 +332,10 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `dismissUpdate()` | `updates:dismiss` | Remembers the current newer version as dismissed (`updates.dismissedVersion`) so the banner and the system notification stay away until a newer one appears, and answers the new `UpdateState` |
 | `setAutoCheck(on)` | `updates:set-auto-check` | Turns the automatic check (about 10 seconds after launch, then every 6 hours) on or off (`on` must be a boolean; saved as `updates.autoCheck`) and answers the new `UpdateState` |
 | `onUpdateStateChanged(listener)` | `updates:state-changed` (main → main window) | Called with the new `UpdateState` on every change. Returns an unsubscribe function |
+| `getInstalled()` | `launch:get-installed` | The installed games that match the library, as `InstalledEntry[]`: `{ gameId, platformGameId, platform }`. Built from the last scan; empty until the first scan finishes. No payload |
+| `playGame(platformGameId)` | `launch:play` | Starts the game through its platform's launcher (ADR-0017). The payload is a positive integer (zod), otherwise `{ ok: false }`. Main looks the target up in its own scan; the UI sends no URI or path. Answers a `PlayResult`: `{ ok: true }` or `{ ok: false, reason }` (`That game is not installed.`, `Could not open the launcher.`, ...). A failed start triggers a rescan |
+| `rescanInstalled()` | `launch:rescan` | Scans for installs now and answers the new `InstalledEntry[]`. No payload. No button calls it yet |
+| `onInstalledChanged(listener)` | `launch:installed-changed` (main → main window) | Called after each scan finishes, so open screens reload `getInstalled()`. Returns an unsubscribe function |
 
 **Events** (main → UI, via `webContents.send`): `sync:status` (per-account progress/state), `achievement:unlocked`, `account:status-changed`, `settings:changed`.
 

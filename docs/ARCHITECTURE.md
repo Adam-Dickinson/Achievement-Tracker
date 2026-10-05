@@ -39,6 +39,7 @@ Closing the main window destroys it (freeing its renderer, ~90 MB). The tray ico
 | `src/main/store` | main | SQLite access, SQL migrations, migration runner. **The only place SQL lives.** |
 | `src/main/providers` | main | One folder per platform/emulator implementing `AchievementProvider` |
 | `src/main/sync` | main | Scheduler (`scheduler.ts`: rounds, and syncing a game at once when a provider's watch reports it), one sync pass with the baseline rule (`sync-pass.ts`), backoff |
+| `src/main/launch` | main | Finding installed games and starting them (ADR-0017): one `InstallAdapter` per source (Steam so far), matching to the library, a `LaunchService` that scans in memory, and the guarded starter. No SQL; the library comes in through a callback |
 | `src/main` (root files) | main | App lifecycle (`index.ts`), windows, tray, overlay service, IPC handlers |
 | `src/preload` | preload (sandboxed) | Builds `window.api` from the IPC contract |
 | `src/renderer` | renderer | The React UI: `app/` shell, `features/*` screens, `components/` shared UI, `overlay/` toast, `styles/` |

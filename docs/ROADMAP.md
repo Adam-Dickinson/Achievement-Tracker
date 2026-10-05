@@ -99,9 +99,12 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 
 Wanted by the owner: launch any installed game from the app. Each platform is its own adapter and must be checked against real installs first (rule 10); it needs its own design.
 
-- [ ] Detect what is installed and match it to the library by title: Steam `appmanifest` files, Epic manifests, Xbox packages, the Ubisoft and EA registry entries, and the emulators' game folders
-- [ ] Steam launch (`steam://rungameid/<appid>`, the easy first adapter), then Xbox, Epic, Ubisoft and EA through their launchers, then shadPS4 and RPCS3 (needs the emulator exe and the game folder)
-- [ ] A Play button on Game detail for entries with a known install; always through the platform's own launcher, never touching the game process (rule 4)
+- [ ] Detect what is installed and match it to the library by title: Steam `appmanifest` files, Epic manifests, Xbox packages, the Ubisoft and EA registry entries, and the emulators' game folders. Built: the matching, the scan scheduling and the Steam adapter ([ADR-0017](adr/0017-launching-installed-games.md)); the other sources are not
+- [x] Steam launch (`steam://rungameid/<appid>`, the easy first adapter): built; launch by hand pending the owner
+- [ ] Then Xbox, Epic, Ubisoft and EA through their launchers, then shadPS4 and RPCS3 (needs the emulator exe and the game folder)
+- [x] A Play button on Game detail for entries with a known install; always through the platform's own launcher, never touching the game process (rule 4). One button per install
+- [x] An Installed filter in the Library
+- [ ] A Rescan button (the `rescanInstalled` call exists)
 
 ## After v1: more emulators
 

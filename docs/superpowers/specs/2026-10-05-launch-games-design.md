@@ -1,6 +1,6 @@
 # Launching installed games
 
-Status: design approved in chat 5 October 2026. First item of the post-v1 milestone "launch installed games" ([ROADMAP](../../ROADMAP.md)). Needs an ADR (0017) when the base is built.
+Status: design approved in chat 5 October 2026. First item of the post-v1 milestone "launch installed games" ([ROADMAP](../../ROADMAP.md)). Recorded in [ADR-0017](../../adr/0017-launching-installed-games.md). The base and the Steam adapter are built; where the build differs from this design is listed under Deviations at the end.
 
 ## Goal
 
@@ -70,7 +70,7 @@ Each emulator has a saved setting `emulator.<id>.exe` (a path).
 
 | Call | Channel | Payload | Result |
 | --- | --- | --- | --- |
-| `getInstalled()` | `launch:get-installed` | none | `{ platformGameId: number, platform, launchable: boolean }[]` |
+| `getInstalled()` | `launch:get-installed` | none | `{ gameId, platformGameId, platform }[]` (`InstalledEntry`) |
 | `playGame(platformGameId)` | `launch:play` | positive integer | `{ ok: true }` or `{ ok: false, reason }` |
 | `rescanInstalled()` | `launch:rescan` | none | the new installed list |
 | `onInstalledChanged(listener)` | `launch:installed-changed` (push) | | the new list |
@@ -117,3 +117,12 @@ Each adapter phase records in PROVIDERS.md what was actually verified (rule 10).
 ## Docs
 
 ADR-0017, SPEC (the IPC table), PROVIDERS.md (per adapter, with what was verified), PROJECT-MAP, ARCHITECTURE, ROADMAP.
+
+## Deviations (as built, base and Steam)
+
+- **One button per install, not a menu.** Game detail shows a Play button for each install of the game ("Play" with one, "Play on <platform>" with several) instead of one button that opens a picker.
+- **`getInstalled()` entries are `{ gameId, platformGameId, platform }`.** There is no `launchable` field; an entry exists only when the game is installed and matched.
+- **Scan triggers:** 10 seconds after start, when the window gains focus (at most once a minute) and after a failed Play. There is no scan after an account connects, and no Rescan button yet; `rescanInstalled` exists for the emulator card work.
+- **The Steam adapter** dedupes the main library by a normalised path (the registry gives `c:/program files (x86)/steam` with forward slashes, `libraryfolders.vdf` uses backslashes), accepts only object entries in `libraryfolders.vdf` (the legacy string-entry format is dropped), and counts a manifest as installed when `StateFlags` has bit 4.
+- **`findInstalled()` takes no `AbortSignal`** and the Xbox `shell:AppsFolder` scheme is not in the URI allow-list yet (it arrives with the Xbox adapter).
+- `ToggleGroup` options gained an optional `disabled` for the Installed filter.

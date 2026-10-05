@@ -96,6 +96,12 @@ Captured against a real account (214 games) with the user's own key. Sanitized r
 - **Still to verify with a real unlock:** whether Steam rewrites the stats file at the moment of the unlock (the game has to store its stats, which games normally do right away so Steam's own popup shows). The app logs each unlock it finds as `Steam unlock found at <time>: <game>, "<name>", unlocked at <time> (N s earlier)` in the terminal running `npm run dev`; a delay of a few seconds confirms it (ROADMAP M2).
 - **Risks:** API rate limits (~100k calls/day, be conservative), and possibly private profiles if the own-key result above turns out to be caching.
 
+### Install detection and launch (ADR-0017)
+
+- **Install detection, verified 2026-10-02 on the owner's machine (read in place):** `HKCU\Software\Valve\Steam\SteamPath` gives the main library as `c:/program files (x86)/steam` (forward slashes). `steamapps/libraryfolders.vdf` lists 3 library folders, each as an object with a `path` using backslashes, so the app compares folders by a normalised path to avoid counting the main one twice. Each library's `steamapps` holds `appmanifest_<appid>.acf` files (`AppState` with `appid`, `name`, `StateFlags`); 13 in the first library. A game is fully installed when `StateFlags` has bit 4 set (`4` when installed, other values while updating or installing). The legacy `libraryfolders.vdf` form with plain string entries is not read.
+- **Built:** `main/launch/steam.ts` (`createSteamInstallAdapter`), with `main/launch/vdf.ts` reading the text key-values format. A manifest over 1 MB, malformed or missing a field is skipped with a logged warning.
+- **Launch URI:** `steam://rungameid/<appid>`, opened with `shell.openExternal`. Launch by hand: pending the owner (the date the owner starts one game from the app and what happened go here). Until then the URI is prior knowledge, not verified.
+
 ## RetroAchievements (after v1)
 
 - Official Web API at retroachievements.org (user gets an API key in their settings). Calls include recent achievements, user completion progress, game info and achievement lists. *(Verify current endpoint names.)*
