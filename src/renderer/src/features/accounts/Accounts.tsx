@@ -61,6 +61,9 @@ function AccountsBody({
   const [reconnectingShadPs4, setReconnectingShadPs4] = useState<string | null>(null)
   const [reconnectingRpcs3, setReconnectingRpcs3] = useState<string | null>(null)
   const counts = countAccounts(accounts)
+  const programRowAccountId = accounts.find(
+    (account) => account.platform === 'rpcs3' && account.status === 'connected',
+  )?.id
 
   const slot = (platform: OnlinePlatform) => {
     const own = accounts.filter((account) => account.platform === platform)
@@ -157,14 +160,14 @@ function AccountsBody({
           />
           {accounts
             .filter((account) => account.platform === 'rpcs3')
-            .map((account, index) => (
+            .map((account) => (
               <div key={account.id} className="flex flex-col gap-3">
                 <AccountCard
                   account={account}
                   onChanged={onChanged}
                   onReconnect={() => setReconnectingRpcs3(account.displayName)}
                 />
-                {index === 0 && <EmulatorProgramRow />}
+                {account.id === programRowAccountId && <EmulatorProgramRow />}
               </div>
             ))}
           <Rpcs3Card

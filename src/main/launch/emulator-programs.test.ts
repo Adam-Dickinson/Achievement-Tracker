@@ -83,19 +83,36 @@ describe('EmulatorPrograms', () => {
   it.each(['relative.exe', 'E:\\Tools\\notes.txt', 'E:\\Tools\\rpcs3.bat'])(
     'refuses to save %s',
     async (path) => {
-      const { svc, saved } = service({ chooseFile: () => Promise.resolve(path) }, [BESIDE, path])
+      const { svc, saved, onChanged } = service({ chooseFile: () => Promise.resolve(path) }, [
+        BESIDE,
+        path,
+      ])
 
       await svc.choose('rpcs3')
 
       expect(saved.size).toBe(0)
+      expect(onChanged).not.toHaveBeenCalled()
     },
   )
 
   it('refuses to save an exe that does not exist', async () => {
-    const { svc, saved } = service({}, [BESIDE])
+    const { svc, saved, onChanged } = service({}, [BESIDE])
 
     await svc.choose('rpcs3')
 
     expect(saved.size).toBe(0)
+    expect(onChanged).not.toHaveBeenCalled()
   })
+
+  it.each(['E:\\Tools\\notes.txt', 'relative.exe'])(
+    'ignores a saved value that is not a program path (%s)',
+    async (saved) => {
+      const { svc } = service({ read: () => saved }, [BESIDE, saved])
+
+      await expect(svc.resolve('rpcs3', DIR)).resolves.toBe(BESIDE)
+      await expect(svc.list()).resolves.toEqual([
+        { emulator: 'rpcs3', path: BESIDE, source: 'found' },
+      ])
+    },
+  )
 })

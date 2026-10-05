@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { EmulatorProgram } from '@shared/launch'
 import { fakeApi } from '@/test/fake-api'
@@ -55,7 +55,7 @@ describe('EmulatorProgramRow', () => {
     })
     render(<EmulatorProgramRow />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Choose…' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Choose the RPCS3 program' }))
 
     expect(await screen.findByText(CHOSEN.path as string)).toBeInTheDocument()
     expect(choose).toHaveBeenCalledWith('rpcs3')
@@ -68,7 +68,7 @@ describe('EmulatorProgramRow', () => {
     })
     render(<EmulatorProgramRow />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Choose…' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Choose the RPCS3 program' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Try again.')
   })
@@ -86,12 +86,12 @@ describe('EmulatorProgramRow', () => {
     })
     render(<EmulatorProgramRow />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Choose…' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Choose the RPCS3 program' }))
 
-    expect(screen.getByRole('button', { name: 'Choose…' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Choose the RPCS3 program' })).toBeDisabled()
     finish(CHOSEN)
     expect(await screen.findByText(CHOSEN.path as string)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Choose…' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Choose the RPCS3 program' })).toBeEnabled()
   })
 
   it('shows an error when the program cannot be read', async () => {
@@ -103,5 +103,27 @@ describe('EmulatorProgramRow', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Could not read the emulator program.',
     )
+  })
+
+  it('reads the program again when the installed games change', async () => {
+    let changed: () => void = () => {}
+    const unsubscribe = vi.fn()
+    const read = vi.fn().mockResolvedValueOnce([NONE]).mockResolvedValue([FOUND])
+    window.api = fakeApi({
+      getEmulatorPrograms: read,
+      onInstalledChanged: (listener) => {
+        changed = listener
+        return unsubscribe
+      },
+    })
+    const { unmount } = render(<EmulatorProgramRow />)
+    expect(await screen.findByText('Not found')).toBeInTheDocument()
+
+    act(() => changed())
+
+    expect(await screen.findByText(FOUND.path as string)).toBeInTheDocument()
+    expect(read).toHaveBeenCalledTimes(2)
+    unmount()
+    expect(unsubscribe).toHaveBeenCalledOnce()
   })
 })

@@ -76,13 +76,66 @@ describe('LaunchService', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('boom'))
   })
 
-  it('shares one scan between callers that overlap', async () => {
+  it('runs one more scan when one is requested during a scan', async () => {
+    let release: () => void = () => {}
+    const steam: InstallAdapter = {
+      platform: 'steam',
+      findInstalled: vi
+        .fn()
+        .mockImplementationOnce(
+          () =>
+            new Promise<InstalledGame[]>((resolve) => {
+              release = () => resolve([])
+            }),
+        )
+        .mockResolvedValue([STEAM_INSTALL]),
+    }
+    const { svc } = service({ adapters: [steam] })
+
+    const first = svc.scan()
+    const second = svc.scan()
+    release()
+    await Promise.all([first, second])
+
+    expect(steam.findInstalled).toHaveBeenCalledTimes(2)
+    expect(svc.installed()).toHaveLength(1)
+  })
+
+  it('coalesces many requests during a scan into one follow-up', async () => {
+    const steam = adapter('steam', [STEAM_INSTALL])
+    const { svc, onChanged } = service({ adapters: [steam] })
+
+    await Promise.all([svc.scan(), svc.scan(), svc.scan(), svc.scan()])
+
+    expect(steam.findInstalled).toHaveBeenCalledTimes(2)
+    expect(onChanged).toHaveBeenCalledTimes(2)
+  })
+
+  it('starts a fresh scan when requested after the previous one finished', async () => {
     const steam = adapter('steam', [STEAM_INSTALL])
     const { svc } = service({ adapters: [steam] })
 
-    await Promise.all([svc.scan(), svc.scan()])
+    await svc.scan()
+    await svc.scan()
 
-    expect(steam.findInstalled).toHaveBeenCalledOnce()
+    expect(steam.findInstalled).toHaveBeenCalledTimes(2)
+  })
+
+  it('still resolves when the follow-up scan has a failing adapter or announcer', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const broken: InstallAdapter = {
+      platform: 'epic',
+      findInstalled: vi.fn().mockRejectedValue(new Error('boom')),
+    }
+    const onChanged = vi.fn(() => {
+      throw new Error('destroyed')
+    })
+    const { svc } = service({ adapters: [broken], onChanged })
+
+    await expect(Promise.all([svc.scan(), svc.scan()])).resolves.toEqual([undefined, undefined])
+
+    expect(broken.findInstalled).toHaveBeenCalledTimes(2)
+    expect(warn).toHaveBeenCalled()
   })
 
   it('starts the target of an installed game', async () => {

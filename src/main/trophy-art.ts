@@ -31,15 +31,24 @@ export async function resolveTrophyArt(
     const npCommId = parseNpCommId(url)
     if (npCommId === null) return NOT_FOUND
     for (const folder of deps.rpcs3Folders()) {
-      const bytes = await deps.readFile(
-        join(trophyDir(folder), npCommId, 'ICON0.PNG'),
-        MAX_ICON_BYTES,
-      )
+      const bytes = await readIcon(folder, npCommId, deps)
       if (bytes && isPng(bytes)) return { status: 200, contentType: 'image/png', body: bytes }
     }
     return NOT_FOUND
   } catch {
     return NOT_FOUND
+  }
+}
+
+async function readIcon(
+  folder: TrophyArtFolder,
+  npCommId: string,
+  deps: TrophyArtDeps,
+): Promise<Uint8Array | null> {
+  try {
+    return await deps.readFile(join(trophyDir(folder), npCommId, 'ICON0.PNG'), MAX_ICON_BYTES)
+  } catch {
+    return null
   }
 }
 

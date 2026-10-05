@@ -16,6 +16,7 @@ export class LaunchService {
   readonly #onChanged: () => void
   #index: InstallIndex = buildInstallIndex([])
   #scanning: Promise<void> | null = null
+  #again = false
 
   constructor(deps: LaunchServiceDeps) {
     this.#adapters = deps.adapters
@@ -25,7 +26,11 @@ export class LaunchService {
   }
 
   scan(): Promise<void> {
-    this.#scanning ??= this.#run().finally(() => {
+    if (this.#scanning) {
+      this.#again = true
+      return this.#scanning
+    }
+    this.#scanning = this.#runUntilSettled().finally(() => {
       this.#scanning = null
     })
     return this.#scanning
@@ -48,6 +53,13 @@ export class LaunchService {
     const result = await this.#start(match.target)
     if (!result.ok) void this.scan()
     return result
+  }
+
+  async #runUntilSettled(): Promise<void> {
+    do {
+      this.#again = false
+      await this.#run()
+    } while (this.#again)
   }
 
   async #run(): Promise<void> {
