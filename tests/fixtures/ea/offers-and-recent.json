@@ -67,22 +67,27 @@
         "items": [
           {
             "gameSlug": "star-wars-jedi-fallen-order",
+            "totalPlayTimeSeconds": 12600,
             "lastSessionEndDate": "2025-04-22T18:44:17.000Z"
           },
           {
             "gameSlug": "unravel-two",
+            "totalPlayTimeSeconds": 0,
             "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
           },
           {
             "gameSlug": "apex-legends",
+            "totalPlayTimeSeconds": 0,
             "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
           },
           {
             "gameSlug": "the-sims-4",
+            "totalPlayTimeSeconds": 0,
             "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
           },
           {
             "gameSlug": "it-takes-two",
+            "totalPlayTimeSeconds": 0,
             "lastSessionEndDate": "1970-01-01T00:00:00.000Z"
           }
         ]

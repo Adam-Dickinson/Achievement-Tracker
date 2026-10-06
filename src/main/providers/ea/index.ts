@@ -27,7 +27,7 @@ const IDENTITY_QUERY = 'query{me{player{pd psd displayName}}}'
 const OWNED_QUERY = `query{me{ownedGameProducts(storefronts:[EA,STEAM,EPIC] locale:"DEFAULT" paging:{limit:9999} productFound:true ownershipMethod:[${OWNERSHIP}] type:[DIGITAL_FULL_GAME,PACKAGED_FULL_GAME] downloadableOnly:false platforms:[PC]){items{originOfferId product{name gameSlug baseItem{gameType title keyArt{largestImage{path}}}}}}}}`
 
 function offersQuery(offerIds: readonly string[], slugs: readonly string[]): string {
-  return `query{legacyOffers(offerIds:${JSON.stringify(offerIds)},locale:"DEFAULT"){offerId:id achievementSetOverride} me{recentGames(gameSlugs:${JSON.stringify(slugs)}){items{gameSlug lastSessionEndDate}}}}`
+  return `query{legacyOffers(offerIds:${JSON.stringify(offerIds)},locale:"DEFAULT"){offerId:id achievementSetOverride} me{recentGames(gameSlugs:${JSON.stringify(slugs)}){items{gameSlug totalPlayTimeSeconds lastSessionEndDate}}}}`
 }
 
 interface EaSession extends EaIdentity {
