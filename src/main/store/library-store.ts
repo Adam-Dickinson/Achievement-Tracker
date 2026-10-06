@@ -36,6 +36,7 @@ interface EntryRecord {
   store_url: string | null
   portrait_url: string | null
   hero_url: string | null
+  playtime_seconds: number | null
   total: number
   unlocked: number
   last_unlock: string | null
@@ -87,7 +88,7 @@ const UNLOCKS = `
 
 const ENTRIES = `
   SELECT pg.id, pg.game_id, pg.title, pg.platform, pg.cover_url, pg.store_url,
-         pg.portrait_url, pg.hero_url,
+         pg.portrait_url, pg.hero_url, pg.playtime_seconds,
          COUNT(a.id) AS total, COUNT(u.id) AS unlocked, MAX(u.unlocked_at) AS last_unlock
   FROM platform_game pg
   LEFT JOIN achievement a ON a.platform_game_id = pg.id
@@ -433,6 +434,20 @@ function toLibraryGame(
     unlocked: best.unlocked,
     total: best.total,
     lastUnlockAt: toDate(lastUnlock),
+    ...totalPlaytime(all),
+  }
+}
+
+function totalPlaytime(entries: readonly EntryRecord[]): {
+  playtimeSeconds: number | null
+  playtimePartial: boolean
+} {
+  const reported = entries.flatMap((entry) =>
+    entry.playtime_seconds === null ? [] : [entry.playtime_seconds],
+  )
+  return {
+    playtimeSeconds: reported.length === 0 ? null : reported.reduce((a, b) => a + b, 0),
+    playtimePartial: reported.length > 0 && reported.length < entries.length,
   }
 }
 
@@ -464,6 +479,7 @@ function toGameEntry(
     achievements: listAchievements(db, entry.id, entry.title),
     appPlatinum: appPlatinum && { earnedAt: appPlatinum.earnedAt },
     hasStorePage: entry.store_url !== null,
+    playtimeSeconds: entry.playtime_seconds,
   }
 }
 

@@ -164,6 +164,8 @@ describe('listLibraryGames', () => {
         unlocked: 2,
         total: 3,
         lastUnlockAt: new Date('2026-09-05T10:00:00Z'),
+        playtimeSeconds: null,
+        playtimePartial: false,
       },
     ])
   })
@@ -212,8 +214,90 @@ describe('listLibraryGames', () => {
         unlocked: 2,
         total: 2,
         lastUnlockAt: new Date('2026-09-10T00:00:00Z'),
+        playtimeSeconds: null,
+        playtimePartial: false,
       },
     ])
+  })
+
+  describe('playtime', () => {
+    function setPlaytime(platformGameId: number, seconds: number | null): void {
+      db.prepare('UPDATE platform_game SET playtime_seconds = ? WHERE id = ?').run(
+        seconds,
+        platformGameId,
+      )
+    }
+
+    it('gives a game with one entry that entry’s playtime, complete', () => {
+      const { gameId, platformGameId } = seedGame('400', 'Portal', 1)
+      setPlaytime(platformGameId, 8040)
+
+      expect(listLibraryGames(db)).toMatchObject([
+        { id: gameId, playtimeSeconds: 8040, playtimePartial: false },
+      ])
+    })
+
+    it('has no playtime when no entry reports any, and zero is a report', () => {
+      seedGame('1', 'Quiet', 1)
+      const played = seedGame('2', 'Never played', 1)
+      setPlaytime(played.platformGameId, 0)
+
+      const games = listLibraryGames(db)
+
+      expect(games.find((game) => game.title === 'Quiet')).toMatchObject({
+        playtimeSeconds: null,
+        playtimePartial: false,
+      })
+      expect(games.find((game) => game.title === 'Never played')).toMatchObject({
+        playtimeSeconds: 0,
+        playtimePartial: false,
+      })
+    })
+
+    it('adds up the entries of a linked game', () => {
+      const steam = seedGame('1', 'Apex Legends', 4)
+      const ea = seedGame('set-1', 'Apex Legends', 2, [], 'ea')
+      setPlaytime(steam.platformGameId, 3600)
+      setPlaytime(ea.platformGameId, 1800)
+
+      expect(listLibraryGames(db)).toMatchObject([
+        { playtimeSeconds: 5400, playtimePartial: false },
+      ])
+    })
+
+    it('marks the total partial when a linked entry reports nothing', () => {
+      const steam = seedGame('1', 'Apex Legends', 4)
+      seedGame('trophy/NPWR1', 'Apex Legends', 2, [], 'playstation')
+      setPlaytime(steam.platformGameId, 3600)
+
+      expect(listLibraryGames(db)).toMatchObject([{ playtimeSeconds: 3600, playtimePartial: true }])
+    })
+
+    it('has no playtime for a linked game when none of its entries report any', () => {
+      seedGame('1', 'Apex Legends', 4)
+      seedGame('set-1', 'Apex Legends', 2, [], 'ea')
+
+      expect(listLibraryGames(db)).toMatchObject([
+        { playtimeSeconds: null, playtimePartial: false },
+      ])
+    })
+
+    it('gives Game detail the total and each entry’s own playtime', () => {
+      const steam = seedGame('1', 'Apex Legends', 4)
+      const ea = seedGame('set-1', 'Apex Legends', 2, [], 'ea')
+      seedGame('trophy/NPWR1', 'Apex Legends', 2, [], 'playstation')
+      setPlaytime(steam.platformGameId, 3600)
+      setPlaytime(ea.platformGameId, 1800)
+
+      const detail = getGameDetail(db, steam.gameId)
+
+      expect(detail?.game).toMatchObject({ playtimeSeconds: 5400, playtimePartial: true })
+      expect(
+        Object.fromEntries(
+          (detail?.entries ?? []).map((entry) => [entry.platform, entry.playtimeSeconds]),
+        ),
+      ).toEqual({ steam: 3600, ea: 1800, playstation: null })
+    })
   })
 
   it('breaks a tie on share by the most unlocked, and puts entries with no achievements last', () => {

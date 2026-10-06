@@ -161,7 +161,7 @@ export function parseLibrary(
     const known = games.get(setId)
     const playtimeSeconds = largest(
       known?.playtimeSeconds ?? null,
-      (game.slug && playtimeBySlug.get(game.slug)) ?? null,
+      game.slug ? (playtimeBySlug.get(game.slug) ?? null) : null,
     )
     if (known && !isLater(lastPlayed, known.lastPlayed)) {
       games.set(setId, { ...known, playtimeSeconds })

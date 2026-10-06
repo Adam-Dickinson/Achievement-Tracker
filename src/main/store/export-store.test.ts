@@ -27,6 +27,7 @@ function game(externalId: string, title: string): RemoteGame {
     coverUrl: 'https://cover/portal.jpg',
     lastPlayed: new Date('2026-09-30T10:00:00.000Z'),
     recentlyPlayed: true,
+    playtimeSeconds: 3600,
   }
 }
 
@@ -106,6 +107,7 @@ describe('buildDataExport', () => {
       platform: 'steam',
       title: 'Portal',
       lastPlayed: '2026-09-30T10:00:00.000Z',
+      playtimeSeconds: 3600,
       linked: 'auto',
       platinum: null,
     })

@@ -130,7 +130,13 @@ describe('toFamilyGame', () => {
 
   it("builds a library game with Steam's icon, leaving the cover to the provider", () => {
     const game = toFamilyGame(
-      { appid: '220', name: 'Half-Life 2', iconHash: 'abc', lastPlayed: null, playtimeSeconds: 7200 },
+      {
+        appid: '220',
+        name: 'Half-Life 2',
+        iconHash: 'abc',
+        lastPlayed: null,
+        playtimeSeconds: 7200,
+      },
       now,
     )
 
