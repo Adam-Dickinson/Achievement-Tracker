@@ -15,7 +15,7 @@ In this pass:
 
 Out of this pass:
 
-- Xbox, PlayStation, EA, shadPS4 and RPCS3 return no playtime until a source is verified (rule 10). They are a separate pass.
+- Ubisoft, Xbox, PlayStation, shadPS4 and RPCS3 return no playtime until a source is verified (rule 10). They are a separate pass.
 - Tracking play sessions ourselves through the launch module (ADR-0017). Possible later, and it needs its own design because of rule 4.
 - A Dashboard stat or "most played" list.
 - Playtime history (per-day deltas, graphs).
@@ -27,7 +27,7 @@ Out of this pass:
 | --- | --- |
 | Source | Platform-reported only |
 | Where shown | Library and Game detail, not the Dashboard |
-| Providers | Steam, Epic, Ubisoft now; the rest in a later pass |
+| Providers | Steam, Epic and EA now; the rest in a later pass |
 | Linked games | Sum across linked entries, with a partial marker when some linked entry has no data |
 
 ## Data path
