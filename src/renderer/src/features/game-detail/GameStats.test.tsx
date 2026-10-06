@@ -41,6 +41,17 @@ function entry(achievements: GameAchievement[]): GameEntry {
 const tile = (label: string) => screen.getByText(label, { selector: 'span' }).parentElement
 
 describe('GameStats', () => {
+  it('shows the entry’s own playtime with its platform, and no tile when none is reported', () => {
+    const { rerender } = render(
+      <GameStats entry={{ ...entry([achievement(1)]), playtimeSeconds: 5 * 3600 }} />,
+    )
+    expect(tile('Played')).toHaveTextContent('5h')
+    expect(tile('Played')).toHaveTextContent('Steam')
+
+    rerender(<GameStats entry={entry([achievement(1)])} />)
+    expect(screen.queryByText('Played')).not.toBeInTheDocument()
+  })
+
   it('shows the counts, completion, rarest held and the last unlock with its time and platform', () => {
     const today = new Date()
     today.setHours(13, 42, 0, 0)

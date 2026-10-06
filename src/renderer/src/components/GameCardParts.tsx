@@ -2,6 +2,7 @@ import { Crown } from 'lucide-react'
 import type { LibraryGame } from '@shared/library'
 import type { GameProgress } from './game-progress'
 import { PlatformBadge } from './PlatformBadge'
+import { PlaytimeLabel } from './PlaytimeLabel'
 
 export function cardShell(progress: GameProgress): string {
   return `flex w-full flex-col rounded-panel border bg-surface-1 bg-linear-to-b from-white/5 to-white/1 p-2 text-left shadow-float transition duration-200 hover:-translate-y-2.5 hover:scale-[1.02] hover:border-primary/55 hover:ring-4 hover:ring-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 ${
@@ -51,6 +52,11 @@ export function GameCardFooter({ game, progress }: { game: LibraryGame; progress
           </span>
         )}
       </span>
+      <PlaytimeLabel
+        seconds={game.playtimeSeconds}
+        partial={game.playtimePartial}
+        className="text-xs text-fg-muted"
+      />
     </div>
   )
 }

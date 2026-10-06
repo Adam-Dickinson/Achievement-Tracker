@@ -21,6 +21,20 @@ function game(overrides: Partial<LibraryGame> = {}): LibraryGame {
 }
 
 describe('GameBanner', () => {
+  it('shows the total playtime, and says when it may be incomplete', () => {
+    render(
+      <GameBanner
+        game={game({ playtimeSeconds: 42 * 3600, playtimePartial: true })}
+        back={null}
+        actions={null}
+      />,
+    )
+
+    const banner = screen.getByRole('region', { name: 'Elden Ring' })
+    expect(banner).toHaveTextContent('42h+')
+    expect(within(banner).getByText('42 hours played, may be incomplete')).toBeInTheDocument()
+  })
+
   it('titles the page with the game, its platforms and the given controls', () => {
     const { container } = render(
       <GameBanner

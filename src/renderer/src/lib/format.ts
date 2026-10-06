@@ -66,6 +66,20 @@ function startOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
 }
 
+const HOUR_SECONDS = 3600
+
+export function formatPlaytime(seconds: number, partial = false): string {
+  const hours = Math.floor(seconds / HOUR_SECONDS)
+  const text = hours >= 1 ? `${hours.toLocaleString()}h` : `${Math.floor(seconds / 60)}m`
+  return partial ? `${text}+` : text
+}
+
+export function describePlaytime(seconds: number, partial = false): string {
+  const hours = Math.floor(seconds / HOUR_SECONDS)
+  const amount = hours >= 1 ? plural(hours, 'hour') : plural(Math.floor(seconds / 60), 'minute')
+  return `${amount} played${partial ? ', may be incomplete' : ''}`
+}
+
 export function plural(count: number, one: string, many = `${one}s`): string {
   return `${count.toLocaleString()} ${count === 1 ? one : many}`
 }

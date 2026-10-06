@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  describePlaytime,
+  formatPlaytime,
   formatUnlockDay,
   formatAgo,
   formatDayHeading,
@@ -10,6 +12,38 @@ import {
   formatUnlockDate,
   plural,
 } from './format'
+
+describe('formatPlaytime', () => {
+  it('shows minutes below an hour and whole hours from then on', () => {
+    expect(formatPlaytime(0)).toBe('0m')
+    expect(formatPlaytime(35 * 60)).toBe('35m')
+    expect(formatPlaytime(3599)).toBe('59m')
+    expect(formatPlaytime(3600)).toBe('1h')
+    expect(formatPlaytime(42 * 3600 + 1800)).toBe('42h')
+  })
+
+  it('groups the digits of a large number of hours in the user’s locale', () => {
+    expect(formatPlaytime(1203 * 3600)).toBe(`${(1203).toLocaleString()}h`)
+  })
+
+  it('adds a plus when the total may be incomplete', () => {
+    expect(formatPlaytime(42 * 3600, true)).toBe('42h+')
+    expect(formatPlaytime(35 * 60, true)).toBe('35m+')
+  })
+})
+
+describe('describePlaytime', () => {
+  it('spells out hours or minutes, singular and plural', () => {
+    expect(describePlaytime(3600)).toBe('1 hour played')
+    expect(describePlaytime(42 * 3600)).toBe('42 hours played')
+    expect(describePlaytime(60)).toBe('1 minute played')
+    expect(describePlaytime(35 * 60)).toBe('35 minutes played')
+  })
+
+  it('says when the total may be incomplete', () => {
+    expect(describePlaytime(42 * 3600, true)).toBe('42 hours played, may be incomplete')
+  })
+})
 
 describe('formatPercent', () => {
   it('shows one decimal place, dropping a trailing zero', () => {
