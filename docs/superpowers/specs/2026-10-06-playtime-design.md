@@ -8,7 +8,7 @@ Show how long the user has played each game, using the figures the platforms alr
 
 In this pass:
 
-- Steam, Epic and Ubisoft report playtime.
+- Steam, Epic and EA report playtime.
 - Library: a "Most played" sort and a compact playtime label on each row and card.
 - Game detail: a total "Played" stat plus a per-platform line for each entry that reports playtime.
 - Data export includes playtime per entry.
@@ -38,15 +38,16 @@ Out of this pass:
 - Providers stay pure adapters (rule 1):
   - Steam: the playtime field in replies already parsed, added to the zod schema (ADR-0004). The family-library path uses `rt_playtime` from `GetSharedLibraryApps`.
   - Epic: the playtime map the provider already fetches, mapped through each game's records. Several records can belong to one game, so their values are summed.
-  - Ubisoft: `totalPlayTimeSeconds` from the recent-games query.
-  - Xbox, PlayStation, EA, shadPS4, RPCS3: `null`.
+  - EA: `totalPlayTimeSeconds` from the `recentGames` query the provider already sends.
+  - Ubisoft: `null`. Its games query has no playtime field and none is documented.
+  - Xbox, PlayStation, shadPS4, RPCS3: `null`.
 
 ### Verify before coding
 
 Per rule 10, capture a real reply for each source before writing its parser, and record what was found in PROVIDERS.md:
 
 - Steam owned games (`GetOwnedGames` playtime) and family library (`rt_playtime`).
-- Epic playtime and Ubisoft `totalPlayTimeSeconds` are already documented in PROVIDERS.md; confirm they still match.
+- Epic playtime and EA `totalPlayTimeSeconds` are already documented in PROVIDERS.md; confirm they still match.
 
 If a documented field is missing or differently shaped, report it and drop that source for this pass rather than guessing.
 
@@ -65,7 +66,7 @@ If a documented field is missing or differently shaped, report it and drop that 
 
 ## Testing
 
-- Provider parse tests with sanitized fixtures for Steam, Epic and Ubisoft (rule 7).
+- Provider parse tests with sanitized fixtures for Steam, Epic and EA (rule 7).
 - Migration upgrade test.
 - Sync-store tests: playtime is stored, updates, and a `null` does not wipe a stored value.
 - Library-store tests: sum, all-null, partial.
