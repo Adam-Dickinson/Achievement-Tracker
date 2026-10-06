@@ -590,6 +590,40 @@ describe('addPlatformGames', () => {
     expect(storeUrl()).toEqual({ store_url: 'steam://nav/games/details/401' })
   })
 
+  it('stores playtime, updates it, and keeps the old value when a later sync has none', () => {
+    const { db, account } = setup()
+    const playtime = () =>
+      db.prepare('SELECT playtime_seconds FROM platform_game WHERE external_id = ?').get('400')
+
+    addPlatformGames(db, account, [remoteGame('400', { playtimeSeconds: 3600 })])
+    expect(playtime()).toEqual({ playtime_seconds: 3600 })
+
+    addPlatformGames(db, account, [remoteGame('400', { playtimeSeconds: null })])
+    expect(playtime()).toEqual({ playtime_seconds: 3600 })
+
+    addPlatformGames(db, account, [remoteGame('400')])
+    expect(playtime()).toEqual({ playtime_seconds: 3600 })
+
+    addPlatformGames(db, account, [remoteGame('400', { playtimeSeconds: 7200 })])
+    expect(playtime()).toEqual({ playtime_seconds: 7200 })
+  })
+
+  it('stores zero playtime as zero and an unreported one as null', () => {
+    const { db, account } = setup()
+
+    addPlatformGames(db, account, [
+      remoteGame('played-none', { playtimeSeconds: 0 }),
+      remoteGame('unreported'),
+    ])
+
+    expect(
+      db.prepare('SELECT external_id, playtime_seconds FROM platform_game ORDER BY id').all(),
+    ).toEqual([
+      { external_id: 'played-none', playtime_seconds: 0 },
+      { external_id: 'unreported', playtime_seconds: null },
+    ])
+  })
+
   it('stores the baseline cutoff on new games only, leaving it null by default', () => {
     const { db, account } = setup()
     const cutoff = new Date('2026-09-23T10:00:00Z')
