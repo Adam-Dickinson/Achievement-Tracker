@@ -21,6 +21,17 @@ function game(overrides: Partial<LibraryGame> = {}): LibraryGame {
 }
 
 describe('GameCard', () => {
+  it('shows the playtime, and nothing when the platforms report none', () => {
+    const { rerender } = render(
+      <GameCard game={game({ playtimeSeconds: 42 * 3600 })} onOpen={vi.fn()} />,
+    )
+    expect(screen.getByRole('button')).toHaveTextContent('42h')
+    expect(screen.getByText('42 hours played')).toBeInTheDocument()
+
+    rerender(<GameCard game={game()} onOpen={vi.fn()} />)
+    expect(screen.queryByText(/hours? played/)).not.toBeInTheDocument()
+  })
+
   it('shows the title, platform, completion and what is left', () => {
     render(<GameCard game={game()} onOpen={vi.fn()} />)
 

@@ -35,6 +35,34 @@ describe('platformsIn', () => {
   })
 })
 
+describe('applyView sorted by playtime', () => {
+  function played(id: number, title: string, playtimeSeconds: number | null): LibraryGame {
+    return { ...game(id, title, ['steam']), playtimeSeconds }
+  }
+
+  it('puts the most played first, games without playtime last, and ties by name', () => {
+    const games = [
+      played(1, 'Unknown', null),
+      played(2, 'Zelda', 3600),
+      played(3, 'Celeste', 7200),
+      played(4, 'Abzu', 3600),
+      played(5, 'Never played', 0),
+      game(6, 'Absent', ['steam']),
+    ]
+
+    const sorted = applyView(games, { ...DEFAULT_VIEW, sort: 'playtime' })
+
+    expect(sorted.map((g) => g.title)).toEqual([
+      'Celeste',
+      'Abzu',
+      'Zelda',
+      'Never played',
+      'Absent',
+      'Unknown',
+    ])
+  })
+})
+
 describe('applyView', () => {
   it('leaves the list it was given unchanged', () => {
     const games = [game(1, 'Portal', ['steam']), game(2, 'Celeste', ['steam'])]

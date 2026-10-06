@@ -10,6 +10,8 @@ export interface LibraryGame {
   readonly unlocked: number
   readonly total: number
   readonly lastUnlockAt: Date | null
+  readonly playtimeSeconds?: number | null
+  readonly playtimePartial?: boolean
 }
 
 export interface GameAchievement {
@@ -39,6 +41,7 @@ export interface GameEntry {
   readonly achievements: readonly GameAchievement[]
   readonly appPlatinum: AppPlatinum | null
   readonly hasStorePage: boolean
+  readonly playtimeSeconds?: number | null
 }
 
 export interface GameDetail {

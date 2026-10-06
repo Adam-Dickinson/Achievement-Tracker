@@ -38,6 +38,7 @@ export interface ExportedEntry {
   readonly heroUrl: string | null
   readonly storeUrl: string | null
   readonly lastPlayed: string | null
+  readonly playtimeSeconds: number | null
   readonly linked: string
   readonly platinum: ExportedPlatinum | null
   readonly achievements: readonly ExportedAchievement[]

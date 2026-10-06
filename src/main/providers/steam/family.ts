@@ -19,6 +19,7 @@ export interface FamilyApp {
   readonly name: string
   readonly iconHash: string | null
   readonly lastPlayed: Date | null
+  readonly playtimeSeconds: number | null
 }
 
 const groupSchema = z.object({
@@ -38,6 +39,7 @@ const sharedSchema = z.object({
           img_icon_hash: z.string().optional(),
           exclude_reason: z.number().int().optional(),
           rt_last_played: z.number().int().min(0).optional(),
+          rt_playtime: z.number().int().min(0).optional(),
           owner_steamids: z.array(z.string()),
         }),
       )
@@ -98,6 +100,7 @@ export async function fetchFamilyApps(
       name: app.name.trim() || String(app.appid),
       iconHash: app.img_icon_hash?.trim() || null,
       lastPlayed: app.rt_last_played ? new Date(app.rt_last_played * 1000) : null,
+      playtimeSeconds: app.rt_playtime === undefined ? null : app.rt_playtime * 60,
     }))
 }
 
@@ -137,6 +140,7 @@ export function toFamilyGame(app: FamilyApp, now: Date): RemoteGame {
     lastPlayed: app.lastPlayed,
     recentlyPlayed:
       app.lastPlayed !== null && now.getTime() - app.lastPlayed.getTime() <= RECENT_MS,
+    playtimeSeconds: app.playtimeSeconds,
     storeUrl: steamStoreUrl(app.appid),
   }
 }

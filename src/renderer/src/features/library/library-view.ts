@@ -2,7 +2,7 @@ import { matchesSearch, searchWords } from '@/lib/search'
 import type { LibraryGame } from '@shared/library'
 import { PLATFORMS, type Platform } from '@shared/platform'
 
-export type SortId = 'recent' | 'completion' | 'title' | 'platform'
+export type SortId = 'recent' | 'completion' | 'playtime' | 'title' | 'platform'
 export type StatusId = 'all' | 'in_progress' | 'not_started' | 'completed'
 export type PlatformFilter = Platform | 'all'
 export type LayoutId = 'landscape' | 'portrait' | 'list'
@@ -31,6 +31,10 @@ export const SORTS: Record<
 > = {
   recent: { label: 'Last unlock', compare: () => 0 },
   completion: { label: 'Completion', compare: (a, b) => ratio(b) - ratio(a) },
+  playtime: {
+    label: 'Playtime',
+    compare: (a, b) => (b.playtimeSeconds ?? -1) - (a.playtimeSeconds ?? -1) || byTitle(a, b),
+  },
   title: { label: 'Name', compare: byTitle },
   platform: {
     label: 'Platform',

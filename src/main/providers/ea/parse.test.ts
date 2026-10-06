@@ -120,6 +120,7 @@ describe('parseLibrary', () => {
       iconUrl: null,
       lastPlayed: new Date('2025-04-22T18:44:17.000Z'),
       recentlyPlayed: false,
+      playtimeSeconds: 12600,
     })
     expect(jedi?.coverUrl).toMatch(/SWJFO-game-art-16x9\.jpg\?w=920$/)
   })
@@ -148,8 +149,16 @@ describe('parseLibrary', () => {
       me: {
         recentGames: {
           items: [
-            { gameSlug: 'old', lastSessionEndDate: '2024-01-01T00:00:00.000Z' },
-            { gameSlug: 'new', lastSessionEndDate: '2026-09-20T00:00:00.000Z' },
+            {
+              gameSlug: 'old',
+              totalPlayTimeSeconds: 5400,
+              lastSessionEndDate: '2024-01-01T00:00:00.000Z',
+            },
+            {
+              gameSlug: 'new',
+              totalPlayTimeSeconds: 3600,
+              lastSessionEndDate: '2026-09-20T00:00:00.000Z',
+            },
           ],
         },
       },
@@ -184,8 +193,30 @@ describe('parseLibrary', () => {
         portraitUrl: 'https://x/b-tall.jpg',
         lastPlayed: new Date('2026-09-20T00:00:00.000Z'),
         recentlyPlayed: true,
+        playtimeSeconds: 5400,
       },
     ])
+  })
+
+  it('reports playtime in seconds, with zero for a game never played', () => {
+    const games = parseLibrary(owned, data('offers-and-recent.json'), NOW)
+
+    expect(games.find((game) => game.ref.externalId === JEDI)?.playtimeSeconds).toBe(12600)
+    expect(games.find((game) => game.title === 'Apex Legends')?.playtimeSeconds).toBe(0)
+  })
+
+  it('reports no playtime for a game EA lists no recent entry for', () => {
+    const offers = {
+      legacyOffers: [{ offerId: 'a', achievementSetOverride: 'set' }],
+      me: { recentGames: { items: [] } },
+    }
+    const [game] = parseLibrary(
+      [{ offerId: 'a', slug: 'x', title: 'X', coverUrl: null, portraitUrl: null }],
+      offers,
+      NOW,
+    )
+
+    expect(game?.playtimeSeconds).toBeNull()
   })
 
   it('rejects a reply without offers as a parse error', () => {

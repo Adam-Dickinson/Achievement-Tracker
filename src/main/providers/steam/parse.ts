@@ -71,6 +71,7 @@ const ownedGameSchema = z.object({
   img_icon_url: z.string(),
   has_community_visible_stats: z.boolean().optional(),
   rtime_last_played: z.number().int().min(0),
+  playtime_forever: z.number().int().min(0).optional(),
 })
 
 const ownedGamesResponseSchema = z.object({
@@ -81,6 +82,7 @@ const recentGameSchema = z.object({
   appid: z.number().int().positive(),
   name: z.string(),
   img_icon_url: z.string().optional(),
+  playtime_forever: z.number().int().min(0).optional(),
 })
 
 const recentlyPlayedResponseSchema = z.object({
@@ -101,6 +103,7 @@ interface SteamLibraryGame {
   readonly name: string
   readonly img_icon_url?: string
   readonly rtime_last_played?: number
+  readonly playtime_forever?: number
 }
 
 export function check<Schema extends z.ZodType>(
@@ -181,6 +184,7 @@ function toRemoteGame(game: SteamLibraryGame, recentlyPlayed: boolean): RemoteGa
     coverUrl: null,
     lastPlayed: fromUnixSeconds(game.rtime_last_played ?? 0),
     recentlyPlayed,
+    playtimeSeconds: game.playtime_forever === undefined ? null : game.playtime_forever * 60,
     storeUrl: steamStoreUrl(game.appid),
   }
 }

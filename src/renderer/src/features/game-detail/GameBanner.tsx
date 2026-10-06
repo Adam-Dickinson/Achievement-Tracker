@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { paletteFor } from '@/components/CoverArt'
 import { PlatformBadge } from '@/components/PlatformBadge'
+import { PlaytimeLabel } from '@/components/PlaytimeLabel'
 import type { LibraryGame } from '@shared/library'
 import { platformName } from '@shared/platform'
 
@@ -53,6 +54,11 @@ export function GameBanner({ game, back, actions }: GameBannerProps) {
             <span className="ml-1 text-[13px] font-semibold text-fg/70">
               {game.platforms.map(platformName).join(' · ')}
             </span>
+            <PlaytimeLabel
+              seconds={game.playtimeSeconds}
+              partial={game.playtimePartial}
+              className="ml-2 text-[13px] font-semibold text-fg/70"
+            />
           </p>
           <h1
             id="game-title"

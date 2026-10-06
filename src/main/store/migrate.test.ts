@@ -50,6 +50,24 @@ describe('migrations', () => {
     expect(columns).toContain('baseline_cutoff')
   })
 
+  it('give platform_game a nullable playtime_seconds column, keeping rows from before it', () => {
+    const db = new DatabaseSync(':memory:')
+    applyMigrations(db, MIGRATIONS.slice(0, 8))
+    db.exec(`
+      INSERT INTO account (id, platform, external_id, display_name, status, created_at)
+      VALUES (1, 'steam', 'acc1', 'Test', 'connected', '2026-01-01');
+      INSERT INTO game (id, title, sort_title) VALUES (1, 'Portal', 'portal');
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title, baseline_done)
+      VALUES (1, 1, 1, 'steam', '400', 'Portal', 1);
+    `)
+
+    applyMigrations(db)
+
+    expect(db.prepare('SELECT title, playtime_seconds FROM platform_game').all()).toEqual([
+      { title: 'Portal', playtime_seconds: null },
+    ])
+  })
+
   it('upgrade a version 1 database with data to the latest, keeping every row', () => {
     const db = new DatabaseSync(':memory:')
     applyMigrations(db, MIGRATIONS.slice(0, 1))

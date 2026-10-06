@@ -50,6 +50,7 @@ const offersSchema = z.object({
       items: z.array(
         z.object({
           gameSlug: z.string().min(1),
+          totalPlayTimeSeconds: z.number().int().min(0).nullish(),
           lastSessionEndDate: z.iso.datetime({ offset: true }).nullish(),
         }),
       ),
@@ -148,13 +149,24 @@ export function parseLibrary(
     data.me.recentGames.items.map((game) => [game.gameSlug, playedDate(game.lastSessionEndDate)]),
   )
 
+  const playtimeBySlug = new Map(
+    data.me.recentGames.items.map((game) => [game.gameSlug, game.totalPlayTimeSeconds ?? null]),
+  )
+
   const games = new Map<string, RemoteGame>()
   for (const game of owned) {
     const setId = setByOffer.get(game.offerId)
     if (!setId) continue
     const lastPlayed = (game.slug && lastPlayedBySlug.get(game.slug)) || null
     const known = games.get(setId)
-    if (known && !isLater(lastPlayed, known.lastPlayed)) continue
+    const playtimeSeconds = largest(
+      known?.playtimeSeconds ?? null,
+      game.slug ? (playtimeBySlug.get(game.slug) ?? null) : null,
+    )
+    if (known && !isLater(lastPlayed, known.lastPlayed)) {
+      games.set(setId, { ...known, playtimeSeconds })
+      continue
+    }
     games.set(setId, {
       ref: { externalId: setId },
       title: known?.title ?? game.title,
@@ -163,6 +175,7 @@ export function parseLibrary(
       portraitUrl: known?.portraitUrl ?? game.portraitUrl,
       lastPlayed,
       recentlyPlayed: lastPlayed !== null && now.getTime() - lastPlayed.getTime() <= RECENT_MS,
+      playtimeSeconds,
     })
   }
   return [...games.values()]
@@ -227,6 +240,11 @@ function playedDate(value: string | null | undefined): Date | null {
   if (!value) return null
   const date = new Date(value)
   return date.getTime() < NEVER_PLAYED_BEFORE ? null : date
+}
+
+function largest(a: number | null, b: number | null): number | null {
+  if (a === null || b === null) return a ?? b
+  return Math.max(a, b)
 }
 
 function isLater(candidate: Date | null, current: Date | null): boolean {

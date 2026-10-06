@@ -4,6 +4,7 @@ import type { LibraryGame } from '@shared/library'
 import { CoverArt } from './CoverArt'
 import { gameProgress } from './game-progress'
 import { PlatformBadge } from './PlatformBadge'
+import { PlaytimeLabel } from './PlaytimeLabel'
 
 interface GameRowProps {
   game: LibraryGame
@@ -66,6 +67,10 @@ export function GameRow({ game, onOpen }: GameRowProps) {
       >
         {progress.completed && <Crown aria-hidden="true" className="size-4" />}
         {progress.synced ? `${progress.percent}%` : '–'}
+      </span>
+
+      <span className="hidden w-20 shrink-0 justify-end text-xs text-fg-muted lg:flex">
+        <PlaytimeLabel seconds={game.playtimeSeconds} partial={game.playtimePartial} />
       </span>
 
       <span className="hidden w-32 shrink-0 text-right text-xs text-fg-muted lg:block">

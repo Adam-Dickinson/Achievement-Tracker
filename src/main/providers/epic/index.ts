@@ -146,6 +146,7 @@ export class EpicProvider implements AchievementProvider {
         if (details.achievements === 0) continue
 
         const played = sum(group.map((record) => playtime.get(record.appName) ?? 0))
+        const reported = group.some((record) => playtime.has(record.appName))
         const before = previous && sum(group.map((record) => previous.get(record.appName) ?? 0))
         games.push({
           ref: { externalId: namespace },
@@ -156,6 +157,7 @@ export class EpicProvider implements AchievementProvider {
           heroUrl: details.heroUrl,
           lastPlayed: null,
           recentlyPlayed: before === undefined ? played > 0 : played > before,
+          playtimeSeconds: reported ? played : null,
         })
       }
       return games

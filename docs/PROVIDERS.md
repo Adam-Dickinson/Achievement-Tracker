@@ -357,6 +357,19 @@ User-defined watcher for emulators/tools that write achievements to a file: user
 
 ---
 
+## Playtime (2026-10-06)
+
+`RemoteGame.playtimeSeconds` is `null` when a platform reports no playtime and `0` when it reports none played. Read from recorded replies in `tests/fixtures/_raw` and the sanitized fixtures; **not yet checked against a live run of the finished feature.**
+
+| Platform | Source | Unit | Status |
+|---|---|---|---|
+| Steam, owned | `GetOwnedGames` and `GetRecentlyPlayedGames`: `playtime_forever` | minutes (Steam's documented unit; the fixture's 134 and 1027 fit it), stored as seconds | Field present in the recorded replies |
+| Steam, family library | `GetSharedLibraryApps`: the requesting player's own `rt_playtime` | minutes, same as above | Field present on every app; matched `playtime_forever` for the same game in the earlier capture |
+| Epic | `GET .../playtime/account/<accountId>/all`: `totalTime` per `artifactId` | seconds | Already fetched for the recently-played signal; a game's value is the sum over its library records, `null` if none has a record |
+| EA | `me { recentGames(gameSlugs: [...]) { items { gameSlug totalPlayTimeSeconds } } }` | seconds | Present in the recorded reply (`_raw/ea/recent.json`); the query now asks for it; across several offers of one game the largest value is kept |
+| Ubisoft | none | | The games query has no playtime field and none is documented, so `null` |
+| Xbox, PlayStation, shadPS4, RPCS3 | not looked at | | `null` until a source is verified |
+
 ## Cross-cutting provider rules
 
 1. Unofficial providers ship behind a per-provider "I understand this is unofficial" opt-in

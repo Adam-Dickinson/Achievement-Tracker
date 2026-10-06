@@ -158,7 +158,13 @@ describe('Library', () => {
 
   it('sorts by completion, name or platform when asked', async () => {
     await renderLibrary()
-    expect(selectOptions('Sort by')).toEqual(['Last unlock', 'Completion', 'Name', 'Platform'])
+    expect(selectOptions('Sort by')).toEqual([
+      'Last unlock',
+      'Completion',
+      'Playtime',
+      'Name',
+      'Platform',
+    ])
 
     choose('Sort by', 'completion')
     expect(titles()).toEqual(['Celeste', 'Portal', 'Ōkami HD', 'Hades'])
@@ -169,6 +175,21 @@ describe('Library', () => {
 
     choose('Sort by', 'platform')
     expect(titles()).toEqual(['Celeste', 'Ōkami HD', 'Portal', 'Hades'])
+  })
+
+  it('sorts by playtime, most played first, and shows each game’s hours', async () => {
+    await renderLibrary([
+      { ...GAMES[0]!, playtimeSeconds: 3 * 3600 },
+      { ...GAMES[1]!, playtimeSeconds: 40 * 3600, playtimePartial: true },
+      GAMES[2]!,
+      { ...GAMES[3]!, playtimeSeconds: 0 },
+    ])
+
+    choose('Sort by', 'playtime')
+
+    expect(titles()).toEqual(['Celeste', 'Portal', 'Ōkami HD', 'Hades'])
+    expect(screen.getByText('40 hours played, may be incomplete')).toBeInTheDocument()
+    expect(screen.getByText('3 hours played')).toBeInTheDocument()
   })
 
   it('finds games by any words of their title, ignoring case and accents', async () => {

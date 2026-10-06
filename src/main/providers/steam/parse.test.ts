@@ -334,6 +334,7 @@ const PORTAL = {
   coverUrl: null,
   lastPlayed: new Date(1621685363 * 1000),
   recentlyPlayed: false,
+  playtimeSeconds: 134 * 60,
   storeUrl: 'steam://nav/games/details/400',
 }
 
@@ -344,6 +345,7 @@ const RESIDENT_EVIL_2 = {
   coverUrl: null,
   lastPlayed: new Date(1790160642 * 1000),
   recentlyPlayed: false,
+  playtimeSeconds: 1027 * 60,
   storeUrl: 'steam://nav/games/details/883710',
 }
 
@@ -354,6 +356,7 @@ const SPIDER_MAN = {
   coverUrl: null,
   lastPlayed: null,
   recentlyPlayed: true,
+  playtimeSeconds: 1560 * 60,
   storeUrl: 'steam://nav/games/details/1817070',
 }
 
@@ -389,8 +392,22 @@ describe('parseLibrary', () => {
       coverUrl: null,
       lastPlayed: null,
       recentlyPlayed: true,
+      playtimeSeconds: null,
       storeUrl: 'steam://nav/games/details/20',
     })
+  })
+
+  it('reports Steam’s minutes played as seconds, keeping zero and an absent value apart', () => {
+    const library = parseLibrary(
+      ownedGames([
+        ownedGame({ appid: 1, playtime_forever: 0 }),
+        ownedGame({ appid: 2, playtime_forever: 90 }),
+        ownedGame({ appid: 3 }),
+      ]),
+      NO_RECENT,
+    )
+
+    expect(library.map((game) => game.playtimeSeconds)).toEqual([0, 5400, null])
   })
 
   it('marks exactly the games in the recently played list as recently played', () => {

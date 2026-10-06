@@ -44,6 +44,7 @@ interface EntryRow {
   hero_url: string | null
   store_url: string | null
   last_played: string | null
+  playtime_seconds: number | null
   linked: string
   has_platinum: number
   platinum_earned_at: string | null
@@ -124,7 +125,8 @@ function readEntries(db: DatabaseSync): { gameId: number; entry: ExportedEntry }
   const rows = db
     .prepare(
       `SELECT pg.id, pg.game_id, pg.account_id, pg.platform, pg.title, pg.icon_url, pg.cover_url,
-              pg.portrait_url, pg.hero_url, pg.store_url, pg.last_played, pg.linked,
+              pg.portrait_url, pg.hero_url, pg.store_url, pg.last_played, pg.playtime_seconds,
+              pg.linked,
               (p.platform_game_id IS NOT NULL) AS has_platinum,
               p.earned_at AS platinum_earned_at, p.detected_at AS platinum_detected_at
        FROM platform_game pg
@@ -146,6 +148,7 @@ function readEntries(db: DatabaseSync): { gameId: number; entry: ExportedEntry }
       heroUrl: row.hero_url,
       storeUrl: row.store_url,
       lastPlayed: row.last_played,
+      playtimeSeconds: row.playtime_seconds,
       linked: row.linked,
       platinum: row.has_platinum
         ? { earnedAt: row.platinum_earned_at, detectedAt: row.platinum_detected_at ?? '' }

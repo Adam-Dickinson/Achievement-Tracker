@@ -260,6 +260,12 @@ describe('EpicProvider', () => {
       expect(games.map((game) => game.recentlyPlayed)).toEqual([true, false, true])
     })
 
+    it('reports each game’s playtime in seconds, and none for a game Epic has no playtime for', async () => {
+      const games = await provider().listGames(stored())
+
+      expect(games.map((game) => game.playtimeSeconds)).toEqual([166388, null, 59650])
+    })
+
     it('then counts only the games whose playtime has grown', async () => {
       const epic = provider()
       await epic.listGames(stored())

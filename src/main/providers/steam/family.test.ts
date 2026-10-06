@@ -55,6 +55,7 @@ describe('fetchFamilyApps', () => {
       name: 'Half-Life 2',
       iconHash: 'fcfb366051782b8ebf2aa297f3b746395858cb62',
       lastPlayed: null,
+      playtimeSeconds: 0,
     })
     expect(apps.find((app) => app.appid === '289070')?.lastPlayed).toEqual(
       new Date('2026-09-04T17:45:45.000Z'),
@@ -129,7 +130,13 @@ describe('toFamilyGame', () => {
 
   it("builds a library game with Steam's icon, leaving the cover to the provider", () => {
     const game = toFamilyGame(
-      { appid: '220', name: 'Half-Life 2', iconHash: 'abc', lastPlayed: null },
+      {
+        appid: '220',
+        name: 'Half-Life 2',
+        iconHash: 'abc',
+        lastPlayed: null,
+        playtimeSeconds: 7200,
+      },
       now,
     )
 
@@ -140,6 +147,7 @@ describe('toFamilyGame', () => {
       coverUrl: null,
       lastPlayed: null,
       recentlyPlayed: false,
+      playtimeSeconds: 7200,
       storeUrl: 'steam://nav/games/details/220',
     })
   })
@@ -148,7 +156,10 @@ describe('toFamilyGame', () => {
     const played = new Date('2026-09-04T00:00:00.000Z')
 
     expect(
-      toFamilyGame({ appid: '1', name: 'x', iconHash: null, lastPlayed: played }, now),
+      toFamilyGame(
+        { appid: '1', name: 'x', iconHash: null, lastPlayed: played, playtimeSeconds: null },
+        now,
+      ),
     ).toMatchObject({ iconUrl: null, recentlyPlayed: true })
   })
 })

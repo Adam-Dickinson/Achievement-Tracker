@@ -32,6 +32,25 @@ describe('GameRow', () => {
     expect(row).toHaveTextContent('80%')
   })
 
+  it('shows the playtime, marked when the total may be incomplete', () => {
+    render(
+      <GameRow
+        game={game({ playtimeSeconds: 42 * 3600, playtimePartial: true })}
+        onOpen={vi.fn()}
+      />,
+    )
+
+    const row = screen.getByRole('button')
+    expect(row).toHaveTextContent('42h+')
+    expect(within(row).getByText('42 hours played, may be incomplete')).toBeInTheDocument()
+  })
+
+  it('shows no playtime when the platforms report none', () => {
+    render(<GameRow game={game()} onOpen={vi.fn()} />)
+
+    expect(screen.getByRole('button')).not.toHaveTextContent(/played/i)
+  })
+
   it('says when the last unlock was', () => {
     const today = new Date()
     today.setHours(13, 42, 0, 0)
