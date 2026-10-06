@@ -95,6 +95,16 @@ Moved ahead of PlayStation at the owner's request ([ADR-0008](adr/0008-stores-be
 - [ ] Crash reporting (opt-in), docs site/README screenshots
 - [ ] v1.0.0: the version is set and the installer builds; waiting for the owner's hands-on checks (install, upgrade over an older build, a test tag, a real update through the banner, Start with Windows) before tagging
 
+## After v1: playtime per game
+
+Design: `docs/superpowers/specs/2026-10-06-playtime-design.md`. Platform-reported only; own tracking through the launch module is a possible later step.
+
+- [x] Steam, Epic and EA report playtime (`RemoteGame.playtimeSeconds`, `platform_game.playtime_seconds`, migration 0009); linked games sum their entries, marked partial when one has no data
+- [x] A Playtime sort and a label on every card and row in the Library; the total in the Game detail banner and a Played tile per platform entry; included in the data export
+- [ ] Check it by hand against real Steam, Epic and EA accounts (nothing has been run against a live account yet)
+- [ ] Xbox, PlayStation and the emulators: find and verify a source for each (rule 10); Ubisoft has none in its games query
+- [ ] A Dashboard stat, left out on purpose
+
 ## After v1: launch installed games
 
 Wanted by the owner: launch any installed game from the app. Each platform is its own adapter and must be checked against real installs first (rule 10); it needs its own design.

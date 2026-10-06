@@ -117,6 +117,7 @@ CREATE TABLE platform_game (             -- a game as it exists on one platform/
   linked        TEXT NOT NULL DEFAULT 'auto', -- auto | manual: manual entries are never regrouped (0003)
   portrait_url  TEXT,                   -- tall (2:3-ish) art for the Library's Portrait view, when the platform has some (0008)
   hero_url      TEXT,                   -- wide banner art for Game detail, when the platform has some (0008)
+  playtime_seconds INTEGER,             -- platform-reported time played; NULL = the platform reports none, 0 = reported, none played (0009)
   store_url     TEXT,                   -- the game's store page, when its platform has one (0007): steam://nav/games/details/<appid> or https://www.xbox.com/games/store/_/<ProductId>
   UNIQUE (account_id, external_id)
 );
