@@ -11,6 +11,14 @@ import { OVERLAY_SIZE } from './windows'
 const SCREEN_MARGIN = 16
 const EXIT_ANIMATION_MS = 400
 
+interface Placement extends Rectangle {
+  readonly displayId: number
+}
+
+function plural(count: number): string {
+  return `${count} ${count === 1 ? 'toast' : 'toasts'}`
+}
+
 export class OverlayService {
   #hideTimer: NodeJS.Timeout | null = null
   #loaded: Promise<void>
@@ -37,8 +45,14 @@ export class OverlayService {
     this.#hideTimer = null
 
     if (toasts.length > 0) {
-      this.#reposition()
-      if (!this.window.isVisible()) this.window.showInactive()
+      const placed = this.#reposition()
+      const wasVisible = this.window.isVisible()
+      if (!wasVisible) this.window.showInactive()
+      this.window.setAlwaysOnTop(true, 'screen-saver')
+      this.window.moveTop()
+      console.info(
+        `Toast overlay: ${plural(toasts.length)} on display ${placed.displayId} at ${placed.x},${placed.y} (${placed.width}x${placed.height}), window was ${wasVisible ? 'visible' : 'hidden'}`,
+      )
     } else {
       this.#hideTimer = setTimeout(() => {
         if (!this.window.isDestroyed()) this.window.hide()
@@ -52,16 +66,18 @@ export class OverlayService {
     })
   }
 
-  #reposition(): void {
+  #reposition(): Placement {
     const scale = TOAST_SCALE[this.#settings.size]
     const width = Math.round(OVERLAY_SIZE.width * scale)
     const height = Math.round(OVERLAY_SIZE.height * scale)
-    const { workArea } = this.#resolveDisplay()
-    this.window.setBounds({
+    const { id, workArea } = this.#resolveDisplay()
+    const bounds = {
       ...cornerOrigin(this.#settings.corner, workArea, width, height),
       width,
       height,
-    })
+    }
+    this.window.setBounds(bounds)
+    return { ...bounds, displayId: id }
   }
 
   #resolveDisplay(): Display {

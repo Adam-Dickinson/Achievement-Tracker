@@ -42,6 +42,8 @@ function fakeWindow() {
     showInactive: vi.fn(),
     hide: vi.fn(),
     setBounds: vi.fn(),
+    setAlwaysOnTop: vi.fn(),
+    moveTop: vi.fn(),
   }
 }
 
@@ -123,6 +125,39 @@ describe('OverlayService', () => {
       scale: 0.85,
       sound: { enabled: false, volume: 0.2 },
     })
+  })
+
+  it('raises the window to the top of the always-on-top band each time toasts are shown', async () => {
+    const window = fakeWindow()
+    const overlay = new OverlayService(window as never)
+
+    await overlay.display([toast(1)])
+    await overlay.display([toast(1), toast(2)])
+
+    expect(window.setAlwaysOnTop).toHaveBeenCalledTimes(2)
+    expect(window.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver')
+    expect(window.moveTop).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not raise the window when no toast is showing', async () => {
+    const window = fakeWindow()
+    const overlay = new OverlayService(window as never)
+
+    await overlay.display([])
+
+    expect(window.moveTop).not.toHaveBeenCalled()
+  })
+
+  it('logs where the window was put, so a missing toast can be traced', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const overlay = new OverlayService(fakeWindow() as never)
+
+    await overlay.display([toast(1)])
+
+    expect(info).toHaveBeenCalledWith(
+      'Toast overlay: 1 toast on display 1 at 1424,668 (480x396), window was hidden',
+    )
+    info.mockRestore()
   })
 
   it('shows the window once when toasts arrive and stays hidden until they do', async () => {
