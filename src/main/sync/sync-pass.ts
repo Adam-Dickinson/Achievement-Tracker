@@ -11,6 +11,7 @@ import {
   type AccountRow,
   getPlatformGameByExternalId,
   insertNewUnlocks,
+  removeMissingAchievements,
   setBaselineDone,
   upsertAchievements,
 } from '../store/sync-store'
@@ -30,6 +31,7 @@ export async function runSyncPass(
   db.exec('BEGIN')
   try {
     upsertAchievements(db, platformGame.id, remote.achievements)
+    removeMissingAchievements(db, platformGame.id, remote.achievements)
     const newUnlocks = insertNewUnlocks(db, platformGame.id, remote.unlocks)
 
     const { baselineDone, baselineCutoff: cutoff } = platformGame
