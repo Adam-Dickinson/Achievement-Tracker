@@ -343,6 +343,28 @@ describe('runSyncPass', () => {
     expect(await runSyncPass(db, account, 'g1', provider, CREDENTIALS)).toEqual([])
   })
 
+  it('drops a locked achievement the platform has removed from the game', async () => {
+    const db = seedDb()
+    const account = getAccount(db, 1)
+    await runSyncPass(
+      db,
+      account,
+      'g1',
+      returning({ achievements: [achievement('a1'), achievement('a2')], unlocks: [] }),
+      CREDENTIALS,
+    )
+
+    await runSyncPass(
+      db,
+      account,
+      'g1',
+      returning({ achievements: [achievement('a1')], unlocks: [] }),
+      CREDENTIALS,
+    )
+
+    expect(db.prepare('SELECT external_id FROM achievement').all()).toEqual([{ external_id: 'a1' }])
+  })
+
   it('asks the provider for the right game, forwarding the credentials and abort signal', async () => {
     const db = seedDb()
     const fetchGame = vi.fn<AchievementProvider['fetchGame']>(() =>

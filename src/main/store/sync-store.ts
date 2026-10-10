@@ -88,6 +88,20 @@ export function upsertAchievements(
   }
 }
 
+export function removeMissingAchievements(
+  db: DatabaseSync,
+  platformGameId: number,
+  achievements: readonly RemoteAchievement[],
+): void {
+  if (achievements.length === 0) return
+  db.prepare(
+    `DELETE FROM achievement
+     WHERE platform_game_id = ?
+       AND external_id NOT IN (SELECT value FROM json_each(?))
+       AND NOT EXISTS (SELECT 1 FROM unlock u WHERE u.achievement_id = achievement.id)`,
+  ).run(platformGameId, JSON.stringify(achievements.map((achievement) => achievement.externalId)))
+}
+
 export function insertNewUnlocks(
   db: DatabaseSync,
   platformGameId: number,
