@@ -173,7 +173,7 @@ export function getDashboardStats(db: DatabaseSync, now = new Date()): Dashboard
     week: days.week,
     unlockedByRarity: countByRarity(db, new Set(counted.map((entry) => entry.id))),
     platinums: countPlatinums(db, entries),
-    platforms: byPlatform(counted),
+    platforms: byPlatform(ranked),
     nearlyThere,
     recentUnlocks: listRecentUnlocks(db, RECENT_UNLOCK_COUNT),
     rarestUnlock: findRarestUnlock(db, games, now),
@@ -367,19 +367,28 @@ function toUnlock(row: UnlockRecord): UnlockedAchievement {
   }
 }
 
-function byPlatform(entries: readonly EntryRecord[]): PlatformProgress[] {
+function byPlatform(games: readonly RankedEntries[]): PlatformProgress[] {
+  const copies = games.flatMap(({ best, all }) =>
+    all.map((entry) => ({ entry, covered: coveredElsewhere(entry, best) })),
+  )
   return PLATFORMS.flatMap((platform) => {
-    const own = entries.filter((entry) => entry.platform === platform)
+    const own = copies.filter(({ entry }) => entry.platform === platform)
     if (own.length === 0) return []
     return [
       {
         platform,
         games: own.length,
-        unlocked: sum(own, (entry) => entry.unlocked),
-        total: sum(own, (entry) => entry.total),
+        unlocked: sum(own, ({ entry }) => entry.unlocked),
+        covered: sum(own, ({ covered }) => covered),
+        total: sum(own, ({ entry }) => entry.total),
       },
     ]
   }).sort((a, b) => b.unlocked - a.unlocked)
+}
+
+function coveredElsewhere(entry: EntryRecord, best: EntryRecord): number {
+  if (entry === best || best.total === 0) return 0
+  return Math.max(0, Math.floor((best.unlocked * entry.total) / best.total) - entry.unlocked)
 }
 
 function listEntries(db: DatabaseSync): EntryRecord[] {

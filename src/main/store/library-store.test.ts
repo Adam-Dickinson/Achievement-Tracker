@@ -61,10 +61,6 @@ interface Seeded {
   readonly platformGameId: number
 }
 
-function sumOf<K extends string>(rows: readonly Record<K, number>[], key: K): number {
-  return rows.reduce((total, row) => total + row[key], 0)
-}
-
 function seedGame(
   externalId: string,
   title: string,
@@ -691,35 +687,37 @@ describe('getDashboardStats', () => {
     })
   })
 
-  it('counts a linked game only on the platform of its best copy', () => {
-    seedGame('1', 'Apex Legends', 2, [null, null])
-    seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
+  it('counts every copy on its own platform, with progress done on a better copy as covered', () => {
+    seedGame('1', 'Apex Legends', 4, [null, null, null])
+    seedGame('trophy/NPWR1', 'Apex Legends', 8, [null], 'playstation')
     seedGame('trophy/NPWR2', 'Astro Bot', 2, [null], 'playstation')
 
     expect(getDashboardStats(db, NOW).platforms).toEqual([
-      { platform: 'steam', games: 1, unlocked: 2, total: 2 },
-      { platform: 'playstation', games: 1, unlocked: 1, total: 2 },
+      { platform: 'steam', games: 1, unlocked: 3, covered: 0, total: 4 },
+      { platform: 'playstation', games: 2, unlocked: 2, covered: 5, total: 10 },
     ])
   })
 
-  it('leaves out a platform whose games are all played further elsewhere', () => {
+  it('keeps a platform whose games are all played further elsewhere, filled in as covered', () => {
     seedGame('1', 'Rainbow Six Siege', 4, [null, null, null])
     seedGame('2', 'Rainbow Six Siege', 4, [null], 'ubisoft')
 
-    expect(getDashboardStats(db, NOW).platforms.map((row) => row.platform)).toEqual(['steam'])
+    expect(getDashboardStats(db, NOW).platforms).toEqual([
+      { platform: 'steam', games: 1, unlocked: 3, covered: 0, total: 4 },
+      { platform: 'ubisoft', games: 1, unlocked: 1, covered: 2, total: 4 },
+    ])
   })
 
-  it('makes the platform rows add up to the overall totals', () => {
-    seedGame('1', 'Apex Legends', 2, [null, null])
-    seedGame('trophy/NPWR1', 'Apex Legends', 4, [null], 'playstation')
-    seedGame('2', 'Portal', 4, [null])
-    seedGame('trophy/NPWR2', 'Astro Bot', 3, [null, null], 'playstation')
+  it('covers nothing on the best copy, on a copy level with it, or on a copy with no achievements', () => {
+    seedGame('1', 'Portal', 4, [null, null])
+    seedGame('2', 'Portal', 2, [null], 'epic')
+    seedGame('3', 'Celeste', 0)
+    seedGame('4', 'Celeste', 3, [], 'epic')
 
-    const stats = getDashboardStats(db, NOW)
-
-    expect(sumOf(stats.platforms, 'unlocked')).toBe(stats.unlockedAchievements)
-    expect(sumOf(stats.platforms, 'total')).toBe(stats.totalAchievements)
-    expect(sumOf(stats.platforms, 'games')).toBe(stats.gamesTracked)
+    expect(getDashboardStats(db, NOW).platforms).toEqual([
+      { platform: 'steam', games: 2, unlocked: 2, covered: 0, total: 4 },
+      { platform: 'epic', games: 2, unlocked: 1, covered: 0, total: 5 },
+    ])
   })
 
   it('adds up games and achievements per platform, most unlocked first', () => {
@@ -729,8 +727,8 @@ describe('getDashboardStats', () => {
     seedGame('trophy/NPWR2', 'Astro Bot', 2, [null, null], 'playstation')
 
     expect(getDashboardStats(db, NOW).platforms).toEqual([
-      { platform: 'playstation', games: 2, unlocked: 4, total: 5 },
-      { platform: 'steam', games: 2, unlocked: 1, total: 4 },
+      { platform: 'playstation', games: 2, unlocked: 4, covered: 0, total: 5 },
+      { platform: 'steam', games: 2, unlocked: 1, covered: 0, total: 4 },
     ])
   })
 
