@@ -1,5 +1,11 @@
 import type { DatabaseSync } from 'node:sqlite'
-import type { DashboardStats, PlatformProgress, RarestUnlock } from '@shared/dashboard'
+import type {
+  CoverageSource,
+  CoveredGame,
+  DashboardStats,
+  PlatformProgress,
+  RarestUnlock,
+} from '@shared/dashboard'
 import type {
   ActivityItem,
   ActivityPage,
@@ -40,6 +46,12 @@ interface EntryRecord {
   total: number
   unlocked: number
   last_unlock: string | null
+}
+
+interface CoveredCopy {
+  readonly entry: EntryRecord
+  readonly best: EntryRecord
+  readonly covered: number
 }
 
 interface RankedEntries {
@@ -369,7 +381,7 @@ function toUnlock(row: UnlockRecord): UnlockedAchievement {
 
 function byPlatform(games: readonly RankedEntries[]): PlatformProgress[] {
   const copies = games.flatMap(({ best, all }) =>
-    all.map((entry) => ({ entry, covered: coveredElsewhere(entry, best) })),
+    all.map((entry) => ({ entry, best, covered: coveredElsewhere(entry, best) })),
   )
   return PLATFORMS.flatMap((platform) => {
     const own = copies.filter(({ entry }) => entry.platform === platform)
@@ -381,9 +393,34 @@ function byPlatform(games: readonly RankedEntries[]): PlatformProgress[] {
         unlocked: sum(own, ({ entry }) => entry.unlocked),
         covered: sum(own, ({ covered }) => covered),
         total: sum(own, ({ entry }) => entry.total),
+        sources: coverageSources(own),
       },
     ]
   }).sort((a, b) => b.unlocked - a.unlocked)
+}
+
+function coverageSources(copies: readonly CoveredCopy[]): CoverageSource[] {
+  return PLATFORMS.flatMap((platform) => {
+    const games = copies
+      .filter(({ best, covered }) => covered > 0 && best.platform === platform)
+      .map(toCoveredGame)
+      .sort((a, b) => b.covered - a.covered || a.title.localeCompare(b.title))
+    if (games.length === 0) return []
+    return [{ platform, covered: sum(games, (game) => game.covered), games }]
+  }).sort((a, b) => b.covered - a.covered)
+}
+
+function toCoveredGame({ entry, best, covered }: CoveredCopy): CoveredGame {
+  return {
+    gameId: entry.game_id,
+    platformGameId: entry.id,
+    title: entry.title.trim(),
+    unlocked: entry.unlocked,
+    total: entry.total,
+    covered,
+    sourceUnlocked: best.unlocked,
+    sourceTotal: best.total,
+  }
 }
 
 function coveredElsewhere(entry: EntryRecord, best: EntryRecord): number {
