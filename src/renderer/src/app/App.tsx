@@ -115,7 +115,7 @@ export function App() {
   }
 
   return (
-    <div ref={setScrollParent} className="h-full overflow-y-auto bg-aurora">
+    <div ref={setScrollParent} className="relative h-full overflow-y-auto bg-aurora">
       <IslandNav
         selected={page}
         onSelect={selectPage}

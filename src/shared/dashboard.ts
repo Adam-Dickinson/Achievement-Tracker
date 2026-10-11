@@ -6,6 +6,7 @@ export interface PlatformProgress {
   readonly platform: Platform
   readonly games: number
   readonly unlocked: number
+  readonly covered: number
   readonly total: number
 }
 

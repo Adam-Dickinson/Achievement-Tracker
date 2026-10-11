@@ -67,8 +67,8 @@ const STATS: DashboardStats = {
   unlockedByRarity: { ultra_rare: 9, rare: 142, uncommon: 388, common: 745 },
   platinums: 9,
   platforms: [
-    { platform: 'steam', games: 120, unlocked: 402, total: 536 },
-    { platform: 'playstation', games: 1, unlocked: 0, total: 0 },
+    { platform: 'steam', games: 120, unlocked: 402, covered: 0, total: 536 },
+    { platform: 'playstation', games: 1, unlocked: 0, covered: 0, total: 0 },
   ],
   nearlyThere: [game(1, 'Hollow Knight', 61, 63), game(2, 'Celeste', 31, 33)],
   recentUnlocks: [UNLOCK],
@@ -271,6 +271,34 @@ describe('Dashboard', () => {
 
     fireEvent.click(within(section).getByRole('button', { name: 'Accounts' }))
     expect(onNavigate).toHaveBeenCalledWith('accounts')
+  })
+
+  it('fills in progress done on another platform in a second colour, with a legend', async () => {
+    renderDashboard({
+      ...STATS,
+      platforms: [{ platform: 'playstation', games: 3, unlocked: 300, covered: 150, total: 900 }],
+    })
+
+    const section = await screen.findByRole('region', { name: 'Platforms' })
+    const [playstation] = within(section).getAllByRole('listitem')
+    expect(playstation).toHaveTextContent('300 +150 / 900')
+    expect(playstation).toHaveTextContent('50.0%')
+    const bar = within(playstation!).getByRole('progressbar', { name: 'PlayStation completion' })
+    expect(bar).toHaveAttribute('aria-valuenow', '50')
+    expect(bar).toHaveAttribute('aria-valuetext', '50.0%, 150 of them done on another platform')
+    expect(section).toHaveTextContent('Unlocked here')
+    expect(section).toHaveTextContent('Done on another platform')
+  })
+
+  it('shows no covered count or legend when every platform is played on its own', async () => {
+    renderDashboard()
+
+    const section = await screen.findByRole('region', { name: 'Platforms' })
+    expect(section).not.toHaveTextContent('+')
+    expect(section).not.toHaveTextContent('Done on another platform')
+    expect(
+      within(section).getByRole('progressbar', { name: 'Steam completion' }),
+    ).not.toHaveAttribute('aria-valuetext')
   })
 
   it('leaves out "Platforms" before any account has games', async () => {

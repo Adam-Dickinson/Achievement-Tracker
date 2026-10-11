@@ -15,6 +15,7 @@ import {
   listConnectedAccounts,
   listConnectedEntries,
   listPlatformGameExternalIds,
+  removeMissingAchievements,
   setAccountStatus,
   setBaselineDone,
   upsertAccount,
@@ -152,6 +153,71 @@ describe('insertNewUnlocks', () => {
         { achievementExternalId: 'does-not-exist', unlockedAt: null, progress: null },
       ]),
     ).toThrow()
+  })
+})
+
+describe('removeMissingAchievements', () => {
+  let db: DatabaseSync
+  beforeEach(() => {
+    db = seedDb()
+    db.exec(`
+      INSERT INTO platform_game (id, game_id, account_id, platform, external_id, title, baseline_done)
+      VALUES (2, 1, 1, 'steam', 'g2', 'Another Game', 0)
+    `)
+  })
+
+  const achievement = (externalId: string) => ({
+    externalId,
+    name: externalId,
+    description: null,
+    iconUrl: null,
+    iconLockedUrl: null,
+    hidden: false,
+    points: null,
+    tier: null,
+    globalPercent: null,
+  })
+
+  function externalIds(platformGameId: number): string[] {
+    return (
+      db
+        .prepare('SELECT external_id FROM achievement WHERE platform_game_id = ? ORDER BY id')
+        .all(platformGameId) as { external_id: string }[]
+    ).map((row) => row.external_id)
+  }
+
+  it('removes a locked achievement the platform no longer lists', () => {
+    upsertAchievements(db, 1, [achievement('kept'), achievement('removed')])
+
+    removeMissingAchievements(db, 1, [achievement('kept')])
+
+    expect(externalIds(1)).toEqual(['kept'])
+  })
+
+  it('keeps an unlocked achievement the platform no longer lists, so earned history survives', () => {
+    upsertAchievements(db, 1, [achievement('kept'), achievement('earned')])
+    insertNewUnlocks(db, 1, [{ achievementExternalId: 'earned', unlockedAt: null, progress: null }])
+
+    removeMissingAchievements(db, 1, [achievement('kept')])
+
+    expect(externalIds(1)).toEqual(['kept', 'earned'])
+  })
+
+  it('removes nothing when the platform lists no achievements at all', () => {
+    upsertAchievements(db, 1, [achievement('a'), achievement('b')])
+
+    removeMissingAchievements(db, 1, [])
+
+    expect(externalIds(1)).toEqual(['a', 'b'])
+  })
+
+  it("leaves other games' achievements alone", () => {
+    upsertAchievements(db, 1, [achievement('a')])
+    upsertAchievements(db, 2, [achievement('b')])
+
+    removeMissingAchievements(db, 1, [achievement('a')])
+
+    expect(externalIds(2)).toEqual(['b'])
   })
 })
 
