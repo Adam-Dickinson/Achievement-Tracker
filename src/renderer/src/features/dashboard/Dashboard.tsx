@@ -97,7 +97,7 @@ function DashboardContent({
               title="Platforms"
               action={{ label: 'Accounts', onClick: () => onNavigate('accounts') }}
             >
-              <PlatformBreakdown platforms={stats.platforms} />
+              <PlatformBreakdown platforms={stats.platforms} onOpenGame={onOpenGame} />
             </Section>
           )}
           <Section id="this-week" title="This week">

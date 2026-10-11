@@ -689,12 +689,36 @@ describe('getDashboardStats', () => {
 
   it('counts every copy on its own platform, with progress done on a better copy as covered', () => {
     seedGame('1', 'Apex Legends', 4, [null, null, null])
-    seedGame('trophy/NPWR1', 'Apex Legends', 8, [null], 'playstation')
+    const apex = seedGame('trophy/NPWR1', 'Apex Legends', 8, [null], 'playstation')
     seedGame('trophy/NPWR2', 'Astro Bot', 2, [null], 'playstation')
 
     expect(getDashboardStats(db, NOW).platforms).toEqual([
-      { platform: 'steam', games: 1, unlocked: 3, covered: 0, total: 4 },
-      { platform: 'playstation', games: 2, unlocked: 2, covered: 5, total: 10 },
+      { platform: 'steam', games: 1, unlocked: 3, covered: 0, total: 4, sources: [] },
+      {
+        platform: 'playstation',
+        games: 2,
+        unlocked: 2,
+        covered: 5,
+        total: 10,
+        sources: [
+          {
+            platform: 'steam',
+            covered: 5,
+            games: [
+              {
+                gameId: apex.gameId,
+                platformGameId: apex.platformGameId,
+                title: 'Apex Legends',
+                unlocked: 1,
+                total: 8,
+                covered: 5,
+                sourceUnlocked: 3,
+                sourceTotal: 4,
+              },
+            ],
+          },
+        ],
+      },
     ])
   })
 
@@ -702,10 +726,40 @@ describe('getDashboardStats', () => {
     seedGame('1', 'Rainbow Six Siege', 4, [null, null, null])
     seedGame('2', 'Rainbow Six Siege', 4, [null], 'ubisoft')
 
-    expect(getDashboardStats(db, NOW).platforms).toEqual([
+    expect(getDashboardStats(db, NOW).platforms).toMatchObject([
       { platform: 'steam', games: 1, unlocked: 3, covered: 0, total: 4 },
       { platform: 'ubisoft', games: 1, unlocked: 1, covered: 2, total: 4 },
     ])
+  })
+
+  it('groups covered progress by the platform it comes from, biggest first, each game under its best copy only', () => {
+    seedGame('1', 'Apex Legends', 4, [null, null, null])
+    seedGame('trophy/NPWR1', 'Apex Legends', 8, [null], 'playstation')
+    seedGame('2', 'Resident Evil 2', 4, [null, null])
+    seedGame('trophy/NPWR2', 'Resident Evil 2', 4, [], 'playstation')
+    seedGame('3', 'Rainbow Six Siege', 4, [null])
+    seedGame('4', 'Rainbow Six Siege', 4, [null, null, null, null], 'ubisoft')
+    seedGame('trophy/NPWR3', 'Rainbow Six Siege', 8, [], 'playstation')
+
+    const platforms = getDashboardStats(db, NOW).platforms
+    const sourcesOf = (platform: Platform) =>
+      platforms
+        .find((row) => row.platform === platform)
+        ?.sources.map((source) => ({
+          platform: source.platform,
+          covered: source.covered,
+          games: source.games.map((game) => `${game.title} +${game.covered}`),
+        }))
+
+    expect(platforms.find((row) => row.platform === 'playstation')?.covered).toBe(15)
+    expect(sourcesOf('playstation')).toEqual([
+      { platform: 'ubisoft', covered: 8, games: ['Rainbow Six Siege +8'] },
+      { platform: 'steam', covered: 7, games: ['Apex Legends +5', 'Resident Evil 2 +2'] },
+    ])
+    expect(sourcesOf('steam')).toEqual([
+      { platform: 'ubisoft', covered: 3, games: ['Rainbow Six Siege +3'] },
+    ])
+    expect(sourcesOf('ubisoft')).toEqual([])
   })
 
   it('covers nothing on the best copy, on a copy level with it, or on a copy with no achievements', () => {
@@ -715,8 +769,8 @@ describe('getDashboardStats', () => {
     seedGame('4', 'Celeste', 3, [], 'epic')
 
     expect(getDashboardStats(db, NOW).platforms).toEqual([
-      { platform: 'steam', games: 2, unlocked: 2, covered: 0, total: 4 },
-      { platform: 'epic', games: 2, unlocked: 1, covered: 0, total: 5 },
+      { platform: 'steam', games: 2, unlocked: 2, covered: 0, total: 4, sources: [] },
+      { platform: 'epic', games: 2, unlocked: 1, covered: 0, total: 5, sources: [] },
     ])
   })
 
@@ -727,8 +781,8 @@ describe('getDashboardStats', () => {
     seedGame('trophy/NPWR2', 'Astro Bot', 2, [null, null], 'playstation')
 
     expect(getDashboardStats(db, NOW).platforms).toEqual([
-      { platform: 'playstation', games: 2, unlocked: 4, covered: 0, total: 5 },
-      { platform: 'steam', games: 2, unlocked: 1, covered: 0, total: 4 },
+      { platform: 'playstation', games: 2, unlocked: 4, covered: 0, total: 5, sources: [] },
+      { platform: 'steam', games: 2, unlocked: 1, covered: 0, total: 4, sources: [] },
     ])
   })
 

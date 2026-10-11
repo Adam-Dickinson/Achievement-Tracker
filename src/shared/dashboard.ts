@@ -8,6 +8,24 @@ export interface PlatformProgress {
   readonly unlocked: number
   readonly covered: number
   readonly total: number
+  readonly sources: readonly CoverageSource[]
+}
+
+export interface CoverageSource {
+  readonly platform: Platform
+  readonly covered: number
+  readonly games: readonly CoveredGame[]
+}
+
+export interface CoveredGame {
+  readonly gameId: number
+  readonly platformGameId: number
+  readonly title: string
+  readonly unlocked: number
+  readonly total: number
+  readonly covered: number
+  readonly sourceUnlocked: number
+  readonly sourceTotal: number
 }
 
 export interface DayCount {

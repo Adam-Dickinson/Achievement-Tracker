@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { DashboardStats, DayCount, RarestUnlock } from '@shared/dashboard'
+import type { DashboardStats, DayCount, PlatformProgress, RarestUnlock } from '@shared/dashboard'
 import type { LibraryGame, RecentUnlock } from '@shared/library'
 import { fakeApi } from '@/test/fake-api'
 import { Dashboard } from './Dashboard'
@@ -67,8 +67,8 @@ const STATS: DashboardStats = {
   unlockedByRarity: { ultra_rare: 9, rare: 142, uncommon: 388, common: 745 },
   platinums: 9,
   platforms: [
-    { platform: 'steam', games: 120, unlocked: 402, covered: 0, total: 536 },
-    { platform: 'playstation', games: 1, unlocked: 0, covered: 0, total: 0 },
+    { platform: 'steam', games: 120, unlocked: 402, covered: 0, total: 536, sources: [] },
+    { platform: 'playstation', games: 1, unlocked: 0, covered: 0, total: 0, sources: [] },
   ],
   nearlyThere: [game(1, 'Hollow Knight', 61, 63), game(2, 'Celeste', 31, 33)],
   recentUnlocks: [UNLOCK],
@@ -104,6 +104,58 @@ afterEach(() => {
   cleanup()
   vi.resetAllMocks()
 })
+
+const COVERED_PLAYSTATION: PlatformProgress = {
+  platform: 'playstation',
+  games: 3,
+  unlocked: 300,
+  covered: 150,
+  total: 900,
+  sources: [
+    {
+      platform: 'steam',
+      covered: 120,
+      games: [
+        {
+          gameId: 7,
+          platformGameId: 70,
+          title: 'Apex Legends',
+          unlocked: 0,
+          total: 200,
+          covered: 100,
+          sourceUnlocked: 100,
+          sourceTotal: 200,
+        },
+        {
+          gameId: 8,
+          platformGameId: 80,
+          title: 'Resident Evil 2',
+          unlocked: 5,
+          total: 40,
+          covered: 20,
+          sourceUnlocked: 25,
+          sourceTotal: 40,
+        },
+      ],
+    },
+    {
+      platform: 'ubisoft',
+      covered: 30,
+      games: [
+        {
+          gameId: 9,
+          platformGameId: 90,
+          title: 'Rainbow Six Siege',
+          unlocked: 10,
+          total: 80,
+          covered: 30,
+          sourceUnlocked: 50,
+          sourceTotal: 80,
+        },
+      ],
+    },
+  ],
+}
 
 describe('Dashboard', () => {
   it('shows a loading status before the stats arrive', () => {
@@ -276,7 +328,7 @@ describe('Dashboard', () => {
   it('fills in progress done on another platform in a second colour, with a legend', async () => {
     renderDashboard({
       ...STATS,
-      platforms: [{ platform: 'playstation', games: 3, unlocked: 300, covered: 150, total: 900 }],
+      platforms: [COVERED_PLAYSTATION],
     })
 
     const section = await screen.findByRole('region', { name: 'Platforms' })
@@ -290,12 +342,42 @@ describe('Dashboard', () => {
     expect(section).toHaveTextContent('Done on another platform')
   })
 
+  it('opens where the covered progress comes from, by platform and game, and opens a game on this tab', async () => {
+    renderDashboard({ ...STATS, platforms: [COVERED_PLAYSTATION] })
+
+    const section = await screen.findByRole('region', { name: 'Platforms' })
+    const toggle = within(section).getByRole('button', {
+      name: 'PlayStation: where the 150 from other platforms come from',
+    })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(within(section).queryByRole('region', { name: 'From Steam' })).not.toBeInTheDocument()
+
+    fireEvent.click(toggle)
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    const fromSteam = within(section).getByRole('region', { name: 'From Steam' })
+    expect(within(fromSteam).getByRole('heading')).toHaveTextContent('From Steam+120')
+    const [apex, residentEvil] = within(fromSteam).getAllByRole('button')
+    expect(apex).toHaveTextContent('Apex Legends+100 (PlayStation 0/200, Steam 100/200)')
+    expect(residentEvil).toHaveTextContent('Resident Evil 2+20 (PlayStation 5/40, Steam 25/40)')
+    expect(within(section).getByRole('region', { name: 'From Ubisoft Connect' })).toHaveTextContent(
+      'Rainbow Six Siege+30',
+    )
+
+    fireEvent.click(apex!)
+    expect(onOpenGame).toHaveBeenCalledWith(7, 70)
+
+    fireEvent.click(toggle)
+    expect(within(section).queryByRole('region', { name: 'From Steam' })).not.toBeInTheDocument()
+  })
+
   it('shows no covered count or legend when every platform is played on its own', async () => {
     renderDashboard()
 
     const section = await screen.findByRole('region', { name: 'Platforms' })
     expect(section).not.toHaveTextContent('+')
     expect(section).not.toHaveTextContent('Done on another platform')
+    expect(within(section).queryByRole('button', { expanded: false })).not.toBeInTheDocument()
     expect(
       within(section).getByRole('progressbar', { name: 'Steam completion' }),
     ).not.toHaveAttribute('aria-valuetext')
