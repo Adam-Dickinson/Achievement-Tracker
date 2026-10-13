@@ -16,6 +16,7 @@ Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC
 
 - One unified library and progress view across every platform you play on
 - Real-time unlock notifications (custom in-game-style toast with rarity and sound)
+- Stream overlay: the same toasts on stream through an OBS Browser Source (Settings → Notifications → Stream overlay)
 - Tiny background footprint: always on, barely noticeable
 - Local-first: your data lives in a local SQLite database, credentials in the OS keychain
 - Extensible: adding a platform or emulator is one self-contained adapter

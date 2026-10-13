@@ -3,6 +3,8 @@ import { z } from 'zod'
 import type { DashboardStats } from '@shared/dashboard'
 import {
   IPC,
+  STREAM_PORT_MAX,
+  STREAM_PORT_MIN,
   TOAST_CORNERS,
   TOAST_SIZES,
   type AccountSummary,
@@ -23,6 +25,7 @@ import {
   type MergeGamesInput,
   type NotificationSettings,
   type NotificationSettingsPatch,
+  type StreamOverlayStatus,
   type PlayStationConnectInput,
   type Profile,
   type SteamConnectInput,
@@ -114,6 +117,8 @@ export interface IpcHandlers {
   getNotificationSettings(): NotificationSettings
   updateNotificationSettings(patch: NotificationSettingsPatch): NotificationSettings
   listDisplays(): DisplayInfo[]
+  getStreamOverlayStatus(): StreamOverlayStatus
+  sendTestStreamToast(): Promise<void>
 }
 
 const logLevelSchema = z.enum(LOG_LEVELS)
@@ -183,6 +188,15 @@ const notificationSettingsPatchSchema = z.object({
   enabledPlatforms: enabledPlatformsPatchSchema.optional(),
   sound: z
     .object({ enabled: z.boolean().optional(), volume: z.number().min(0).max(1).optional() })
+    .optional(),
+  stream: z
+    .object({
+      enabled: z.boolean().optional(),
+      port: z.number().int().min(STREAM_PORT_MIN).max(STREAM_PORT_MAX).optional(),
+      sound: z
+        .object({ enabled: z.boolean().optional(), volume: z.number().min(0).max(1).optional() })
+        .optional(),
+    })
     .optional(),
 })
 
@@ -612,6 +626,16 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.listDisplays, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.listDisplays()
+  })
+
+  ipcMain.handle(IPC.getStreamOverlayStatus, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.getStreamOverlayStatus()
+  })
+
+  ipcMain.handle(IPC.sendTestStreamToast, (event) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    return handlers.sendTestStreamToast()
   })
 }
 

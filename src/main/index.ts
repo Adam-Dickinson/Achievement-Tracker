@@ -65,6 +65,7 @@ import { openStorePage } from './store-page'
 import { openLogsFolder } from './logs-folder'
 import { launchedHidden, setStartWithWindows, startupSettings, startWithWindows } from './startup'
 import { nextSampleToast } from './sample-toasts'
+import { StreamOverlayServer } from './stream-overlay'
 import { openDatabase } from './store/database'
 import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
 import { awardPlatinums } from './store/platinum'
@@ -202,11 +203,35 @@ async function start(): Promise<void> {
     return Promise.resolve()
   }
 
+  const streamOverlay = new StreamOverlayServer({
+    rendererDir: join(__dirname, '../renderer'),
+    devUrl: process.env['ELECTRON_RENDERER_URL'],
+    onStatus: (status) => {
+      console.info(`Stream overlay: ${status.state}${status.message ? ` (${status.message})` : ''}`)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(IPC.streamOverlayStatusChanged, status)
+      }
+    },
+  })
+  const streamNotifications = new NotificationService({
+    display: (toasts) => streamOverlay.publish(toasts),
+  })
+  let streamEnabled = false
+  const sendTestStreamToast = (): Promise<void> => {
+    streamNotifications.show(nextSampleToast())
+    return Promise.resolve()
+  }
+
   const applyNotificationSettings = (settings: NotificationSettings): void => {
-    notifications.durationMs = settings.durationSec * 1000
-    notifications.minRarity = settings.minRarity
-    notifications.enabledPlatforms = settings.enabledPlatforms
+    for (const service of [notifications, streamNotifications]) {
+      service.durationMs = settings.durationSec * 1000
+      service.minRarity = settings.minRarity
+      service.enabledPlatforms = settings.enabledPlatforms
+    }
     overlay.settings = settings
+    streamEnabled = settings.stream.enabled
+    if (!streamEnabled) streamNotifications.stop()
+    void streamOverlay.configure(settings.stream)
   }
   applyNotificationSettings(readNotificationSettings(db))
 
@@ -345,6 +370,7 @@ async function start(): Promise<void> {
     onUnlocks: (events) => {
       for (const event of events) console.info(describeUnlockTiming(event))
       notifications.notify(events)
+      if (streamEnabled) streamNotifications.notify(events)
     },
     onDataChanged: () => {
       dataChanged()
@@ -392,6 +418,8 @@ async function start(): Promise<void> {
     scheduler.stop()
     artwork.stop()
     notifications.stop()
+    streamNotifications.stop()
+    void streamOverlay.stop()
     xboxSignIn.cancel()
     ubisoftSignIn.cancel()
     eaSignIn.cancel()
@@ -591,6 +619,8 @@ async function start(): Promise<void> {
         primary: display.id === primaryId,
       }))
     },
+    getStreamOverlayStatus: () => streamOverlay.status,
+    sendTestStreamToast,
   })
 
   tray = createTray({

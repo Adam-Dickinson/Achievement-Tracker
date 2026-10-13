@@ -2,6 +2,8 @@ import type { DatabaseSync } from 'node:sqlite'
 import { z } from 'zod'
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
+  STREAM_PORT_MAX,
+  STREAM_PORT_MIN,
   TOAST_CORNERS,
   TOAST_SIZES,
   type NotificationSettings,
@@ -29,6 +31,14 @@ const notificationSettingsSchema = z.object({
   minRarity: z.enum(RARITIES),
   enabledPlatforms: z.partialRecord(z.enum(PLATFORMS), z.boolean()),
   sound: z.object({ enabled: z.boolean(), volume: z.number().min(0).max(1) }),
+  stream: z
+    .object({
+      enabled: z.boolean(),
+      port: z.number().int().min(STREAM_PORT_MIN).max(STREAM_PORT_MAX),
+      sound: z.object({ enabled: z.boolean(), volume: z.number().min(0).max(1) }),
+    })
+    .optional()
+    .catch(undefined),
 })
 
 export function readProfileName(db: DatabaseSync): string | null {
@@ -68,6 +78,7 @@ export function readNotificationSettings(db: DatabaseSync): NotificationSettings
         ...DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms,
         ...parsed.data.enabledPlatforms,
       },
+      stream: parsed.data.stream ?? DEFAULT_NOTIFICATION_SETTINGS.stream,
     }
   } catch {
     return DEFAULT_NOTIFICATION_SETTINGS
@@ -91,6 +102,11 @@ export function updateNotificationSettings(
     ...patch,
     enabledPlatforms: { ...current.enabledPlatforms, ...patch.enabledPlatforms },
     sound: { ...current.sound, ...patch.sound },
+    stream: {
+      ...current.stream,
+      ...patch.stream,
+      sound: { ...current.stream.sound, ...patch.stream?.sound },
+    },
   }
   saveNotificationSettings(db, settings)
   return settings

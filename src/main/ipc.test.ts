@@ -11,6 +11,7 @@ import {
   type ExportResult,
   type NotificationSettings,
   type Profile,
+  type StreamOverlayStatus,
 } from '@shared/ipc'
 import { type ActivityPage, MAX_ACTIVITY_LIMIT } from '@shared/library'
 import type { LogEntry, LogLevel } from '@shared/logs'
@@ -62,6 +63,12 @@ const PROFILE: Profile = { name: null, windowsName: 'tester' }
 const ACTIVITY: ActivityPage = { unlocks: [], hasMore: true }
 
 const DISPLAYS: DisplayInfo[] = [{ id: 1, label: 'Display 1 · Primary', primary: true }]
+
+const STREAM_RUNNING: StreamOverlayStatus = {
+  state: 'running',
+  url: 'http://127.0.0.1:47821/',
+  message: null,
+}
 
 const RPCS3_FOLDER: EmulatorFolder = {
   path: 'D:\\Emulators\\rpcs3',
@@ -156,6 +163,8 @@ const fakes = {
     }),
   ),
   listDisplays: vi.fn(() => DISPLAYS),
+  getStreamOverlayStatus: vi.fn(() => STREAM_RUNNING),
+  sendTestStreamToast: vi.fn(() => Promise.resolve()),
 }
 
 function call(channel: string, event: unknown, ...args: unknown[]): unknown {
@@ -235,6 +244,8 @@ describe('registerIpcHandlers', () => {
     IPC.getNotificationSettings,
     IPC.updateNotificationSettings,
     IPC.listDisplays,
+    IPC.getStreamOverlayStatus,
+    IPC.sendTestStreamToast,
   ])('refuses %s from a page we did not ship', (channel) => {
     expect(() => call(channel, UNTRUSTED, { steamId: 'x', apiKey: 'y' })).toThrow(
       'Untrusted sender',
@@ -950,10 +961,37 @@ describe('notification settings handlers', () => {
     ['a duration out of range', { durationSec: 999 }],
     ['a volume out of range', { sound: { volume: 4 } }],
     ['an unknown platform key', { enabledPlatforms: { switch: true } }],
+    ['a stream port below 1024', { stream: { port: 80 } }],
+    ['a stream port above 65535', { stream: { port: 70000 } }],
+    ['a fractional stream port', { stream: { port: 47821.5 } }],
+    ['a stream volume out of range', { stream: { sound: { volume: 2 } } }],
+    ['a stream switch that is not a boolean', { stream: { enabled: 'yes' } }],
   ])('ignores a patch with %s', (_label, payload) => {
     call(IPC.updateNotificationSettings, TRUSTED, payload)
 
     expect(fakes.updateNotificationSettings).toHaveBeenCalledWith({})
+  })
+
+  it('passes a stream overlay patch through', () => {
+    call(IPC.updateNotificationSettings, TRUSTED, {
+      stream: { enabled: true, port: 50000, sound: { volume: 0.3 } },
+    })
+
+    expect(fakes.updateNotificationSettings).toHaveBeenCalledWith({
+      stream: { enabled: true, port: 50000, sound: { volume: 0.3 } },
+    })
+  })
+})
+
+describe('stream overlay handlers', () => {
+  it('reports the stream overlay status', () => {
+    expect(call(IPC.getStreamOverlayStatus, TRUSTED)).toEqual(STREAM_RUNNING)
+  })
+
+  it('sends a test toast to the stream overlay', async () => {
+    await call(IPC.sendTestStreamToast, TRUSTED)
+
+    expect(fakes.sendTestStreamToast).toHaveBeenCalledOnce()
   })
 })
 

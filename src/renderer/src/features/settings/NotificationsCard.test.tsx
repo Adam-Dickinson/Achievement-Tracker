@@ -22,6 +22,11 @@ beforeEach(() => {
       ...patch,
       enabledPlatforms: { ...stored.enabledPlatforms, ...patch.enabledPlatforms },
       sound: { ...stored.sound, ...patch.sound },
+      stream: {
+        ...stored.stream,
+        ...patch.stream,
+        sound: { ...stored.stream.sound, ...patch.stream?.sound },
+      },
     }
     return Promise.resolve(stored)
   })

@@ -114,6 +114,24 @@ describe('OverlayApp', () => {
     expect(playChime).not.toHaveBeenCalled()
   })
 
+  it('takes its frames from a subscribe prop instead of the app bridge when given one', () => {
+    let send: (frame: OverlayFrame) => void = () => {}
+    const stop = vi.fn()
+    const subscribe = vi.fn((listener: (frame: OverlayFrame) => void) => {
+      send = listener
+      return stop
+    })
+    const { unmount } = render(<OverlayApp subscribe={subscribe} />)
+
+    act(() => send(frame([toast(1, 'From the stream')])))
+
+    expect(screen.getByRole('status')).toHaveTextContent('From the stream')
+    expect(subscribe).toHaveBeenCalledOnce()
+    unmount()
+    expect(stop).toHaveBeenCalledOnce()
+    expect(unsubscribe).not.toHaveBeenCalled()
+  })
+
   it('does not replay a chime for a toast that is still on screen', () => {
     render(<OverlayApp />)
 
