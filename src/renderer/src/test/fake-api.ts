@@ -92,6 +92,9 @@ export function fakeApi(overrides: Partial<TrophyLockerApi> = {}): TrophyLockerA
     onToasts: vi.fn(() => () => {}),
     onNotificationsPausedChanged: vi.fn(() => () => {}),
     onNotificationSettingsChanged: vi.fn(() => () => {}),
+    getStreamOverlayStatus: vi.fn().mockResolvedValue({ state: 'off', url: null, message: null }),
+    sendTestStreamToast: vi.fn().mockResolvedValue(undefined),
+    onStreamOverlayStatusChanged: vi.fn(() => () => {}),
     ...overrides,
   }
 }

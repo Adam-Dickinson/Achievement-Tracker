@@ -105,6 +105,61 @@ describe('notification settings', () => {
     expect(readNotificationSettings(db).sound).toEqual({ enabled: false, volume: 0.6 })
   })
 
+  it('starts with the stream overlay off on port 47821 with the chime on', () => {
+    expect(readNotificationSettings(db).stream).toEqual({
+      enabled: false,
+      port: 47821,
+      sound: { enabled: true, volume: 0.6 },
+    })
+  })
+
+  it('reads settings saved before the stream overlay existed with stream defaults', () => {
+    const legacy: Record<string, unknown> = { ...DEFAULT_NOTIFICATION_SETTINGS, corner: 'top-left' }
+    delete legacy['stream']
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'notifications.settings',
+      JSON.stringify(legacy),
+    )
+
+    const settings = readNotificationSettings(db)
+    expect(settings.corner).toBe('top-left')
+    expect(settings.stream).toEqual(DEFAULT_NOTIFICATION_SETTINGS.stream)
+  })
+
+  it('falls back to stream defaults when the saved stream settings are invalid', () => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'notifications.settings',
+      JSON.stringify({
+        ...DEFAULT_NOTIFICATION_SETTINGS,
+        corner: 'top-left',
+        stream: { port: 80 },
+      }),
+    )
+
+    const settings = readNotificationSettings(db)
+    expect(settings.corner).toBe('top-left')
+    expect(settings.stream).toEqual(DEFAULT_NOTIFICATION_SETTINGS.stream)
+  })
+
+  it('merges a stream patch without dropping the stream port or chime', () => {
+    updateNotificationSettings(db, { stream: { enabled: true } })
+    updateNotificationSettings(db, { stream: { sound: { volume: 0.2 } } })
+
+    expect(readNotificationSettings(db).stream).toEqual({
+      enabled: true,
+      port: 47821,
+      sound: { enabled: true, volume: 0.2 },
+    })
+  })
+
+  it('keeps the desktop sound separate from the stream chime', () => {
+    updateNotificationSettings(db, { stream: { sound: { enabled: false } } })
+
+    const settings = readNotificationSettings(db)
+    expect(settings.sound.enabled).toBe(true)
+    expect(settings.stream.sound.enabled).toBe(false)
+  })
+
   it('keeps the latest settings across separate updates', () => {
     updateNotificationSettings(db, { corner: 'top-left' })
     updateNotificationSettings(db, { size: 'large' })

@@ -126,6 +126,12 @@ Not in v1 ([ADR-0006](adr/0006-v1-provider-scope.md); shadPS4 and RPCS3 moved in
 - Xenia: feasibility spike, then a provider if viable
 - Generic local-file adapter
 
+## Stream overlay ([ADR-0018](adr/0018-stream-overlay.md))
+
+- [x] Localhost page for an OBS Browser Source with the real toasts, its own on/off, port and chime, unaffected by the pause; Settings card with the URL, status and a test button. Verified: the built page served by the app rendered live toasts over Server-Sent Events with a transparent background in Chrome, and a request with a foreign `Host` was refused
+- [ ] Check it in OBS during a real stream (owner)
+- [ ] Maybe: a stream-only look (theme) and a size option
+
 ## Risks
 
 | Risk | Impact | Mitigation |

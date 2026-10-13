@@ -38,6 +38,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | F-24 | Native OS toast fallback | P1 |
 | F-25 | Do Not Disturb (manual, schedule) | P1 |
 | F-26 | Test/preview notification button | P0 |
+| F-27 | Stream overlay: the same unlock toasts as a localhost page for an OBS Browser Source, with its own on/off, port and chime, unaffected by pausing desktop pop-ups ([ADR-0018](adr/0018-stream-overlay.md)) | P2 |
 
 ### Library and UI
 | ID | Requirement | Pri |
@@ -318,6 +319,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `getNotificationSettings()` | `notifications:get-settings` | `NotificationSettings`: corner, monitor (`'primary'` or a display id), toast size, duration, minimum rarity to show, per-platform toggles and sound (enabled, volume). Defaults to `DEFAULT_NOTIFICATION_SETTINGS` |
 | `updateNotificationSettings(patch)` | `notifications:update-settings` | Merges a `NotificationSettingsPatch` into the stored settings (checked with zod; an invalid field is dropped rather than rejecting the call), repositions/rescales the overlay window at once, and returns the new `NotificationSettings`. Fires `onNotificationSettingsChanged`. A platinum always bypasses `minRarity` and a disabled platform |
 | `onNotificationSettingsChanged(listener)` | `notifications:settings-changed` (main → main and overlay windows) | Called with the new `NotificationSettings` whenever they change. Returns an unsubscribe function |
+| `getStreamOverlayStatus()` | `stream:get-status` | The stream overlay server's `StreamOverlayStatus`: `state` (`off`, `running` or `error`), the Browser Source `url` while running, and a plain `message` on error (such as the port being in use). Fires `onStreamOverlayStatusChanged` (`stream:status-changed`) whenever it changes |
+| `sendTestStreamToast()` | `stream:send-test` | Queues the next sample toast on the stream overlay only |
 | `listDisplays()` | `overlay:list-displays` | Every connected display as a `DisplayInfo` (`id`, a label such as "Display 1 (2560×1440)", `primary`), for the corner/monitor picker |
 | `exportData()` | `data:export` | Opens a save dialog in the main process and writes one JSON file of the user's data (no secrets, no external ids). The UI sends nothing, so it cannot choose the path. Answers an `ExportResult`: `{ kind: 'saved', path, games, achievements }`, `{ kind: 'cancelled' }`, or `{ kind: 'failed', message }`; it never rejects |
 | `getLogSettings()` | `logs:get-settings` | `LogSettings`: `{ level, available }`, the saved logging level (`info` when none or an unknown value is stored) and whether the logger can currently write to its folder (`available` goes false after a failed write and true again after the next good one) |
@@ -352,7 +355,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
     "corner": "bottom-right", "monitor": "primary", "size": "medium",
     "durationSec": 5, "minRarity": "common",
     "enabledPlatforms": { "steam": true, "xbox": true, /* ...one per platform */ },
-    "sound": { "enabled": true, "volume": 0.6 }
+    "sound": { "enabled": true, "volume": 0.6 },
+    "stream": { "enabled": false, "port": 47821, "sound": { "enabled": true, "volume": 0.6 } }
     // full-screen-game fallback and a DND schedule are planned but not yet built (M5)
   },
   "appearance":    { "theme": "system" }

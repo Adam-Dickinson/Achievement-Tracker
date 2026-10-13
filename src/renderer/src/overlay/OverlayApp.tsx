@@ -23,11 +23,17 @@ const INITIAL_FRAME: OverlayFrame = {
   sound: DEFAULT_NOTIFICATION_SETTINGS.sound,
 }
 
-export function OverlayApp() {
+export type FrameSubscriber = (listener: (frame: OverlayFrame) => void) => () => void
+
+interface OverlayAppProps {
+  readonly subscribe?: FrameSubscriber
+}
+
+export function OverlayApp({ subscribe }: OverlayAppProps = {}) {
   const [frame, setFrame] = useState<OverlayFrame>(INITIAL_FRAME)
   const shownIds = useRef(new Set<number>())
 
-  useEffect(() => window.api.onToasts(setFrame), [])
+  useEffect(() => (subscribe ?? window.api.onToasts)(setFrame), [subscribe])
 
   useEffect(() => {
     const wasShown = shownIds.current

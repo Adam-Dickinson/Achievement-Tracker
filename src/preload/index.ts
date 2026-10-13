@@ -3,6 +3,7 @@ import {
   IPC,
   type NotificationSettings,
   type OverlayFrame,
+  type StreamOverlayStatus,
   type TrophyLockerApi,
 } from '@shared/ipc'
 import type { UpdateState } from '@shared/updates'
@@ -94,6 +95,14 @@ const api: TrophyLockerApi = {
     const handler = (_event: IpcRendererEvent, paused: boolean): void => listener(paused)
     ipcRenderer.on(IPC.notificationsPausedChanged, handler)
     return () => ipcRenderer.removeListener(IPC.notificationsPausedChanged, handler)
+  },
+  getStreamOverlayStatus: () => ipcRenderer.invoke(IPC.getStreamOverlayStatus),
+  sendTestStreamToast: () => ipcRenderer.invoke(IPC.sendTestStreamToast),
+  onStreamOverlayStatusChanged: (listener) => {
+    const handler = (_event: IpcRendererEvent, status: StreamOverlayStatus): void =>
+      listener(status)
+    ipcRenderer.on(IPC.streamOverlayStatusChanged, handler)
+    return () => ipcRenderer.removeListener(IPC.streamOverlayStatusChanged, handler)
   },
   onNotificationSettingsChanged: (listener) => {
     const handler = (_event: IpcRendererEvent, settings: NotificationSettings): void =>

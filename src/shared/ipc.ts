@@ -75,6 +75,9 @@ export const IPC = {
   updateNotificationSettings: 'notifications:update-settings',
   notificationSettingsChanged: 'notifications:settings-changed',
   listDisplays: 'overlay:list-displays',
+  getStreamOverlayStatus: 'stream:get-status',
+  streamOverlayStatusChanged: 'stream:status-changed',
+  sendTestStreamToast: 'stream:send-test',
   dataChanged: 'data:changed',
 } as const
 
@@ -127,6 +130,19 @@ export const TOAST_SCALE: Readonly<Record<ToastSize, number>> = {
   large: 1.15,
 }
 
+export const DEFAULT_STREAM_PORT = 47821
+export const STREAM_PORT_MIN = 1024
+export const STREAM_PORT_MAX = 65535
+
+export interface StreamOverlaySettings {
+  readonly enabled: boolean
+  readonly port: number
+  readonly sound: {
+    readonly enabled: boolean
+    readonly volume: number
+  }
+}
+
 export interface NotificationSettings {
   readonly corner: ToastCorner
   readonly monitor: 'primary' | number
@@ -138,6 +154,7 @@ export interface NotificationSettings {
     readonly enabled: boolean
     readonly volume: number
   }
+  readonly stream: StreamOverlaySettings
 }
 
 export interface NotificationSettingsPatch {
@@ -150,6 +167,14 @@ export interface NotificationSettingsPatch {
   readonly sound?: {
     readonly enabled?: boolean
     readonly volume?: number
+  }
+  readonly stream?: {
+    readonly enabled?: boolean
+    readonly port?: number
+    readonly sound?: {
+      readonly enabled?: boolean
+      readonly volume?: number
+    }
   }
 }
 
@@ -164,6 +189,19 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     boolean
   >,
   sound: { enabled: true, volume: 0.6 },
+  stream: {
+    enabled: false,
+    port: DEFAULT_STREAM_PORT,
+    sound: { enabled: true, volume: 0.6 },
+  },
+}
+
+export type StreamOverlayState = 'off' | 'running' | 'error'
+
+export interface StreamOverlayStatus {
+  readonly state: StreamOverlayState
+  readonly url: string | null
+  readonly message: string | null
 }
 
 export interface DisplayInfo {
@@ -360,6 +398,9 @@ export interface TrophyLockerApi {
   getNotificationSettings(): Promise<NotificationSettings>
   updateNotificationSettings(patch: NotificationSettingsPatch): Promise<NotificationSettings>
   listDisplays(): Promise<DisplayInfo[]>
+  getStreamOverlayStatus(): Promise<StreamOverlayStatus>
+  sendTestStreamToast(): Promise<void>
+  onStreamOverlayStatusChanged(listener: (status: StreamOverlayStatus) => void): () => void
   onDataChanged(listener: () => void): () => void
   onToasts(listener: (frame: OverlayFrame) => void): () => void
   onNotificationsPausedChanged(listener: (paused: boolean) => void): () => void
