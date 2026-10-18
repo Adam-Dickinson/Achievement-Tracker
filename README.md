@@ -6,7 +6,7 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 
 ## Download
 
-Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [Releases page](https://github.com/Adam-Dickinson/Achievement-Tracker/releases). It installs for the current user and needs no admin rights.
+Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [website](https://adam-dickinson.github.io/Achievement-Tracker/) or the [Releases page](https://github.com/Adam-Dickinson/Achievement-Tracker/releases). It installs for the current user and needs no admin rights.
 
 Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**.
 
