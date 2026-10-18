@@ -1,0 +1,33 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+  <defs>
+    <radialGradient id="logo-teal" cx=".15" cy=".1" r=".8"><stop offset="0" stop-color="#1F8A7A" stop-opacity=".55"/><stop offset="1" stop-color="#1F8A7A" stop-opacity="0"/></radialGradient>
+    <radialGradient id="logo-indigo" cx=".95" cy=".05" r=".75"><stop offset="0" stop-color="#5B4BD6" stop-opacity=".5"/><stop offset="1" stop-color="#5B4BD6" stop-opacity="0"/></radialGradient>
+    <linearGradient id="logo-rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>
+    <linearGradient id="logo-lime" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E2FF8A"/><stop offset="1" stop-color="#A9DE22"/></linearGradient>
+    <clipPath id="logo-done"><rect x="0" y="0" width="581.6" height="1024"/></clipPath>
+    <filter id="logo-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="#121620"/>
+  <rect width="1024" height="1024" rx="232" fill="url(#logo-teal)"/>
+  <rect width="1024" height="1024" rx="232" fill="url(#logo-indigo)"/>
+  <rect x="8" y="8" width="1008" height="1008" rx="224" fill="none" stroke="url(#logo-rim)" stroke-width="16"/>
+  <g transform="translate(512 512) scale(.8) translate(-512 -528)">
+    <g filter="url(#logo-glow)" opacity=".55" clip-path="url(#logo-done)">
+    <path d="M318 290H222c0 132 58 206 150 230M706 290h96c0 132-58 206-150 230" fill="none" stroke="#C4F542" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216zM480.3617699610108 425.32A62 62 0 1 1 543.6382300389893 425.32L560.36 539.4H463.64Z" fill="#C4F542" fill-rule="evenodd"/>
+    <rect x="470" y="640" width="84" height="118" fill="#C4F542"/>
+    <rect x="352" y="752" width="320" height="80" rx="26" fill="#C4F542"/></g>
+    
+    <path d="M318 290H222c0 132 58 206 150 230M706 290h96c0 132-58 206-150 230" fill="none" stroke="#4B5470" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216zM480.3617699610108 425.32A62 62 0 1 1 543.6382300389893 425.32L560.36 539.4H463.64Z" fill="#4B5470" fill-rule="evenodd"/>
+    <rect x="470" y="640" width="84" height="118" fill="#4B5470"/>
+    <rect x="352" y="752" width="320" height="80" rx="26" fill="#4B5470"/>
+    <g clip-path="url(#logo-done)">
+    <path d="M318 290H222c0 132 58 206 150 230M706 290h96c0 132-58 206-150 230" fill="none" stroke="url(#logo-lime)" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216zM480.3617699610108 425.32A62 62 0 1 1 543.6382300389893 425.32L560.36 539.4H463.64Z" fill="url(#logo-lime)" fill-rule="evenodd"/>
+    <rect x="470" y="640" width="84" height="118" fill="url(#logo-lime)"/>
+    <rect x="352" y="752" width="320" height="80" rx="26" fill="url(#logo-lime)"/></g>
+    <rect x="574.6" y="196" width="14" height="660" rx="7" fill="#C4F542" filter="url(#logo-glow)"/>
+    <rect x="577.6" y="196" width="8" height="660" rx="4" fill="#F4FFD6"/>
+  </g>
+</svg>

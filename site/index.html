@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trophy Locker: every trophy, one locker</title>
+    <meta
+      name="description"
+      content="Free Windows app that tracks achievements and trophies across Steam, Xbox, PlayStation, Epic, Ubisoft, EA, shadPS4 and RPCS3, with a pop-up the moment you unlock something."
+    />
+    <meta name="theme-color" content="#080a10" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Trophy Locker" />
+    <meta
+      property="og:description"
+      content="Every achievement and trophy from every platform in one place, with a pop-up the moment you unlock something."
+    />
+    <meta property="og:image" content="icon.png" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="icon.png" type="image/png" />
+    <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      @font-face {
+        font-family: 'Bricolage Grotesque';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Figtree';
+        font-style: normal;
+        font-weight: 300 900;
+        font-display: swap;
+        src: url('fonts/figtree-latin-wght-normal.woff2') format('woff2');
+      }
+
+      :root {
+        color-scheme: dark;
+        --canvas: #080a10;
+        --surface-1: #121620;
+        --surface-2: #191e2b;
+        --surface-3: #222839;
+        --line: rgb(255 255 255 / 0.07);
+        --line-strong: rgb(255 255 255 / 0.12);
+        --fg: #f3f5fa;
+        --fg-muted: #9aa3b8;
+        --fg-subtle: #888fa0;
+        --primary: #c4f542;
+        --primary-hover: #d6ff5c;
+        --on-primary: #0b1000;
+        --teal: #3fd6c8;
+
+        --steam: #66c0f4;
+        --xbox: #5fd35a;
+        --playstation: #4f8cff;
+        --epic: #e4e4e7;
+        --ubisoft: #5aa0ff;
+        --ea: #ff6b6b;
+        --emulator: #b79cff;
+
+        --radius-control: 14px;
+        --radius-card: 18px;
+        --radius-panel: 26px;
+
+        --shadow-float: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 28px 56px -22px rgb(0 0 0 / 0.8),
+          0 10px 22px -10px rgb(0 0 0 / 0.55);
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --display: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+        --sans: 'Figtree', system-ui, sans-serif;
+      }
+
+      [data-rarity='uncommon'] {
+        --rarity: #4ade9a;
+        --rarity-light: #37d493;
+        --rarity-dark: #127a55;
+        --rarity-on: #04231a;
+      }
+      [data-rarity='rare'] {
+        --rarity: #5ab0ff;
+        --rarity-light: #5ab0ff;
+        --rarity-dark: #2a5fd6;
+        --rarity-on: #ffffff;
+      }
+      [data-rarity='ultra'] {
+        --rarity: #ffc94a;
+        --rarity-light: #ffe07a;
+        --rarity-dark: #ff8a1f;
+        --rarity-on: #3a1c00;
+      }
+      [data-rarity='platinum'] {
+        --rarity: #d9e2ff;
+        --rarity-light: #f4f6ff;
+        --rarity-dark: #7f8fc2;
+        --rarity-on: #141a33;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--fg);
+        background:
+          radial-gradient(1100px 540px at 4% -10%, rgb(22 150 132 / 0.36), transparent 62%),
+          radial-gradient(900px 520px at 100% 0%, rgb(70 80 200 / 0.26), transparent 62%),
+          radial-gradient(1000px 600px at 55% 112%, rgb(160 215 40 / 0.1), transparent 60%),
+          var(--canvas);
+        background-repeat: no-repeat;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      svg.icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 3px;
+        border-radius: 6px;
+      }
+
+      .skip {
+        position: absolute;
+        left: 16px;
+        top: -60px;
+        padding: 10px 14px;
+        background: var(--primary);
+        color: var(--on-primary);
+        border-radius: var(--radius-control);
+        font-weight: 700;
+        z-index: 20;
+      }
+      .skip:focus {
+        top: 12px;
+      }
+
+      .wrap {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgb(8 10 16 / 0.72);
+        backdrop-filter: blur(14px) saturate(140%);
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 68px;
+        gap: 16px;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        font-family: var(--display);
+        font-weight: 700;
+        font-size: 19px;
+        letter-spacing: -0.01em;
+      }
+      .brand img {
+        width: 32px;
+        height: 32px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .nav-links a:not(.btn) {
+        text-decoration: none;
+        color: var(--fg-muted);
+        transition: color 0.2s;
+      }
+      .nav-links a:not(.btn):hover {
+        color: var(--fg);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        height: 52px;
+        padding: 0 24px;
+        border-radius: var(--radius-control);
+        font: 700 16px/1 var(--sans);
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          transform 0.2s var(--ease-out),
+          background-color 0.2s,
+          box-shadow 0.2s,
+          border-color 0.2s;
+      }
+      .btn:active {
+        transform: translateY(1px) scale(0.98);
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: var(--on-primary);
+        box-shadow: 0 12px 28px -10px rgb(196 245 66 / 0.7);
+      }
+      .btn-primary:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+      }
+      .btn-ghost {
+        color: var(--fg);
+        border: 1px solid var(--line-strong);
+        background: rgb(255 255 255 / 0.03);
+      }
+      .btn-ghost:hover {
+        border-color: rgb(255 255 255 / 0.24);
+        background: rgb(255 255 255 / 0.06);
+      }
+      .btn-small {
+        height: 40px;
+        padding: 0 16px;
+        font-size: 14px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        align-items: center;
+        gap: 48px;
+        padding: 88px 0 96px;
+        min-height: min(calc(100dvh - 68px), 860px);
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: clamp(44px, 6.4vw, 76px);
+        line-height: 1;
+        letter-spacing: -0.035em;
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--primary);
+      }
+      .lede {
+        margin: 24px 0 0;
+        max-width: 34ch;
+        font-size: clamp(18px, 1.6vw, 20px);
+        line-height: 1.55;
+        color: var(--fg-muted);
+      }
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 36px;
+      }
+      .download-meta {
+        margin: 14px 0 0;
+        font-size: 14px;
+        color: var(--fg-subtle);
+      }
+
+      .stage {
+        position: relative;
+        display: grid;
+        gap: 18px;
+        justify-items: end;
+      }
+      .stage .toast:nth-child(2) {
+        margin-right: 40px;
+      }
+      .stage .toast:nth-child(3) {
+        margin-right: 12px;
+      }
+
+      .toast {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: min(400px, 100%);
+        height: 92px;
+        padding: 0 16px;
+        overflow: hidden;
+        border-radius: var(--radius-panel);
+        border: 1px solid color-mix(in srgb, var(--rarity) 45%, transparent);
+        background:
+          linear-gradient(to bottom, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.01)),
+          var(--surface-1);
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.1),
+          0 0 0 4px color-mix(in srgb, var(--rarity) 10%, transparent),
+          0 26px 50px -16px rgb(0 0 0 / 0.9),
+          0 12px 44px -6px color-mix(in srgb, var(--rarity) 45%, transparent);
+      }
+      .toast[data-rarity='ultra'],
+      .toast[data-rarity='platinum'] {
+        border-color: color-mix(in srgb, var(--rarity) 75%, transparent);
+      }
+      .tile {
+        display: grid;
+        place-items: center;
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
+        border-radius: var(--radius-card);
+        background: linear-gradient(140deg, var(--rarity-light), var(--rarity-dark));
+        color: var(--rarity-on);
+        box-shadow:
+          0 10px 22px -10px var(--rarity),
+          inset 0 1px 0 rgb(255 255 255 / 0.35);
+      }
+      .tile svg {
+        width: 24px;
+        height: 28px;
+        fill: currentColor;
+      }
+      .toast-body {
+        min-width: 0;
+        flex: 1;
+      }
+      .toast-heading {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--rarity);
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .toast-heading svg {
+        width: 12px;
+        height: 12px;
+      }
+      .gem {
+        fill: currentColor;
+        stroke: none;
+      }
+      .toast-title {
+        font-family: var(--display);
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 24px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .toast-desc {
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--fg-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .toast-game {
+        margin-top: 2px;
+        font-size: 11px;
+        line-height: 1.4;
+        color: var(--fg-subtle);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .toast-game b {
+        font-weight: 700;
+      }
+      .toast-side {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        min-width: 76px;
+        flex-shrink: 0;
+      }
+      .percent {
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 28px;
+        line-height: 28px;
+      }
+      .toast[data-rarity='ultra'] .percent,
+      .toast[data-rarity='platinum'] .percent {
+        color: var(--rarity);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 20px;
+        padding: 0 8px 0 6px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--rarity) 30%, transparent);
+        background: color-mix(in srgb, var(--rarity) 14%, transparent);
+        color: var(--rarity);
+        font-size: 10.5px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .chip svg {
+        width: 10px;
+        height: 10px;
+      }
+      .shine {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 60px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          color-mix(in srgb, var(--rarity-light) 30%, transparent),
+          transparent
+        );
+        transform: translateX(-80px) skewX(-18deg);
+        pointer-events: none;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .stage .toast {
+          opacity: 0;
+          transform: translateX(56px);
+          animation: toast-in 0.7s var(--ease-out) forwards;
+          animation-delay: calc(0.35s + var(--i) * 0.45s);
+        }
+        .stage .shine {
+          animation: shine 0.9s ease-in-out forwards;
+          animation-delay: calc(0.7s + var(--i) * 0.45s);
+        }
+        .reveal {
+          opacity: 0;
+          transform: translateY(24px);
+          transition:
+            opacity 0.7s var(--ease-out),
+            transform 0.7s var(--ease-out);
+        }
+        .reveal.is-visible {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes toast-in {
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes shine {
+        to {
+          transform: translateX(440px) skewX(-18deg);
+        }
+      }
+
+      .platforms {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 28px;
+        padding: 28px 0;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+      .platforms-label {
+        font-size: 14px;
+        color: var(--fg-subtle);
+        margin-right: 4px;
+      }
+      .platforms ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .platforms li {
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--c) 32%, transparent);
+        background: color-mix(in srgb, var(--c) 9%, transparent);
+        color: var(--c);
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      section {
+        scroll-margin-top: 84px;
+      }
+      h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: clamp(32px, 4vw, 48px);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+      h3 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: -0.015em;
+      }
+      .section-intro {
+        margin: 16px 0 0;
+        max-width: 56ch;
+        color: var(--fg-muted);
+        font-size: 18px;
+      }
+
+      .features {
+        padding: 120px 0 0;
+      }
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 48px;
+      }
+      .cell {
+        position: relative;
+        overflow: hidden;
+        padding: 28px;
+        border-radius: var(--radius-panel);
+        border: 1px solid var(--line);
+        background: var(--surface-1);
+        box-shadow: var(--shadow-float);
+      }
+      .cell p {
+        margin: 10px 0 0;
+        color: var(--fg-muted);
+        max-width: 46ch;
+      }
+      .cell-icon {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        margin-bottom: 20px;
+        border-radius: var(--radius-control);
+        background: rgb(255 255 255 / 0.05);
+        border: 1px solid var(--line);
+        color: var(--primary);
+      }
+      .cell-toasts {
+        grid-column: span 4;
+        grid-row: span 2;
+        display: flex;
+        flex-direction: column;
+        background:
+          radial-gradient(520px 320px at 85% 100%, rgb(255 201 74 / 0.14), transparent 70%),
+          radial-gradient(420px 260px at 0% 0%, rgb(63 214 200 / 0.12), transparent 70%),
+          var(--surface-1);
+      }
+      .cell-toasts .demo {
+        margin-top: auto;
+        padding-top: 36px;
+        display: grid;
+        gap: 14px;
+      }
+      .rarity-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+      }
+      .cell-platinum {
+        grid-column: span 2;
+        background:
+          radial-gradient(360px 240px at 100% 0%, rgb(217 226 255 / 0.16), transparent 70%),
+          var(--surface-1);
+      }
+      .cell-platinum .cell-icon {
+        color: #d9e2ff;
+      }
+      .cell-stream {
+        grid-column: span 2;
+      }
+      .cell-tray {
+        grid-column: span 3;
+      }
+      .cell-private {
+        grid-column: span 3;
+        background:
+          radial-gradient(420px 260px at 100% 100%, rgb(196 245 66 / 0.1), transparent 70%),
+          var(--surface-1);
+      }
+
+      .install {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: 64px;
+        padding: 140px 0 0;
+      }
+      .install-head {
+        align-self: start;
+        position: sticky;
+        top: 108px;
+      }
+      .steps {
+        counter-reset: step;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 40px;
+      }
+      .steps li {
+        counter-increment: step;
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 20px;
+      }
+      .steps li::before {
+        content: counter(step);
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        background: var(--surface-2);
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 18px;
+        color: var(--primary);
+      }
+      .steps p {
+        margin: 8px 0 0;
+        color: var(--fg-muted);
+        max-width: 60ch;
+      }
+      .steps strong {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .smartscreen {
+        margin-top: 16px;
+        padding: 16px 18px;
+        border-radius: var(--radius-card);
+        border: 1px solid var(--line);
+        background: rgb(255 255 255 / 0.03);
+        font-size: 15px;
+        color: var(--fg-muted);
+        max-width: 60ch;
+      }
+
+      .closing {
+        margin: 140px 0 0;
+        padding: 64px 48px;
+        border-radius: 30px;
+        border: 1px solid var(--line-strong);
+        background:
+          radial-gradient(700px 360px at 0% 0%, rgb(22 150 132 / 0.3), transparent 65%),
+          radial-gradient(600px 360px at 100% 100%, rgb(160 215 40 / 0.16), transparent 65%),
+          var(--surface-1);
+        box-shadow: var(--shadow-float);
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 36px;
+      }
+      .closing img {
+        width: 96px;
+        height: 96px;
+      }
+      .closing p {
+        margin: 12px 0 0;
+        color: var(--fg-muted);
+        max-width: 52ch;
+      }
+      .closing .cta-row {
+        margin-top: 0;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      footer {
+        margin-top: 96px;
+        padding: 40px 0 56px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        color: var(--fg-subtle);
+      }
+      .footer-inner {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .footer-inner p {
+        margin: 0;
+        max-width: 62ch;
+      }
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .footer-links a {
+        color: var(--fg-muted);
+        text-decoration: none;
+      }
+      .footer-links a:hover {
+        color: var(--fg);
+        text-decoration: underline;
+      }
+
+      @media (max-width: 1023px) {
+        .bento {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .cell-toasts {
+          grid-column: span 2;
+          grid-row: auto;
+        }
+        .cell-platinum,
+        .cell-stream,
+        .cell-tray,
+        .cell-private {
+          grid-column: span 1;
+        }
+        .closing {
+          grid-template-columns: minmax(0, 1fr);
+          padding: 48px 32px;
+        }
+        .closing .cta-row {
+          flex-direction: row;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .hero {
+          grid-template-columns: minmax(0, 1fr);
+          min-height: 0;
+          padding: 56px 0 72px;
+          gap: 48px;
+        }
+        .stage {
+          justify-items: start;
+        }
+        .stage .toast:nth-child(2),
+        .stage .toast:nth-child(3) {
+          margin-right: 0;
+        }
+        .install {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 40px;
+          padding-top: 100px;
+        }
+        .install-head {
+          position: static;
+        }
+        .features {
+          padding-top: 96px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .wrap {
+          padding: 0 16px;
+        }
+        .nav-links .hide-sm {
+          display: none;
+        }
+        .bento {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .cell-toasts,
+        .cell-platinum,
+        .cell-stream,
+        .cell-tray,
+        .cell-private {
+          grid-column: auto;
+        }
+        .cell {
+          padding: 22px;
+        }
+        .cta-row .btn,
+        .closing .cta-row {
+          width: 100%;
+        }
+        .closing .cta-row {
+          flex-direction: column;
+        }
+        .closing {
+          padding: 36px 20px;
+          margin-top: 100px;
+        }
+        .toast {
+          height: auto;
+          min-height: 92px;
+          padding: 14px 12px;
+          gap: 10px;
+        }
+        .tile {
+          width: 48px;
+          height: 48px;
+          border-radius: var(--radius-control);
+        }
+        .toast-side {
+          min-width: 0;
+        }
+        .percent {
+          font-size: 22px;
+          line-height: 24px;
+        }
+        .steps li {
+          grid-template-columns: 40px minmax(0, 1fr);
+          gap: 16px;
+        }
+        .steps li::before {
+          width: 40px;
+          height: 40px;
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-trophy" viewBox="296 224 432 608">
+        <path d="M296 224h432v208c0 120-96 216-216 216s-216-96-216-216z" />
+        <path d="M472 640h80v120h-80z" />
+        <path d="M356 760h312v72H356z" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 15V3" />
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <path d="m7 10 5 5 5-5" />
+      </symbol>
+      <symbol id="i-code" viewBox="0 0 24 24">
+        <path d="m18 16 4-4-4-4" />
+        <path d="m6 8-4 4 4 4" />
+        <path d="m14.5 4-5 16" />
+      </symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24">
+        <path
+          d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+        />
+      </symbol>
+      <symbol id="i-hexagon" viewBox="0 0 24 24">
+        <path
+          d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+        />
+      </symbol>
+      <symbol id="i-diamond" viewBox="0 0 24 24">
+        <path
+          d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z"
+        />
+      </symbol>
+      <symbol id="i-crown" viewBox="0 0 24 24">
+        <path
+          d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"
+        />
+        <path d="M5 21h14" />
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M10.268 21a2 2 0 0 0 3.464 0" />
+        <path d="M22 8c0-2.3-.8-4.3-2-6" />
+        <path
+          d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"
+        />
+        <path d="M4 2C2.8 3.7 2 5.7 2 8" />
+      </symbol>
+      <symbol id="i-cast" viewBox="0 0 24 24">
+        <path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
+        <path d="M2 12a9 9 0 0 1 8 8" />
+        <path d="M2 16a5 5 0 0 1 4 4" />
+        <line x1="2" x2="2.01" y1="20" y2="20" />
+      </symbol>
+      <symbol id="i-feather" viewBox="0 0 24 24">
+        <path d="M14.086 18.412A2 2 0 0112.67 19H5v-7.672a2 2 0 01.586-1.414L11.75 3.75a6 6 0 118.49 8.49z" />
+        <path d="M16 8 2 22" />
+        <path d="M17.488 15H9" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path
+          d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+        />
+        <path d="m9 12 2 2 4-4" />
+      </symbol>
+    </svg>
+
+    <header>
+      <nav class="wrap nav" aria-label="Main">
+        <a class="brand" href="#top">
+          <img src="icon.svg" alt="" width="32" height="32" />
+          Trophy Locker
+        </a>
+        <div class="nav-links">
+          <a class="hide-sm" href="#features">Features</a>
+          <a class="hide-sm" href="#install">Install</a>
+          <a class="btn btn-primary btn-small" href="https://github.com/Adam-Dickinson/Achievement-Tracker/releases/latest" data-download>
+            <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
+            Download
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main">
+      <div class="wrap" id="top">
+        <section class="hero" aria-labelledby="hero-title">
+          <div>
+            <h1 id="hero-title">Every trophy.<br /><em>One locker.</em></h1>
+            <p class="lede">
+              Tracks achievements across Steam, Xbox, PlayStation, Epic, Ubisoft, EA and emulators. Unlocks
+              pop up the moment they happen.
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="https://github.com/Adam-Dickinson/Achievement-Tracker/releases/latest" data-download>
+                <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
+                Download for Windows
+              </a>
+              <a class="btn btn-ghost" href="https://github.com/Adam-Dickinson/Achievement-Tracker">
+                <svg class="icon" aria-hidden="true"><use href="#i-code" /></svg>
+                View source
+              </a>
+            </div>
+            <p class="download-meta" data-download-meta>Free for Windows 10 and 11</p>
+          </div>
+
+          <div class="stage" aria-label="Example unlock pop-ups" role="img">
+            <div class="toast" data-rarity="platinum" style="--i: 0">
+              <div class="tile"><svg aria-hidden="true"><use href="#i-trophy" /></svg></div>
+              <div class="toast-body">
+                <div class="toast-heading">
+                  <svg class="icon" aria-hidden="true"><use href="#i-crown" /></svg>
+                  Platinum unlocked
+                </div>
+                <div class="toast-title">Hollow Meridian</div>
+                <div class="toast-desc">Every trophy earned</div>
+                <div class="toast-game"><b style="color: var(--playstation)">PlayStation</b> Hollow Meridian</div>
+              </div>
+              <div class="toast-side">
+                <span class="percent">3.8%</span>
+                <span class="chip"><svg class="icon" aria-hidden="true"><use href="#i-crown" /></svg>Platinum</span>
+              </div>
+              <span class="shine" aria-hidden="true"></span>
+            </div>
+
+            <div class="toast" data-rarity="ultra" style="--i: 1">
+              <div class="tile"><svg aria-hidden="true"><use href="#i-trophy" /></svg></div>
+              <div class="toast-body">
+                <div class="toast-heading">
+                  <svg class="gem" aria-hidden="true"><use href="#i-sparkle" /></svg>
+                  Achievement unlocked
+                </div>
+                <div class="toast-title">No Light Left Behind</div>
+                <div class="toast-desc">Finish the campaign on Nightmare</div>
+                <div class="toast-game"><b style="color: var(--steam)">Steam</b> Starfall Drift</div>
+              </div>
+              <div class="toast-side">
+                <span class="percent">2.7%</span>
+                <span class="chip"><svg class="gem" aria-hidden="true"><use href="#i-sparkle" /></svg>Ultra rare</span>
+              </div>
+              <span class="shine" aria-hidden="true"></span>
+            </div>
+
+            <div class="toast" data-rarity="rare" style="--i: 2">
+              <div class="tile"><svg aria-hidden="true"><use href="#i-trophy" /></svg></div>
+              <div class="toast-body">
+                <div class="toast-heading">
+                  <svg class="gem" aria-hidden="true"><use href="#i-hexagon" /></svg>
+                  Achievement unlocked
+                </div>
+                <div class="toast-title">Perfect Landing</div>
+                <div class="toast-desc">Touch down without a scratch</div>
+                <div class="toast-game"><b style="color: var(--xbox)">Xbox</b> Kite Runner Rally</div>
+              </div>
+              <div class="toast-side">
+                <span class="percent">11.6%</span>
+                <span class="chip"><svg class="gem" aria-hidden="true"><use href="#i-hexagon" /></svg>Rare</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="platforms reveal">
+          <span class="platforms-label">Works with</span>
+          <ul>
+            <li style="--c: var(--steam)">Steam</li>
+            <li style="--c: var(--xbox)">Xbox</li>
+            <li style="--c: var(--playstation)">PlayStation</li>
+            <li style="--c: var(--epic)">Epic Games</li>
+            <li style="--c: var(--ubisoft)">Ubisoft Connect</li>
+            <li style="--c: var(--ea)">EA app</li>
+            <li style="--c: var(--emulator)">shadPS4</li>
+            <li style="--c: var(--emulator)">RPCS3</li>
+          </ul>
+        </div>
+
+        <section class="features" id="features" aria-labelledby="features-title">
+          <h2 id="features-title" class="reveal">Built for the moment it pops.</h2>
+          <p class="section-intro reveal">
+            Trophy Locker sits in your tray, keeps every platform in sync and stays out of the way until you
+            earn something.
+          </p>
+
+          <div class="bento">
+            <article class="cell cell-toasts reveal">
+              <div class="cell-icon"><svg class="icon" aria-hidden="true"><use href="#i-bell" /></svg></div>
+              <h3>Unlock pop-ups, whatever the platform</h3>
+              <p>
+                An animated toast with the rarity and how many players have it. Steam unlocks show within
+                seconds; other platforms on their next sync.
+              </p>
+              <div class="rarity-row" aria-label="Rarity tiers">
+                <span class="chip" data-rarity="uncommon"><svg class="gem" aria-hidden="true"><use href="#i-diamond" /></svg>Uncommon</span>
+                <span class="chip" data-rarity="rare"><svg class="gem" aria-hidden="true"><use href="#i-hexagon" /></svg>Rare</span>
+                <span class="chip" data-rarity="ultra"><svg class="gem" aria-hidden="true"><use href="#i-sparkle" /></svg>Ultra rare</span>
+                <span class="chip" data-rarity="platinum"><svg class="icon" aria-hidden="true"><use href="#i-crown" /></svg>Platinum</span>
+              </div>
+              <div class="demo" aria-hidden="true">
+                <div class="toast" data-rarity="uncommon">
+                  <div class="tile"><svg><use href="#i-trophy" /></svg></div>
+                  <div class="toast-body">
+                    <div class="toast-heading"><svg class="gem"><use href="#i-diamond" /></svg>Trophy unlocked</div>
+                    <div class="toast-title">Cartographer</div>
+                    <div class="toast-desc">Map every district</div>
+                    <div class="toast-game"><b style="color: var(--emulator)">RPCS3</b> Neon Ward</div>
+                  </div>
+                  <div class="toast-side">
+                    <span class="percent">24.3%</span>
+                    <span class="chip"><svg class="gem"><use href="#i-diamond" /></svg>Uncommon</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="cell cell-platinum reveal">
+              <div class="cell-icon"><svg class="icon" aria-hidden="true"><use href="#i-crown" /></svg></div>
+              <h3>A platinum for every game</h3>
+              <p>Hit 100% in any game and it earns a platinum, even on stores that don't have them.</p>
+            </article>
+
+            <article class="cell cell-stream reveal">
+              <div class="cell-icon"><svg class="icon" aria-hidden="true"><use href="#i-cast" /></svg></div>
+              <h3>On stream</h3>
+              <p>Add the same pop-ups to OBS as a Browser Source.</p>
+            </article>
+
+            <article class="cell cell-tray reveal">
+              <div class="cell-icon"><svg class="icon" aria-hidden="true"><use href="#i-feather" /></svg></div>
+              <h3>Light in the tray</h3>
+              <p>
+                One library across every platform, with the same game linked between stores. Runs quietly in
+                the background and can start with Windows.
+              </p>
+            </article>
+
+            <article class="cell cell-private reveal">
+              <div class="cell-icon"><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg></div>
+              <h3>Local, private, anti-cheat safe</h3>
+              <p>
+                Your library stays in a database on your PC and sign-ins sit in the Windows keychain. It never
+                touches game processes.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="install" id="install" aria-labelledby="install-title">
+          <div class="install-head reveal">
+            <h2 id="install-title">Up and running in a minute.</h2>
+            <p class="section-intro">Installs for your user only, so no admin rights needed.</p>
+          </div>
+          <ol class="steps">
+            <li class="reveal">
+              <div>
+                <h3>Download the installer</h3>
+                <p>
+                  Grab the installer from the download button, or pick any version from
+                  the <a href="https://github.com/Adam-Dickinson/Achievement-Tracker/releases">releases page</a>.
+                </p>
+              </div>
+            </li>
+            <li class="reveal">
+              <div>
+                <h3>Let it past SmartScreen</h3>
+                <p>The installer isn't code-signed yet, so Windows may warn you the first time.</p>
+                <div class="smartscreen">
+                  If you see <strong>"Windows protected your PC"</strong>, click <strong>More info</strong>, then
+                  <strong>Run anyway</strong>. The source code is public if you'd like to check it first.
+                </div>
+              </div>
+            </li>
+            <li class="reveal">
+              <div>
+                <h3>Connect your accounts</h3>
+                <p>
+                  Sign in to the platforms you play on. Your existing unlocks load quietly, and only new ones pop
+                  up. The app checks for updates and asks before downloading one.
+                </p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="closing reveal" aria-labelledby="closing-title">
+          <img src="icon.svg" alt="" width="96" height="96" />
+          <div>
+            <h2 id="closing-title">Free and open source.</h2>
+            <p>Licensed under GPL-3.0. Read the code, report a bug, or add a platform of your own.</p>
+          </div>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/Adam-Dickinson/Achievement-Tracker/releases/latest" data-download>
+              <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
+              Download for Windows
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/Adam-Dickinson/Achievement-Tracker">
+              <svg class="icon" aria-hidden="true"><use href="#i-code" /></svg>
+              View source
+            </a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="wrap footer-inner">
+        <p>
+          Trophy Locker is not affiliated with or endorsed by Sony, Microsoft, Valve, Epic, Ubisoft or EA. Some
+          platforms use unofficial services that are opt-in and may change without notice.
+        </p>
+        <div class="footer-links">
+          <a href="https://github.com/Adam-Dickinson/Achievement-Tracker/releases">Releases</a>
+          <a href="https://github.com/Adam-Dickinson/Achievement-Tracker/issues">Report a bug</a>
+          <a href="https://github.com/Adam-Dickinson/Achievement-Tracker/blob/main/LICENSE">License</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      ;(() => {
+        const repo = 'Adam-Dickinson/Achievement-Tracker'
+        const installer = /^Trophy-Locker-Setup-.+\.exe$/
+
+        fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+          headers: { Accept: 'application/vnd.github+json' },
+        })
+          .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+          .then((release) => {
+            const asset = (release.assets || []).find((a) => installer.test(a.name))
+            if (!asset) return
+            document.querySelectorAll('[data-download]').forEach((link) => {
+              link.href = asset.browser_download_url
+            })
+            const version = String(release.tag_name).replace(/^v/, '')
+            const size = Math.round(asset.size / (1024 * 1024))
+            document.querySelectorAll('[data-download-meta]').forEach((meta) => {
+              meta.textContent = `Version ${version}, ${size} MB, for Windows 10 and 11`
+            })
+          })
+          .catch(() => {})
+
+        const items = document.querySelectorAll('.reveal')
+        if (!('IntersectionObserver' in window)) {
+          items.forEach((item) => item.classList.add('is-visible'))
+          return
+        }
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return
+              entry.target.classList.add('is-visible')
+              observer.unobserve(entry.target)
+            })
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
+        )
+        items.forEach((item) => observer.observe(item))
+      })()
+    </script>
+  </body>
+</html>

@@ -88,6 +88,7 @@ The renderer imports only `shared`, never `main`. Providers never touch the data
 | Change lint rules | [eslint.config.mjs](../eslint.config.mjs) | |
 | Change formatting | [.prettierrc.json](../.prettierrc.json) | |
 | Change CI | [.github/workflows/ci.yml](../.github/workflows/ci.yml) | |
+| Change the download website | [site/index.html](../site/index.html) | Deployed to GitHub Pages by [pages.yml](../.github/workflows/pages.yml) on every push to `main` that touches `site/`. |
 | Change the app icon | [resources/](../resources/) and [assets/logo.svg](../src/renderer/src/assets/logo.svg) | The "Colour-in" logo: a keyhole trophy on a midnight aurora tile, filled with lime up to a glowing edge like the game art. `icon.svg` is the full design, `icon-small.svg` the 24–32px version (no aurora or glow, thicker mark) and `icon-tiny.svg` the 16px one (no keyhole). The PNGs and the ICO are rendered from them by `.superdesign/generator/logo/icons.mjs` (git-ignored, needs Chrome): `icon.ico` (16–256, the small versions at 16–32) for the window, `icon.png` (512), and `tray.png`/`tray@2x.png` (16/32) for the tray. The island nav shows `assets/logo.svg`. |
 | Record an architectural decision | A new file in [docs/adr/](adr/) | Skill: `write-adr`. |
 | See what to build next | [ROADMAP.md](ROADMAP.md) | |
@@ -104,7 +105,8 @@ Achievement-Tracker/
 ├── docs/                    all documentation (section 9)
 ├── resources/               app icon
 ├── scripts/                 the idle measurement script
-├── .github/workflows/       CI
+├── site/                    the download website (GitHub Pages)
+├── .github/workflows/       CI, releases and the website
 ├── out/                     build output (git-ignored)
 ├── node_modules/            installed packages (git-ignored)
 ├── .claude/                 local Claude Code project skills (git-ignored)
@@ -118,6 +120,8 @@ Achievement-Tracker/
 | [package.json](../package.json) | Name, version, licence, `npm` scripts, dependencies. `"main"` points at the built main process (`out/main/index.js`). | Adding a package or script. **Never add `"type": "module"`** (main and preload must build as CommonJS). |
 | `package.json` `build` block | The electron-builder config: app id, product name, `release/` as the output folder, an NSIS per-user installer (not one-click, a choice of folder, `Trophy-Locker-Setup-${version}.exe`), the packaged files (`out/**`, `package.json` and the production dependencies), the GitHub publish target that `latest.yml` and the update check read. `npm run dist:dir` builds the unpacked app in `release/win-unpacked/` and `npm run dist` the installer. | Changing the installer or the release feed. |
 | [.github/workflows/release.yml](../.github/workflows/release.yml) | Runs on a pushed `v*` tag on a Windows runner: installs, runs the checks and creates one draft GitHub release with the installer, blockmap and `latest.yml` through a single `gh release create` call. The owner publishes the draft by hand. | Changing how releases are made. |
+| [site/](../site/) | The one-page download website, plain HTML and CSS with no build step: `index.html` (styles and a small script inline), `icon.svg` and `icon.png` copied from `resources/`, and the two variable fonts copied from `@fontsource-variable` into `fonts/` so the page loads nothing from other sites. The script asks the GitHub API for the latest published release and points every Download button at its `Trophy-Locker-Setup-<version>.exe`, showing the version and size; if that fails the buttons keep their fallback link to the latest release page. The toasts on the page are HTML copies of the real toast's look with made-up games, not the React component. | Changing the website. Recopy the icon if the app icon changes. |
+| [.github/workflows/pages.yml](../.github/workflows/pages.yml) | Uploads `site/` as-is and deploys it to GitHub Pages on a push to `main` that changes `site/` or this file, or when run by hand. Needs Pages set to "GitHub Actions" in the repository settings. | Changing how the website is published. |
 | `package-lock.json` | Exact installed versions. CI uses it via `npm ci`. | Only by running npm. |
 | [electron.vite.config.ts](../electron.vite.config.ts) | Build config for all three parts: main, preload, renderer. Defines the `@shared` and `@` aliases, the two HTML entries (`index`, `overlay`), the React and Tailwind plugins, and a Content-Security-Policy that is injected only in production builds. Marks `node:sqlite` as external for main. | Adding an entry page, an alias, or changing the CSP. |
 | [vitest.config.ts](../vitest.config.ts) | Test runner config: aliases, and which files count as tests (`src/**/*.test.ts` and `.tsx`). Runs in Node by default. | Rarely. |
