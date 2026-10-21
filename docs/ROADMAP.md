@@ -109,11 +109,12 @@ Design: `docs/superpowers/specs/2026-10-06-playtime-design.md`. Platform-reporte
 
 Wanted by the owner: launch any installed game from the app. Each platform is its own adapter and must be checked against real installs first (rule 10); it needs its own design.
 
-- [ ] Detect what is installed and match it to the library by title: Steam `appmanifest` files, Epic manifests, Xbox packages, the Ubisoft and EA registry entries, and the emulators' game folders. Built: the matching, the scan scheduling and the Steam adapter ([ADR-0017](adr/0017-launching-installed-games.md)); the other sources are not
+- [ ] Detect what is installed and match it to the library by title: Steam `appmanifest` files, Epic manifests, Xbox packages, the Ubisoft and EA registry entries, and the emulators' game folders. Built: the matching, the scan scheduling, the Steam adapter and the Xbox adapter (the Xbox app's `.GamingRoot` folders, matched by title id; [ADR-0017](adr/0017-launching-installed-games.md)); the other sources are not
 - [x] Steam launch (`steam://rungameid/<appid>`, the easy first adapter): install detection built; checked by hand by the owner (reported 20 October 2026)
 - [x] RPCS3 launch (`rpcs3.exe --no-gui <path>`): built (games read from `games.yml`, titles from `PARAM.SFO`, the program found beside the data folder or chosen on Accounts); checked by hand by the owner (reported 20 October 2026)
 - [x] RPCS3 cover art from the trophy folder's `ICON0.PNG`, served through the `trophy-art://` protocol
-- [ ] Then Xbox, Epic, Ubisoft and EA through their launchers, then shadPS4 (deferred: no installed game to verify against; needs the emulator exe and the game folder)
+- [ ] Xbox launch (`explorer.exe shell:AppsFolder\<app id>`): built and checked against the real installs (the app ids match Windows' own); the start by hand is pending the owner's manual check
+- [ ] Then Epic, Ubisoft and EA through their launchers (blocked: on 21 October 2026 none had a game installed through its own launcher; the Ubisoft and EA games on the machine are Steam copies), then shadPS4 (deferred: no installed game to verify against; needs the emulator exe and the game folder)
 - [x] A Play button on Game detail for entries with a known install; always through the platform's own launcher, never touching the game process (rule 4). One button per install
 - [x] An Installed filter in the Library
 - [ ] A Rescan button (the `rescanInstalled` call exists)

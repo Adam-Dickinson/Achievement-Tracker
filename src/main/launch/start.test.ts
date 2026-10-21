@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import { isLaunchUri, startTarget, type StartDeps } from './start'
+import { isAppUserModelId, isLaunchUri, startTarget, type StartDeps } from './start'
+
+const XBOX_GAME = '38985CA0.COREBase_5bkah9njm3e9g!codShip'
 
 function deps(over: Partial<StartDeps> = {}): StartDeps {
   return {
     openExternal: vi.fn().mockResolvedValue(undefined),
     spawnProgram: vi.fn().mockResolvedValue(undefined),
+    openPackage: vi.fn().mockResolvedValue(undefined),
     fileExists: vi.fn().mockResolvedValue(true),
     ...over,
   }
@@ -26,6 +29,26 @@ describe('isLaunchUri', () => {
     'steam://rungameid/220 --evil',
     '',
   ])('refuses %s', (uri) => expect(isLaunchUri(uri)).toBe(false))
+})
+
+describe('isAppUserModelId', () => {
+  it.each([
+    XBOX_GAME,
+    'Fictions.ProjectAibou_qj8vnfjar8dk2!AppBeastOfReincarnationShipping',
+    'Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft',
+  ])('allows %s', (id) => expect(isAppUserModelId(id)).toBe(true))
+
+  it.each([
+    '',
+    '38985CA0.COREBase_5bkah9njm3e9g',
+    '38985CA0.COREBase!codShip',
+    '38985CA0.COREBase_5bkah9njm3e9g!..\\..\\cmd',
+    '38985CA0.COREBase_5bkah9njm3e9g!cod Ship',
+    '38985CA0.COREBase_5bkah9njm3e9g!1cod',
+    'C:\\Windows_5bkah9njm3e9g!codShip',
+    '38985CA0.COREBase_5bkah9njm3e9u!codShip',
+    `38985CA0.COREBase_5bkah9njm3e9g!${'a'.repeat(65)}`,
+  ])('refuses %s', (id) => expect(isAppUserModelId(id)).toBe(false))
 })
 
 describe('startTarget', () => {
@@ -110,5 +133,34 @@ describe('startTarget', () => {
     await expect(
       startTarget({ kind: 'program', exe: 'D:\\Emu\\RPCS3.EXE', args: [] }, d),
     ).resolves.toEqual({ ok: true })
+  })
+
+  it('opens an installed app package by its app id', async () => {
+    const d = deps()
+
+    await expect(startTarget({ kind: 'package', appUserModelId: XBOX_GAME }, d)).resolves.toEqual({
+      ok: true,
+    })
+    expect(d.openPackage).toHaveBeenCalledWith(XBOX_GAME)
+    expect(d.openExternal).not.toHaveBeenCalled()
+    expect(d.spawnProgram).not.toHaveBeenCalled()
+  })
+
+  it('refuses a package app id that is not well formed', async () => {
+    const d = deps()
+
+    const result = await startTarget({ kind: 'package', appUserModelId: 'calc.exe' }, d)
+
+    expect(result).toEqual({ ok: false, reason: 'That game cannot be started from here.' })
+    expect(d.openPackage).not.toHaveBeenCalled()
+  })
+
+  it('reports a package that failed to start', async () => {
+    const d = deps({ openPackage: vi.fn().mockRejectedValue(new Error('ENOENT')) })
+
+    await expect(startTarget({ kind: 'package', appUserModelId: XBOX_GAME }, d)).resolves.toEqual({
+      ok: false,
+      reason: 'The game could not be started.',
+    })
   })
 })

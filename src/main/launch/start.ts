@@ -9,9 +9,12 @@ const LAUNCH_SCHEMES: readonly string[] = [
   'origin2:',
 ]
 
+const APP_USER_MODEL_ID = /^[A-Za-z0-9.-]{3,50}_[0-9a-hjkmnp-tv-z]{13}![A-Za-z][A-Za-z0-9.]{0,63}$/
+
 export interface StartDeps {
   openExternal(uri: string): Promise<void>
   spawnProgram(exe: string, args: readonly string[]): Promise<void>
+  openPackage(appUserModelId: string): Promise<void>
   fileExists(path: string): Promise<boolean>
 }
 
@@ -24,9 +27,19 @@ export function isLaunchUri(uri: string): boolean {
   }
 }
 
+export function isAppUserModelId(id: string): boolean {
+  return APP_USER_MODEL_ID.test(id)
+}
+
 export async function startTarget(target: LaunchTarget, deps: StartDeps): Promise<PlayResult> {
-  if (target.kind === 'uri') return startUri(target.uri, deps)
-  return startProgram(target.exe, target.args, deps)
+  switch (target.kind) {
+    case 'uri':
+      return startUri(target.uri, deps)
+    case 'program':
+      return startProgram(target.exe, target.args, deps)
+    case 'package':
+      return startPackage(target.appUserModelId, deps)
+  }
 }
 
 async function startUri(uri: string, deps: StartDeps): Promise<PlayResult> {
@@ -53,5 +66,17 @@ async function startProgram(
     return { ok: true }
   } catch {
     return { ok: false, reason: 'The program could not be started.' }
+  }
+}
+
+async function startPackage(appUserModelId: string, deps: StartDeps): Promise<PlayResult> {
+  if (!isAppUserModelId(appUserModelId)) {
+    return { ok: false, reason: 'That game cannot be started from here.' }
+  }
+  try {
+    await deps.openPackage(appUserModelId)
+    return { ok: true }
+  } catch {
+    return { ok: false, reason: 'The game could not be started.' }
   }
 }
