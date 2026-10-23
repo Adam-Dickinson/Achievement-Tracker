@@ -51,6 +51,7 @@ import {
 } from '@shared/logs'
 import type { EmulatorId, EmulatorProgram, InstalledEntry, PlayResult } from '@shared/launch'
 import { PLATFORMS } from '@shared/platform'
+import { MINUTES_PER_DAY } from '@shared/quiet-hours'
 import { RARITIES } from '@shared/rarity'
 import type { UpdateState } from '@shared/updates'
 
@@ -188,6 +189,25 @@ const notificationSettingsPatchSchema = z.object({
   enabledPlatforms: enabledPlatformsPatchSchema.optional(),
   sound: z
     .object({ enabled: z.boolean().optional(), volume: z.number().min(0).max(1).optional() })
+    .optional(),
+  fullscreenFallback: z.boolean().optional(),
+  quietHours: z
+    .object({
+      enabled: z.boolean().optional(),
+      start: z
+        .number()
+        .int()
+        .min(0)
+        .max(MINUTES_PER_DAY - 1)
+        .optional(),
+      end: z
+        .number()
+        .int()
+        .min(0)
+        .max(MINUTES_PER_DAY - 1)
+        .optional(),
+    })
+    .strict()
     .optional(),
   stream: z
     .object({

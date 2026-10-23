@@ -12,6 +12,7 @@ import {
 import type { EmulatorId } from '@shared/launch'
 import { LOG_LEVELS, type LogLevel } from '@shared/logs'
 import { PLATFORMS } from '@shared/platform'
+import { MINUTES_PER_DAY } from '@shared/quiet-hours'
 import { RARITIES } from '@shared/rarity'
 import type { UpdateSettings } from '@shared/updates'
 
@@ -31,6 +32,23 @@ const notificationSettingsSchema = z.object({
   minRarity: z.enum(RARITIES),
   enabledPlatforms: z.partialRecord(z.enum(PLATFORMS), z.boolean()),
   sound: z.object({ enabled: z.boolean(), volume: z.number().min(0).max(1) }),
+  fullscreenFallback: z.boolean().optional().catch(undefined),
+  quietHours: z
+    .object({
+      enabled: z.boolean(),
+      start: z
+        .number()
+        .int()
+        .min(0)
+        .max(MINUTES_PER_DAY - 1),
+      end: z
+        .number()
+        .int()
+        .min(0)
+        .max(MINUTES_PER_DAY - 1),
+    })
+    .optional()
+    .catch(undefined),
   stream: z
     .object({
       enabled: z.boolean(),
@@ -78,6 +96,9 @@ export function readNotificationSettings(db: DatabaseSync): NotificationSettings
         ...DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms,
         ...parsed.data.enabledPlatforms,
       },
+      fullscreenFallback:
+        parsed.data.fullscreenFallback ?? DEFAULT_NOTIFICATION_SETTINGS.fullscreenFallback,
+      quietHours: parsed.data.quietHours ?? DEFAULT_NOTIFICATION_SETTINGS.quietHours,
       stream: parsed.data.stream ?? DEFAULT_NOTIFICATION_SETTINGS.stream,
     }
   } catch {
@@ -102,6 +123,7 @@ export function updateNotificationSettings(
     ...patch,
     enabledPlatforms: { ...current.enabledPlatforms, ...patch.enabledPlatforms },
     sound: { ...current.sound, ...patch.sound },
+    quietHours: { ...current.quietHours, ...patch.quietHours },
     stream: {
       ...current.stream,
       ...patch.stream,

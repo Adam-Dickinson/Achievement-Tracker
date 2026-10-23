@@ -329,6 +329,161 @@ describe('NotificationService', () => {
   })
 })
 
+describe('NotificationService quiet hours', () => {
+  const overnight = { enabled: true, start: 22 * 60, end: 7 * 60 }
+  let now: Date
+  let quiet: NotificationService
+
+  beforeEach(() => {
+    now = new Date(2026, 9, 23, 23, 30)
+    quiet = new NotificationService({
+      display: (toasts) => frames.push(toasts),
+      now: () => now,
+    })
+    quiet.quietHours = overnight
+  })
+
+  afterEach(() => {
+    quiet.stop()
+  })
+
+  it('shows no unlocks inside quiet hours', () => {
+    quiet.notify([unlock('a')])
+
+    expect(frames).toHaveLength(0)
+  })
+
+  it('shows unlocks again once quiet hours are over', () => {
+    now = new Date(2026, 9, 24, 7, 0)
+
+    quiet.notify([unlock('a')])
+
+    expect(onScreen()).toEqual(['Achievement a'])
+  })
+
+  it('still shows the test notification inside quiet hours', () => {
+    quiet.show(SAMPLE)
+
+    expect(onScreen()).toEqual(['Sample'])
+  })
+
+  it('shows unlocks when quiet hours are turned off', () => {
+    quiet.quietHours = { ...overnight, enabled: false }
+
+    quiet.notify([unlock('a')])
+
+    expect(onScreen()).toEqual(['Achievement a'])
+  })
+
+  it('ignores quiet hours until they are set', () => {
+    const service = new NotificationService({
+      display: (toasts) => frames.push(toasts),
+      now: () => now,
+    })
+
+    service.notify([unlock('a')])
+
+    expect(onScreen()).toEqual(['Achievement a'])
+    service.stop()
+  })
+})
+
+describe('NotificationService delivery', () => {
+  let native: ToastPayload[]
+  let delivery: 'overlay' | 'native'
+  let routed: NotificationService
+
+  beforeEach(() => {
+    native = []
+    delivery = 'native'
+    routed = new NotificationService({
+      display: (toasts) => frames.push(toasts),
+      delivery: () => delivery,
+      showNative: (toast) => native.push(toast),
+    })
+  })
+
+  afterEach(() => {
+    routed.stop()
+  })
+
+  it('sends unlocks to Windows notifications instead of the overlay', () => {
+    routed.notify([unlock('a'), unlock('b')])
+
+    expect(native.map((toast) => toast.title)).toEqual(['Achievement a', 'Achievement b'])
+    expect(frames).toHaveLength(0)
+  })
+
+  it('sends a burst as one Windows notification and a platinum after it', () => {
+    const many = Array.from({ length: BURST_SIZE + 1 }, (_, index) => unlock(String(index)))
+    const platinum = unlock('p', { tier: 'platinum', description: 'Earn every trophy' })
+
+    routed.notify([...many, platinum])
+
+    expect(native.map((toast) => toast.heading)).toEqual([
+      `${BURST_SIZE + 1} achievements unlocked`,
+      'Platinum unlocked',
+    ])
+  })
+
+  it('sends the test notification the same way', () => {
+    routed.show(SAMPLE)
+
+    expect(native).toEqual([SAMPLE])
+    expect(frames).toHaveLength(0)
+  })
+
+  it('uses the overlay when the delivery says so', () => {
+    delivery = 'overlay'
+
+    routed.notify([unlock('a')])
+
+    expect(onScreen()).toEqual(['Achievement a'])
+    expect(native).toEqual([])
+  })
+
+  it('asks for the delivery once per batch of unlocks', () => {
+    const choose = vi.fn(() => 'native' as const)
+    const service = new NotificationService({
+      display: (toasts) => frames.push(toasts),
+      delivery: choose,
+      showNative: (toast) => native.push(toast),
+    })
+
+    service.notify([unlock('a'), unlock('b'), unlock('c')])
+
+    expect(choose).toHaveBeenCalledOnce()
+    service.stop()
+  })
+
+  it('does not ask for the delivery while paused', () => {
+    const choose = vi.fn(() => 'native' as const)
+    const service = new NotificationService({
+      display: (toasts) => frames.push(toasts),
+      delivery: choose,
+      showNative: (toast) => native.push(toast),
+    })
+    service.paused = true
+
+    service.notify([unlock('a')])
+
+    expect(choose).not.toHaveBeenCalled()
+    service.stop()
+  })
+
+  it('keeps the overlay when there is no way to show a Windows notification', () => {
+    const service = new NotificationService({
+      display: (toasts) => frames.push(toasts),
+      delivery: () => 'native',
+    })
+
+    service.notify([unlock('a')])
+
+    expect(onScreen()).toEqual(['Achievement a'])
+    service.stop()
+  })
+})
+
 function platforms(overrides: Partial<Record<Platform, boolean>>): Record<Platform, boolean> {
   return { ...DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms, ...overrides }
 }

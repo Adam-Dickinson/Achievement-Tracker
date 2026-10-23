@@ -357,7 +357,8 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
     "enabledPlatforms": { "steam": true, "xbox": true, /* ...one per platform */ },
     "sound": { "enabled": true, "volume": 0.6 },
     "stream": { "enabled": false, "port": 47821, "sound": { "enabled": true, "volume": 0.6 } }
-    // full-screen-game fallback and a DND schedule are planned but not yet built (M5)
+    "fullscreenFallback": true,
+    "quietHours": { "enabled": false, "start": 1320, "end": 420 }  // minutes after midnight, 22:00 to 07:00
   },
   "appearance":    { "theme": "system" }
 }

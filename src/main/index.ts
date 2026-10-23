@@ -12,7 +12,7 @@ import {
   shell,
 } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { IPC, type NotificationSettings } from '@shared/ipc'
+import { DEFAULT_NOTIFICATION_SETTINGS, IPC, type NotificationSettings } from '@shared/ipc'
 import { MAX_LOG_ENTRIES } from '@shared/logs'
 import {
   connectEa,
@@ -41,6 +41,8 @@ import { openAppPackage, spawnDetached } from './launch/spawn'
 import { startTarget } from './launch/start'
 import { createXboxInstallAdapter } from './launch/xbox'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
+import { chooseDelivery, NotificationStateReader } from './fullscreen'
+import { createNativeToaster } from './native-toast'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
 import { EaProvider } from './providers/ea'
@@ -196,8 +198,26 @@ async function start(): Promise<void> {
   awardPlatinums(db)
 
   const overlay = new OverlayService(createOverlayWindow())
+  const notificationState = new NotificationStateReader()
+  void notificationState.start()
+  let desktopSettings = DEFAULT_NOTIFICATION_SETTINGS
   const notifications = new NotificationService({
     display: (toasts) => void overlay.display(toasts),
+    delivery: () => {
+      const delivery = chooseDelivery(notificationState.read(), desktopSettings.fullscreenFallback)
+      if (delivery === 'native') {
+        console.info(
+          'Toast: an exclusive full-screen game is running, using a Windows notification',
+        )
+      }
+      return delivery
+    },
+    showNative: createNativeToaster({
+      supported: () => Notification.isSupported(),
+      create: (options) => new Notification(options),
+      silent: () => !desktopSettings.sound.enabled,
+      onClick: showMainWindow,
+    }),
   })
   const sendTestNotification = (): Promise<void> => {
     notifications.show(nextSampleToast())
@@ -224,6 +244,8 @@ async function start(): Promise<void> {
   }
 
   const applyNotificationSettings = (settings: NotificationSettings): void => {
+    desktopSettings = settings
+    notifications.quietHours = settings.quietHours
     for (const service of [notifications, streamNotifications]) {
       service.durationMs = settings.durationSec * 1000
       service.minRarity = settings.minRarity

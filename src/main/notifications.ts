@@ -1,7 +1,9 @@
 import { DEFAULT_NOTIFICATION_SETTINGS, type ToastPayload, type VisibleToast } from '@shared/ipc'
 import type { UnlockEvent } from '@shared/models'
 import type { Platform } from '@shared/platform'
+import { isQuietTime, type QuietHours } from '@shared/quiet-hours'
 import { rarityAtLeast, rarityFromPercent, type Rarity } from '@shared/rarity'
+import type { Delivery } from './fullscreen'
 import { APP_PLATINUM_ID, isPlatinumAchievement } from './store/platinum'
 
 export const TOAST_DURATION_MS = 5000
@@ -11,6 +13,9 @@ export const BURST_SIZE = 5
 export interface NotificationServiceDeps {
   readonly display: (toasts: readonly VisibleToast[]) => void
   readonly durationMs?: number
+  readonly delivery?: () => Delivery
+  readonly showNative?: (toast: ToastPayload) => void
+  readonly now?: () => Date
 }
 
 interface Pending {
@@ -25,10 +30,14 @@ interface Shown extends Pending {
 
 export class NotificationService {
   readonly #display: (toasts: readonly VisibleToast[]) => void
+  readonly #delivery: () => Delivery
+  readonly #showNative: ((toast: ToastPayload) => void) | null
+  readonly #now: () => Date
   #durationMs: number
   #minRarity: Rarity = DEFAULT_NOTIFICATION_SETTINGS.minRarity
   #enabledPlatforms: Readonly<Record<Platform, boolean>> =
     DEFAULT_NOTIFICATION_SETTINGS.enabledPlatforms
+  #quietHours: QuietHours = DEFAULT_NOTIFICATION_SETTINGS.quietHours
   readonly #queue: Pending[] = []
   #shown: Shown[] = []
   #nextId = 1
@@ -36,6 +45,9 @@ export class NotificationService {
 
   constructor(deps: NotificationServiceDeps) {
     this.#display = deps.display
+    this.#delivery = deps.delivery ?? (() => 'overlay')
+    this.#showNative = deps.showNative ?? null
+    this.#now = deps.now ?? (() => new Date())
     this.#durationMs = deps.durationMs ?? TOAST_DURATION_MS
   }
 
@@ -59,26 +71,27 @@ export class NotificationService {
     this.#enabledPlatforms = enabledPlatforms
   }
 
+  set quietHours(quietHours: QuietHours) {
+    this.#quietHours = quietHours
+  }
+
   notify(events: readonly UnlockEvent[]): void {
-    if (this.#paused) return
+    if (this.#paused || isQuietTime(this.#quietHours, this.#now())) return
     const allowed = events.filter((event) => this.#allows(event))
     const fresh = allowed.filter((event) => !this.#has(unlockKey(event)))
     if (fresh.length === 0) return
 
     const platinums = fresh.filter(isPlatinum)
     const others = fresh.filter((event) => !isPlatinum(event))
-    if (others.length > BURST_SIZE) {
-      this.#queue.push({ key: null, toast: burstToast(others) })
-    } else {
-      for (const event of others) this.#enqueue(event)
-    }
-    for (const event of platinums) this.#enqueue(event)
-    this.#fill()
+    const pending: Pending[] =
+      others.length > BURST_SIZE
+        ? [{ key: null, toast: burstToast(others) }]
+        : others.map(pendingUnlock)
+    this.#deliver([...pending, ...platinums.map(pendingUnlock)])
   }
 
   show(toast: ToastPayload): void {
-    this.#queue.push({ key: null, toast })
-    this.#fill()
+    this.#deliver([{ key: null, toast }])
   }
 
   stop(): void {
@@ -87,8 +100,14 @@ export class NotificationService {
     this.#queue.length = 0
   }
 
-  #enqueue(event: UnlockEvent): void {
-    this.#queue.push({ key: unlockKey(event), toast: unlockToast(event) })
+  #deliver(items: readonly Pending[]): void {
+    const showNative = this.#showNative
+    if (showNative && this.#delivery() === 'native') {
+      for (const item of items) showNative(item.toast)
+      return
+    }
+    this.#queue.push(...items)
+    this.#fill()
   }
 
   #has(key: string): boolean {
@@ -122,6 +141,10 @@ export class NotificationService {
   #publish(): void {
     this.#display(this.#shown.map(({ id, toast }) => ({ ...toast, id })))
   }
+}
+
+function pendingUnlock(event: UnlockEvent): Pending {
+  return { key: unlockKey(event), toast: unlockToast(event) }
 }
 
 function isPlatinum(event: UnlockEvent): boolean {
