@@ -3,6 +3,7 @@ import type { Platform } from '@shared/platform'
 export type LaunchTarget =
   | { readonly kind: 'uri'; readonly uri: string }
   | { readonly kind: 'program'; readonly exe: string; readonly args: readonly string[] }
+  | { readonly kind: 'package'; readonly appUserModelId: string }
 
 export interface InstalledGame {
   readonly platform: Platform

@@ -37,8 +37,9 @@ import { EmulatorPrograms } from './launch/emulator-programs'
 import { createRpcs3InstallAdapter } from './launch/rpcs3'
 import { createSteamInstallAdapter } from './launch/steam'
 import { LaunchService } from './launch/service'
-import { spawnDetached } from './launch/spawn'
+import { openAppPackage, spawnDetached } from './launch/spawn'
 import { startTarget } from './launch/start'
+import { createXboxInstallAdapter } from './launch/xbox'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
 import { NotificationService } from './notifications'
 import { OverlayService } from './overlay-service'
@@ -343,12 +344,14 @@ async function start(): Promise<void> {
         files: LOCAL_FILES,
         openSource: fileByteSource,
       }),
+      createXboxInstallAdapter({ files: LOCAL_FILES }),
     ],
     known: () => listKnownGames(db),
     start: (target) =>
       startTarget(target, {
         openExternal: (uri) => shell.openExternal(uri),
         spawnProgram: spawnDetached,
+        openPackage: openAppPackage,
         fileExists: (path) =>
           access(path).then(
             () => true,

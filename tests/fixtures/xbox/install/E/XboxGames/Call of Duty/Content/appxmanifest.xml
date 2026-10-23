@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6" xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10" xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" xmlns:wincap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/windowscapabilities" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" IgnorableNamespaces="uap uap3 desktop desktop6 wincap rescap" xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+  <Identity Name="38985CA0.COREBase" Publisher="CN=07A9AC0F-5502-4D92-BA69-01D5D39D1E92" Version="1.0.235.0" ResourceId="ww" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Call of Duty®</DisplayName>
+    <PublisherDisplayName>Activision Publishing Inc.</PublisherDisplayName>
+    <Logo>StoreLogo.png</Logo>
+    <Description>38985CA0.COREBase</Description>
+    <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.18362.0" MaxVersionTested="10.0.18362.0" />
+    <PackageDependency Name="Microsoft.VCLibs.140.00.UWPDesktop" MinVersion="14.0.33728.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-US" />
+    <Resource Language="en-AE" />
+    <Resource Language="en-SA" />
+    <Resource Language="ru-RU" />
+    <Resource Language="fr-FR" />
+    <Resource Language="fr-CA" />
+    <Resource Language="en-GB" />
+    <Resource Language="en-CA" />
+    <Resource Language="de-DE" />
+    <Resource Language="es-ES" />
+    <Resource Language="it-IT" />
+    <Resource Language="pl-PL" />
+    <Resource Language="pt-BR" />
+    <Resource Language="es-MX" />
+    <Resource Language="zh-CN" />
+    <Resource Language="ja-JP" />
+    <Resource Language="zh-TW" />
+    <Resource Language="zh-HK" />
+    <Resource Language="zh-SG" />
+    <Resource Language="ko-KR" />
+    <Resource Language="ar-AE" />
+    <Resource Language="th-TH" />
+  </Resources>
+  <Applications>
+    <Application Id="codShip" Executable="GameLaunchHelper.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Call of Duty®" Square150x150Logo="Square150x150Logo.png" Square44x44Logo="Square44x44Logo.png" Description="38985CA0.COREBase" ForegroundText="light" BackgroundColor="transparent">
+        <uap:SplashScreen Image="SplashScreen.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="ms-xbl-774f87f6" />
+        </uap:Extension>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="ms-xbl-multiplayer" />
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+  <Extensions>
+    <desktop6:Extension Category="windows.customInstall">
+      <desktop6:CustomInstall Folder="bootstrapper_installer">
+        <desktop6:InstallActions>
+          <desktop6:InstallAction File="bootstrapper_installer.exe" Name="Driver Installation 29528769" Arguments="atvi-randgrid_msstore false Randgrid.sys" />
+        </desktop6:InstallActions>
+        <desktop6:RepairActions>
+          <desktop6:RepairAction File="bootstrapper_installer.exe" Name="Driver Repair" Arguments="atvi-randgrid_msstore false Randgrid.sys" />
+        </desktop6:RepairActions>
+        <desktop6:UninstallActions>
+          <desktop6:UninstallAction File="bootstrapper_installer.exe" Name="CODBrokerInstaller Uninstallation" Arguments="--uninstall" />
+        </desktop6:UninstallActions>
+      </desktop6:CustomInstall>
+    </desktop6:Extension>
+  </Extensions>
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="appLicensing" />
+    <rescap:Capability Name="unvirtualizedResources" />
+    <rescap:Capability Name="customInstallActions" />
+  </Capabilities>
+</Package>
