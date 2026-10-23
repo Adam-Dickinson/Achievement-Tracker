@@ -4,6 +4,7 @@ import type { EmulatorId, EmulatorProgram, InstalledEntry, PlayResult } from './
 import type { LogEntry, LogLevel, LogSettings, StartupSettings } from './logs'
 import type { AccountStatus } from './models'
 import { PLATFORMS, type Platform } from './platform'
+import { DEFAULT_QUIET_HOURS, type QuietHours } from './quiet-hours'
 import type { Rarity } from './rarity'
 import type { UpdateState } from './updates'
 
@@ -154,6 +155,8 @@ export interface NotificationSettings {
     readonly enabled: boolean
     readonly volume: number
   }
+  readonly fullscreenFallback: boolean
+  readonly quietHours: QuietHours
   readonly stream: StreamOverlaySettings
 }
 
@@ -168,6 +171,8 @@ export interface NotificationSettingsPatch {
     readonly enabled?: boolean
     readonly volume?: number
   }
+  readonly fullscreenFallback?: boolean
+  readonly quietHours?: Partial<QuietHours>
   readonly stream?: {
     readonly enabled?: boolean
     readonly port?: number
@@ -189,6 +194,8 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     boolean
   >,
   sound: { enabled: true, volume: 0.6 },
+  fullscreenFallback: true,
+  quietHours: DEFAULT_QUIET_HOURS,
   stream: {
     enabled: false,
     port: DEFAULT_STREAM_PORT,

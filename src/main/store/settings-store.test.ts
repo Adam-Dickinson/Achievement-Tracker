@@ -160,6 +160,61 @@ describe('notification settings', () => {
     expect(settings.stream.sound.enabled).toBe(false)
   })
 
+  it('starts with the full-screen fallback on and quiet hours off from 22:00 to 07:00', () => {
+    const settings = readNotificationSettings(db)
+
+    expect(settings.fullscreenFallback).toBe(true)
+    expect(settings.quietHours).toEqual({ enabled: false, start: 1320, end: 420 })
+  })
+
+  it('reads settings saved before quiet hours existed with their defaults', () => {
+    const legacy: Record<string, unknown> = { ...DEFAULT_NOTIFICATION_SETTINGS, corner: 'top-left' }
+    delete legacy['fullscreenFallback']
+    delete legacy['quietHours']
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'notifications.settings',
+      JSON.stringify(legacy),
+    )
+
+    const settings = readNotificationSettings(db)
+    expect(settings.corner).toBe('top-left')
+    expect(settings.fullscreenFallback).toBe(true)
+    expect(settings.quietHours).toEqual(DEFAULT_NOTIFICATION_SETTINGS.quietHours)
+  })
+
+  it.each([
+    ['a start past midnight', { enabled: true, start: 1440, end: 420 }],
+    ['a negative end', { enabled: true, start: 1320, end: -1 }],
+    ['a fractional minute', { enabled: true, start: 1320.5, end: 420 }],
+    ['no switch', { start: 1320, end: 420 }],
+  ])('falls back to the quiet hours defaults for %s', (_label, quietHours) => {
+    db.prepare('INSERT INTO setting (key, value) VALUES (?, ?)').run(
+      'notifications.settings',
+      JSON.stringify({ ...DEFAULT_NOTIFICATION_SETTINGS, corner: 'top-left', quietHours }),
+    )
+
+    const settings = readNotificationSettings(db)
+    expect(settings.corner).toBe('top-left')
+    expect(settings.quietHours).toEqual(DEFAULT_NOTIFICATION_SETTINGS.quietHours)
+  })
+
+  it('saves the full-screen fallback switch', () => {
+    updateNotificationSettings(db, { fullscreenFallback: false })
+
+    expect(readNotificationSettings(db).fullscreenFallback).toBe(false)
+  })
+
+  it('merges a quiet hours patch without dropping the other times', () => {
+    updateNotificationSettings(db, { quietHours: { enabled: true } })
+    updateNotificationSettings(db, { quietHours: { start: 1380 } })
+
+    expect(readNotificationSettings(db).quietHours).toEqual({
+      enabled: true,
+      start: 1380,
+      end: 420,
+    })
+  })
+
   it('keeps the latest settings across separate updates', () => {
     updateNotificationSettings(db, { corner: 'top-left' })
     updateNotificationSettings(db, { size: 'large' })

@@ -59,12 +59,12 @@ One place to see every achievement and trophy you've ever earned, on any platfor
 - Content: achievement icon, title, description, game name, platform badge, rarity tier (with % of players), points (Gamerscore / trophy tier / Steam %)
 - Rarity styling: Common, Uncommon, Rare, Ultra Rare, each with its own accent and sound
 - Optional sound, volume control and mute. Built as a synthesized per-rarity chime, no custom file upload
-- **Do Not Disturb** mode (manual + optional "while in exclusive-fullscreen")
+- **Do Not Disturb** mode: manual (the pause in the tray and nav bell) and a daily quiet-hours schedule
 
 ### Known limitation
 Exclusive-fullscreen games render over normal windows. Mitigations:
 1. Recommend borderless windowed (documented in onboarding)
-2. Fallback: native OS toast notification (Windows Action Center) for when the overlay can't be shown
+2. Fallback: a native Windows notification while Windows reports an exclusive full-screen Direct3D app ([ADR-0019](adr/0019-fullscreen-detection.md)), switchable in Settings. Windows may hold it silently in Notification Center until the game ends
 3. Missed toasts are always in the Activity feed
 
 ### First-sync rule

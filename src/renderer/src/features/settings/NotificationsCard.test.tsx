@@ -22,6 +22,7 @@ beforeEach(() => {
       ...patch,
       enabledPlatforms: { ...stored.enabledPlatforms, ...patch.enabledPlatforms },
       sound: { ...stored.sound, ...patch.sound },
+      quietHours: { ...stored.quietHours, ...patch.quietHours },
       stream: {
         ...stored.stream,
         ...patch.stream,
