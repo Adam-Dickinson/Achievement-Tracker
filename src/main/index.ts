@@ -12,7 +12,12 @@ import {
   shell,
 } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { DEFAULT_NOTIFICATION_SETTINGS, IPC, type NotificationSettings } from '@shared/ipc'
+import {
+  DEFAULT_NOTIFICATION_SETTINGS,
+  IPC,
+  type NotificationSettings,
+  type ReplayTarget,
+} from '@shared/ipc'
 import { MAX_LOG_ENTRIES } from '@shared/logs'
 import {
   connectEa,
@@ -43,7 +48,7 @@ import { createXboxInstallAdapter } from './launch/xbox'
 import { isEaAddress, isSonyAddress, isSteamAddress, mayNavigate } from './navigation'
 import { chooseDelivery, NotificationStateReader } from './fullscreen'
 import { createNativeToaster } from './native-toast'
-import { NotificationService } from './notifications'
+import { NotificationService, unlockToast } from './notifications'
 import { OverlayService } from './overlay-service'
 import { EaProvider } from './providers/ea'
 import { readSignInCookies } from './providers/ea/auth'
@@ -72,6 +77,7 @@ import { StreamOverlayServer } from './stream-overlay'
 import { openDatabase } from './store/database'
 import { mergeGames, relinkGames, unlinkPlatformGame } from './store/game-links'
 import { awardPlatinums } from './store/platinum'
+import { findReplayEvent } from './store/replay-store'
 import { ArtworkService } from './artwork/artwork-service'
 import {
   getDashboardStats,
@@ -241,6 +247,14 @@ async function start(): Promise<void> {
   const sendTestStreamToast = (): Promise<void> => {
     streamNotifications.show(nextSampleToast())
     return Promise.resolve()
+  }
+
+  const replayUnlock = (target: ReplayTarget): void => {
+    const event = findReplayEvent(db, target)
+    if (!event) return
+    const toast = unlockToast(event)
+    notifications.show(toast)
+    if (streamEnabled) streamNotifications.show(toast)
   }
 
   const applyNotificationSettings = (settings: NotificationSettings): void => {
@@ -646,6 +660,7 @@ async function start(): Promise<void> {
     },
     getStreamOverlayStatus: () => streamOverlay.status,
     sendTestStreamToast,
+    replayUnlock,
   })
 
   tray = createTray({

@@ -28,6 +28,7 @@ import {
   type StreamOverlayStatus,
   type PlayStationConnectInput,
   type Profile,
+  type ReplayTarget,
   type SteamConnectInput,
   type SteamGridDbKeyInput,
   type SteamSignInInput,
@@ -120,6 +121,7 @@ export interface IpcHandlers {
   listDisplays(): DisplayInfo[]
   getStreamOverlayStatus(): StreamOverlayStatus
   sendTestStreamToast(): Promise<void>
+  replayUnlock(target: ReplayTarget): void
 }
 
 const logLevelSchema = z.enum(LOG_LEVELS)
@@ -156,6 +158,11 @@ const mergeGamesSchema = z
   .refine((input) => input.intoGameId !== input.gameId)
 
 const unlinkGameSchema = z.object({ platformGameId: gameIdSchema })
+
+const replayTargetSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('achievement'), achievementId: gameIdSchema }),
+  z.object({ kind: z.literal('platinum'), platformGameId: gameIdSchema }),
+])
 
 const steamGridDbKeySchema = z.object({
   key: z
@@ -656,6 +663,12 @@ export function registerIpcHandlers(handlers: IpcHandlers): void {
   ipcMain.handle(IPC.sendTestStreamToast, (event) => {
     if (!isTrustedSender(event)) throw new Error('Untrusted sender')
     return handlers.sendTestStreamToast()
+  })
+
+  ipcMain.handle(IPC.replayUnlock, (event, target: unknown) => {
+    if (!isTrustedSender(event)) throw new Error('Untrusted sender')
+    const parsed = replayTargetSchema.safeParse(target)
+    if (parsed.success) handlers.replayUnlock(parsed.data)
   })
 }
 

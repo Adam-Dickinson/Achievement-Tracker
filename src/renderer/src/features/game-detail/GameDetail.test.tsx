@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { MergeGamesInput, UnlinkGameInput } from '@shared/ipc'
+import type { MergeGamesInput, ReplayTarget, UnlinkGameInput } from '@shared/ipc'
 import type { GameAchievement, GameDetail as GameDetailData, GameEntry } from '@shared/library'
 import { fakeApi } from '@/test/fake-api'
 import { fakeLayout, renderScrolled } from '@/test/layout'
@@ -84,6 +84,7 @@ const getGame = vi.fn<(id: number) => Promise<GameDetailData | null>>()
 const listLibrary = vi.fn()
 const mergeGames = vi.fn<(input: MergeGamesInput) => Promise<void>>()
 const unlinkGame = vi.fn<(input: UnlinkGameInput) => Promise<void>>()
+const replayUnlock = vi.fn<(target: ReplayTarget) => Promise<void>>()
 let listeners: (() => void)[] = []
 const dataChanged = () => listeners.forEach((listener) => listener())
 const onBack = vi.fn()
@@ -94,6 +95,7 @@ beforeEach(() => {
   listeners = []
   mergeGames.mockResolvedValue(undefined)
   unlinkGame.mockResolvedValue(undefined)
+  replayUnlock.mockResolvedValue(undefined)
   listLibrary.mockResolvedValue([
     { ...DETAIL.game },
     { ...DETAIL.game, id: 8, title: 'Elden Ring Nightreign', platforms: ['xbox'] },
@@ -104,6 +106,7 @@ beforeEach(() => {
     listLibrary,
     mergeGames,
     unlinkGame,
+    replayUnlock,
     onDataChanged: (listener) => {
       listeners.push(listener)
       return () => {}
@@ -161,6 +164,27 @@ describe('GameDetail', () => {
     const platinum = await screen.findByRole('region', { name: 'Platinum' })
     expect(platinum).toHaveTextContent("Unlock all 4 achievements to earn this game's Platinum")
     expect(platinum).toHaveTextContent('2 achievements to go')
+  })
+
+  it('replays the pop-up of an unlocked achievement or an earned Platinum', async () => {
+    getGame.mockResolvedValue({
+      ...DETAIL,
+      entries: [entry({ appPlatinum: { earnedAt: new Date(2026, 2, 9) } })],
+    })
+    renderScrolled(<GameDetail id={7} onBack={onBack} />)
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Replay the pop-up for Achievement 2' }),
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Replay the pop-up for Every achievement in Elden Ring' }),
+    )
+
+    expect(replayUnlock.mock.calls).toEqual([
+      [{ kind: 'achievement', achievementId: 2 }],
+      [{ kind: 'platinum', platformGameId: 70 }],
+    ])
+    expect(screen.queryByRole('button', { name: /Replay the pop-up for Achievement 3/ })).toBeNull()
   })
 
   it('lists achievements rarest first, and filters unlocked and locked ones', async () => {

@@ -3,14 +3,17 @@ import { useState } from 'react'
 import { PlatinumChip } from '@/components/PlatinumChip'
 import { RarityChip } from '@/components/RarityChip'
 import { formatPercent, formatUnlockDate } from '@/lib/format'
+import type { ReplayTarget } from '@shared/ipc'
 import type { GameAchievement } from '@shared/library'
 import { rarityFromPercent } from '@shared/rarity'
+import { ReplayButton } from './ReplayButton'
 
 interface AchievementRowProps {
   achievement: GameAchievement
+  onReplay?: (target: ReplayTarget) => void
 }
 
-export function AchievementRow({ achievement }: AchievementRowProps) {
+export function AchievementRow({ achievement, onReplay }: AchievementRowProps) {
   const { unlocked, globalPercent } = achievement
   const secret = achievement.hidden && !unlocked
   const rarity = globalPercent === null ? 'common' : rarityFromPercent(globalPercent)
@@ -60,6 +63,13 @@ export function AchievementRow({ achievement }: AchievementRowProps) {
           <span className="font-display text-2xl font-bold">{formatPercent(globalPercent)}</span>
           <RarityChip rarity={rarity} />
         </div>
+      )}
+
+      {unlocked && onReplay && (
+        <ReplayButton
+          name={achievement.name}
+          onClick={() => onReplay({ kind: 'achievement', achievementId: achievement.id })}
+        />
       )}
     </div>
   )

@@ -165,6 +165,7 @@ const fakes = {
   listDisplays: vi.fn(() => DISPLAYS),
   getStreamOverlayStatus: vi.fn(() => STREAM_RUNNING),
   sendTestStreamToast: vi.fn(() => Promise.resolve()),
+  replayUnlock: vi.fn(),
 }
 
 function call(channel: string, event: unknown, ...args: unknown[]): unknown {
@@ -246,6 +247,7 @@ describe('registerIpcHandlers', () => {
     IPC.listDisplays,
     IPC.getStreamOverlayStatus,
     IPC.sendTestStreamToast,
+    IPC.replayUnlock,
   ])('refuses %s from a page we did not ship', (channel) => {
     expect(() => call(channel, UNTRUSTED, { steamId: 'x', apiKey: 'y' })).toThrow(
       'Untrusted sender',
@@ -1009,6 +1011,30 @@ describe('stream overlay handlers', () => {
     await call(IPC.sendTestStreamToast, TRUSTED)
 
     expect(fakes.sendTestStreamToast).toHaveBeenCalledOnce()
+  })
+})
+
+describe('replay handler', () => {
+  it.each([
+    { kind: 'achievement', achievementId: 12 },
+    { kind: 'platinum', platformGameId: 7 },
+  ])('replays the toast of $kind', (target) => {
+    call(IPC.replayUnlock, TRUSTED, target)
+
+    expect(fakes.replayUnlock).toHaveBeenCalledExactlyOnceWith(target)
+  })
+
+  it.each([
+    ['nothing', undefined],
+    ['an unknown kind', { kind: 'game', gameId: 3 }],
+    ['an achievement id as text', { kind: 'achievement', achievementId: '12' }],
+    ['a zero achievement id', { kind: 'achievement', achievementId: 0 }],
+    ['a fractional platform game id', { kind: 'platinum', platformGameId: 1.5 }],
+    ['a Platinum with an achievement id', { kind: 'platinum', achievementId: 12 }],
+  ])('ignores %s', (_label, payload) => {
+    call(IPC.replayUnlock, TRUSTED, payload)
+
+    expect(fakes.replayUnlock).not.toHaveBeenCalled()
   })
 })
 

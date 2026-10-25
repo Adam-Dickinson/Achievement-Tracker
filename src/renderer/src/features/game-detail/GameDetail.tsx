@@ -5,6 +5,7 @@ import { Select } from '@/components/Select'
 import { ToggleGroup } from '@/components/ToggleGroup'
 import { VirtualGrid } from '@/components/VirtualGrid'
 import { useInstalled } from '@/features/launch/useInstalled'
+import type { ReplayTarget } from '@shared/ipc'
 import { type Platform, platformName } from '@shared/platform'
 import { AchievementRow } from './AchievementRow'
 import {
@@ -101,6 +102,7 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
       await window.api.unlinkGame({ platformGameId: entry.platformGameId })
       setSelected(undefined)
     })
+  const replay = (target: ReplayTarget) => void window.api.replayUnlock(target)
   const shown = applyAchievementView(achievements, view)
   const update = (change: Partial<AchievementView>) => setView({ ...view, ...change })
 
@@ -212,7 +214,7 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
         aria-labelledby={entries.length > 1 ? `entry-tab-${entry.platformGameId}` : undefined}
         className="mt-6 flex flex-col gap-6"
       >
-        <PlatinumBanner entry={entry} />
+        <PlatinumBanner entry={entry} onReplay={replay} />
 
         {achievements.length === 0 ? (
           <p role="status" className="text-fg-muted">
@@ -234,7 +236,9 @@ export function GameDetail({ id, initialEntry, onBack }: GameDetailProps) {
             gap={16}
             estimateRowHeight={96}
             getKey={(achievement) => achievement.id}
-            renderItem={(achievement) => <AchievementRow achievement={achievement} />}
+            renderItem={(achievement) => (
+              <AchievementRow achievement={achievement} onReplay={replay} />
+            )}
           />
         )}
       </div>

@@ -1,21 +1,26 @@
 import { Crown, Lock } from 'lucide-react'
 import { PlatinumChip } from '@/components/PlatinumChip'
 import { formatUnlockDate, plural } from '@/lib/format'
+import type { ReplayTarget } from '@shared/ipc'
 import type { GameEntry } from '@shared/library'
+import { ReplayButton } from './ReplayButton'
 
 interface PlatinumBannerProps {
   entry: GameEntry
+  onReplay?: (target: ReplayTarget) => void
 }
 
 interface PlatinumState {
   readonly earned: boolean
   readonly title: string
   readonly detail: string
+  readonly replay: ReplayTarget | null
 }
 
-export function PlatinumBanner({ entry }: PlatinumBannerProps) {
+export function PlatinumBanner({ entry, onReplay }: PlatinumBannerProps) {
   const state = platinumState(entry)
   if (!state) return null
+  const { replay } = state
 
   return (
     <section
@@ -45,6 +50,7 @@ export function PlatinumBanner({ entry }: PlatinumBannerProps) {
         <p className="truncate font-display text-xl font-bold">{state.title}</p>
         <p className="text-sm text-fg-muted">{state.detail}</p>
       </div>
+      {replay && onReplay && <ReplayButton name={state.title} onClick={() => onReplay(replay)} />}
     </section>
   )
 }
@@ -59,12 +65,18 @@ function platinumState(entry: GameEntry): PlatinumState | null {
 
   if (own) {
     if (own.unlocked) {
-      return { earned: true, title: own.name, detail: earnedText(own.unlockedAt) }
+      return {
+        earned: true,
+        title: own.name,
+        detail: earnedText(own.unlockedAt),
+        replay: { kind: 'achievement', achievementId: own.id },
+      }
     }
     return {
       earned: false,
       title: own.hidden ? 'Hidden platinum' : own.name,
       detail: left === 0 ? 'Every other achievement is unlocked' : toGo,
+      replay: null,
     }
   }
   if (entry.appPlatinum) {
@@ -72,12 +84,14 @@ function platinumState(entry: GameEntry): PlatinumState | null {
       earned: true,
       title: `Every achievement in ${entry.title}`,
       detail: earnedText(entry.appPlatinum.earnedAt),
+      replay: { kind: 'platinum', platformGameId: entry.platformGameId },
     }
   }
   return {
     earned: false,
     title: `Unlock all ${plural(achievements.length, 'achievement')} to earn this game's Platinum`,
     detail: toGo,
+    replay: null,
   }
 }
 

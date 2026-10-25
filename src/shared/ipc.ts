@@ -79,6 +79,7 @@ export const IPC = {
   getStreamOverlayStatus: 'stream:get-status',
   streamOverlayStatusChanged: 'stream:status-changed',
   sendTestStreamToast: 'stream:send-test',
+  replayUnlock: 'notifications:replay-unlock',
   dataChanged: 'data:changed',
 } as const
 
@@ -114,6 +115,10 @@ export interface ToastPayload {
   readonly percent: number | null
   readonly platinum: boolean
 }
+
+export type ReplayTarget =
+  | { readonly kind: 'achievement'; readonly achievementId: number }
+  | { readonly kind: 'platinum'; readonly platformGameId: number }
 
 export interface VisibleToast extends ToastPayload {
   readonly id: number
@@ -407,6 +412,7 @@ export interface TrophyLockerApi {
   listDisplays(): Promise<DisplayInfo[]>
   getStreamOverlayStatus(): Promise<StreamOverlayStatus>
   sendTestStreamToast(): Promise<void>
+  replayUnlock(target: ReplayTarget): Promise<void>
   onStreamOverlayStatusChanged(listener: (status: StreamOverlayStatus) => void): () => void
   onDataChanged(listener: () => void): () => void
   onToasts(listener: (frame: OverlayFrame) => void): () => void

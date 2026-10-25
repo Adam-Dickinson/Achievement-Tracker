@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { GameAchievement, GameEntry } from '@shared/library'
 import { formatUnlockDate } from '@/lib/format'
 import { PlatinumBanner } from './PlatinumBanner'
@@ -99,6 +99,45 @@ describe('PlatinumBanner', () => {
 
     expect(banner()).toHaveTextContent("Unlock all 3 achievements to earn this game's Platinum")
     expect(banner()).toHaveTextContent('2 achievements to go')
+  })
+
+  it("replays the pop-up of the game's own platinum once earned", () => {
+    const onReplay = vi.fn()
+    render(
+      <PlatinumBanner
+        entry={entry([done(1), own({ unlocked: true, unlockedAt: EARNED })])}
+        onReplay={onReplay}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Replay the pop-up for Elden Ring' }))
+
+    expect(onReplay).toHaveBeenCalledExactlyOnceWith({ kind: 'achievement', achievementId: 9 })
+  })
+
+  it('replays the pop-up of the app-awarded Platinum', () => {
+    const onReplay = vi.fn()
+    render(
+      <PlatinumBanner
+        entry={entry([done(1)], { platformGameId: 5, appPlatinum: { earnedAt: EARNED } })}
+        onReplay={onReplay}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Replay the pop-up for Every achievement in Elden Ring' }),
+    )
+
+    expect(onReplay).toHaveBeenCalledExactlyOnceWith({ kind: 'platinum', platformGameId: 5 })
+  })
+
+  it('offers no replay for a Platinum not earned yet', () => {
+    render(<PlatinumBanner entry={entry([done(1), own()])} onReplay={vi.fn()} />)
+    expect(screen.queryByRole('button')).toBeNull()
+    cleanup()
+
+    render(<PlatinumBanner entry={entry([done(1), achievement(2)])} onReplay={vi.fn()} />)
+    expect(screen.queryByRole('button')).toBeNull()
   })
 
   it('shows nothing for a game whose achievements have not been read', () => {
