@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { GameAchievement } from '@shared/library'
 import { AchievementRow } from './AchievementRow'
 
@@ -106,5 +106,31 @@ describe('AchievementRow', () => {
     fireEvent.error(img)
 
     expect(container.querySelector('img')).toBeNull()
+  })
+
+  it('replays the pop-up of an unlocked achievement', () => {
+    const onReplay = vi.fn()
+    render(<AchievementRow achievement={achievement({ id: 42 })} onReplay={onReplay} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Replay the pop-up for Age of the Stars' }))
+
+    expect(onReplay).toHaveBeenCalledExactlyOnceWith({ kind: 'achievement', achievementId: 42 })
+  })
+
+  it('offers no replay for a locked achievement', () => {
+    render(
+      <AchievementRow
+        achievement={achievement({ unlocked: false, unlockedAt: null })}
+        onReplay={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('offers no replay when nothing handles it', () => {
+    renderRow()
+
+    expect(screen.queryByRole('button')).toBeNull()
   })
 })

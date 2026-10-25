@@ -131,6 +131,7 @@ Not in v1 ([ADR-0006](adr/0006-v1-provider-scope.md); shadPS4 and RPCS3 moved in
 
 - [x] Localhost page for an OBS Browser Source with the real toasts, its own on/off, port and chime, unaffected by the pause; Settings card with the URL, status and a test button. Verified: the built page served by the app rendered live toasts over Server-Sent Events with a transparent background in Chrome, and a request with a foreign `Host` was refused
 - [x] Check it in OBS during a real stream (owner; works, reported 20 October 2026)
+- [x] Replay the pop-up of an earned achievement or Platinum from Game detail, on the desktop and the stream overlay (F-28)
 - [ ] Maybe: a stream-only look (theme) and a size option
 
 ## Risks

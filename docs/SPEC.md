@@ -38,6 +38,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | F-24 | Native OS toast fallback | P1 |
 | F-25 | Do Not Disturb (manual, schedule) | P1 |
 | F-26 | Test/preview notification button | P0 |
+| F-28 | Replay the unlock pop-up of an achievement or Platinum already earned, from Game detail, on the desktop and (when it is on) the stream overlay | P2 |
 | F-27 | Stream overlay: the same unlock toasts as a localhost page for an OBS Browser Source, with its own on/off, port and chime, unaffected by pausing desktop pop-ups ([ADR-0018](adr/0018-stream-overlay.md)) | P2 |
 
 ### Library and UI
@@ -321,6 +322,7 @@ The UI has no Node.js access. It calls the main process through `window.api`, wh
 | `onNotificationSettingsChanged(listener)` | `notifications:settings-changed` (main → main and overlay windows) | Called with the new `NotificationSettings` whenever they change. Returns an unsubscribe function |
 | `getStreamOverlayStatus()` | `stream:get-status` | The stream overlay server's `StreamOverlayStatus`: `state` (`off`, `running` or `error`), the Browser Source `url` while running, and a plain `message` on error (such as the port being in use). Fires `onStreamOverlayStatusChanged` (`stream:status-changed`) whenever it changes |
 | `sendTestStreamToast()` | `stream:send-test` | Queues the next sample toast on the stream overlay only |
+| `replayUnlock(target)` | `notifications:replay-unlock` | Shows an earned unlock's toast again (F-28). `target` is `{ kind: 'achievement', achievementId }` or `{ kind: 'platinum', platformGameId }` (the app-awarded Platinum), checked with zod. The main process rebuilds the toast from the database, so the page cannot make one up, and queues it like a test toast: on the desktop overlay (or a Windows notification in exclusive full-screen) whether or not notifications are paused, ignoring the rarity and platform filters and quiet hours, and on the stream overlay when that is on. A locked achievement, an unearned Platinum or an unknown id does nothing |
 | `listDisplays()` | `overlay:list-displays` | Every connected display as a `DisplayInfo` (`id`, a label such as "Display 1 (2560×1440)", `primary`), for the corner/monitor picker |
 | `exportData()` | `data:export` | Opens a save dialog in the main process and writes one JSON file of the user's data (no secrets, no external ids). The UI sends nothing, so it cannot choose the path. Answers an `ExportResult`: `{ kind: 'saved', path, games, achievements }`, `{ kind: 'cancelled' }`, or `{ kind: 'failed', message }`; it never rejects |
 | `getLogSettings()` | `logs:get-settings` | `LogSettings`: `{ level, available }`, the saved logging level (`info` when none or an unknown value is stored) and whether the logger can currently write to its folder (`available` goes false after a failed write and true again after the next good one) |

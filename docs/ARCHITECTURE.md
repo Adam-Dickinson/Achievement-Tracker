@@ -128,7 +128,7 @@ trophy-locker/
 │   │   ├── index.ts                 # app lifecycle: single instance, windows, tray, IPC, sync wiring
 │   │   ├── profile.ts  windows.ts  tray.ts  tray-menu.ts  startup.ts  overlay-service.ts  notifications.ts  fullscreen.ts  native-toast.ts  ipc.ts  accounts.ts  sample-toasts.ts
 │   │   ├── store/                   # migrations/*.sql, migrations.ts, migrate.ts, database.ts,
-│   │   │                            #   sync-store.ts (the sync engine's SQL)
+│   │   │                            #   sync-store.ts (the sync engine's SQL), replay-store.ts
 │   │   ├── sync/                    # scheduler.ts, sync-pass.ts, backoff.ts
 │   │   └── providers/               # steam/ xbox/ playstation/ retroachievements/ rpcs3/
 │   │                                #   xenia/ epic/ ubisoft/ ea/ local-file/   (steam, xbox, epic, ubisoft and ea real, the rest stubs)

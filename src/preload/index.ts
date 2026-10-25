@@ -98,6 +98,7 @@ const api: TrophyLockerApi = {
   },
   getStreamOverlayStatus: () => ipcRenderer.invoke(IPC.getStreamOverlayStatus),
   sendTestStreamToast: () => ipcRenderer.invoke(IPC.sendTestStreamToast),
+  replayUnlock: (target) => ipcRenderer.invoke(IPC.replayUnlock, target),
   onStreamOverlayStatusChanged: (listener) => {
     const handler = (_event: IpcRendererEvent, status: StreamOverlayStatus): void =>
       listener(status)
