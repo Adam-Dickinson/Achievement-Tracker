@@ -73,7 +73,17 @@ describe('playChime', () => {
   it('plays more notes for a rarer unlock', () => {
     playChime('ultra_rare', 0.6)
 
-    expect(created[0]?.oscillators).toHaveLength(4)
+    expect(created[0]?.oscillators.map((o) => o.frequency.value)).toEqual([
+      523.25, 659.25, 783.99, 1046.5,
+    ])
+  })
+
+  it('gives a platinum its own chime, rising higher than an ultra rare', () => {
+    playChime('platinum', 0.6)
+
+    expect(created[0]?.oscillators.map((o) => o.frequency.value)).toEqual([
+      523.25, 783.99, 1046.5, 1567.98,
+    ])
   })
 
   it('ramps the gain up to the given volume for each note', () => {

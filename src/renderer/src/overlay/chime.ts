@@ -5,18 +5,21 @@ const NOTE_STEP_MS = 110
 const ATTACK_MS = 6
 const RELEASE_FLOOR = 0.0001
 
-const NOTES: Readonly<Record<Rarity, readonly number[]>> = {
+export type ChimeSound = Rarity | 'platinum'
+
+const NOTES: Readonly<Record<ChimeSound, readonly number[]>> = {
   common: [659.25],
   uncommon: [659.25, 987.77],
   rare: [523.25, 783.99, 1046.5],
-  ultra_rare: [523.25, 783.99, 1046.5, 1567.98],
+  ultra_rare: [523.25, 659.25, 783.99, 1046.5],
+  platinum: [523.25, 783.99, 1046.5, 1567.98],
 }
 
-export function playChime(rarity: Rarity, volume: number): void {
+export function playChime(sound: ChimeSound, volume: number): void {
   if (volume <= 0 || typeof AudioContext === 'undefined') return
 
   const context = new AudioContext()
-  const notes = NOTES[rarity]
+  const notes = NOTES[sound]
   const step = NOTE_STEP_MS / 1000
 
   notes.forEach((frequency, index) => {

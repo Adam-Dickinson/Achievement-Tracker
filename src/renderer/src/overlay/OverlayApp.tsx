@@ -40,7 +40,9 @@ export function OverlayApp({ subscribe }: OverlayAppProps = {}) {
     shownIds.current = new Set(frame.toasts.map((toast) => toast.id))
     if (!frame.sound.enabled) return
     for (const toast of frame.toasts) {
-      if (!wasShown.has(toast.id)) playChime(toast.rarity, frame.sound.volume)
+      if (!wasShown.has(toast.id)) {
+        playChime(toast.platinum ? 'platinum' : toast.rarity, frame.sound.volume)
+      }
     }
   }, [frame])
 
