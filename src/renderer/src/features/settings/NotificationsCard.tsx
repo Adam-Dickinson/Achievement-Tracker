@@ -264,7 +264,7 @@ export function NotificationsCard() {
             <SettingCard
               icon={Volume2}
               title="Sound"
-              description="A distinct chime for each rarity tier"
+              description="A distinct chime for each rarity tier, and a bigger one for a Platinum"
             >
               <SettingRow label="Play a sound" description="One sound per rarity tier.">
                 <Switch

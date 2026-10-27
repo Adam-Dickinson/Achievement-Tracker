@@ -106,6 +106,20 @@ describe('OverlayApp', () => {
     expect(playChime).toHaveBeenCalledExactlyOnceWith('rare', 0.6)
   })
 
+  it('plays the platinum chime for a platinum, whatever its rarity', () => {
+    render(<OverlayApp />)
+
+    act(() =>
+      deliver(
+        frame([{ ...toast(1, 'Platinum'), rarity: 'common', platinum: true }], {
+          sound: { enabled: true, volume: 0.6 },
+        }),
+      ),
+    )
+
+    expect(playChime).toHaveBeenCalledExactlyOnceWith('platinum', 0.6)
+  })
+
   it('does not play a chime when sound is disabled', () => {
     render(<OverlayApp />)
 
