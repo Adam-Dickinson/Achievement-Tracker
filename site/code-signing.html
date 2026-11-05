@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Code signing policy - Trophy Locker</title>
+    <meta
+      name="description"
+      content="How Trophy Locker installers are signed, who may approve a release, and what the app sends over the network."
+    />
+    <meta name="theme-color" content="#080a10" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="icon.png" type="image/png" />
+    <style>
+      @font-face {
+        font-family: 'Figtree';
+        font-style: normal;
+        font-weight: 300 900;
+        font-display: swap;
+        src: url('fonts/figtree-latin-wght-normal.woff2') format('woff2');
+      }
+      :root {
+        color-scheme: dark;
+        --canvas: #080a10;
+        --fg: #f3f5fa;
+        --fg-muted: #9aa3b8;
+        --line: rgb(255 255 255 / 0.12);
+        --primary: #c4f542;
+        --sans: 'Figtree', system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--fg);
+        font: 400 1.0625rem/1.65 var(--sans);
+      }
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 56px 16px 80px;
+      }
+      h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-size: 1.25rem;
+        margin: 40px 0 8px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+      }
+      p,
+      li {
+        color: var(--fg-muted);
+      }
+      a {
+        color: var(--primary);
+      }
+      a:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><a href="index.html">&larr; Trophy Locker</a></p>
+      <h1>Code signing policy</h1>
+      <p>Last updated 5 November 2026.</p>
+
+      <h2>Who signs</h2>
+      <p>
+        Free code signing for the Windows installer is provided by
+        <a href="https://signpath.org">SignPath.io</a>, with a certificate from the
+        <a href="https://signpath.org/about">SignPath Foundation</a>. Until that is in place, installers are
+        unsigned and Windows SmartScreen may warn when you run one.
+      </p>
+
+      <h2>What is signed</h2>
+      <p>
+        Only the installer, <code>Trophy-Locker-Setup-&lt;version&gt;.exe</code>, built from the public source in
+        <a href="https://github.com/Adam-Dickinson/Achievement-Tracker">this repository</a>. The build runs in GitHub
+        Actions from a version tag, and the signing request comes from that same run. Nothing built on a personal
+        computer is signed.
+      </p>
+
+      <h2>Roles</h2>
+      <ul>
+        <li>Author, committer, reviewer and approver of releases: <a href="https://github.com/Adam-Dickinson">Adam Dickinson</a>.</li>
+      </ul>
+      <p>
+        The <code>main</code> branch and release tags are protected: changes need a pull request that passes the
+        automated checks, and tags cannot be moved or deleted.
+      </p>
+
+      <h2>Privacy</h2>
+      <p>Trophy Locker keeps your data on your computer. It has no accounts, no analytics and no crash reporting.</p>
+      <ul>
+        <li>
+          It contacts the game platforms you choose to connect (Steam, Xbox, PlayStation, Epic, Ubisoft, EA) to read
+          your achievements, using the sign-in you gave it. Sign-in secrets are stored with Windows encryption.
+        </li>
+        <li>
+          It checks github.com for new versions at launch and every six hours. That sends only the usual details of a
+          web request, such as your IP address, and nothing about your account, games or library. You can switch it off
+          in Settings under Updates.
+        </li>
+        <li>
+          If you add a SteamGridDB key, it fetches artwork from SteamGridDB. The optional stream overlay is served only
+          on your own computer.
+        </li>
+      </ul>
+
+      <h2>Report a problem</h2>
+      <p>
+        Found something wrong with a release? <a href="https://github.com/Adam-Dickinson/Achievement-Tracker/issues">Open an issue</a>.
+      </p>
+    </main>
+  </body>
+</html>
