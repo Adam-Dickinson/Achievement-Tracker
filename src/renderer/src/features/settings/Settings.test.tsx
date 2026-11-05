@@ -54,6 +54,14 @@ describe('Settings', () => {
     expect(await screen.findByRole('region', { name: 'Your data' })).toBeInTheDocument()
   })
 
+  it('asks for a credit and shows the website address', () => {
+    renderSettings()
+
+    expect(screen.getByText(/credit Adam Dickinson/)).toHaveTextContent(
+      'https://adam-dickinson.github.io/Achievement-Tracker/',
+    )
+  })
+
   it('shows the app version and database schema once known', async () => {
     renderSettings()
 
