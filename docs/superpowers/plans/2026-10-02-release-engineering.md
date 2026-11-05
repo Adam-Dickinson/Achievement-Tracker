@@ -67,7 +67,7 @@ and add this top-level key (after `"main"`; it is separate from `scripts.build`)
     "publish": {
       "provider": "github",
       "owner": "Adam-Dickinson",
-      "repo": "Achievement-Tracker",
+      "repo": "Trophy-Locker",
       "releaseType": "draft"
     }
   },

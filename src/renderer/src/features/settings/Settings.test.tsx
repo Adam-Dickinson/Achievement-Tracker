@@ -58,7 +58,7 @@ describe('Settings', () => {
     renderSettings()
 
     expect(screen.getByText(/credit Adam Dickinson/)).toHaveTextContent(
-      'https://adam-dickinson.github.io/Achievement-Tracker/',
+      'https://adam-dickinson.github.io/Trophy-Locker/',
     )
   })
 

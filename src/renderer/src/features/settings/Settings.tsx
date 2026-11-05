@@ -8,7 +8,7 @@ import { ProfileCard } from './ProfileCard'
 import { StartupCard } from './StartupCard'
 import { UpdatesCard } from './UpdatesCard'
 
-const CREDIT_URL = 'https://adam-dickinson.github.io/Achievement-Tracker/'
+const CREDIT_URL = 'https://adam-dickinson.github.io/Trophy-Locker/'
 
 interface SettingsProps {
   profile: Profile | null
