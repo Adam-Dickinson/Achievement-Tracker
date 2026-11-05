@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 
-const repo = 'Adam-Dickinson/Achievement-Tracker'
+const repo = 'Adam-Dickinson/Trophy-Locker'
 const installer = /^Trophy-Locker-Setup-.+\.exe$/
 
 const releases = JSON.parse(

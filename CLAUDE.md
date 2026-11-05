@@ -4,7 +4,7 @@ Guidance for Claude Code in this repo.
 
 ## What this is
 
-**Trophy Locker** (formerly Achievement Tracker; repo folder and GitHub repo keep old name): Electron desktop app (TypeScript everywhere, React UI) tracking achievements/trophies across Steam, Xbox, PlayStation, Epic, Ubisoft, EA, plus shadPS4 and RPCS3 emulators (ADR-0015; more emulators after v1). Runs in tray, shows animated unlock toasts. **Read before non-trivial changes:**
+**Trophy Locker** (formerly Achievement Tracker; the GitHub repo is now `Trophy-Locker`, the local repo folder keeps the old name): Electron desktop app (TypeScript everywhere, React UI) tracking achievements/trophies across Steam, Xbox, PlayStation, Epic, Ubisoft, EA, plus shadPS4 and RPCS3 emulators (ADR-0015; more emulators after v1). Runs in tray, shows animated unlock toasts. **Read before non-trivial changes:**
 
 - [docs/SPEC.md](docs/SPEC.md): requirements, DB schema, provider interface, IPC contract
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): code areas, data flow, folder structure

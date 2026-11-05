@@ -24,7 +24,7 @@ electron-builder, configured under `build` in `package.json`.
 - `productName` "Trophy Locker", `appId` `io.github.adam-dickinson.trophy-locker`, icon `resources/icon.ico`, license GPL-3.0.
 - NSIS, **per user, not per machine** (no admin prompt), the user may choose the folder, Start Menu shortcut, normal Windows uninstaller entry. Artifact name `Trophy-Locker-Setup-${version}.exe`.
 - Package contents: `out/**`, `package.json` and the production dependencies (electron-builder adds them automatically). `node:sqlite` is part of Electron 44, so there are no native modules to rebuild.
-- `publish` provider `github`, owner `Adam-Dickinson`, repo `Achievement-Tracker` (the repository keeps its old name).
+- `publish` provider `github`, owner `Adam-Dickinson`, repo `Trophy-Locker` (the repository was first published as `Achievement-Tracker` and renamed; GitHub redirects the old name).
 - Scripts: `npm run dist` (build and package the installer) and `npm run dist:dir` (unpacked folder, used for measuring). Neither publishes.
 - The version in `package.json` becomes `1.0.0` for the release; the tag must equal `v<version>` (the workflow checks).
 
