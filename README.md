@@ -10,6 +10,8 @@ Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [website](https
 
 **Making a video or stream with Trophy Locker?** Please credit Adam Dickinson and link to the [website](https://adam-dickinson.github.io/Achievement-Tracker/).
 
+See the [code signing policy](https://adam-dickinson.github.io/Achievement-Tracker/code-signing.html) for how installers are signed and what the app sends over the network.
+
 Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**.
 
 **Updates:** the app checks GitHub for new versions at launch and every 6 hours, tells you when one exists, and only downloads it when you press Download. The check contacts github.com and sends only the usual details of a web request, such as your IP address, with no account, game or library information. You can switch it off in Settings under Updates. See [ADR-0016](docs/adr/0016-release-and-updates.md).
