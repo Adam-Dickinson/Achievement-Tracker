@@ -8,6 +8,8 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 
 Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [website](https://adam-dickinson.github.io/Achievement-Tracker/) or the [Releases page](https://github.com/Adam-Dickinson/Achievement-Tracker/releases). It installs for the current user and needs no admin rights.
 
+**Making a video or stream with Trophy Locker?** Please credit Adam Dickinson and link to the [website](https://adam-dickinson.github.io/Achievement-Tracker/).
+
 Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**.
 
 **Updates:** the app checks GitHub for new versions at launch and every 6 hours, tells you when one exists, and only downloads it when you press Download. The check contacts github.com and sends only the usual details of a web request, such as your IP address, with no account, game or library information. You can switch it off in Settings under Updates. See [ADR-0016](docs/adr/0016-release-and-updates.md).
