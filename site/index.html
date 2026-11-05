@@ -3,20 +3,61 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Trophy Locker: every trophy, one locker</title>
+    <title>Trophy Locker: free achievement tracker for Steam, Xbox and PlayStation</title>
     <meta
       name="description"
-      content="Free Windows app that tracks achievements and trophies across Steam, Xbox, PlayStation, Epic, Ubisoft, EA, shadPS4 and RPCS3, with a pop-up the moment you unlock something."
+      content="Trophy Locker is a free, open source achievement tracker for PC. It tracks achievements and trophies across Steam, Xbox, PlayStation, Epic, Ubisoft, EA, shadPS4 and RPCS3, with a pop-up the moment you unlock something."
     />
+    <link rel="canonical" href="https://adam-dickinson.github.io/Achievement-Tracker/" />
     <meta name="theme-color" content="#080a10" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Trophy Locker" />
+    <meta property="og:site_name" content="Trophy Locker" />
+    <meta property="og:url" content="https://adam-dickinson.github.io/Achievement-Tracker/" />
+    <meta property="og:title" content="Trophy Locker: free achievement tracker for PC" />
     <meta
       property="og:description"
-      content="Every achievement and trophy from every platform in one place, with a pop-up the moment you unlock something."
+      content="Every achievement and trophy from Steam, Xbox, PlayStation and more in one place, with a pop-up the moment you unlock something."
     />
-    <meta property="og:image" content="icon.png" />
+    <meta property="og:image" content="https://adam-dickinson.github.io/Achievement-Tracker/icon.png" />
     <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Trophy Locker: free achievement tracker for PC" />
+    <meta
+      name="twitter:description"
+      content="Every achievement and trophy from Steam, Xbox, PlayStation and more in one place."
+    />
+    <meta name="twitter:image" content="https://adam-dickinson.github.io/Achievement-Tracker/icon.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "name": "Trophy Locker",
+            "alternateName": "Achievement Tracker",
+            "description": "A free, open source achievement tracker for PC that tracks achievements and trophies across Steam, Xbox, PlayStation, Epic, Ubisoft, EA, shadPS4 and RPCS3.",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Windows 10, Windows 11",
+            "url": "https://adam-dickinson.github.io/Achievement-Tracker/",
+            "downloadUrl": "https://github.com/Adam-Dickinson/Achievement-Tracker/releases/latest",
+            "license": "https://github.com/Adam-Dickinson/Achievement-Tracker/blob/main/LICENSE",
+            "image": "https://adam-dickinson.github.io/Achievement-Tracker/icon.png",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "author": { "@type": "Person", "name": "Adam Dickinson" }
+          },
+          {
+            "@type": "VideoObject",
+            "name": "I Built My Own Achievement Tracker",
+            "description": "A live demo of Trophy Locker, a free and open source achievement tracker for PC: the dashboard, the library, Steam platinums, and PlayStation-style pop-ups on PC and on stream.",
+            "thumbnailUrl": "https://i.ytimg.com/vi/kiyRVteyv4o/maxresdefault.jpg",
+            "uploadDate": "2026-11-05T14:00:37Z",
+            "duration": "PT5M47S",
+            "contentUrl": "https://www.youtube.com/watch?v=kiyRVteyv4o",
+            "embedUrl": "https://www.youtube-nocookie.com/embed/kiyRVteyv4o"
+          }
+        ]
+      }
+    </script>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="icon" href="icon.png" type="image/png" />
     <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
@@ -549,6 +590,68 @@
         font-size: 18px;
       }
 
+      .video {
+        padding: 120px 0 0;
+      }
+      .video-frame {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        margin-top: 48px;
+        overflow: hidden;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-panel);
+        background: radial-gradient(120% 120% at 50% 0%, var(--surface-3), var(--surface-1));
+        box-shadow: var(--shadow-float);
+      }
+      .video-frame iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .video-play {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        width: 100%;
+        padding: 16px;
+        border: 0;
+        background: none;
+        color: var(--fg);
+        font: inherit;
+        font-weight: 700;
+        text-align: center;
+        cursor: pointer;
+      }
+      .video-play-icon {
+        display: grid;
+        place-items: center;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: var(--on-primary);
+        box-shadow: 0 12px 28px -10px rgb(196 245 66 / 0.7);
+        transition: transform 0.2s var(--ease-out);
+      }
+      .video-play-icon svg {
+        width: 32px;
+        height: 32px;
+      }
+      .video-play:hover .video-play-icon {
+        transform: scale(1.06);
+      }
+      .video-note {
+        margin: 16px 0 0;
+        color: var(--fg-muted);
+        font-size: 15px;
+      }
+
       .features {
         padding: 120px 0 0;
       }
@@ -792,7 +895,8 @@
         .install-head {
           position: static;
         }
-        .features {
+        .features,
+        .video {
           padding-top: 96px;
         }
       }
@@ -948,8 +1052,8 @@
           <div>
             <h1 id="hero-title">Every trophy.<br /><em>One locker.</em></h1>
             <p class="lede">
-              Tracks achievements across Steam, Xbox, PlayStation, Epic, Ubisoft, EA and emulators. Unlocks
-              pop up the moment they happen.
+              A free achievement tracker for PC. It tracks achievements and trophies across Steam, Xbox,
+              PlayStation, Epic, Ubisoft, EA and emulators, and unlocks pop up the moment they happen.
             </p>
             <div class="cta-row">
               <a class="btn btn-primary" href="https://github.com/Adam-Dickinson/Achievement-Tracker/releases/latest" data-download>
@@ -1033,6 +1137,26 @@
             <li style="--c: var(--emulator)">RPCS3</li>
           </ul>
         </div>
+
+        <section class="video" id="video" aria-labelledby="video-title">
+          <h2 id="video-title" class="reveal">See it in action.</h2>
+          <p class="section-intro reveal">
+            A five-minute live demo of the dashboard, the library, Steam platinums and the pop-ups on PC and on
+            stream.
+          </p>
+          <div class="video-frame reveal" data-video="kiyRVteyv4o">
+            <button type="button" class="video-play" data-video-play>
+              <span class="video-play-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
+              </span>
+              <span>Play video: I Built My Own Achievement Tracker</span>
+            </button>
+          </div>
+          <p class="video-note">
+            <a href="https://www.youtube.com/watch?v=kiyRVteyv4o">Watch on YouTube</a>. Nothing loads from
+            YouTube until you press play.
+          </p>
+        </section>
 
         <section class="features" id="features" aria-labelledby="features-title">
           <h2 id="features-title" class="reveal">Built for the moment it pops.</h2>
@@ -1202,6 +1326,19 @@
             })
           })
           .catch(() => {})
+
+        document.querySelectorAll('[data-video]').forEach((frame) => {
+          const button = frame.querySelector('[data-video-play]')
+          if (!button) return
+          button.addEventListener('click', () => {
+            const player = document.createElement('iframe')
+            player.src = `https://www.youtube-nocookie.com/embed/${frame.dataset.video}?autoplay=1&rel=0`
+            player.title = 'I Built My Own Achievement Tracker'
+            player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'
+            player.allowFullscreen = true
+            frame.replaceChildren(player)
+          })
+        })
 
         const items = document.querySelectorAll('.reveal')
         if (!('IntersectionObserver' in window)) {
