@@ -8,6 +8,8 @@ import { ProfileCard } from './ProfileCard'
 import { StartupCard } from './StartupCard'
 import { UpdatesCard } from './UpdatesCard'
 
+const CREDIT_URL = 'https://adam-dickinson.github.io/Achievement-Tracker/'
+
 interface SettingsProps {
   profile: Profile | null
   onRename: (name: string) => Promise<void>
@@ -45,6 +47,10 @@ export function Settings({ profile, onRename }: SettingsProps) {
             Trophy Locker v{info.version} · database schema {info.schemaVersion}
           </p>
         )}
+        <p className="text-sm text-fg-subtle">
+          Using Trophy Locker in a video or stream? Please credit Adam Dickinson and link to{' '}
+          {CREDIT_URL}
+        </p>
       </div>
     </div>
   )
