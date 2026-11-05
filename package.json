@@ -43,6 +43,7 @@
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
     "dist": "npm run build && electron-builder --win --publish never",
+    "downloads": "node scripts/downloads.mjs",
     "dist:dir": "npm run build && electron-builder --win --dir --publish never",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
