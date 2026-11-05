@@ -6,13 +6,13 @@ A lightweight desktop app that tracks your achievements and trophies across **Pl
 
 ## Download
 
-Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [website](https://adam-dickinson.github.io/Achievement-Tracker/) or the [Releases page](https://github.com/Adam-Dickinson/Achievement-Tracker/releases). It installs for the current user and needs no admin rights.
+Get the installer, `Trophy-Locker-Setup-<version>.exe`, from the [website](https://adam-dickinson.github.io/Trophy-Locker/) or the [Releases page](https://github.com/Adam-Dickinson/Trophy-Locker/releases). It installs for the current user and needs no admin rights.
 
 **Watch the demo:** [I Built My Own Achievement Tracker](https://www.youtube.com/watch?v=kiyRVteyv4o) (5 minutes, live walkthrough).
 
-**Making a video or stream with Trophy Locker?** Please credit Adam Dickinson and link to the [website](https://adam-dickinson.github.io/Achievement-Tracker/).
+**Making a video or stream with Trophy Locker?** Please credit Adam Dickinson and link to the [website](https://adam-dickinson.github.io/Trophy-Locker/).
 
-See the [code signing policy](https://adam-dickinson.github.io/Achievement-Tracker/code-signing.html) for how installers are signed and what the app sends over the network.
+See the [code signing policy](https://adam-dickinson.github.io/Trophy-Locker/code-signing.html) for how installers are signed and what the app sends over the network.
 
 Version 1 is unsigned, so Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**.
 

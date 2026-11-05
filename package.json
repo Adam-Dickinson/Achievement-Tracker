@@ -34,7 +34,7 @@
     "publish": {
       "provider": "github",
       "owner": "Adam-Dickinson",
-      "repo": "Achievement-Tracker",
+      "repo": "Trophy-Locker",
       "releaseType": "draft"
     }
   },

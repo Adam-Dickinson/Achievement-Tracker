@@ -5,7 +5,7 @@
 
 ## Context
 
-v1 needs a way to reach users and a way to keep them current. The app is Windows only, a single developer maintains it, and there is no budget for a code-signing certificate before the first release. The source lives at https://github.com/Adam-Dickinson/Achievement-Tracker, which already runs CI on `windows-latest`.
+v1 needs a way to reach users and a way to keep them current. The app is Windows only, a single developer maintains it, and there is no budget for a code-signing certificate before the first release. The source lives at https://github.com/Adam-Dickinson/Trophy-Locker, which already runs CI on `windows-latest`.
 
 Update checking is the first request the app makes to anything other than the platforms the user has connected, so it has a privacy cost that needs a decision, not a default.
 
